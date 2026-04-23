@@ -1,0 +1,102 @@
+{
+  "skill": "helix-task-clarify",
+  "version": "3.1-pipeline",
+  "description": "Binary assertions for /helix-task-clarify v3.1 multi-agent pipeline orchestration",
+  "test_input": "task clarification for VN-USV-SS-001 low-observable maritime autonomous surface vessel",
+  "assertions": [
+    {
+      "id": "TC-ORCH",
+      "name": "pipeline_orchestration",
+      "check": "output follows pipeline structure with CEO checkpoints",
+      "regex": "Block B[0A-E]|pipeline|BLOCK.*COMPLETE|CEO.*Approve|tiếp tục Block|helix-p1-",
+      "required": true
+    },
+    {
+      "id": "TC-B0",
+      "name": "block_preflight",
+      "check": "output includes preflight with stakeholder register and standards scan",
+      "regex": "stakeholder|PRE-FLIGHT|standards.*scan|task source|scope",
+      "required": true
+    },
+    {
+      "id": "TC-BA",
+      "name": "block_requirements_16cat",
+      "check": "output generates requirements using 16 P&B categories",
+      "regex": "16.*categor|Geometry|Kinematics|Forces|Energy|Material|Signal|Safety|Ergonomics|Production|Quality|Assembly|Transport|Operation|Maintenance|Cost|Schedule",
+      "required": true
+    },
+    {
+      "id": "TC-BB",
+      "name": "block_validate_dw",
+      "check": "output includes D/W classification (human judgment, not AI)",
+      "regex": "D/W|Demand|Wish|classification|D.*W.*classif|CEO.*classif|non.?delegable",
+      "required": true
+    },
+    {
+      "id": "TC-MIN50",
+      "name": "minimum_50_requirements",
+      "check": "output mentions minimum 50 requirements target",
+      "regex": "≥\\s*50|50.*requirement|minimum.*50|50-80|requirement.*count",
+      "required": true
+    },
+    {
+      "id": "TC-BC",
+      "name": "block_abstraction",
+      "check": "output includes 5-step abstraction and essential problem",
+      "regex": "5.?step|abstraction|essential.*problem|ELIMINATE|OMIT|TRANSFORM|GENERALIZE|FORMULATE",
+      "required": true
+    },
+    {
+      "id": "TC-BD",
+      "name": "block_structure",
+      "check": "output produces function structure with verb+noun format",
+      "regex": "function.*structure|sub.?function|SF-\\d|verb.*noun|6.?flow|Energy.*Material.*Signal",
+      "required": true
+    },
+    {
+      "id": "TC-BE",
+      "name": "block_compile",
+      "check": "output compiles deliverables and references Gate 1",
+      "regex": "deliverable|Gate 1|Phase 1.*complete|compile|P02.*QC|cross.?domain.*sync",
+      "required": true
+    },
+    {
+      "id": "TC-VERIFY",
+      "name": "verification_method",
+      "check": "every requirement has verification method (I/M/T/A)",
+      "regex": "verif|test.*method|Inspect|Measure|Test|Analyz|I/M/T/A",
+      "required": true
+    },
+    {
+      "id": "TC-CEO",
+      "name": "ceo_checkpoint",
+      "check": "output includes CEO approve/adjust/pause options",
+      "regex": "✅.*Approve|🔄.*Chạy lại|⏸.*Dừng|CEO Checkpoint|BLOCK.*COMPLETE",
+      "required": true
+    },
+    {
+      "id": "TC-IFR",
+      "name": "ifr_sacred_constraints",
+      "check": "output includes IFR statement and sacred constraints",
+      "regex": "IFR|ideal.*final|sacred.*constraint|SC-\\d",
+      "required": false
+    },
+    {
+      "id": "TC-TVDT",
+      "name": "tvdt_present",
+      "check": "output includes TVDT for top requirements",
+      "regex": "TVDT|target.*value|trade.?off|benchmark|implication",
+      "required": false
+    },
+    {
+      "id": "TC-FAILURE",
+      "name": "failure_derived",
+      "check": "output includes failure-derived requirements or SPOF check",
+      "regex": "failure.*mode|SPOF|failure.*derived|single.*point|FMEA|failure.*scan",
+      "required": false
+    }
+  ],
+  "passing_score": 10,
+  "total_required": 10,
+  "total_optional": 3
+}

@@ -1,0 +1,58 @@
+{
+  "skill": "analyst-trap",
+  "description": "Binary assertions for /analyst-trap output quality",
+  "assertions": [
+    {
+      "id": "A1",
+      "name": "mentions_dPdt",
+      "check": "output contains 'dP/dt' or 'physical velocity' or 'prototype iteration'",
+      "regex": "dP/dt|physical velocity|prototype iteration|physical progress",
+      "required": true
+    },
+    {
+      "id": "A2",
+      "name": "cites_specific_project",
+      "check": "output mentions at least 1 specific project by name",
+      "regex": "AST-MSL|XUONG|BB-01|LOMAH|12\\.7MM|VN-",
+      "required": true
+    },
+    {
+      "id": "A3",
+      "name": "gives_ratio",
+      "check": "output contains a numerical ratio (X:1 or X:Y or percentage)",
+      "regex": "\\d+\\.?\\d*\\s*:\\s*\\d|\\d+%|ratio",
+      "required": true
+    },
+    {
+      "id": "A4",
+      "name": "recommends_action",
+      "check": "output contains at least 1 actionable recommendation",
+      "regex": "recommend|action|should|phải|cần|nên|đề xuất|priority",
+      "required": true
+    },
+    {
+      "id": "A5",
+      "name": "checks_physical_gate",
+      "check": "output mentions physical gate deadline or timeline",
+      "regex": "gate|deadline|physical.*milestone|2026-\\d{2}|ngày|tháng",
+      "required": false
+    },
+    {
+      "id": "A6",
+      "name": "warns_if_zero",
+      "check": "if dP/dt = 0, output contains explicit warning",
+      "regex": "warning|cảnh báo|alert|🔴|⚠|zero physical|trap",
+      "required": false
+    },
+    {
+      "id": "A7",
+      "name": "under_500_words",
+      "check": "output is concise (under 500 words for actionability)",
+      "max_words": 500,
+      "required": false
+    }
+  ],
+  "passing_score": 4,
+  "total_required": 4,
+  "total_optional": 3
+}

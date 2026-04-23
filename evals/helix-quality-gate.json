@@ -1,0 +1,59 @@
+{
+  "skill": "helix-quality-gate",
+  "description": "Binary assertions for /helix-quality-gate output quality",
+  "test_input": "gate 2 review for VN-AST-MSL-001 towed sea target",
+  "assertions": [
+    {
+      "id": "QG1",
+      "name": "auto_checks_present",
+      "check": "output contains auto-check items (A-items) with PASS/FAIL status",
+      "regex": "A\\d+.*PASS|A\\d+.*FAIL|auto-check|Auto.*Check|A-item",
+      "required": true
+    },
+    {
+      "id": "QG2",
+      "name": "human_items_present",
+      "check": "output contains human judgment items (H-items) requiring CEO input",
+      "regex": "H\\d+|H-item|[Hh]uman.*[Jj]udgment|[Hh]uman.*[Rr]eview|CEO.*decide|CEO.*input|CEO.*PASS|CEO.*FAIL|awaiting.*CEO|judgment.*item|thẩm định",
+      "required": true
+    },
+    {
+      "id": "QG3",
+      "name": "score_out_of_4",
+      "check": "output produces a numerical score out of 4.0",
+      "regex": "\\d\\.\\d{1,2}.*\\/.*4\\.0|score.*\\d\\.\\d|__\\/4\\.0",
+      "required": true
+    },
+    {
+      "id": "QG4",
+      "name": "verdict_present",
+      "check": "output includes one of: PASS, CONDITIONAL PASS, REVISE, or FAIL verdict",
+      "regex": "\\bPASS\\b|CONDITIONAL.*PASS|\\bREVISE\\b|\\bFAIL\\b|verdict|GO.*NO-GO",
+      "required": true
+    },
+    {
+      "id": "QG5",
+      "name": "plausible_or_p02",
+      "check": "output runs PLAUSIBLE 9-check or P02 content quality check on artifacts",
+      "regex": "PLAUSIBLE|P02|content.*quality|9-check|Physics.*Logic|Confidence.*Calibration",
+      "required": false
+    },
+    {
+      "id": "QG6",
+      "name": "cross_domain_sync",
+      "check": "output checks cross-domain sync (S-items) for multi-domain products",
+      "regex": "S-item|S\\d+.*|cross-domain.*sync|domain.*sync|Mech.*Elec.*AI.*sync|synchronized",
+      "required": false
+    },
+    {
+      "id": "QG7",
+      "name": "no_auto_pass",
+      "check": "output does NOT auto-approve gate — presents H-items for CEO decision",
+      "regex": "CEO.*input|CEO.*decide|awaiting.*CEO|require.*human|waiting.*judgment|Core",
+      "required": false
+    }
+  ],
+  "passing_score": 4,
+  "total_required": 4,
+  "total_optional": 3
+}

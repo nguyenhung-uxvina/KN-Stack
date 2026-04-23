@@ -1,0 +1,102 @@
+{
+  "skill": "helix-embody-realize",
+  "version": "3.1-pipeline",
+  "description": "Binary assertions for /helix-embody-realize v3.1 multi-agent pipeline orchestration",
+  "test_input": "embody concept A for VN-AST-MSL-001 towed sea target",
+  "assertions": [
+    {
+      "id": "ER-ORCH",
+      "name": "pipeline_orchestration",
+      "check": "output follows pipeline structure with CEO checkpoints",
+      "regex": "Block B[0A-E]|pipeline|BLOCK.*COMPLETE|CEO.*Approve|tiếp tục Block|helix-p3-",
+      "required": true
+    },
+    {
+      "id": "ER-B0",
+      "name": "block_preflight",
+      "check": "output includes preflight with embodiment-determining requirements",
+      "regex": "PRE-FLIGHT|embodiment.?determining|size.?determining|arrangement|spatial.*constraint",
+      "required": true
+    },
+    {
+      "id": "ER-BA",
+      "name": "block_layout",
+      "check": "output acknowledges layout as CEO Core judgment",
+      "regex": "Core|CEO.*layout|human.*layout|preliminary.*layout|non.?delegable|hand.*sketch|AI.*cannot.*generate",
+      "required": true
+    },
+    {
+      "id": "ER-BB-DFX",
+      "name": "block_dfx",
+      "check": "output contains DfX review with DfM, DfA, DfT minimum",
+      "regex": "DfX|DfM|DfA|DfT|Design for Manufacture|Design for Assembly|Design for Test",
+      "required": true
+    },
+    {
+      "id": "ER-BB-DFU",
+      "name": "dfu_present",
+      "check": "output includes DfU or explicitly states N/A for mechanical-only",
+      "regex": "DfU|Design for Update|AI.*update|firmware.*swap|N/A.*no AI|OTA",
+      "required": true
+    },
+    {
+      "id": "ER-BB-RULES",
+      "name": "basic_rules_audit",
+      "check": "output checks 3 basic rules (Clarity, Simplicity, Safety)",
+      "regex": "Clarity|Simplicity|Safety|basic.*rule|rõ ràng|đơn giản|an toàn|3.*rule",
+      "required": true
+    },
+    {
+      "id": "ER-BB-PLAUSIBLE",
+      "name": "plausible_check",
+      "check": "output runs PLAUSIBLE 9-check",
+      "regex": "PLAUSIBLE|Physics.*Logic|9.?check|Lethality|P.*L.*A.*U.*S.*I.*B.*L.*E",
+      "required": true
+    },
+    {
+      "id": "ER-BC",
+      "name": "block_integrate",
+      "check": "output contains integration check and ICD v3",
+      "regex": "integration.*check|ICD.*v3|interface.*verif|cross.?domain|thermal.*check|EMC",
+      "required": true
+    },
+    {
+      "id": "ER-BD",
+      "name": "block_bom",
+      "check": "output generates draft BOM",
+      "regex": "BOM|Bill of Material|parts list|cost.*estimate|sourcing|long.?lead",
+      "required": true
+    },
+    {
+      "id": "ER-BE",
+      "name": "block_compile",
+      "check": "output includes evaluation (Rt/Re) and Gate 3 reference",
+      "regex": "Rt|Re|S.?diagram|evaluation|Gate 3|Phase 3.*complete|weak.*spot|P02.*QC",
+      "required": true
+    },
+    {
+      "id": "ER-CEO",
+      "name": "ceo_checkpoints",
+      "check": "output includes CEO approve/adjust/pause after blocks",
+      "regex": "✅.*Approve|🔄.*Chạy lại|⏸.*Dừng|CEO.*Checkpoint|BLOCK.*COMPLETE",
+      "required": false
+    },
+    {
+      "id": "ER-MARITIME",
+      "name": "maritime_awareness",
+      "check": "output mentions P50/P51 or maritime mode",
+      "regex": "P50|P51|maritime|stability.*check|weight.*estimate|GM|--maritime",
+      "required": false
+    },
+    {
+      "id": "ER-PRINCIPLES",
+      "name": "design_principles",
+      "check": "output checks 5 design principles (force transmission, division, self-help, stability, fault-free)",
+      "regex": "force.*transmission|division.*task|self.?help|stability|fault.?free|design.*principle",
+      "required": false
+    }
+  ],
+  "passing_score": 10,
+  "total_required": 10,
+  "total_optional": 3
+}

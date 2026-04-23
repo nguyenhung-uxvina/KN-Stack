@@ -1,0 +1,59 @@
+{
+  "skill": "research",
+  "description": "Binary assertions for /research output quality",
+  "test_input": "research HDPE extrusion welding for marine applications",
+  "assertions": [
+    {
+      "id": "R1",
+      "name": "presents_tier_table",
+      "check": "output contains source tier classification (S/A/B/C)",
+      "regex": "Tier S|Tier A|Tier B|Tier C|tier_s|Standards.*Primary|Authority.*OEM",
+      "required": true
+    },
+    {
+      "id": "R2",
+      "name": "asks_ceo_selection",
+      "check": "output asks CEO to select sources (Core — do not skip)",
+      "regex": "CEO.*chọn|chọn.*source|select.*source|CEO.*select|which.*analyze",
+      "required": true
+    },
+    {
+      "id": "R3",
+      "name": "reports_pro_ratio",
+      "check": "output reports pro source ratio (S+A count or percentage)",
+      "regex": "pro.*ratio|S\\+A|pro source|đủ nguồn pro|\\d+.*Tier S|nguồn pro",
+      "required": true
+    },
+    {
+      "id": "R4",
+      "name": "saves_to_dca",
+      "check": "output saves or proposes to save to Deep-Content-Analyzer-Outputs",
+      "regex": "Deep-Content-Analyzer|DCA|RESEARCH_.*\\.md|3_Resources.*Output|save.*output|saved.*to|lưu.*kết quả|output.*saved|file.*saved",
+      "required": true
+    },
+    {
+      "id": "R5",
+      "name": "flags_galaxy_candidates",
+      "check": "output identifies Galaxy candidates with confidence rating",
+      "regex": "Galaxy.*candidate|★★★|★★|THỊNH.*H|Hóa|galaxy.*promot",
+      "required": false
+    },
+    {
+      "id": "R6",
+      "name": "nlm_mentioned",
+      "check": "output mentions NLM notebook usage or NLM auth check",
+      "regex": "nlm|NLM|notebook|NotebookLM",
+      "required": false
+    },
+    {
+      "id": "R7",
+      "name": "multi_channel_search",
+      "check": "output uses multiple search channels (Web + YouTube or Authority or Patents)",
+      "regex": "channel|YouTube|patent|authority.*domain|yt-dlp|WebSearch",
+      "required": false
+    }
+  ],
+  "passing_score": 4,
+  "total_required": 4,
+  "total_optional": 3
+}

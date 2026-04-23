@@ -1,0 +1,102 @@
+{
+  "skill": "helix-concept-generate",
+  "version": "3.1-pipeline",
+  "description": "Binary assertions for /helix-concept-generate v3.1 multi-agent pipeline orchestration",
+  "test_input": "generate concepts for VN-12.7MM-SIM recoil simulation system",
+  "assertions": [
+    {
+      "id": "P-ORCH",
+      "name": "pipeline_orchestration",
+      "check": "output follows pipeline structure: invokes block-skills sequentially with CEO checkpoints",
+      "regex": "Block B[0A-E]|pipeline|BLOCK.*COMPLETE|CEO.*Approve|tiếp tục Block|helix-p2-",
+      "required": true
+    },
+    {
+      "id": "P-STATE",
+      "name": "pipeline_state",
+      "check": "output creates or references pipeline state file",
+      "regex": "_pipeline_state|Block Progress|PENDING|RUNNING|COMPLETE|Phase2-Concept",
+      "required": true
+    },
+    {
+      "id": "P-B0",
+      "name": "block_preflight",
+      "check": "output includes preflight verification (Phase 1 inputs, design type)",
+      "regex": "PRE-FLIGHT|preflight|design type|Original|Adaptive|Variant|11.*guideline|abstraction.*check",
+      "required": true
+    },
+    {
+      "id": "P-BA",
+      "name": "block_frame",
+      "check": "output includes problem framing (solution-determining SF)",
+      "regex": "solution.?determining|cascade.*score|TRIZ|contradiction|essential.*problem|Problem Frame",
+      "required": true
+    },
+    {
+      "id": "P-BB",
+      "name": "block_search",
+      "check": "output includes solution search (morphological matrix with ACH column)",
+      "regex": "morphological|matrix|working.*principle|ACH.*column|DSO|compatibility",
+      "required": true
+    },
+    {
+      "id": "P-BC",
+      "name": "block_develop",
+      "check": "output includes concept development (VDI 2225 with scores)",
+      "regex": "VDI 2225|x_t|x_e|firming.*up|Pugh|weak.*spot|evaluation",
+      "required": true
+    },
+    {
+      "id": "P-BD",
+      "name": "block_risk",
+      "check": "output includes risk analysis (coupling + CFMA or sensitivity)",
+      "regex": "coupling|CFMA|assumption.*register|sensitivity|3-scenario|risk",
+      "required": true
+    },
+    {
+      "id": "P-BE",
+      "name": "block_select",
+      "check": "output includes CEO selection checkpoint (non-delegable)",
+      "regex": "CEO.*chọn|CEO.*select|concept.*selection|P02.*QC|handoff|PHASE 2.*COMPLETE",
+      "required": true
+    },
+    {
+      "id": "P-MIN3",
+      "name": "minimum_3_concepts",
+      "check": "output generates at least 3 concept variants",
+      "regex": "Concept [ABC]|Variant [ABC]|≥\\s*3.*concept|3.*variant",
+      "required": true
+    },
+    {
+      "id": "P-CEO",
+      "name": "ceo_checkpoint_pattern",
+      "check": "output includes CEO checkpoint with approve/adjust/pause options",
+      "regex": "✅.*Approve|🔄.*Chạy lại|⏸.*Dừng|CEO Checkpoint|BLOCK.*COMPLETE",
+      "required": true
+    },
+    {
+      "id": "P-QC",
+      "name": "p02_qc_gate",
+      "check": "output includes P02 QC gate before CEO selection",
+      "regex": "P02|QC.*gate|COHERENCE|STANDARDS|ENVIRONMENT|SAFETY|CONFIDENCE",
+      "required": false
+    },
+    {
+      "id": "P-ICDM",
+      "name": "icdm_awareness",
+      "check": "output mentions ICDM extension possibility",
+      "regex": "icdm|ICDM|--icdm|extension|flag",
+      "required": false
+    },
+    {
+      "id": "P-RESUME",
+      "name": "resume_capability",
+      "check": "output supports resume from block",
+      "regex": "--from|resume|pipeline.*state|PENDING|SKIPPED",
+      "required": false
+    }
+  ],
+  "passing_score": 10,
+  "total_required": 10,
+  "total_optional": 3
+}

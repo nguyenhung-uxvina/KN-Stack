@@ -1,0 +1,9 @@
+# Runtime artifacts
+create-junctions.ps1
+*.bak
+*.tmp
+
+# OS
+Thumbs.db
+.DS_Store
+desktop.ini
