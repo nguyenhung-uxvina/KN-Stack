@@ -19,9 +19,10 @@ Build and track trust evidence packages for defense customers evaluating ACH pro
 ### Step 1: Gather Evidence
 
 Read:
-- forge-validate → Performance Envelope, validation results
+- forge-validate → Performance Envelope, validation results, Learning Loop Architecture (Step 1.5 entries)
 - forge-fallback → fallback architecture (reassurance material)
 - forge-cost → transparent cost-benefit analysis
+- HELIX Phase 3 design journal → architectural compliance choices (provider lock-in audit, telemetry-by-default audit, on-device vs cloud inference)
 - `1_Projects/{{project}}/Status.md` — current readiness
 
 ### Step 2: Generate Trust Evidence Package
@@ -39,6 +40,7 @@ Date: {{today}}  |  Customer: {{customer_name}}
 | Live demonstration capability | Ready/Not Ready | Strong/Weak |
 | Field deployment data | Available/None | Strong/Weak |
 | Comparison vs hardware alternative | Done/Not Done | Strong/Weak |
+| Architecture compliance (air-gapped / provider-agnostic / on-device) | Audited/Pending | Strong/Weak |
 
 ## CUSTOMER-FACING MATERIALS
 1. Performance Envelope summary (non-proprietary version)
@@ -49,6 +51,27 @@ Date: {{today}}  |  Customer: {{customer_name}}
    - "If AI fails, system does THIS automatically"
 3. Cost-benefit for customer (total ownership perspective)
 4. Case study / field results (if available)
+
+## ARCHITECTURE COMPLIANCE EVIDENCE
+
+For defense customers in compliance-gated environments (tactical isolation, air-gapped networks, no-cloud requirements). Each architectural choice is concrete, auditable evidence — not a marketing claim.
+
+| Compliance dimension | Concrete architectural choice | Audit method | Status |
+|---------------------|-------------------------------|--------------|--------|
+| Air-gapped operation | All inference on-device; no network calls in decision path | Network capture during 1h field run | Audited / Pending |
+| Provider-agnostic | No vendor-specific SDK in production binary (no OpenAI/Anthropic/Cohere SDKs); local model weights only | Binary scan + dependency audit | Audited / Pending |
+| Lexical memory (no embeddings) | Retrieval uses BM25 / keyword (not embedding model) — no version-migration risk on provider deprecation | `grep -i embedding` on memory layer; verify zero embedding service calls | Audited / Pending |
+| No telemetry-by-default | Field unit ships with telemetry OFF; opt-in only with operator consent | Default-config audit + first-run network capture | Audited / Pending |
+| No embedded credentials | Binary contains no API keys, no provider tokens, no callback URLs | `strings` scan + entropy check | Audited / Pending |
+| Reproducible model artifact | Model weights + config bundled in single signed artifact; no runtime download | Build artifact inventory | Audited / Pending |
+
+**Pattern source:** TradingAgents (arXiv:2412.20138) Ch 9 — BM25, Not Embeddings. The framework explicitly rejects vector embeddings to preserve provider-agnosticism + offline capability. Same architectural discipline produces compliance evidence for defense buyers: each rejected dependency is one less compliance question to answer at procurement gate.
+
+**Goldilocks Disclosure for architecture:**
+- SHARE: which compliance dimensions are met (audit results above)
+- SHARE: that retrieval is lexical/local (not how the model is trained)
+- DO NOT SHARE: training data sources, model architecture details, internal calibration coefficients
+- DO NOT SHARE: which competitor architectures have which weaknesses (sounds like marketing; defense buyers prefer audit-evidence over comparisons)
 
 ## CUSTOMER CONCERN TRACKER
 | # | Concern | Source | Status | Response |
@@ -125,6 +148,8 @@ forge-trust WRITES TO:
 - Never demo an unstable system — better to delay than destroy trust
 - Track unspoken concerns — political and career risk drive defense decisions
 - Goldilocks Disclosure applies — know what to share vs protect
+- Architecture compliance is auditable evidence, not a claim — every dimension must have a concrete audit method, not just a checkbox
+- Each rejected dependency (no cloud, no provider SDK, no embedding service) is one less compliance question to answer at procurement gate
 
 ## COD Classification
 
