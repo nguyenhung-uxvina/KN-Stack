@@ -7,7 +7,7 @@
 
 ```
 KN-Stack/
-├── skills/           ← 143 skills organized by domain (12 domains)
+├── skills/           ← 153 skills organized by domain (13 domains)
 │   ├── bridge/       (10) — Operations skills
 │   ├── forge/        (13) — Product strategy skills
 │   ├── helix/        (34) — Design execution pipeline (Pahl-Beitz phases)
@@ -19,7 +19,8 @@ KN-Stack/
 │   ├── design/       (19) — Generic design tools (bom, validate, odi)
 │   ├── ops/          (15) — CEO operations (portfolio, sprint, weekly-3)
 │   ├── session/      (5)  — Session management (catchup, checkpoint)
-│   └── system/       (16) — System design tools (gate0-3, decide, cld)
+│   ├── system/       (16) — System design tools (gate0-3, decide, cld)
+│   └── book/         (10) — Codebase-to-book pipeline (9-phase mega-skill)
 ├── hooks/            ← 3 hook scripts (SessionStart, UserPromptSubmit, Stop)
 ├── rules/            ← 4 vault rules (projects, galaxy, areas-helix, resources)
 ├── evals/            ← Eval framework (6 specs + runner)
@@ -35,8 +36,9 @@ KN-Stack/
 
 ## Naming Conventions
 
-- Domain prefix: `bridge-`, `forge-`, `helix-`, `erp-`, etc.
+- Domain prefix: `bridge-`, `forge-`, `helix-`, `erp-`, `book-`, etc.
 - HELIX pipeline blocks: `helix-p{phase}-{block}` (e.g., `helix-p1-preflight`)
+- Book pipeline blocks: `book-{phase}` (e.g., `book-explore`, `book-write`) — orchestrator is `codebase-to-book`
 - Guard rails: descriptive name without prefix (e.g., `analyst-trap`, `ratio-check`)
 - Skill file: always `SKILL.md` (uppercase)
 
