@@ -1,0 +1,89 @@
+{
+  "skill": "codebase-to-book",
+  "version": "1.0-pipeline",
+  "description": "Binary assertions for /codebase-to-book 9-phase book-authoring mega-skill",
+  "mode": "static",
+  "test_input": "codebase to book for KN-Stack",
+  "assertions": [
+    {
+      "id": "CB-PHASES",
+      "name": "nine_phase_pipeline",
+      "check": "skill defines a 9-phase pipeline",
+      "regex": "P9|Phase 9|9.?phase",
+      "required": true
+    },
+    {
+      "id": "CB-EXPLORE",
+      "name": "phase_explore",
+      "check": "exploration phase maps the codebase",
+      "regex": "book-explore|Exploration|khám phá",
+      "required": true
+    },
+    {
+      "id": "CB-OUTLINE",
+      "name": "phase_outline",
+      "check": "outline phase structures the book",
+      "regex": "book-outline|Outline|mục lục",
+      "required": true
+    },
+    {
+      "id": "CB-WRITE",
+      "name": "phase_write",
+      "check": "write phase produces chapters",
+      "regex": "book-write|chapter|chương",
+      "required": true
+    },
+    {
+      "id": "CB-REVIEW",
+      "name": "phase_review_revise",
+      "check": "review and revise phases exist",
+      "regex": "book-review|book-revise|review.*revise",
+      "required": true
+    },
+    {
+      "id": "CB-BLOCKS",
+      "name": "block_skill_delegation",
+      "check": "orchestrator delegates to book-* block skills",
+      "regex": "book-(explore|outline|write|review|revise|position|audit|notebook|ceo-insight)",
+      "required": true
+    },
+    {
+      "id": "CB-REFS",
+      "name": "reference_files",
+      "check": "references phase-prompts and templates",
+      "regex": "references/(phase-prompts|chapter-template|book-voice-and-style|source-prompt)\\.md",
+      "required": true
+    },
+    {
+      "id": "CB-STATE",
+      "name": "pipeline_state",
+      "check": "pipeline state tracking for resume",
+      "regex": "_pipeline_state|state|resume|checkpoint",
+      "required": true
+    },
+    {
+      "id": "CB-CEO",
+      "name": "ceo_checkpoint",
+      "check": "phases pause for CEO approval",
+      "regex": "CEO|Approve|checkpoint|phê duyệt",
+      "required": true
+    },
+    {
+      "id": "CB-NLM",
+      "name": "notebooklm_integration",
+      "check": "NotebookLM integration for book grounding",
+      "regex": "NotebookLM|notebook|nlm",
+      "required": false
+    },
+    {
+      "id": "CB-VOICE",
+      "name": "voice_and_style",
+      "check": "book voice and style guide is enforced",
+      "regex": "voice|style|giọng văn",
+      "required": false
+    }
+  ],
+  "passing_score": 9,
+  "total_required": 9,
+  "total_optional": 2
+}
