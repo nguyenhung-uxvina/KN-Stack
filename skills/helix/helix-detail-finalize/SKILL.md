@@ -1,411 +1,355 @@
 ---
 name: helix-detail-finalize
-description: Run Pahl-Beitz Phase 4 Detail Design to produce manufacturing-ready package with drawings, final BOM, inspection checklist, and assembly instructions. This skill should be used when the user asks for "detail design", "manufacturing drawings", "production ready", "hoan thien che tao", "Phase 4", or needs to finalize a design for workshop fabrication.
+description: "Orchestrator for Pahl-Beitz Phase 4 Detail Design — multi-agent pipeline commanding 6 block-skills (preflight → drawing → bom → inspection → assembly → handoff). Each block is an independent skill that can be run, inspected, and upgraded separately. Produces manufacturing-ready package + bridges to forge-fabrication F0. Flags: --from <block>, --only <block>, --variant <name>, --no-tech-spec, --ach. Triggers on: 'detail design', 'manufacturing drawings', 'production ready', 'hoan thien che tao', 'Phase 4', 'finalize design', 'workshop fabrication handoff'."
 ---
 
-# Helix Detail Finalize — Phase 4 Pahl-Beitz Detail Design
+# Helix Detail Finalize — Phase 4 Orchestrator (Multi-Agent Pipeline)
 
-> **VDI 2221:2019:** Blatt 1 — requirements freeze before detail design
+> **Role:** Chỉ huy trưởng (Commander) — điều phối 6 block-skills tuần tự, đóng vòng R&D → production
+> **Architecture:** Modular pipeline — đối xứng với P1 (helix-task-clarify), P2 (helix-concept-generate), P3 (helix-embody-realize)
+> **P&B Reference:** Chapter 9 (Detail Design § 9.1-9.7)
+> **VDI 2221:2019:** Blatt 1 — requirements MUST be frozen before detail design begins
+> **AI-Orchestration:** S1 (Schema v3.0) · S2 (Multi-Agent) · S3 (P02 QC) · S5 (Audit Trail)
+> **Closes:** the R&D → production gap. Feeds `forge-fabrication F0`.
 
-Produce the complete manufacturing package: final CAD with GD&T, manufacturing drawings, final BOM, inspection checklist, and assembly instructions. Workshop master review gate included.
-
-## When to Use
-
-- After Phase 3 Embodiment Design is complete and Gate 3 passed
-- User asks "detail design", "manufacturing drawings", "production ready"
-- When preparing handoff to workshop for fabrication
-- Final phase before physical prototype build
-
-## Workflow
-
-### Step 1: Gather Inputs
-
-Read Phase 3 deliverables:
-- `1_Projects/{{project}}/Phase3-Embodiment/DfX_Review.md` — all items resolved
-- `1_Projects/{{project}}/Phase3-Embodiment/BOM_Draft.md` — draft BOM
-- `1_Projects/{{project}}/Phase3-Embodiment/ICD_v3.md` — frozen interfaces
-- `1_Projects/{{project}}/Phase3-Embodiment/Design_Decisions.md` — trade-offs
-- `1_Projects/{{project}}/Phase1-Task/Requirements_List_v1.md` — for traceability
-
-Verify prerequisites:
-- All DfX FAIL items resolved? [YES/NO]
-- ICD v3 frozen? [YES/NO]
-- BOM draft complete? [YES/NO]
-- If any NO → return to helix-embody-realize
-
-### Step 1b: Requirements Freeze Confirmation (VDI 2221:2019)
-
-> **VDI 2221:2019:** Requirements co-evolve with the solution through Phase 2 and Phase 3. By Phase 4, the requirements list MUST be frozen — no further changes without formal change request.
+## Pipeline Architecture
 
 ```
-REQUIREMENTS FREEZE CHECK — {{project}}
-Date: {{today}}
+┌──────────────────────────────────────────────────────────────────────────────────┐
+│                  helix-detail-finalize (ORCHESTRATOR — 6 blocks)                 │
+│                                                                                   │
+│  Flags: --from <B0/BA/BB/BC/BD/BE>  --only <X>  --variant <name>                │
+│         --no-tech-spec  --ach (force ACH lifecycle)                             │
+│                                                                                   │
+│  ┌──────┐  ┌──────┐  ┌──────┐  ┌──────┐  ┌──────┐  ┌──────┐                     │
+│  │ B0   │─▶│ BA   │─▶│ BB   │─▶│ BC   │─▶│ BD   │─▶│ BE   │                     │
+│  │PRE-  │  │DRAW- │  │FINAL │  │INSP- │  │ASSEM-│  │HAND- │                     │
+│  │FLT   │  │ING   │  │BOM   │  │ECTION│  │BLY   │  │OFF   │                     │
+│  └──┬───┘  └──┬───┘  └──┬───┘  └──┬───┘  └──┬───┘  └──┬───┘                     │
+│     │CEO     │CORE     │CORE     │CEO      │CEO      │CORE                      │
+│     ▼        ▼         ▼         ▼         ▼         ▼                          │
+│  [verify]  [GD&T]   [vendor]  [FAT]     [DfX     [workshop                     │
+│   freeze    drawings  cost     trace-    final +   master                       │
+│   reqs      ISO128    long-    ability   routing]  review]                      │
+│                       lead                                                       │
+└──────────────────────────────────────────────────────────────────────────────────┘
 
-□ Requirements_Delta_Log.md exists? [YES / NO]
-  If YES: All deltas CEO-approved? [YES / NO — list pending]
-□ Requirements_List version: v{{X}} (should be ≥ v1.1 if deltas exist)
-□ No [TBD] values remaining in D-requirements? [PASS / FAIL — list TBDs]
-□ All [P4]-tagged requirements have values now? [PASS / FAIL]
+Legend: CORE = CEO non-delegable | CEO = checkpoint after block
 
-STATUS: [REQUIREMENTS FROZEN / PENDING — {{N}} items to resolve]
+Data Bus: 1_Projects/{{project}}/Phase4-Detail/{{variant}}/
+State:    {{output_path}}/_pipeline_state.md
+Next:     /helix-quality-gate ... --gate 4  +  /forge-fabrication ...
 ```
 
-If PENDING → CEO must resolve before detail design proceeds.
+## Sub-Skills (6 Block-Skills)
 
-> **P&B Reference + VDI 2221:2019 Blatt 1**
+| Block | Skill | P&B § | Purpose | CEO Gate |
+|----|----|----|----|----|
+| **B0** | `/helix-p4-preflight` | 9.1 | Verify P3 + Gate 3, **requirements freeze (VDI 2221:2019)**, identify detail-determining components, P03/P04 readiness, ACH detection | Approve freeze + detail-determining list |
+| **BA** | `/helix-p4-drawing` | 9.2-9.3 | **CEO specifies critical GD&T/surface/weld/connector/PCB (CORE)**, AI completes 3D + 2D drawings per ISO 128/TCVN, Gerber prep, drawing index | **CORE — critical spec table** |
+| **BB** | `/helix-p4-bom` | 9.4 | Final BOM (mech/elec/fasteners/COTS), **Vietnam vendor selection ≥60% local**, long-lead order-by, cost rollup vs P3, single-source flags, MIL/TCVN trace | **CORE — vendor selection critical/SS** |
+| **BC** | `/helix-p4-inspection` | 9.5 | Incoming + in-process + FAT plans, Req-ID ↔ Test-ID matrix, serialization, P03 + P04 gates, 5-yr retention | Approve FAT criteria + serial scheme |
+| **BD** | `/helix-p4-assembly` | 9.6 | Final DfX verification, tools/consumables, step-by-step sequence with critical sign-off, time/unit, **routing alignment with erp-master** | Approve critical sign-off + time |
+| **BE** | `/helix-p4-handoff` | 9.7 | **Workshop master review "gia cong duoc?" (CORE)**, ACH Operational Lifecycle (if applicable), customer Tech Spec, compile package, **handoff to forge-fabrication F0** | **CORE — workshop verdict** |
 
-### Step 2: Human Specifies Critical Dimensions (Core)
+## How to Use
 
-User provides:
-- GD&T on critical dimensions (datum surfaces, tolerances)
-- Surface finish requirements on functional surfaces
-- Weld specifications (type, size, inspection level)
-- Cable/connector pinout definitions
-- PCB final layout approval
-
-AI cannot determine which dimensions are critical — this requires manufacturing experience.
-
-### Step 3: AI Completes CAD Package
-
-From human specs, AI generates:
-- 3D model completion (manufacturing features: fillets, chamfers, draft angles)
-- 2D manufacturing drawings (per ISO 128 / TCVN drawing standards)
-- Exploded views for assembly reference
-- PCB Gerber files preparation checklist
-
-### Step 4: Final DfX Verification
-
-Re-run DfX checks on final geometry:
-
+### Full Pipeline (default)
 ```
-FINAL DfX VERIFICATION — {{project_id}}
-Date: {{today}}
-CAD revision: [rev]
+/helix-detail-finalize VN-XUONG-UUV
+```
+Runs B0 → BE sequentially. Pauses after each block for CEO inspection.
 
-| Category | Items Checked | PASS | WARN | FAIL |
-|----------|-------------|------|------|------|
-| DfM | [n] | [n] | [n] | [n] |
-| DfA | [n] | [n] | [n] | [n] |
-| DfR | [n] | [n] | [n] | [n] |
-| DfT | [n] | [n] | [n] | [n] |
-| DfU | [n] | [n] | [n] | [n] |
+### With variant
+```
+/helix-detail-finalize VN-MGM V5-MOTORIZED
+```
+Output → `Phase4-Detail/V5-MOTORIZED/` + file prefix `VN_MGM_V5_`.
 
-GATE: [PASS — proceed / FAIL — iterate]
-Any remaining WARN items: [list with accepted risk rationale]
+### Resume from block
+```
+/helix-detail-finalize VN-XUONG-UUV --from BC
 ```
 
-### Step 5: Compile Final BOM
-
+### Single block (re-run after adjustment)
 ```
-FINAL BOM — {{project_id}}
-Date: {{today}}
-Revision: v1.0 (production)
-
-MECHANICAL:
-| Item | Part No. | Description | Material | Qty | Dims (mm) | Process | Vendor | Cost (VND) | Lead (d) |
-|------|----------|-------------|----------|-----|-----------|---------|--------|-----------|----------|
-| M-01 | [PN] | [desc] | [mat] | [n] | [LxWxH] | [CNC/weld/bend] | [VN vendor] | [cost] | [days] |
-| M-02 | ... | ... | ... | ... | ... | ... | ... | ... | ... |
-
-ELECTRICAL:
-| Item | Part No. | Description | Package | Qty | Vendor | Cost (VND) | Lead (d) |
-|------|----------|-------------|---------|-----|--------|-----------|----------|
-| E-01 | [PN] | [desc] | [pkg] | [n] | [vendor] | [cost] | [days] |
-| E-02 | ... | ... | ... | ... | ... | ... | ... |
-
-FASTENERS & HARDWARE:
-| Item | Spec | Qty | Cost (VND) |
-|------|------|-----|-----------|
-| F-01 | M5x16 SS304 | [n] | [cost] |
-| ... | ... | ... | ... |
-
-PURCHASED ITEMS (COTS):
-| Item | Description | Supplier | Qty | Cost (VND) | Lead (d) |
-|------|-------------|----------|-----|-----------|----------|
-| P-01 | [desc] | [supplier] | [n] | [cost] | [days] |
-| ... | ... | ... | ... | ... | ... |
-
-COST SUMMARY:
-| Category | Cost (VND) | % Total |
-|----------|-----------|---------|
-| Mechanical | [sum] | [%] |
-| Electrical | [sum] | [%] |
-| Fasteners | [sum] | [%] |
-| COTS | [sum] | [%] |
-| Assembly labor (est.) | [sum] | [%] |
-| TOTAL | [sum] | 100% |
-
-LONG-LEAD PROCUREMENT (order immediately):
-| Item | Lead Time | Order By | Status |
-|------|-----------|---------|--------|
-| [item] | [days] | [date] | [ordered/pending] |
+/helix-p4-bom VN-XUONG-UUV
 ```
 
-### Step 6: Generate Inspection Checklist
-
+### Skip customer tech spec
 ```
-INSPECTION CHECKLIST — {{project_id}}
-Date: {{today}}
-
-INCOMING MATERIAL INSPECTION:
-| Check | Method | Accept Criteria | Freq |
-|-------|--------|----------------|------|
-| Material cert (Al 5083) | Certificate review | Match spec | 100% |
-| Dimensional check (CNC parts) | Caliper/CMM | Per drawing +/- | 100% |
-| PCB visual | Microscope | IPC-A-610 Class 2 | 100% |
-| Connector continuity | Multimeter | < 0.5 ohm | 100% |
-
-IN-PROCESS INSPECTION:
-| Stage | Check | Method | Accept | Record |
-|-------|-------|--------|--------|--------|
-| After welding | Weld visual + dims | Visual + caliper | AWS D1.2 | Photo |
-| After assembly | Torque check | Torque wrench | Per spec | Checklist |
-| After wiring | Continuity + isolation | Multimeter | Per ICD | Test report |
-| After firmware | Functional test | Test procedure | Per req | Log |
-
-FINAL ACCEPTANCE TEST (FAT):
-| Test | Requirement | Method | Duration | Accept |
-|------|------------|--------|----------|--------|
-| [test 1] | R-xxx | [method] | [time] | [criteria] |
-| [test 2] | R-xxx | [method] | [time] | [criteria] |
-| ... | ... | ... | ... | ... |
-
-TRACEABILITY:
-  Each unit gets serial number: {{project_id}}-[YYYY]-[NNN]
-  Test records retained for: [5 years minimum for defense]
+/helix-detail-finalize VN-XUONG-UUV --no-tech-spec
 ```
 
-### Step 6b: P03 Document Quality Gate + P04 TCVN Compliance (from S1 Prompt Library)
-
-Before compiling final package, verify all documents meet P03 and P04 standards:
-
+### Force ACH lifecycle (override B0 detection)
 ```
-P03 ENGINEERING DOCUMENT QUALITY — {{project_id}}
-
-□ Quantification rate: ≥80% of specs have measurable acceptance criteria?
-□ Parameter citation: 100% of technical parameters traceable to source?
-□ Safety tagging: All life-safety requirements tagged [SAFETY-CRITICAL]?
-□ No forbidden vague terms: "adequate", "sufficient", "good", "robust" → replaced with numbers?
-□ YAML frontmatter: project, phase, type, version, created, status — all present?
-□ [UNKNOWN] marked: Any unverified value flagged [UNKNOWN: requires verification from {{source}}]?
-
-P03 SCORE: __/6 checks passed
+/helix-detail-finalize BB-01 --ach
 ```
 
-```
-P04 TCVN COMPLIANCE — {{project_id}}
+## Orchestrator Workflow
 
-□ Primary standard identified and cited (TCVN_XXXX:YYYY)?
-□ Compliance matrix: section-by-section Compliant / Gap / Unknown?
-□ Top 3 procurement-blocking gaps explicitly highlighted?
-□ No fabricated TCVN clause numbers (use [TCVN-UNKNOWN] if uncertain)?
-□ Safety-critical sections with GAP/CONFLICT flagged as [SAFETY-GAP]?
-
-P04 SCORE: __/5 checks passed
-IF any P03 or P04 FAIL → revise documents before Phase 4 compilation
-```
-
-### Step 7: Assembly Instructions Outline
+### Step 1: Parse Arguments
 
 ```
-ASSEMBLY INSTRUCTIONS — {{project_id}}
-Date: {{today}}
-
-REQUIRED TOOLS:
-  [list specific tools: torque wrench ranges, crimping tools, etc.]
-
-REQUIRED CONSUMABLES:
-  [thread locker, thermal paste, conformal coat, etc.]
-
-ASSEMBLY SEQUENCE:
-| Step | Action | Parts Used | Torque/Spec | Photo Ref | Time (min) |
-|------|--------|-----------|-------------|-----------|-----------|
-| 1 | [action] | M-01, F-01 | [spec] | [ref] | [est] |
-| 2 | [action] | E-01, M-02 | [spec] | [ref] | [est] |
-| ... | ... | ... | ... | ... | ... |
-
-CRITICAL STEPS (require sign-off):
-  Step [N]: [description] — Inspector sign-off required
-  Step [N]: [description] — Functional test before proceeding
-
-ESTIMATED TOTAL ASSEMBLY TIME: [hours] per unit
+PROJECT: {{first arg}}
+VARIANT: {{second arg or empty}}
+FLAGS:
+  --from X        → Resume from B0/BA/BB/BC/BD/BE
+  --only X        → Run single block
+  --variant N     → Variant subfolder + file prefix
+  --no-tech-spec  → BE skips customer-facing Tech Spec
+  --ach           → Force ACH lifecycle in BE (override B0)
 ```
 
-### Step 8: Workshop Master Review (Core)
-
-Present manufacturing package to workshop master (or user acting as workshop master):
+### Step 1.5: Resolve Output Path + Variant Convention
 
 ```
-WORKSHOP REVIEW — {{project_id}}
-Date: {{today}}
-Reviewer: [name]
-
-MANUFACTURING FEASIBILITY:
-| Item | Workshop Can Make? | Notes |
-|------|-------------------|-------|
-| [part 1] | [YES/OUTSOURCE/MODIFY] | |
-| [part 2] | [YES/OUTSOURCE/MODIFY] | |
-| ... | ... | ... |
-
-WORKSHOP VERDICT: "gia cong duoc" / "can sua" / "khong lam duoc"
-  [YES — proceed to fabrication]
-  [MODIFY — list changes needed, iterate]
-  [NO — fundamental redesign needed, return to Phase 3]
-
-SIGN-OFF: _________________ Date: _________
+If variant given:
+  output_path = 1_Projects/{{project}}/Phase4-Detail/{{variant}}/
+  prefix      = {{PROJECT}}_{{VARIANT_SHORT}}_
+Else:
+  output_path = 1_Projects/{{project}}/Phase4-Detail/
+  prefix      = {{PROJECT}}_
 ```
 
-### Step 9: Operational Update Lifecycle Document (ACH products only)
+Matches P1-P3 variant convention exactly.
 
-For products flagged as ACH in FORGE portfolio, generate:
+### Step 1.6: Input Validation
+
+**MANDATORY before any block.** Verify Phase 3 outputs exist:
 
 ```
-OPERATIONAL UPDATE LIFECYCLE — {{project_id}}
-Date: {{today}}
-ACH Status: [YES — from forge-shift]
+═══ INPUT VALIDATION — {{project}} {{variant}} — Phase 4 ═══
 
-1. MODEL UPDATE PROCEDURE:
-   a. Trigger: [scheduled quarterly / performance regression detected / new training data available]
-   b. Retraining pipeline: [data source → labeling → training → validation → staging → deploy]
-   c. Validation criteria: [minimum accuracy on test set, no regression on edge cases]
-   d. Deployment method: [OTA / USB field update / depot-level update]
-   e. Rollback trigger: [performance below threshold for N consecutive samples]
-   f. Rollback procedure: [automatic / manual — steps to revert to previous model]
+REQUIRED (Phase 3 — helix-embody-realize):
+  □ {{prefix}}BA_Layout.md
+  □ {{prefix}}BB_DfX_Review.md
+  □ {{prefix}}BC_Integration.md (ICD v3 frozen)
+  □ {{prefix}}BD_BOM_Draft.md
+  □ {{prefix}}BE_Phase3_Compile.md
+  □ Gate 3 PASSED
 
-2. FIELD DATA COLLECTION:
-   a. What data is collected: [sensor readings, inference results, ground truth when available]
-   b. Storage: [onboard buffer size, offload method, offload frequency]
-   c. Privacy/security: [data classification, encryption, handling procedures]
+REQUIRED (Phase 1):
+  □ {{prefix}}Requirements_List_v*.md (frozen)
+  □ {{prefix}}Requirements_Delta_Log.md (if exists)
 
-3. MONITORING:
-   a. Health telemetry: [CPU temp, inference time, error rate, uptime]
-   b. Performance drift detection: [moving average of key metrics, alert threshold]
-   c. Alerting: [who gets notified, how, escalation path]
+RECOMMENDED:
+  □ FORGE/ACH_Assessment_v*.md (for BE ACH lifecycle)
+  □ FORGE/Cost_Envelope_v*.md (for BB variance check)
 
-4. VERSION TRACKING:
-   a. Model version format: [project-vMAJOR.MINOR.PATCH]
-   b. Registry: [where deployed model versions are tracked per unit serial number]
-   c. Compatibility matrix: [which model versions work with which firmware/hardware versions]
-
-5. DEPENDENCY MANAGEMENT:
-   a. AI framework: [version, update policy]
-   b. OS: [version, security patch policy]
-   c. Hardware drivers: [version, compatibility notes]
+CEO:
+(1) ▶️ Proceed with current inputs
+(2) 🔄 Run prerequisite: /helix-embody-realize / /helix-quality-gate --gate 3
+(3) 📝 Manual input
+═══════════════════════════════════════════════════
 ```
 
-### Step 10: Compile Phase 4 Deliverables
+### Step 2: Initialize Pipeline State
 
-Save to `1_Projects/{{project}}/Phase4-Detail/`:
-- `Manufacturing_Drawings/` — drawing files (DXF/PDF per ISO 128/TCVN)
-- `BOM_Final.md` — hierarchical BOM (assembly → subassembly → part):
-  - Per item: Part Number | Description | Qty | Material/Spec | Make/Buy | Local% | Unit Cost (VND) | Source | MIL-STD req
-  - Local content target: ≥60% by value for Vietnamese defense programs
-  - Flag single-source items and long-lead items (>4 weeks)
-- `Manufacturing_Plan.md` — process sequence per custom part, tooling/fixture requirements, quality inspection points, estimated time per unit
-- `Inspection_Checklist.md`
-- `Assembly_Instructions.md`
-- `Test_Procedures.md` — unit-level + integration + system acceptance tests, mapped to requirements
-- `Workshop_Review.md`
-- `DfX_Final_Verification.md`
-- `Documentation_Package.md` — drawing list, wiring diagrams, SW version, user manual outline, maintenance manual outline
-- `Operational_Update_Lifecycle.md` — ACH products only (from Step 9)
+`{{output_path}}/_pipeline_state.md`:
 
-Update `Status.md` → Phase 4 complete, ready for Gate 4 review and fabrication.
+```markdown
+---
+project: {{project}}
+variant: {{variant or "default"}}
+pipeline: helix-detail-finalize v2.0
+started: {{today}}
+updated: {{today}}
+ach_lifecycle: [TBD — set by B0]
+---
+
+# Phase 4 Pipeline State — {{project}} {{variant}}
+
+## Block Progress
+| Block | Skill | Status | Started | Completed | CEO Approved |
+|----|----|----|----|----|----|
+| B0 | helix-p4-preflight | PENDING | - | - | - |
+| BA | helix-p4-drawing | PENDING | - | - | - |
+| BB | helix-p4-bom | PENDING | - | - | - |
+| BC | helix-p4-inspection | PENDING | - | - | - |
+| BD | helix-p4-assembly | PENDING | - | - | - |
+| BE | helix-p4-handoff | PENDING | - | - | - |
+
+## Block Ledger
+> SOLE communication channel between blocks.
+
+[populated by each block]
+
+## CEO Decisions
+[populated at each checkpoint]
+
+## Requirements Delta Log (Phase 4)
+> If any block discovers a need to change Phase 1/2/3 reqs → STOP, escalate as architectural concern. Phase 4 = freeze.
+```
+
+### Step 3: Execute Blocks Sequentially — ONE AT A TIME
+
+**⛔ #1 RULE: Execute EXACTLY ONE block per turn. STOP and WAIT for CEO response after each.**
+
+#### Ledger Read Protocol (BEFORE each block)
+Read `_pipeline_state.md` → Block Ledger. Reconstruct context. Critical for `--from` resume.
+
+#### Ledger Write Protocol (AFTER each block)
+Append:
+```
+### {{Block ID}} — {{block name}} ({{date}})
+**Key outputs:** [2-3 bullets — files + counts]
+**Decisions for downstream:** [what next block needs]
+**Open questions:** [unresolved]
+**CEO checkpoint result:** [approve / revise / pause + words]
+```
+
+#### Per-Block Execution
+
+For each block (respecting --from / --only):
+
+1. **Ledger Read** — context reconstruct
+2. **Announce:** "Đang chạy Block {{X}}: {{name}}..."
+3. **Pre-conditions check** — verify predecessor files exist
+4. **Execute block** — invoke `/helix-p4-{{name}}` (orchestrator never does block work itself)
+5. **Post-conditions check** — verify expected outputs created
+6. **Ledger Write** — append summary
+7. **Update state** — mark COMPLETE
+8. **STOP — CEO Checkpoint (BLOCKING):**
+   ```
+   ═══ BLOCK {{X}} COMPLETE ═══
+   Deliverables: [files]
+   Key findings: [bullets]
+   
+   CEO:
+   (1) ✅ Approve → tiếp tục Block {{next}}
+   (2) 🔄 Chạy lại Block {{X}} với điều chỉnh
+   (3) ⏸️ Dừng pipeline
+   (4) ⏭️ Skip Block {{next}}
+   ```
+9. **⛔ WAIT for CEO message.**
+
+### Step 4: Pipeline Completion
+
+```
+═══════════════════════════════════════════════════
+PHASE 4 PIPELINE COMPLETE — {{project}} {{variant}}
+═══════════════════════════════════════════════════
+Manufacturing package: {{N}} files in Phase4-Detail/{{variant}}/
+Workshop verdict: GIA CONG DUOC
+Local content: {{%}} (target ≥60%)
+Unit cost: {{VND}} (variance vs P3: ±{{%}})
+FAT coverage: {{N}}/{{N}} D-requirements
+Critical sign-off steps: {{N}}
+ACH lifecycle: [READY / N/A]
+
+Next:
+  - /helix-quality-gate {{project}} --gate 4   (formal gate review)
+  - /forge-fabrication --product {{project}} --qty N --helix-handoff {{path}}
+═══════════════════════════════════════════════════
+```
+
+## Data Bus — Shared File Contract
+
+All files in `{{output_path}}/` with `{{prefix}}` prefix:
+
+| File Pattern | Written By | Read By | Content |
+|----|----|----|----|
+| `_pipeline_state.md` | Orchestrator | All blocks | Progress, ledger, CEO decisions |
+| `B0_Preflight_Report.md` | B0 | BA, BE | P3 verification + reqs freeze + detail-determining + ACH flag |
+| `Manufacturing_Drawings/` (dir) | BA | BB, BC, BD | DXF + PDF per part |
+| `Schematics/`, `Gerber/` (dirs) | BA | BD, fabrication | PCB production files |
+| `BA_Drawing_Index.md` | BA | BB | Drawing list + revisions |
+| `BOM_Final.md` + `BOM_Final.csv` | BB | BC, BD, BE, **forge-fabrication F0** | Hierarchical BOM + vendor + cost |
+| `Inspection_Checklist.md` | BC | BD, BE, **forge-fabrication F3/F4** | Incoming + in-process + FAT |
+| `Test_Procedures.md` | BC | BE | FAT procedure book |
+| `Req_Test_Traceability.md` | BC | BE, Gate 4 | Req-ID ↔ Test-ID matrix |
+| `Serialization_Scheme.md` | BC | BE, fabrication | Serial format + retention |
+| `Calibration_Register.md` | BC | BE | Equipment cal references |
+| `Assembly_Instructions.md` | BD | BE, **forge-fabrication F3** | Step sequence + critical sign-off |
+| `DfX_Final_Verification.md` | BD | BE | Final DfX result |
+| `Tools_Consumables.md` | BD | BE | Required for production |
+| `First_Article_Plan.md` | BD | BE, fabrication | FA build plan |
+| `Workshop_Review.md` | BE | Gate 4 | Workshop verdict |
+| `Operational_Update_Lifecycle.md` | BE (ACH only) | bridge-deploy-gate | ACH lifecycle |
+| `Tech_Spec_v1.0.md` | BE | customer | TCVN-format spec |
+| `Handoff_to_Fabrication.md` | BE | **forge-fabrication F0** | Production readiness summary |
+
+Update `_routing.md` (planned hours from BD) — feeds `erp-master` Operations.
 
 ## Integration
 
 ```
+helix-detail-finalize (ORCHESTRATOR) COMMANDS:
+  → /helix-p4-preflight    (B0)
+  → /helix-p4-drawing      (BA)
+  → /helix-p4-bom          (BB)
+  → /helix-p4-inspection   (BC)
+  → /helix-p4-assembly     (BD)
+  → /helix-p4-handoff      (BE)
+
 helix-detail-finalize READS FROM:
-  - helix-embody-realize → frozen layout, ICD v3, draft BOM
-  - helix-task-clarify → requirements for traceability + test methods
-  - forge-cost → budget validation against final BOM
-  - forge-library → standard component specs for drawings
+  - helix-embody-realize → P3 deliverables (layout, DfX, ICD v3, BOM draft)
+  - helix-task-clarify → frozen requirements + test methods
+  - forge-cost → cost envelope (variance check)
+  - forge-shift → ACH assessment (BE lifecycle decision)
+  - forge-library → standard component specs
 
 helix-detail-finalize WRITES TO:
-  - bridge-deploy-gate → manufacturing package for Gate 4 review
+  - 1_Projects/{{project}}/Phase4-Detail/{{variant}}/ → all deliverables
+  - 1_Projects/{{project}}/_routing.md → planned hours (BD output)
+  - helix-quality-gate → Gate 4 readiness
+  - **forge-fabrication → F0 handoff package (closes R&D → production loop)**
+  - bridge-deploy-gate → manufacturing package signed off
   - bridge-risk-radar → manufacturing risks identified
   - forge-library → new component drawings cataloged
-  - bridge-dashboard → project status update (Phase 4 complete)
+
+helix-detail-finalize FOLLOW-UP (CEO-triggered):
+  - /helix-quality-gate {{project}} --gate 4 → formal Gate 4 review
+  - /forge-fabrication --product {{project}} ... → production run
+  - /bridge-deploy-gate → deployment readiness check
+  - /helix-design-journal → log final decisions
+
+SHARED REFERENCES (in helix-detail-finalize/references/):
+  - pb-detail-design.md → P&B Ch9 complete methodology
+  - prompt-templates.md → S1 prompt templates for Phase 4
 ```
 
-### Step 10b: Customer-Facing Technical Specification (from Pattern Library B1)
+## Why This Mega-Skill Exists (Symmetry + Loop Closure)
 
-For products approaching deployment, generate a customer-facing tech spec separate from internal manufacturing package:
+Before: `helix-detail-finalize` was a **single skill** while P1/P2/P3 each had 6-block pipelines. This asymmetry meant the most expensive phase (detail design — entering production) had the **least granular CEO control**.
+
+After: P4 mirrors P1-P3. Each block has independent checkpoint, can be re-run, can be inspected. Critical CORE decisions (GD&T, vendor selection, workshop review) are isolated into their own blocks instead of buried in step list.
+
+**The bigger closure:** `BE → Handoff_to_Fabrication.md → forge-fabrication F0`. Previously there was a black hole between "design freeze" and "part on shop floor". Now it's a documented bridge that auto-generates the production trigger.
 
 ```
-TECHNICAL SPECIFICATION — {{product_id}}
-Version: v1.0 DRAFT
-Date: {{today}}
-Audience: Vietnamese military procurement officers + technical evaluators
-Standard: TCVN format where applicable
-
-STRUCTURE:
-1. OVERVIEW (1 page max)
-   - Product description, operational concept, key differentiators
-   - Photo/render of product in operational context
-
-2. TECHNICAL SPECIFICATIONS (tables)
-   - Performance specs with test methods (from requirements list)
-   - Environmental specs: MIL-STD-810H Method 501-507 (tropical)
-   - EMC specs: MIL-STD-461G (if applicable)
-   - Power specs: voltage, consumption, battery life
-
-3. INTERFACE SPECIFICATIONS
-   - Physical: dimensions, weight, mounting (from ICD v3)
-   - Electrical: connectors, pinout (from ICD v3)
-   - Data: protocols, formats, update methods
-
-4. ENVIRONMENTAL SPECIFICATIONS
-   - Operating temperature: {{range}} (Vietnam tropical)
-   - Storage temperature: {{range}}
-   - Humidity: 40-100% RH (non-condensing)
-   - Salt fog: per MIL-STD-810H Method 509
-   - IP rating: {{IPxx}}
-
-5. COMPLIANCE MATRIX
-   | Standard | Clause | Compliant | Gap | Evidence |
-   |----------|--------|:---------:|:---:|----------|
-   | TCVN_XXXX | §X.Y | ✓/✗/TBD | | |
-   | MIL-STD-810H | Method 501 | ✓/✗/TBD | | |
-
-6. LOGISTICS
-   - Packaging, transport, storage requirements
-   - Maintenance schedule, MTBF, MTTR
-   - Spare parts list (from BOM critical items)
-   - Training requirements
+HELIX P1 → P2 → P3 → P4 (this) → forge-fabrication F0→F5 → field → forge-flywheel
 ```
 
-**CONSTRAINTS (from Pattern Library B1):**
-- Do NOT invent specifications — use only data from Phase 4 deliverables
-- Do NOT claim MIL-STD compliance without verification note
-- Do NOT include pricing or commercial information
-- Do NOT reference competitor products by name
-- Tone: factual, precise, professional — no marketing language
-- Every spec value must be traceable to a test method
-- Mark unverified values as [TBD — requires {{test_type}}]
-
-**Save to:** `1_Projects/{{project}}/Phase4-Detail/Tech_Spec_v1.0.md`
+Compounding asset, not one-shot transaction.
 
 ## Rules
 
-- AI NEVER determines which dimensions are critical — that requires workshop experience
-- Workshop master review ("gia cong duoc?") is MANDATORY before fabrication
-- Final BOM must include Vietnam-sourced vendors where possible
-- Inspection checklist must trace back to requirements (Req-ID linkage)
-- Serial number scheme must be defined before first unit
-- All test records retained minimum 5 years for defense products
-- Long-lead items must be flagged with order-by dates
-- Link to Galaxy: [[Phan doan khong the uy thac cho AI]] — manufacturing feasibility is judgment
-- Link to Galaxy: [[Musk Sequence]] — serial development, get one right before scaling
+- **⛔ ONE BLOCK PER TURN — STOP AND WAIT** — After each block, STOP. NEVER chain. #1 rule.
+- **B0 requirements freeze is mandatory** — VDI 2221:2019 Blatt 1. PENDING reqs block pipeline.
+- **BA critical specs are CEO Core** — GD&T, surface, weld NDT, connector pinout, PCB approval. AI cannot determine.
+- **BB vendor selection for critical/single-source = CORE** — relationship + supply chain commitment.
+- **BC P03 + P04 gates must PASS before BE** — fail = revise docs.
+- **BD DfX FAIL = loop back to BA** — never proceed with failed DfX.
+- **BE workshop verdict is CORE — non-delegable** — "gia cong duoc?" must be physically judged.
+- **Phase 4 requirements ARE FROZEN** — any block discovering a needed req change → STOP, escalate as architectural concern, not a routine delta.
+- **Handoff_to_Fabrication.md is the production trigger** — generated by BE, consumed by forge-fabrication F0.
+- **`_routing.md` planned hours come from BD** — forge-fabrication F3 will update actuals back. This is the compounding asset.
+- **Each block-skill is independently runnable** — CEO can `/helix-p4-bom` alone after BB adjustment.
+- **Orchestrator NEVER does block work** — always delegates.
+- **Data Bus contract is sacred** — exact filenames + prefix convention.
+- **If CEO says "chạy hết" or "skip checkpoints"** — STILL stop after each block, minimal checkpoint (1-line + "tiếp tục?").
 
 ## COD Classification
 
-- CAD completion from specs: Offload (O1) — AI executes defined geometry
-- Drawing generation: Offload (O1) — automated from 3D model
-- BOM compilation: Offload (O1) — AI extracts from design
-- Inspection checklist generation: Offload (O2) — AI drafts from requirements
-- Assembly instructions outline: Offload (O2) — AI drafts sequence
-- GD&T on critical dimensions: **Core (C)** — manufacturing experience required
-- Workshop master review: **Core (C)** — physical feasibility judgment
-- Final sign-off for fabrication: **Core (C)** — CEO accountable
-- Vendor selection for critical parts: **Core (C)** — relationship and trust based
+- Pipeline orchestration: Offload (O1)
+- Block execution: Offload (O2) — each block has own COD
+- B0 reqs freeze decision: **Core (C)** — accountability for "no more changes"
+- BA critical specs: **Core (C)** — manufacturing experience
+- BB vendor selection (critical/SS): **Core (C)** — supply chain trust
+- BC FAT acceptance thresholds: **Core (C)** — quality bar
+- BD critical sign-off step selection: **Core (C)** — safety judgment
+- BE workshop master review: **Core (C)** — physical feasibility (non-delegable)
+- BE Tech Spec accuracy sign-off: **Core (C)** — customer-facing claims
+- Phase 4 completion sign-off: **Core (C)** — CEO accountable

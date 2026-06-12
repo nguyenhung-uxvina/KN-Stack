@@ -1,4 +1,5 @@
 ---
+name: erp-bom
 description: "ERPNext BOM (Bill of Materials) management — create, compare, version control. Encodes BOM Immutability Law. Triggers on: 'erp bom', 'bom erp', 'tạo bom', 'create bom', 'bom version', 'bom compare', 'amendment'."
 allowed-tools: ["Read", "Write", "Edit", "Bash", "Grep", "Glob", "Agent"]
 ---

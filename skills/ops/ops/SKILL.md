@@ -1,4 +1,5 @@
 ---
+name: ops
 description: "WX-OPS — Workshop X AI-First Operations System. Manage production, inventory, finance, HR, CRM, and QC with AI intelligence layer (capacity planning, material forecasting, delay prediction, reorder alerts, NCR pattern detection). XLSX workbook (ERPNext-compatible). Triggers on: 'ops', 'production', 'sản xuất', 'work order', 'lệnh sản xuất', 'inventory', 'tồn kho', 'kho', 'stock', 'finance', 'tài chính', 'invoice', 'hóa đơn', 'cashflow', 'dòng tiền', 'HR', 'nhân sự', 'employee', 'CRM', 'khách hàng', 'customer', 'deal', 'pipeline', 'briefing', 'capacity', 'overload', 'thiếu vật tư', 'delay', 'QC', 'quality', 'chất lượng', 'NCR', 'inspection', 'kiểm tra'."
 allowed-tools: ["Read", "Write", "Edit", "Glob", "Grep", "Bash", "Agent"]
 ---

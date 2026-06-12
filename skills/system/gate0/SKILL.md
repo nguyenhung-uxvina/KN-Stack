@@ -1,3 +1,7 @@
+---
+name: gate0
+description: Conducts the formal Phase 0 Gate Review scoring Strategic Fit, Customer Insight, Scope Clarity, Feasibility, and Risk Awareness (weighted, target ≥3.0/4.0) before authorizing Phase 1. This is a NEVER-AUTOMATE decision — scores are presented and the CEO must explicitly approve. Triggers on: "gate 0", "gate review", "phase 0 gate", "G0", "xét duyệt cổng 0", "cổng giai đoạn 0", "phê duyệt dự án".
+---
 Conduct the formal Phase 0 Gate Review before proceeding to Phase 1 Task Clarification.
 
 Usage: /gate0 [project_name] OR provide details interactively.

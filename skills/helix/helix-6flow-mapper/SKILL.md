@@ -154,6 +154,16 @@ helix-6flow-mapper WRITES TO:
 - Domain assignment drives team allocation and ICD structure
 - Reference: [[Phán đoán không thể uỷ thác cho AI]] — Trust flow embodies this principle
 
+## Triple Helix Validation Check (after drafting)
+
+Before handoff to Phase 2, verify completeness:
+- [ ] Every D-flow sub-function has a controlling C-flow?
+- [ ] Every S-flow has a defined signal path (sensor → processor → actuator)?
+- [ ] Energy budget accounts for all E-flow consumers?
+- [ ] Material flows include maintenance/consumables?
+
+Any unchecked item = incomplete function structure, return to drafting.
+
 ## COD Classification
 
 - Initial 6-flow draft from requirements: Offload (O2) — AI generates, human reviews

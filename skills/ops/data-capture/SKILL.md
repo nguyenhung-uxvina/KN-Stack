@@ -1,3 +1,15 @@
+---
+name: data-capture
+description: >-
+  Design a minimal data capture pipeline for a deployed Workshop X product to
+  stop exercise data from evaporating. Audits current data generation, storage,
+  and extraction gaps across 3 levels (stop evaporation → enable reporting →
+  enable analytics), then writes a spec and estimates the revenue unlock from
+  adding analytics. Triggers on: "data-capture", "data pipeline", "dữ liệu
+  bốc hơi", "stop data loss", "data evaporating", "capture exercise data",
+  "analytics subscription", "data spec".
+---
+
 Design minimal data capture pipeline per product. Stop data from evaporating.
 
 Usage: /data-capture [product-name]

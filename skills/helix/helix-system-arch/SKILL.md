@@ -428,6 +428,23 @@ If NO system architecture:
 
 ---
 
+## Cross-Domain Risk Map (extends SA3 / SA5)
+
+For each domain pair, classify interface readiness:
+
+|              | Mech     | Elec     | SW/AI    | External |
+|--------------|----------|----------|----------|----------|
+| **Mech**     | —        | G/Y/R    | G/Y/R    | G/Y/R    |
+| **Elec**     |          | —        | G/Y/R    | G/Y/R    |
+| **SW/AI**    |          |          | —        | G/Y/R    |
+| **External** |          |          |          | —        |
+
+- **G** = All interfaces defined, no TBDs
+- **Y** = Interfaces defined, minor TBDs remain
+- **R** = TBDs or conflicts blocking integration
+
+Any **R** = blocks Gate 2/3. Hand off debt items to `/helix-integration-debt` for tracking + resolution scheduling.
+
 ## Anti-Patterns (What NOT to Do)
 
 1. **Don't buy SysML tools.** Block diagrams in markdown/draw.io are sufficient for WX scale. See [[MBSE-CAx Gap — SysML Không Mô Tả Được Hình Học Giải Pháp Cơ Khí]]

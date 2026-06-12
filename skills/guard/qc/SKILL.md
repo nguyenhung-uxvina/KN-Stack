@@ -1,3 +1,16 @@
+---
+name: qc
+description: >-
+  Run the Defense AI QC Gate — 10-check validation framework for any
+  AI-generated defense output covering physics plausibility, HITL safety,
+  TCVN/regulatory compliance, ROE context boundary, environmental qualification,
+  AI confidence calibration, fallback protocol, detection dual-error rate,
+  power/logistics budget, and local content. Gate result is PROCEED / HUMAN
+  REVIEW REQUIRED / BLOCKED. Check 02 (HITL) fail = immediate halt. Triggers
+  on: "qc", "QC gate", "defense AI check", "kiểm tra AI", "validate output",
+  "safety check", "HITL", "AI gate defense".
+---
+
 Run the Defense AI QC Gate on any AI-generated output before acting on it.
 
 Usage: /qc [product_name] -- then paste or describe the AI output to review.

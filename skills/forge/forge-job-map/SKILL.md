@@ -334,6 +334,10 @@ Weights feed into `/helix-concept-generate` Step 3.5 ODI import.
 - Re-run annually or when major market shift (new competitor, new requirement, new customer segment)
 - Link to Galaxy: [[Solution Bias Removal — Performance Budget Thay Vendor Name]] — outcomes are solution-neutral by design
 - Link to Galaxy: [[Phán đoán không thể uỷ thác cho AI]] — job definition requires human judgment
+- **Investment Type column** in opportunity table: tag each opportunity `S` (Structural — hardware/architecture) or `SW` (Software — algorithm/UX) to guide resource allocation
+- **HITL Safety Rule:** HITL-mandatory / safety-critical outcomes never classified OVERSERVED unless satisfaction ≥9 — never reduce safety requirements based on opportunity score
+- **Evidence tagging on outcomes:** `[FIELD-VALIDATED]` > `[EXPERT-ESTIMATE]` > `[ASSUMPTION]` — explicitly flag assumptions, prioritize field-validated outcomes in strategy decisions
+- **VN procurement context (when segmenting):** include procurement authority + operational role analysis, not just geography — defense buyers cluster by MoD procurement authority, not region
 
 ## COD Classification
 

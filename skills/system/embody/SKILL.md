@@ -1,3 +1,7 @@
+---
+name: embody
+description: Runs Pahl-Beitz Phase 3 Embodiment Design, producing a System Architecture block diagram, Interface Control Document (ICD), spatial layout, preliminary BOM, DfX review (DfM/DfA/DfT/DfMaint), and power/thermal budget. Use after Phase 2 concept selection Gate is passed. Triggers on: "phase 3", "embodiment design", "system architecture", "ICD", "thiết kế hiện thân", "kiến trúc hệ thống", "giai đoạn 3".
+---
 Run Phase 3 Embodiment Design for a project following Pahl-Beitz systematic design.
 
 Usage: /embody [project_name] OR provide details interactively.

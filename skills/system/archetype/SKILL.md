@@ -1,3 +1,7 @@
+---
+name: archetype
+description: Detects which of the 8 classic system archetypes (Shifting the Burden, Limits to Growth, Tragedy of the Commons, etc.) is operating in a problem or organizational pattern. Use when a problem recurs despite fixes, or when short-term solutions seem to make things worse long-term. Triggers on: "system archetype", "why does this keep happening", "shifting the burden", "limits to growth", "tại sao vấn đề tái diễn", "nguyên mẫu hệ thống".
+---
 Detect system archetypes in a problem, project, or organizational pattern.
 
 Usage: /archetype [system_description] OR provide details interactively.

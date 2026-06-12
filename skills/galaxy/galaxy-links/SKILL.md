@@ -1,3 +1,8 @@
+---
+name: galaxy-links
+description: Batch scan and per-note wikilink suggestions for IPARAG Galaxy permanent notes. Automates the THINH "Ich" (Connect) step by finding missing wikilinks between existing Galaxy notes using cluster-guided reasoning. Use to strengthen the Zettelkasten link density or find connections for a specific note. Triggers on: "galaxy links", "scan galaxy", "suggest links", "find connections", "wikilink scan", "tim ket noi galaxy", "ket noi ghi chu", "tìm liên kết", "quét galaxy".
+---
+
 Batch scan and per-note link suggestions for IPARAG Galaxy permanent notes. Automates the THỊNH "Ích" (Connect) step — finds missing wikilinks between existing Galaxy notes using cluster-guided reasoning.
 
 Usage: /galaxy-links [mode] where mode = scan | suggest "<note-title>"

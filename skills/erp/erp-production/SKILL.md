@@ -1,4 +1,5 @@
 ---
+name: erp-production
 description: "ERPNext Production management — Work Order, Job Card, Stock Entry (Manufacture). Encodes ERP Dependency Chain for production flow. Triggers on: 'erp production', 'erp work order', 'erp wo', 'erp job card', 'lệnh sản xuất erp', 'tạo wo erp', 'job card'."
 allowed-tools: ["Read", "Write", "Edit", "Bash", "Grep", "Glob", "Agent"]
 ---

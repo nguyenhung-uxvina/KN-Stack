@@ -1,4 +1,5 @@
 ---
+name: erp-quality
 description: "ERPNext Quality management — Quality Inspection, NCR tracking, FPY analysis. Links QC gates to Work Orders for traceability. Triggers on: 'erp quality', 'erp qc', 'quality inspection', 'erp ncr', 'kiểm tra chất lượng erp', 'fpy erp', 'inspection erp'."
 allowed-tools: ["Read", "Write", "Edit", "Bash", "Grep", "Glob", "Agent"]
 ---

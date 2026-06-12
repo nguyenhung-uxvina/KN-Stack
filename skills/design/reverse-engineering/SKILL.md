@@ -1,3 +1,8 @@
+---
+name: reverse-engineering
+description: Systematic reverse engineering pipeline v3.0 for defense products — from comparative MCDA evaluation through physical RE to production-ready redesign. Integrates VDI 2221, VDI 2206 V-Model, Pahl-Beitz methodology, OSINT gathering, and Vietnam defense context (ITAR-free, QPAN compliance) via a 3D-A-R-D cycle. Use for competitive product analysis, domestic redesign of imported defense systems, or cross-family technology RE. Triggers on: "reverse engineer", "RE product", "copy design", "analyze competitor", "domestic redesign", "dao nguoc ky thuat", "noi dia hoa", "đảo ngược kỹ thuật", "nội địa hóa sản phẩm quốc phòng".
+---
+
 Systematic reverse engineering pipeline v3.0 for defense products — from comparative evaluation through physical RE to production-ready redesign. Now includes FIELD mode (internal product intelligence from 1,064 deployed units) and TECHNOLOGY mode (cross-family technology domain RE). Integrates VDI 2221 (mechanical), VDI 2206 V-Model (mechatronic), Pahl-Beitz methodology, OSINT intelligence gathering, comparative MCDA evaluation, and partnership strategy with Vietnam defense context (ITAR-free, QPAN compliance). The "super skill" combining /nlm + /helix-* + /research + domain RE expertise into one compound workflow.
 
 Usage: /reverse-engineering <product_or_artifact> [--mode full|mech|mecha|compare|field|technology|audit|capture|partner] [--notebook <alias>] [--project <project-id>] [--stage N] [--candidates "Product1,Product2,Product3"]

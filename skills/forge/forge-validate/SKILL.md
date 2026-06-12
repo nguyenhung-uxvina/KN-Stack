@@ -25,6 +25,47 @@ Design a staged validation plan for ACH products: Lab → Field Simulation → O
 
 ## Workflow
 
+### Step 0: Guard Rail Pre-Check — Iron Law (gstack Ch08)
+
+> Pattern source: gstack Guard Rail + Iron Law — "no build starts without an approved plan that passes defined criteria." Adapted here: no validation plan is designed for a product that hasn't cleared minimum readiness criteria.
+
+**Run before any other step. HALT immediately if any guard fails.**
+
+```
+GUARD RAIL CHECK — {{product}} / {{sub-function}}
+Date: {{today}}
+
+G1 — Quantitative requirements exist?
+  □ HELIX requirements list includes at least 3 measurable pass/fail criteria for this sub-function
+  □ Criteria are in number + unit form (not "adequate" or "robust")
+  Status: [PASS / FAIL — return to helix-p1-requirements to define criteria first]
+
+G2 — Fallback defined?
+  □ forge-fallback spec exists OR product-level fallback behavior is documented
+  □ Fallback has its own pass/fail criteria (not "AI fails → human takes over" without definition)
+  Status: [PASS / FAIL — run forge-fallback before forge-validate]
+
+G3 — HELIX Gate 4 passed (or equivalent testable state)?
+  □ Hardware exists in sufficient form that Stage 1 lab test is physically possible
+  □ Status.md shows Gate 4 PASS or "Stage 1 pre-gate approved"
+  Status: [PASS / FAIL — validation plan is premature; re-trigger at Sync S5]
+
+G4 — Learning Loop Architecture feasibility?
+  □ Ground-truth signal (Step 1.5 GT1) is identifiable — not AI-judging-AI
+  □ GT1 latency is acceptable for development cadence (GT2 reasonable)
+  Status: [PASS / FAIL — GT1 not identifiable: flag as architectural blocker for CEO]
+
+GUARD RAIL RESULT:
+  All 4 PASS  → Proceed to Step 1
+  Any FAIL    → HALT. Record failed guard(s) in Status.md.
+                Return to: {{upstream skill}} to resolve before re-running forge-validate.
+
+IRON LAW: No validation plan is designed for an unready product.
+          Cost of a premature plan = wasted CEO time + misleading evidence.
+```
+
+**COD:** Offload (O1) — AI reads project files and checks. CEO confirms GT1 (G4) is realistic.
+
 ### Step 1: Gather Context
 
 Read:

@@ -1,4 +1,5 @@
 ---
+name: erp-stock
 description: "ERPNext Stock/Inventory management — Stock Entry, Stock Ledger, Warehouse, Material Transfer. Encodes Stock Entry Truth Law. Triggers on: 'erp stock', 'erp inventory', 'erp kho', 'stock entry', 'material transfer', 'nhập kho', 'xuất kho', 'chuyển kho', 'reorder erp'."
 allowed-tools: ["Read", "Write", "Edit", "Bash", "Grep", "Glob", "Agent"]
 ---

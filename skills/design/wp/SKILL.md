@@ -1,3 +1,8 @@
+---
+name: wp
+description: Searches for working principles for each sub-function in a product's Pahl-Beitz function structure, drawing from physical effects catalogs, solution catalogs, patents, competitor analysis, biomimicry, and TRIZ. Each principle is rated on TRL, local content, and ACH potential; flags any sub-function with fewer than 3 viable principles. Use at Phase 2 concept development to build the morphological matrix. Triggers on: "working principles", "function structure principles", "morphological matrix", "physical effects", "nguyen ly lam viec", "nguyen ly hoat dong", "nguyên lý làm việc", "ma trận hình thái".
+---
+
 Search for working principles for each sub-function of a product's function structure.
 
 Usage: /wp [project_name] OR provide function structure interactively.

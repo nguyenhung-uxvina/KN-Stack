@@ -190,6 +190,60 @@ PIPELINE MODE RECOMMENDATION:
 NOTE: This assessment informs pipeline depth but CEO decides final mode.
 ```
 
+### Step 0.6b: Question Protocol + Stopping Conditions (gstack Ch07 Office-Hours)
+
+> Pattern source: gstack Station Zero — "surface ambiguity before implementation, with defined stopping conditions."
+
+Before B0 is approved, surface all open questions systematically. Unanswered questions at this stage become blocking surprises in Phase 2 or 3.
+
+**Question sweep — 5 domains:**
+
+```
+QUESTION PROTOCOL — {{project_id}}
+Date: {{today}}
+
+1. SCOPE questions
+   □ Is the product boundary clear enough that two engineers would agree on what's in/out?
+   □ Are there adjacent systems that might "absorb" scope if not explicitly excluded?
+   □ Open: {{list or NONE}}
+
+2. STAKEHOLDER questions
+   □ Is there a decision-maker we haven't spoken to whose veto could block this product?
+   □ Are any HIGH-priority stakeholders currently inaccessible? (→ see Step 0.3 blocking flag)
+   □ Open: {{list or NONE}}
+
+3. REQUIREMENTS questions (to be answered by BA, not CEO here)
+   □ Are any 17 P&B categories clearly impossible to populate given current info?
+   □ Is there a hard constraint the requirements list MUST reflect but hasn't been stated?
+   □ Open: {{list or NONE}}
+
+4. CONSTRAINTS questions
+   □ Are there external constraints (budget ceiling, HELIX Gate 0 verdicts, ACH go/no-go) that
+     would make this product infeasible before requirements are written?
+   □ Open: {{list or NONE}}
+
+5. DEPENDENCIES questions
+   □ Does this task depend on outputs from another parallel project not yet complete?
+   □ Are shared platform modules locked or still in flux?
+   □ Open: {{list or NONE}}
+```
+
+**Stopping conditions — B0 is DONE ENOUGH to proceed to BA when:**
+
+| Condition | Check |
+|-----------|-------|
+| SC-1 | All 5 question domains addressed (answers or explicit "NONE") |
+| SC-2 | No HIGH-priority stakeholder has Access=N (or blocker logged in Status.md) |
+| SC-3 | Scope boundaries defined with at least one explicit EXCLUDED item |
+| SC-4 | No fatal feasibility blocker identified (budget, ACH no-go, standard violation) |
+| SC-5 | CEO can state the "definition of done" for Phase 1 in one sentence |
+
+**HALT condition:** If SC-4 fails → do NOT proceed to BA. Update Status.md with blocker and return to the blocking upstream deliverable (forge-shift, helix-project-init, etc.) before re-running B0.
+
+**CEO time target:** 20 min for familiar project, 45 min for new product domain.
+
+**COD:** Core (C) for SC-4 and SC-5 — only CEO knows if a constraint is fatal.
+
 ### Step 0.7: Model Inventory Check (VDI 2206 Blue Strand)
 
 > **VDI 2206:2021 Blue Strand:** All engineering tasks should be supported by models. Establish baseline.
@@ -229,10 +283,18 @@ Stakeholders: {{N}} identified, {{M}} HIGH priority, {{K}} accessible
 Standards: {{N}} applicable
 Scope: [confirmed / needs clarification]
 
+Stopping Conditions (Step 0.6b):
+  SC-1 All 5 question domains addressed:  [✅ / ❌ — list open]
+  SC-2 No unblocked HIGH-priority stake:  [✅ / ❌ — {{who}}]
+  SC-3 Scope has ≥1 explicit EXCLUDED:    [✅ / ❌]
+  SC-4 No fatal feasibility blocker:       [✅ / ❌ — {{what}}]
+  SC-5 Phase 1 "done" in one sentence:    "{{sentence}}"
+
 CEO:
-(1) ✅ Approve → tiếp tục Block BA (Requirements Generation)
+(1) ✅ All SC pass → tiếp tục Block BA (Requirements Generation)
 (2) 🔄 Bổ sung stakeholders hoặc standards
-(3) ⏸️ Dừng — cần coordinate stakeholder access
+(3) ⏸️ Dừng — SC-4 blocker: cần resolve {{issue}} trước
+(4) ❓ Re-run question protocol — thêm domain {{X}} chưa đủ
 ```
 
 ## COD

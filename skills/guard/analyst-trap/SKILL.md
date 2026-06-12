@@ -1,3 +1,15 @@
+---
+name: analyst-trap
+description: >-
+  Quantitative Analyst Trap detector — scans 7-day vault activity, classifies
+  files as analytical vs physical-validation, reads dP/dt from system-health.md,
+  checks for upcoming physical gates, and alerts when vault growth is outpacing
+  physical engineering (ratio > 3:1 or dP/dt = 0). Run weekly or whenever
+  dP/dt = 0 is flagged by sprint or session-exit. Triggers on: "analyst-trap",
+  "analyst trap", "dP/dt = 0", "no physical progress", "vault vs lab", "bẫy
+  phân tích", "too much analysis", "physical velocity zero".
+---
+
 Quantitative Analyst Trap detector for Workshop X vault. Run weekly or when dP/dt = 0 is flagged.
 
 Detects whether vault activity is serving engineering (physical deliverables) or drifting into pure analysis.

@@ -188,7 +188,7 @@ APPLY THIS FORMAT ROTATION
 Rule: No 3+ consecutive chapters same variant.
 ```
 
-Xem `references/chapter-template.md` § "Varying format giữa các chapter" cho 3 variants.
+Xem `../codebase-to-book/references/chapter-template.md` § "Varying format giữa các chapter" cho 3 variants.
 
 ### Step P3.8: Write Phase3-Outline.md
 

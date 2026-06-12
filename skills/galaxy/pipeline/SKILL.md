@@ -1,3 +1,8 @@
+---
+name: pipeline
+description: "Manages the full signal-to-knowledge pipeline for the IPARAG vault — from raw capture through routing, storage, retrieval, and harvest. The BRIDGE-level orchestrator covering Inbox status, project decisions, Galaxy note growth, and resource staleness. Use to check pipeline health or trigger ingest/audit/harvest operations. Triggers on: \"pipeline status\", \"knowledge pipeline\", \"pipeline audit\", \"vault health\", \"kiem tra pipeline\", \"trang thai he thong\", \"kiểm tra kho tri thức\", \"luồng tri thức\"."
+---
+
 Manage the full signal-to-knowledge pipeline — from raw capture through routing, storage, retrieval, and harvest. The BRIDGE-level orchestrator for knowledge flow.
 
 Unlike /signal (extracts signals from a single source), /pipeline manages the SYSTEM: what's flowing, what's stuck, what's being used, and what's rotting.

@@ -1,3 +1,13 @@
+---
+name: checkpoint
+description: >-
+  Save a session checkpoint to progress.md — captures completed work, current
+  state, files modified, next steps, and key decisions made so work can resume
+  without context loss. Use at natural pause points or before ending a long
+  session. Triggers on: "checkpoint", "save progress", "lưu tiến độ", "session
+  checkpoint", "save state", "ghi lại trạng thái", "lưu session".
+---
+
 Save a session checkpoint for the current work. Do the following:
 
 1. Create/update a `progress.md` file in the current project directory with:

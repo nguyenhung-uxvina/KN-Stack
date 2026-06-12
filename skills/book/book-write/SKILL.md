@@ -8,7 +8,7 @@ description: "Block P4 của codebase-to-book pipeline — fan-out N parallel Ta
 > **Pipeline:** codebase-to-book → Block P4
 > **Input:** `Phase3-Outline.md` + `Phase2-Positioning.md` + `Phase1-Exploration/` research notes
 > **Output:** `Phase4-Chapters/Ch<NN>_<slug>_Draft.md` × N
-> **Reference:** `codebase-to-book/references/phase-prompts.md` (P4 subagent prompt), `chapter-template.md`, `book-voice-and-style.md`
+> **Reference:** `../codebase-to-book/references/phase-prompts.md` (P4 subagent prompt), `chapter-template.md`, `book-voice-and-style.md`
 
 ## Operational Envelope
 
@@ -89,9 +89,9 @@ for ch in chapters:
             research_files=ch.source_files,
             output_file=f"{output_dir_p4}/Ch{ch.num:02d}_{ch.slug}_Draft.md",
             references=[
-                "codebase-to-book/references/book-voice-and-style.md",
-                "codebase-to-book/references/chapter-template.md",
-                "codebase-to-book/references/diagram-types.md",
+                "../codebase-to-book/references/book-voice-and-style.md",
+                "../codebase-to-book/references/chapter-template.md",
+                "../codebase-to-book/references/diagram-types.md",
             ],
             lang=args.lang,
             deep=args.deep,
@@ -99,7 +99,7 @@ for ch in chapters:
     )
 ```
 
-**Subagent prompt template:** See `references/phase-prompts.md` § "Phase 4 — Writing Subagent Prompt".
+**Subagent prompt template:** See `../codebase-to-book/references/phase-prompts.md` § "Phase 4 — Writing Subagent Prompt".
 
 ### Step P4.4: Subagent Responsibilities (enforced via prompt)
 

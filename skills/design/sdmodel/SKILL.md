@@ -1,3 +1,8 @@
+---
+name: sdmodel
+description: Builds a System Dynamics stock-and-flow model for quantitative causal analysis of organizational, market, or product pipeline behavior. Identifies feedback loops, leverage points, archetypes, and oscillation patterns to support strategic decisions. Use when you need to explain or predict growth, oscillation, collapse, or plateau dynamics over time. Triggers on: "system dynamics", "stock flow model", "feedback loop model", "causal loop", "mo hinh he thong", "vong phan hoi", "mô hình hệ thống động", "phân tích vòng nhân quả".
+---
+
 Build a System Dynamics stock-and-flow model for deep quantitative analysis.
 
 Usage: /sdmodel [system_description] OR provide details interactively.

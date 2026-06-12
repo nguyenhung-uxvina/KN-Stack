@@ -8,7 +8,7 @@ description: "Block P6 của codebase-to-book pipeline — apply P5 review feedb
 > **Pipeline:** codebase-to-book → Block P6
 > **Input:** `Phase5-Review.md` + `Phase4-Chapters/Ch*_Draft.md`
 > **Output:** `Phase6-Revised/Ch<NN>_<slug>_v2.md`
-> **Reference:** `codebase-to-book/references/book-voice-and-style.md`
+> **Reference:** `../codebase-to-book/references/book-voice-and-style.md`
 
 ## Operational Envelope
 

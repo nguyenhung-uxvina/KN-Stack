@@ -1,3 +1,15 @@
+---
+name: nlm
+description: >-
+  Interact with Google NotebookLM via nlm-cli v2.0 — query notebooks, add
+  sources (URL/text/YouTube/Drive), generate audio/slides/quizzes/reports,
+  cross-query up to 3 notebooks for compound insights, check notebook health,
+  and route outputs to the IPARAG vault. Use for deep research, mentor notebook
+  queries, and learning artifact generation. Triggers on: "nlm", "notebook",
+  "NotebookLM", "query notebook", "add source", "generate audio", "podcast",
+  "cross-query", "nlm health", "hỏi notebook", "thêm nguồn", "tạo audio".
+---
+
 Interact with Google NotebookLM via nlm-cli v2.0. Query notebooks, add sources, generate reports/audio/quizzes, cross-query multiple notebooks, check health, and save outputs to the IPARAG vault.
 
 Usage: /nlm [mode] where mode = query | add | generate | list | cross-query | health | persona | deep-research

@@ -1,3 +1,13 @@
+---
+name: hire-tracker
+description: >-
+  Track the hiring pipeline from role definition through onboarding, maintaining
+  a living record in _meta/hiring-pipeline.md and computing an I₂ (team
+  leverage) score. Nudges CEO when roles stall for >14 days to break the I₂ = 0
+  bottleneck. Triggers on: "hire-tracker", "hiring", "tuyển dụng", "tuyển
+  người", "pipeline tuyển", "onboard", "phỏng vấn", "add new role".
+---
+
 Track hiring pipeline from "cần gì" → "đăng tuyển" → "phỏng vấn" → "onboard". Breaks I₂ = 0 bottleneck.
 
 Usage: /hire-tracker

@@ -117,6 +117,8 @@ CEO factors in what numbers cannot capture:
 - Reuse credit is valid ONLY if forge-library has the model cataloged
 - Breakeven volume must be compared to REALISTIC WX production volume
 - No supplier pricing in prompts (CLAUDE.md rule) — use ranges
+- Local content target: **≥60% by value** sourced locally — track and report
+- Unit cost target: **≤70% of import equivalent** price; if over → identify top-3 cost drivers and escalate (do not hide overruns)
 
 ## COD Classification
 

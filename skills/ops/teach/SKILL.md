@@ -1,3 +1,15 @@
+---
+name: teach
+description: >-
+  Compound CEO judgment by recording, reviewing, and pattern-analyzing past
+  design and business decisions. Four modes — record (capture a decision just
+  made), review (revisit for learning), pattern (meta-analysis across all
+  decisions), challenge (pre-mortem on upcoming decision). Enforces dJ/dt >
+  dD/dt: judgment grows faster than delegation. Triggers on: "teach", "record
+  decision", "decision review", "pre-mortem", "ghi quyết định", "pattern
+  analysis", "decision challenge", "calibrate judgment".
+---
+
 Compound CEO judgment over time by extracting, cataloging, and replaying decision patterns from past project decisions.
 
 This is NOT a decision-maker — it's a decision TEACHER that helps the CEO see their own patterns, biases, and growth areas. It enforces dJ/dt > dD/dt (judgment grows faster than delegation).

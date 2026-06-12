@@ -1,8 +1,8 @@
 # Galaxy State Reference
 
-Last updated: 2026-03-11
-Total notes: 66
-Target: 60-80 (lower bound REACHED)
+Last updated: 2026-06-10
+Total notes: 74
+Target: 60-80 (WITHIN TARGET)
 
 
 ## Current Notes by Cluster
@@ -43,12 +43,14 @@ Target: 60-80 (lower bound REACHED)
 - Edge First — Thiết Kế Cho Offline Trước Cloud Sau
 - Training Scars — Luyện Tập Sai Tệ Hơn Không Luyện
 
-### E: Systems Archetypes (5)
+### E: Systems Archetypes (7)
 - Shifting the Burden Archetype (hub, 8+ links)
 - Nested Shifting the Burden
 - Musk Sequence — Serial Development Cho Solo Engineer
 - Tool Overload Trap — Khi Kết Nối Không Bằng Sử Dụng (also I)
 - Compound Law — Zero Trong Một Pillar Bằng Zero Tổng
+- CAIV Thất Bại 10 trên 12 Chương Trình — Framing Assumption Collapse [CDTC 2026-06-10]
+- Nghịch Lý COTS — Chi Phí Giảm Chủ Quyền Giảm [CDTC 2026-06-10]
 
 ### F: Knowledge Lifecycle (4)
 - Vault = Graveyard nếu không có Harvest (hub)
@@ -56,7 +58,7 @@ Target: 60-80 (lower bound REACHED)
 - Muscle Memory Law — Skill Compounds, Tool Accumulates (also I)
 - KLEID — Framework Hệ Thống Tri Thức Có Compound
 
-### G: Pahl-Beitz Technical (15)
+### G: Pahl-Beitz Technical + Cost Engineering (22)
 - PZT vs MEMS — Tại Sao Contact Sensor Thắng Microphone (hub)
 - Charge Amplifier — Chuyển Đổi Impedance Cao
 - VDI 2225 — Sensitivity Analysis Kiểm Tra Robustness
@@ -73,6 +75,12 @@ Target: 60-80 (lower bound REACHED)
 - Design Space Collapse — Khi Chỉ Còn Một Concept
 - Interface Ownership — Đẩy Function Qua Biên Giới Hệ Thống
 - Median vs Mean RCS — Khi Thống Kê Lừa Thiết Kế
+- 80% Chi Phí Vòng Đời Bị Khoá Ở Giai Đoạn Ý Tưởng [CDTC 2026-06-10]
+- Công Cụ Ước Lượng Tham Số — Độ Lệch 45% Trong Kiểm Thử Mù [CDTC 2026-06-10]
+- Giảm Độ Phức Tạp Thắng Giảm Khối Lượng Trong Tối Ưu Chi Phí [CDTC 2026-06-10]
+- Should-Cost — Giá Báo Không Bằng Giá Thực [CDTC 2026-06-10]
+- JDAM Doctrine — Đơn Giản Là Vũ Khí Chi Phí [CDTC 2026-06-10]
+- CDTC Tối Giản Cho Nhóm 26 Người — WX Adaptation [CDTC 2026-06-10]
 
 ### H: Physical Design (11)
 - Foam-Filled HDPE — Thiết Kế Chống Chìm (hub)

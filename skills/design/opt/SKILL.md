@@ -1,3 +1,8 @@
+---
+name: opt
+description: Conducts a Pahl-Beitz design optimization review for Workshop X products to improve weight, cost, part count, and local content percentage. Analyzes 5 optimization categories and quantifies trade-offs for each opportunity, with mandatory HITL approval before implementation. Use at Phase 3 embodiment or when DfX scores flag weaknesses. Triggers on: "optimize design", "weight reduction", "cost optimization", "reduce part count", "local content", "toi uu thiet ke", "giam trong luong", "tối ưu thiết kế", "giảm chi phí sản xuất".
+---
+
 Conduct a design optimization review to improve weight, cost, part count, and performance.
 
 Usage: /opt [project_name] OR provide design details interactively.

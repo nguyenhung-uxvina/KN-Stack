@@ -1,3 +1,14 @@
+---
+name: sync
+description: >-
+  Run a monthly cross-domain synchronization review across BRIDGE (operations),
+  FORGE (strategy), and HELIX (execution) to detect alignment gaps, compute
+  Compound Law scores, and surface the top 3 cross-domain actions. Use at the
+  end of each month to prevent domain drift. Triggers on: "sync", "monthly
+  sync", "cross-domain review", "đồng bộ", "compound law check", "BRIDGE FORGE
+  HELIX alignment".
+---
+
 Run a monthly cross-domain synchronization review across BRIDGE, FORGE, and HELIX.
 
 Usage: /sync OR /sync [focus_area]

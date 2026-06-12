@@ -1,3 +1,13 @@
+---
+name: risk
+description: >-
+  Generate the Workshop X Risk Radar — early warning system that scans all
+  project Status.md files and area dashboards for critical risks, Shifting the
+  Burden patterns, physical validation gaps, and supply chain exposures. Use
+  weekly or when dP/dt = 0 is flagged. Triggers on: "risk", "risk radar", "rủi
+  ro", "early warning", "radar rủi ro", "supply chain risk", "physical gap".
+---
+
 Generate the Workshop X Risk Radar — early warning system for organizational and project risks.
 
 Usage: /risk OR /risk [project_name]

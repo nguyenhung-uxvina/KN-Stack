@@ -8,7 +8,7 @@ description: "Block P9 của codebase-to-book pipeline — query NotebookLM (boo
 > **Pipeline:** codebase-to-book → Block P9 (final block)
 > **Input:** `Phase8-Notebook-Manifest.md` (notebook_id từ P8)
 > **Output:** `Phase9-CEO-Insights.md` với 5 sections + action items
-> **Reference:** `codebase-to-book/references/phase-prompts.md` § P9 NLM Query Templates
+> **Reference:** `../codebase-to-book/references/phase-prompts.md` § P9 NLM Query Templates
 
 ## Operational Envelope
 
@@ -56,7 +56,7 @@ active_lenses = args.insight_lens.split(",") if args.insight_lens else ["helix",
 
 ### Step P9.2: Run 5 Lens Queries (Sequential)
 
-Sequential vì mỗi query build on previous context (NLM conversation-style). Query template chi tiết trong `references/phase-prompts.md`.
+Sequential vì mỗi query build on previous context (NLM conversation-style). Query template chi tiết trong `../codebase-to-book/references/phase-prompts.md`.
 
 #### Lens 1: HELIX Applicability
 

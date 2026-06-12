@@ -1,3 +1,14 @@
+---
+name: journal
+description: >-
+  Record a design decision immediately when it is made — captures context,
+  options considered, rationale, trade-offs accepted, reversibility, and a
+  review trigger. Saves to the project's Phase folder as a structured Decision
+  record. Use any time a design or engineering decision is made during a Helix
+  phase. Triggers on: "journal", "record decision", "design decision", "ghi
+  quyết định thiết kế", "log decision", "decision journal", "quyết định phase".
+---
+
 Record a design decision with context, rationale, and alternatives considered.
 
 Usage: /journal [decision_summary] OR provide details interactively.

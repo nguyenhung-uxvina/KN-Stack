@@ -1,3 +1,7 @@
+---
+name: detail
+description: Runs Pahl-Beitz Phase 4 Detail Design, producing a Final BOM v2.0 with supplier quotes, Manufacturing Plan, Assembly Instructions, tolerance stack-up analysis, and a complete Verification & Validation matrix against Phase 1 requirements. Use after Phase 3 Embodiment Gate is passed. Triggers on: "phase 4", "detail design", "final BOM", "manufacturing plan", "thiết kế chi tiết", "bản vẽ chi tiết", "giai đoạn 4".
+---
 Run Phase 4 Detail Design for a project following Pahl-Beitz systematic design.
 
 Usage: /detail [project_name] OR provide details interactively.

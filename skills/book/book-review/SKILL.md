@@ -8,7 +8,7 @@ description: "Block P5 của codebase-to-book pipeline — launch 2-3 editorial 
 > **Pipeline:** codebase-to-book → Block P5
 > **Input:** `Phase4-Chapters/Ch*_Draft.md` × N
 > **Output:** `Phase5-Reviews/Review_Ch<N>-<M>.md` × (2-3) + `Phase5-Review.md` (consolidated)
-> **Reference:** `codebase-to-book/references/phase-prompts.md` § Phase 5 Review Subagent Prompt
+> **Reference:** `../codebase-to-book/references/phase-prompts.md` § Phase 5 Review Subagent Prompt
 
 ## Operational Envelope
 
@@ -71,7 +71,7 @@ for partition in review_partitions:
             positioning_file=f"{output_dir}/Phase2-Positioning.md",
             outline_file=f"{output_dir}/Phase3-Outline.md",
             output_file=f"{output_dir_p5}/Review_Ch{partition.start}-{partition.end}.md",
-            references=["codebase-to-book/references/book-voice-and-style.md"],
+            references=["../codebase-to-book/references/book-voice-and-style.md"],
         )
     )
 ```

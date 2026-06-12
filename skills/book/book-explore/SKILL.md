@@ -8,7 +8,7 @@ description: "Block P1 của codebase-to-book pipeline — phân tích codebase 
 > **Pipeline:** codebase-to-book → Block P1
 > **Input:** Codebase path + CEO scope confirmation
 > **Output:** `Phase1-Exploration/<subsystem>_Exploration.md` × N + `P1_Synthesis.md`
-> **Reference:** `codebase-to-book/references/phase-prompts.md` (P1 subagent prompt template)
+> **Reference:** `../codebase-to-book/references/phase-prompts.md` (P1 subagent prompt template)
 
 ## Operational Envelope
 
@@ -144,7 +144,7 @@ for s in approved_subsystems:
     )
 ```
 
-**Subagent prompt template:** See `codebase-to-book/references/phase-prompts.md` § "Phase 1 — Exploration Subagent Prompt".
+**Subagent prompt template:** See `../codebase-to-book/references/phase-prompts.md` § "Phase 1 — Exploration Subagent Prompt".
 
 **Subagent output schema** (enforced via prompt):
 ```markdown

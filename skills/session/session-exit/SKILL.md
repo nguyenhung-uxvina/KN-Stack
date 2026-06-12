@@ -1,3 +1,15 @@
+---
+name: session-exit
+description: >-
+  Enforce compound learning at the end of every session — asks 3 reflective
+  questions (physical progress, learning logged, CLAUDE.md drift), logs insights
+  to _meta/learnings.md, updates progress.md, and tracks consecutive zero-
+  physical sessions to trigger Analyst Trap alerts. Use at the end of every
+  working session without exception. Triggers on: "session-exit", "end session",
+  "kết thúc session", "exit", "close session", "wrap up", "done for today",
+  "session wrap".
+---
+
 Session exit protocol for Workshop X. Run at the end of every session to enforce compound learning.
 
 Asks reflective questions, logs learnings, updates progress.md, and tracks physical progress streaks.

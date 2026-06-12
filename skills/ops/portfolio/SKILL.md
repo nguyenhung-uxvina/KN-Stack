@@ -1,3 +1,14 @@
+---
+name: portfolio
+description: >-
+  Generate the Workshop X Product Portfolio dashboard — compiles all active
+  projects from Status.md files into a prioritized matrix with Tier health
+  checks, dependency map, and resource allocation view. Use when reviewing
+  portfolio priorities, checking for missing Tier 1 projects, or resolving
+  sequencing conflicts. Triggers on: "portfolio", "danh mục sản phẩm", "project
+  matrix", "tier health", "portfolio review", "xem portfolio".
+---
+
 Generate the Workshop X Product Portfolio dashboard with prioritization.
 
 Usage: /portfolio OR /portfolio [filter]
