@@ -1,3 +1,15 @@
+---
+name: ratio-check
+description: >-
+  Weekly analytical-to-physical ratio check for the Workshop X vault — scans
+  7-day git activity, classifies files as analytical vs physical-validation,
+  computes the MAKE:THINK ratio, compares to prior week trend, and alerts when
+  ratio exceeds 3:1 or physical activity is zero. Run every Sunday or Monday
+  before sprint planning. Triggers on: "ratio-check", "ratio check", "MAKE
+  THINK ratio", "tỷ lệ phân tích thực", "vault ratio", "analytical physical
+  ratio", "weekly ratio", "kiểm tra tỷ lệ".
+---
+
 Weekly analytical:physical ratio check for Workshop X vault. Recommended every Sunday/Monday.
 
 Quantifies whether vault growth serves engineering or drifts toward pure analysis.

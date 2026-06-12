@@ -1,3 +1,7 @@
+---
+name: decide
+description: Provides structured decision support for complex trade-offs — frames options, scores them against weighted criteria, documents rationale, assigns owner, and sets a review date. Use for high-stakes or irreversible design choices where gut-feel is insufficient. Triggers on: "decide", "decision", "trade-off", "choose between", "ra quyết định", "lựa chọn phương án", "đánh đổi".
+---
 Structured decision support for complex trade-offs and design choices.
 
 Usage: /decide [decision_description] OR provide details interactively.

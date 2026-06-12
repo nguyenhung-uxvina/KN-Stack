@@ -1,3 +1,7 @@
+---
+name: clarify
+description: Runs Pahl-Beitz Phase 1 Task Clarification, producing a Project Charter, Requirements List v1.0 (Demands vs Wishes, ≥80% quantified), Stakeholder Analysis, and preliminary Function Structure. Use at project start after Gate 0 is passed. Triggers on: "phase 1", "task clarification", "requirements list", "project charter", "làm rõ nhiệm vụ", "danh sách yêu cầu", "giai đoạn 1".
+---
 Run Phase 1 Task Clarification for a project following Pahl-Beitz systematic design.
 
 Usage: /clarify [project_name] OR provide details interactively.

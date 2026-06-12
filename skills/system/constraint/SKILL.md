@@ -1,3 +1,7 @@
+---
+name: constraint
+description: Identifies the binding constraint in a project, organization, or technical subsystem using Theory of Constraints (TOC) and systems thinking, then prescribes a focused exploitation plan. Use when progress feels blocked, throughput is low, or a single bottleneck is suspected. Triggers on: "constraint", "bottleneck", "theory of constraints", "TOC", "ràng buộc", "nút cổ chai", "điểm nghẽn".
+---
 Identify the scientific binding constraint in a system, project, or organization.
 
 Usage: /constraint [target] OR provide details interactively.

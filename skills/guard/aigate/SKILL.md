@@ -1,3 +1,16 @@
+---
+name: aigate
+description: >-
+  Validate any AI-generated deliverable before it enters a production workflow
+  — 7-check FORGE-F gate covering traceability, internal consistency,
+  completeness, hallucination, actionability, COD boundary, and downstream
+  impact. Issues PROCEED / REVISE / BLOCK decision. Distinct from /qc which
+  handles defense-domain safety; aigate handles structural quality of any AI
+  output. Triggers on: "aigate", "AI gate", "validate deliverable", "kiểm tra
+  deliverable", "FORGE-F gate", "check AI output", "hallucination check",
+  "deliverable gate".
+---
+
 Validate AI-generated deliverables before they enter production workflows — the FORGE-F deployment gate.
 
 Unlike /qc (defense domain checks), /aigate validates structural quality, consistency, and fitness-for-use of ANY AI output: designs, analyses, documents, code, recommendations.

@@ -1,3 +1,7 @@
+---
+name: cld
+description: Generates a Causal Loop Diagram (CLD) by mapping variables, causal links (+ / −), feedback loops (reinforcing R / balancing B), and system behavior archetypes. Use when diagnosing growth, oscillation, or stagnation patterns in a product, process, or organization. Triggers on: "causal loop", "CLD", "feedback loop", "vòng nhân quả", "sơ đồ nhân quả", "vòng phản hồi".
+---
 Generate a Causal Loop Diagram (CLD) for a system, problem, or design challenge.
 
 Usage: /cld [system_description] OR provide details interactively.

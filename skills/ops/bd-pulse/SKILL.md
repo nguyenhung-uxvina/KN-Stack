@@ -1,3 +1,15 @@
+---
+name: bd-pulse
+description: >-
+  Minimal CRM for defense business development — logs touchpoints with key
+  defense ecosystem contacts, tracks relationship health (green/yellow/red by
+  recency), flags cold contacts and overdue follow-ups, and computes an Ế
+  (external leverage) score. Use weekly or after any BD meeting. Triggers on:
+  "bd-pulse", "BD", "business development", "liên hệ khách hàng", "defense
+  contacts", "quan hệ quốc phòng", "follow-up", "exhibition", "Viettel",
+  "HD128".
+---
+
 Log defense BD touchpoints. Track relationship health. CRM tối giản cho solo CEO.
 
 Usage: /bd-pulse

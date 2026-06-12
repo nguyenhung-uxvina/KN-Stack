@@ -1,3 +1,14 @@
+---
+name: weekly-3
+description: >-
+  Weekly accountability system — commit 3 deliverables every Monday (≥1
+  physical, ≥1 external), score completion every Friday, track streaks, and
+  detect avoidance patterns across P/E layers. Enforces CHIẾN LƯỢC cross-layer
+  execution for solo CEO. Triggers on: "weekly-3", "3 commitments", "cam kết
+  tuần", "weekly accountability", "monday commitments", "friday score", "3 mục
+  tiêu tuần", "weekly check-in".
+---
+
 Weekly accountability: 3 commitments Monday, 3 scores Friday. Cross-layer P-CHIẾN LƯỢC enforcement.
 
 Usage: /weekly-3 [monday|friday]

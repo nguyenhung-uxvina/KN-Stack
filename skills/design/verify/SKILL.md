@@ -1,3 +1,8 @@
+---
+name: verify
+description: Generates a Pahl-Beitz verification plan mapping product requirements to A/I/T/D test methods (Analysis, Inspection, Test, Demonstration) with pass/fail criteria. Enforces mandatory T or D for safety-critical and HITL requirements; escalates unverifiable requirements. Use after Phase 1 to produce the project VnV plan before proceeding to production. Triggers on: "verification plan", "test plan", "VnV", "kiểm tra yêu cầu", "ke hoach kiem tra", "kế hoạch xác minh", "lap ke hoach kiem thu", "safety test plan".
+---
+
 Generate a verification plan mapping requirements to test and inspection methods.
 
 Usage: /verify [project_name] OR provide requirements list interactively.

@@ -1,3 +1,14 @@
+---
+name: scale-map
+description: >-
+  Track horizontal expansion of Workshop X products across Vietnamese military
+  units — maintains a Product × Military Unit matrix from UNTOUCHED through
+  DEPLOYED, computes pipeline metrics, and forces 1 outreach commitment per
+  week. Use quarterly or when scaling a proven product to new units. Triggers
+  on: "scale-map", "horizontal expansion", "mở rộng", "scale product", "unit
+  mới", "military unit pipeline", "outreach commitment".
+---
+
 Track horizontal expansion: Product × Military Unit matrix. Force 1 outreach per week.
 
 Usage: /scale-map

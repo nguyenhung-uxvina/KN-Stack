@@ -1,0 +1,96 @@
+{
+  "skill": "mentor-board",
+  "version": "1.0-orchestrator",
+  "description": "Binary assertions for /mentor-board advisor orchestrator (INTAKE router + 4 consultation modes + board management)",
+  "mode": "static",
+  "test_input": "mentor board: nên chọn kiến trúc FCS nào cho V-SMASH?",
+  "assertions": [
+    {
+      "id": "MB-INTAKE",
+      "name": "intake_router",
+      "check": "INTAKE smart router with clarifying questions and CEO confirm",
+      "regex": "INTAKE|router|clarifying|CEO confirm|đề xuất mentor",
+      "required": true
+    },
+    {
+      "id": "MB-CONSULT",
+      "name": "mode_consult",
+      "check": "CONSULT single-mentor mode with 5-frame DMIR report",
+      "regex": "CONSULT|5.?frame|DMIR",
+      "required": true
+    },
+    {
+      "id": "MB-PANEL",
+      "name": "mode_panel",
+      "check": "PANEL multi-mentor parallel mode with synthesis",
+      "regex": "PANEL|parallel|synthesis|tổng hợp",
+      "required": true
+    },
+    {
+      "id": "MB-DEBATE",
+      "name": "mode_debate",
+      "check": "DEBATE 3-round argument mode",
+      "regex": "DEBATE|3.?round|rebuttal|convergence|phản biện",
+      "required": true
+    },
+    {
+      "id": "MB-DECIDE",
+      "name": "mode_decide",
+      "check": "DECIDE option scoring matrix mode",
+      "regex": "DECIDE|scoring matrix|option.*scor|ma trận",
+      "required": true
+    },
+    {
+      "id": "MB-DMIR",
+      "name": "dmir_cycle",
+      "check": "DMIR cycle (Diagnose-Model-Intervene-Reflect) applied to consults",
+      "regex": "Diagnose|Model|Intervene|Reflect",
+      "required": true
+    },
+    {
+      "id": "MB-RETRO",
+      "name": "retro_reliability",
+      "check": "--retro closes R-step and updates reliability_log",
+      "regex": "--retro|reliability_log|reliability",
+      "required": true
+    },
+    {
+      "id": "MB-MGMT",
+      "name": "board_management",
+      "check": "board management flags: --add, --remove, --suggest, --list",
+      "regex": "--add|--remove|--suggest|--list|--sync",
+      "required": true
+    },
+    {
+      "id": "MB-NLM",
+      "name": "notebooklm_grounding",
+      "check": "mentors are grounded in NotebookLM notebooks",
+      "regex": "NotebookLM|notebook|nlm",
+      "required": true
+    },
+    {
+      "id": "MB-ROUTE",
+      "name": "routes_to_mentor_skills",
+      "check": "orchestrator routes to individual mentor-* skills",
+      "regex": "mentor-[a-z]|skills/mentors|per.?mentor",
+      "required": true
+    },
+    {
+      "id": "MB-FACET",
+      "name": "facet_split",
+      "check": "multi-notebook facet split for >45 sources",
+      "regex": "facet|45.*source|multi.?notebook",
+      "required": false
+    },
+    {
+      "id": "MB-REGISTRY",
+      "name": "consult_registry",
+      "check": "consults recorded to vault registry",
+      "regex": "_registry|Mentor-Consultations|consult.?id",
+      "required": false
+    }
+  ],
+  "passing_score": 10,
+  "total_required": 10,
+  "total_optional": 2
+}

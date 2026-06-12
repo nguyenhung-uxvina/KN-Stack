@@ -1,3 +1,15 @@
+---
+name: ach-recurse
+description: >-
+  Track each Workshop X product's ACH (AI-Compound Hardware) recursion layer
+  from L0 (hardware only) through L4 (platform integration), estimates revenue
+  unlock per layer transition, and forces 1 layer-up commitment per quarter. Use
+  quarterly to compound product value without new hardware development. Triggers
+  on: "ach-recurse", "ACH layer", "product layer", "recursion", "layer
+  transition", "analytics subscription", "data pipeline product", "compound
+  hardware".
+---
+
 Track ACH recursion layers per product. Force 1 layer transition commitment per quarter.
 
 Usage: /ach-recurse

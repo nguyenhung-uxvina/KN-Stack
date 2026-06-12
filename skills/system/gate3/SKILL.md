@@ -1,3 +1,7 @@
+---
+name: gate3
+description: Conducts the formal Phase 3 Gate Review scoring Requirements Traceability, Interface Completeness, Layout Feasibility, BOM Completeness, Local Content (≥60%), DfX Review, Power/Thermal Budget, and Risk Update (weighted, target ≥3.0/4.0) before authorizing Phase 4. Any subsystem with TRL <5 and no prototype test plan is an automatic FAIL. Triggers on: "gate 3", "G3", "phase 3 gate", "embodiment gate", "xét duyệt cổng 3", "nghiệm thu thiết kế hiện thân".
+---
 Conduct the formal Phase 3 Gate Review before proceeding to Phase 4 Detail Design.
 
 Usage: /gate3 [project_name] OR provide details interactively.

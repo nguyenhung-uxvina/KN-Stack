@@ -1,3 +1,7 @@
+---
+name: gate2
+description: Conducts the formal Phase 2 Gate Review scoring Concept Diversity, Evaluation Rigor (VDI 2225), Selected Concept Quality (Rt ≥0.70), Function Coverage, Feasibility, and Documentation (weighted, target ≥3.5/4.0) before authorizing Phase 3. Requires explicit CEO approval — never auto-proceeds. Triggers on: "gate 2", "G2", "phase 2 gate", "concept gate", "xét duyệt cổng 2", "nghiệm thu khái niệm".
+---
 Conduct the formal Phase 2 Gate Review before proceeding to Phase 3 Embodiment Design.
 
 Usage: /gate2 [project_name] OR provide details interactively.

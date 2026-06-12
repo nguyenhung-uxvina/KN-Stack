@@ -1,3 +1,7 @@
+---
+name: leverage
+description: Identifies the top 3 high-leverage intervention points in a system using Donella Meadows' 12 leverage points hierarchy (from parameters at level 12 up to paradigm change at level 1), with specific interventions and risk flags for each. Use when a persistent design or organizational problem resists conventional fixes. Triggers on: "leverage points", "intervention", "Meadows", "high leverage", "điểm đòn bẩy", "can thiệp hệ thống", "giải pháp tận gốc".
+---
 Identify high-leverage intervention points in a system to resolve persistent design problems.
 
 Usage: /leverage [problem_description] OR describe the system interactively.

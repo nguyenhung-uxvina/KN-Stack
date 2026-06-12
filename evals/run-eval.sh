@@ -26,7 +26,7 @@ while [ $# -gt 0 ]; do
   shift
 done
 VAULT_ROOT="$(git rev-parse --show-toplevel)"
-EVALS_FILE="$VAULT_ROOT/_meta/evals/${SKILL_NAME}.json"
+EVALS_FILE="$VAULT_ROOT/evals/${SKILL_NAME}.json"
 SKILL_DIR="$HOME/.claude/commands"
 SKILL_FILE=""
 
@@ -50,29 +50,39 @@ echo "Skill: $SKILL_FILE"
 echo "Evals: $EVALS_FILE"
 echo ""
 
-# Step 1: Run the skill
-echo "[1/3] Running skill..."
+# Step 1: Get skill output (runtime: spawn claude -p; static: read SKILL.md directly)
 SKILL_CONTENT=$(cat "$SKILL_FILE")
 
-# Extract test_input from evals JSON (if present)
-TEST_INPUT=$(python -c "
-import json, sys
+EVAL_MODE=$(python -c "
+import json
+e = json.load(open('$EVALS_FILE', encoding='utf-8'))
+print(e.get('mode', 'runtime'))
+" 2>/dev/null || echo "runtime")
+
+if [ "$EVAL_MODE" = "static" ]; then
+  echo "[1/3] Static audit (reading SKILL.md, no subprocess)..."
+  OUTPUT="$SKILL_CONTENT"
+else
+  echo "[1/3] Running skill via claude -p..."
+  TEST_INPUT=$(python -c "
+import json
 e = json.load(open('$EVALS_FILE', encoding='utf-8'))
 print(e.get('test_input', ''))
 " 2>/dev/null || echo "")
 
-if [ -n "$TEST_INPUT" ]; then
-  echo "Test input: $TEST_INPUT"
-  PROMPT="You are executing a skill. Here are the skill instructions:\n\n${SKILL_CONTENT}\n\n---\n\nNow execute the skill with this input: ${TEST_INPUT}\n\nProduce the output as if the user ran: /${SKILL_NAME} ${TEST_INPUT}\nDo NOT ask clarifying questions — generate the best output you can with available context."
-else
-  PROMPT="$SKILL_CONTENT"
-fi
+  if [ -n "$TEST_INPUT" ]; then
+    echo "Test input: $TEST_INPUT"
+    PROMPT="You are executing a skill. Here are the skill instructions:\n\n${SKILL_CONTENT}\n\n---\n\nNow execute the skill with this input: ${TEST_INPUT}\n\nProduce the output as if the user ran: /${SKILL_NAME} ${TEST_INPUT}\nDo NOT ask clarifying questions — generate the best output you can with available context."
+  else
+    PROMPT="$SKILL_CONTENT"
+  fi
 
-OUTPUT=$(echo -e "$PROMPT" | timeout 600 claude -p $MODEL_FLAG --permission-mode acceptEdits --output-format text 2>/dev/null || echo "TIMEOUT_OR_ERROR")
+  OUTPUT=$(echo -e "$PROMPT" | timeout 600 claude -p $MODEL_FLAG --permission-mode acceptEdits --output-format text 2>/dev/null || echo "TIMEOUT_OR_ERROR")
 
-if [ "$OUTPUT" = "TIMEOUT_OR_ERROR" ]; then
-  echo "ERROR: Skill execution failed or timed out"
-  exit 1
+  if [ "$OUTPUT" = "TIMEOUT_OR_ERROR" ]; then
+    echo "ERROR: Skill execution failed or timed out"
+    exit 1
+  fi
 fi
 
 WORD_COUNT=$(echo "$OUTPUT" | wc -w)

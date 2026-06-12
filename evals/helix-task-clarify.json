@@ -2,6 +2,7 @@
   "skill": "helix-task-clarify",
   "version": "3.1-pipeline",
   "description": "Binary assertions for /helix-task-clarify v3.1 multi-agent pipeline orchestration",
+  "mode": "static",
   "test_input": "task clarification for VN-USV-SS-001 low-observable maritime autonomous surface vessel",
   "assertions": [
     {

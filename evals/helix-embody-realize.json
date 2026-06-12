@@ -2,6 +2,7 @@
   "skill": "helix-embody-realize",
   "version": "3.1-pipeline",
   "description": "Binary assertions for /helix-embody-realize v3.1 multi-agent pipeline orchestration",
+  "mode": "static",
   "test_input": "embody concept A for VN-AST-MSL-001 towed sea target",
   "assertions": [
     {

@@ -1,3 +1,8 @@
+---
+name: learning
+description: End-to-end meta-learning pipeline combining source intake, deep analysis, DMIR cycle, Galaxy note extraction, and judgment compounding into one workflow. The super-skill integrating /analyze + /cycle + /teach + /reflect + /nlm with 10 NLM Mastery Archetypes for specialized deep extraction. Use when starting a structured learning sprint on any topic or book. Triggers on: "learning sprint", "learn this", "study pipeline", "meta-learning", "hoc bai ban", "bat dau hoc", "hoc sau", "học chuyên sâu", "bắt đầu học", "lộ trình học".
+---
+
 End-to-end meta-learning pipeline v2.0: source intake → deep analysis → DMIR cycle → Galaxy extraction → judgment compounding. The "super skill" combining /analyze + /cycle + /teach + /reflect + /nlm into one learning workflow. Also generates standalone self-study practice documents with step-by-step lessons, exercises, and evaluation rubrics. v2.0 adds 10 NLM Mastery Archetypes for specialized deep extraction.
 
 Usage: /learning <topic_or_source> [--mode full|quick|review|practice|refresh|update] [--notebook <alias>] [--project <project-id>] [--weeks N] [--level novice|intermediate|advanced] [--nlm-archetype feynman|briefing|skeptic|miner|study|roadmap|structure|cross-std|failures|socratic]

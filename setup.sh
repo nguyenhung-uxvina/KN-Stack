@@ -10,6 +10,7 @@
 #   bash setup.sh --status                Show deployment summary
 
 set -euo pipefail
+shopt -s nullglob  # empty globs (e.g., empty mentors/ domain) return [] instead of literal pattern
 
 KNSTACK_DIR="$(cd "$(dirname "$0")" && pwd)"
 COMMANDS_DIR="${HOME}/.claude/commands"

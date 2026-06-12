@@ -1,3 +1,7 @@
+---
+name: jobs
+description: Analyzes the Job-to-be-Done (JTBD) for a product or customer segment by defining the core functional job (solution-neutral), emotional jobs, consumption chain jobs, and an 8-step Job Map. Output feeds directly into /outcomes for outcome-driven innovation. Triggers on: "jobs to be done", "JTBD", "job map", "what job does this do", "công việc cần hoàn thành", "phân tích nhu cầu khách hàng".
+---
 Analyze the Job-to-be-Done for a product or customer segment.
 
 Usage: /jobs [product_name] OR provide details interactively.

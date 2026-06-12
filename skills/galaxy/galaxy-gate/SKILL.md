@@ -1,3 +1,8 @@
+---
+name: galaxy-gate
+description: "Galaxy note creation gatekeeper for the IPARAG Zettelkasten vault. Runs a 3-question quality test (product impact / strategic decision / trap warning) before any new permanent note enters 5_Galaxy/. Use before creating any Galaxy note to enforce atomic, high-value knowledge. Triggers on: \"galaxy gate\", \"create galaxy note\", \"new permanent note\", \"tao galaxy note\", \"kiem tra truoc khi tao note\", \"permanent note check\", \"kiểm tra note\", \"tạo ghi chú vĩnh viễn\"."
+---
+
 Galaxy note creation gatekeeper. Run BEFORE creating any new permanent note in `5_Galaxy/`.
 
 Ensures the proposed note passes the 3-question quality test, is atomic, and has proper links.

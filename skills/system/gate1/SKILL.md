@@ -1,3 +1,7 @@
+---
+name: gate1
+description: Conducts the formal Phase 1 Gate Review scoring Requirements Completeness, Quantification Level, D/W Classification, Stakeholder Coverage, Standards Mapping, Function Structure, and Conflict Check (weighted, target ≥3.0/4.0) before authorizing Phase 2. Flags every unquantified D-requirement as a HIGH gap. Triggers on: "gate 1", "G1", "phase 1 gate", "requirements gate", "xét duyệt cổng 1", "nghiệm thu giai đoạn 1".
+---
 Conduct the formal Phase 1 Gate Review before proceeding to Phase 2 Conceptual Design.
 
 Usage: /gate1 [project_name] OR provide details interactively.

@@ -1,3 +1,15 @@
+---
+name: paradigm
+description: >-
+  Conduct a formal paradigm challenge on a deeply held assumption or mental
+  model — audits evidence for and against, runs inversion test, steel-mans the
+  alternative, maps decision impact, and issues a RETAIN/MODIFY/REPLACE/SUSPEND
+  verdict. Use quarterly (maximum) for strategic assumptions about Workshop X
+  products or market positioning. Triggers on: "paradigm", "challenge
+  assumption", "mental model", "thách thức giả định", "paradigm shift", "change
+  belief", "đổi paradigm", "kiểm tra niềm tin".
+---
+
 Conduct a formal paradigm challenge on a deeply held assumption or mental model.
 
 Usage: /paradigm [assumption_to_challenge] OR provide details interactively.

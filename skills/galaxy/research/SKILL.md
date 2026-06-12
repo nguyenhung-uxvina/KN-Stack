@@ -1,3 +1,8 @@
+---
+name: research
+description: End-to-end research pipeline v4.0 with multi-channel source discovery (Web + YouTube + Authority + Patents), source tier classification (S/A/B/C), cross-validation, and structured NLM extraction. The super-skill combining WebSearch + /yt-search + /nlm into one workflow with CEO approval gates. Use when starting a new research sprint on any technical, defense, or market topic. Triggers on: "research topic", "find sources on", "nghien cuu chu de", "tim tai lieu", "nghiên cứu chuyên sâu", "tìm nguồn tham khảo", "patent search", "literature review".
+---
+
 End-to-end research pipeline v4.0 with multi-channel source discovery (Web + YouTube + Authority + Patents), source tier classification (S/A/B/C), analysis routing by quality, cross-validation, and structured NLM extraction templates. The "super skill" combining WebSearch + /yt-search + /nlm + Deep Content Analyzer into one workflow. v4.0 adds 3 extraction modes for deep NLM analysis.
 
 Usage: /research <topic> [--notebook <alias>] [--output report|audio|mindmap|quiz] [--count N] [--deep] [--patents] [--update] [--extract miner|cross-std|structure]

@@ -1,3 +1,14 @@
+---
+name: reflect
+description: >-
+  Run a D-M-I-R (Diagnose-Model-Intervene-Reflect) weekly reflection to extract
+  honest learning from the past week — what happened, why it happened, what to
+  change, and what was learned about CEO judgment. Saves to the Design Review
+  Log. Use every Friday; non-negotiable for compound learning. Triggers on:
+  "reflect", "weekly reflect", "D-M-I-R", "phản ánh tuần", "weekly review",
+  "friday reflection", "nhìn lại tuần", "lesson learned".
+---
+
 Run a D-M-I-R weekly reflection to extract and compound learning.
 
 Usage: /reflect [week_ending_date] OR run interactively for current week.

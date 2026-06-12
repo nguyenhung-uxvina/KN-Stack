@@ -25,6 +25,47 @@ Design a staged validation plan for ACH products: Lab → Field Simulation → O
 
 ## Workflow
 
+### Step 0: Guard Rail Pre-Check — Iron Law (gstack Ch08)
+
+> Pattern source: gstack Guard Rail + Iron Law — "no build starts without an approved plan that passes defined criteria." Adapted here: no validation plan is designed for a product that hasn't cleared minimum readiness criteria.
+
+**Run before any other step. HALT immediately if any guard fails.**
+
+```
+GUARD RAIL CHECK — {{product}} / {{sub-function}}
+Date: {{today}}
+
+G1 — Quantitative requirements exist?
+  □ HELIX requirements list includes at least 3 measurable pass/fail criteria for this sub-function
+  □ Criteria are in number + unit form (not "adequate" or "robust")
+  Status: [PASS / FAIL — return to helix-p1-requirements to define criteria first]
+
+G2 — Fallback defined?
+  □ forge-fallback spec exists OR product-level fallback behavior is documented
+  □ Fallback has its own pass/fail criteria (not "AI fails → human takes over" without definition)
+  Status: [PASS / FAIL — run forge-fallback before forge-validate]
+
+G3 — HELIX Gate 4 passed (or equivalent testable state)?
+  □ Hardware exists in sufficient form that Stage 1 lab test is physically possible
+  □ Status.md shows Gate 4 PASS or "Stage 1 pre-gate approved"
+  Status: [PASS / FAIL — validation plan is premature; re-trigger at Sync S5]
+
+G4 — Learning Loop Architecture feasibility?
+  □ Ground-truth signal (Step 1.5 GT1) is identifiable — not AI-judging-AI
+  □ GT1 latency is acceptable for development cadence (GT2 reasonable)
+  Status: [PASS / FAIL — GT1 not identifiable: flag as architectural blocker for CEO]
+
+GUARD RAIL RESULT:
+  All 4 PASS  → Proceed to Step 1
+  Any FAIL    → HALT. Record failed guard(s) in Status.md.
+                Return to: {{upstream skill}} to resolve before re-running forge-validate.
+
+IRON LAW: No validation plan is designed for an unready product.
+          Cost of a premature plan = wasted CEO time + misleading evidence.
+```
+
+**COD:** Offload (O1) — AI reads project files and checks. CEO confirms GT1 (G4) is realistic.
+
 ### Step 1: Gather Context
 
 Read:
@@ -32,6 +73,35 @@ Read:
 - forge-fallback spec → fallback must be tested too
 - HELIX requirements list → quantitative pass/fail criteria
 - HELIX design journal → known issues to cover in test plan
+
+### Step 1.5: Define Outcome-Linked Learning Loop Architecture
+
+**Purpose:** Before designing the test plan, define the architectural separation between *decision flow* (what deployed AI does in the field, real-time) and *learning flow* (how field outcomes update the model, offline). Without this up front, Stage 4 silently degrades into "model judges itself" — endogenous noise loops that look like learning but aren't.
+
+**Pattern source:** TradingAgents (arXiv:2412.20138) Ch 7-8 — outcome-linked offline learning. P&L is the ground-truth signal; reflection happens offline after trades settle; memory is read-only during decision, write-only during reflection. Defense / sensor-noisy contexts: same shape (mission-result feedback, calibration accuracy, hit-rate).
+
+**Mandatory: define 4 entries before Stage 1 begins.**
+
+| Entry | Question | Example (BB-01 LOMAH) |
+|-------|----------|----------------------|
+| **GT1 — Ground truth signal** | What externally-determined truth arrives late from the field? Must NOT come from the AI itself. | Operator-confirmed shot-call accuracy from range exercises (instrument-measured, T+days) |
+| **GT2 — Arrival latency** | How long after a decision does ground truth arrive? Drives offline batch cadence. | 1-7 days per range exercise; quarterly aggregate |
+| **GT3 — Read/write boundary** | Where in the runtime is AI ALLOWED to read memory? FORBIDDEN to write? Where is the offline writer? | Edge inference: read-only on model weights + lookup table. Offline retraining (after each exercise): write-only into next model version. No in-loop self-update. |
+| **GT4 — Cold-start behavior** | First N deployments: ground-truth backlog is empty. What does AI output? Must be sensible without field-derived memory. | Default to Stage 1 lab calibration table; no field-derived adjustments until 3+ exercises completed. |
+
+**Failure modes this prevents:**
+- **In-loop self-judgment** — model evaluates its own output during decision (LLM-as-judge in real time, confidence-as-truth) → endogenous noise → false improvement signal → silent drift.
+- **Premature first-week optimization** — Stage 4 updates model from Day 1 telemetry without waiting for ground truth → overfits to deployment artifacts (sensor seating, operator novelty) → degrades.
+- **Ground truth that is model-judging-model** — "field performance" measured by another AI rather than human operators / physical instruments → loop is self-amplifying noise, not learning.
+- **Indefinite-pending outcomes blocking the loop** — if ground truth never arrives (mission cancelled, exercise postponed), learning freezes. Define timeout + default behavior.
+
+**Output:** "Learning Loop Architecture" sub-section in Validation Plan (added in Step 2). Becomes checked precondition for Stage 4 sign-off.
+
+**Skip condition:** ACH product where field outcomes are immediate + objective (e.g., automated weight-on-target measurement, instant scoring instrument). Pattern still helps but mandatory 4-entry structure can be lighter.
+
+**Time:** 30-60 min CEO-led, AI drafts.
+
+**COD:** **Core** — only CEO knows what ground-truth signal is realistic for the specific defense customer's operational tempo.
 
 ### Step 2: Generate Validation Plan
 
@@ -90,6 +160,19 @@ Fallback trigger testing: verify each FM-N from forge-fallback
 - Drift detection thresholds
 - Alert conditions: "performance drops below X → notify CEO"
 - Quarterly revalidation schedule
+- **Outcome-linked learning gate (from Step 1.5):**
+  - Model updates ONLY after ground truth (GT1) arrives — no in-loop self-update
+  - Telemetry runs READ-ONLY on field data; writes only after ground-truth batch
+  - Cold-start behavior (GT4) active until N exercises completed
+  - Ground-truth timeout: if GT1 not received within {{GT2 × 2}}, escalate (do not silently fall through to model-judging-model)
+
+## LEARNING LOOP ARCHITECTURE (from Step 1.5 — mandatory before Stage 4 sign-off)
+| Entry | Definition |
+|-------|-----------|
+| GT1 — Ground truth signal | {{from Step 1.5}} |
+| GT2 — Arrival latency | {{days/exercises}} |
+| GT3 — Read/write boundary | {{description}} |
+| GT4 — Cold-start behavior | {{description}} |
 
 ## PERFORMANCE ENVELOPE (output of validation)
 | Condition | Performance | Category |
@@ -159,6 +242,8 @@ forge-validate WRITES TO HELIX:
 - Physical tests always preferred over analysis alone
 - Fallback must be tested as part of validation — not separately
 - Stage 4 telemetry must be designed INTO the product (DfU)
+- Define Learning Loop Architecture (Step 1.5) BEFORE Stage 1 — Stage 4 read/write boundary must be designed-in, not bolted-on
+- Ground truth must come from OUTSIDE the AI (operator, instrument, physical outcome) — no in-loop self-judgment, no model-judging-model
 
 ---
 

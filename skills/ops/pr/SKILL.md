@@ -1,3 +1,13 @@
+---
+name: pr
+description: >-
+  Clean up code, stage changes, and prepare a pull request for the current
+  branch. Runs linters, removes debug artifacts, stages relevant files, drafts a
+  PR title and description, and waits for CEO approval before committing.
+  Triggers on: "pr", "pull request", "tạo PR", "chuẩn bị commit", "stage
+  changes", "clean up code".
+---
+
 Clean up the code, stage changes, and prepare a pull request.
 
 1. Run linters/formatters if configured in the project (check package.json scripts, pyproject.toml, etc.)

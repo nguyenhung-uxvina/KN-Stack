@@ -1,4 +1,5 @@
 ---
+name: erp-finance
 description: "ERPNext Finance management — Purchase Order, Sales Invoice, Payment Entry. TT200 chart of accounts for Vietnam. Defense contract milestone billing. Triggers on: 'erp finance', 'erp invoice', 'erp po', 'purchase order erp', 'sales invoice erp', 'payment erp', 'hóa đơn erp', 'thanh toán erp', 'TT200'."
 allowed-tools: ["Read", "Write", "Edit", "Bash", "Grep", "Glob", "Agent"]
 ---

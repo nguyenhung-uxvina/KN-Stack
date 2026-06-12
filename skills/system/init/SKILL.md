@@ -1,3 +1,7 @@
+---
+name: init
+description: Initializes a new Workshop X project by creating the standard Pahl-Beitz folder structure (Phase1–Phase4, References, VnV) under 1_Projects/ and generating _Project_Brief.md and Status.md with correct frontmatter. Use when starting any new Tier 1/2/3 project. Triggers on: "init project", "new project", "initialize", "create project", "khởi tạo dự án", "tạo dự án mới", "project brief".
+---
 Initialize a new project with the Workshop X / Pahl-Beitz folder structure and Phase 0 artifacts.
 
 Usage: /init [project_code] OR provide details interactively.

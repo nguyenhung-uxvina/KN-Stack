@@ -1,3 +1,8 @@
+---
+name: analyze
+description: Performs deep multi-framework analysis on any article, book chapter, podcast transcript, or intellectual content. Combines Systems Thinking, Meta-Learning, First-Principles Debate, and ARCHITECT framework generation into a 5-phase pipeline. Use when you need structured insight extraction from substantial text. Triggers on: "analyze this article", "deep analysis", "phan tich sau", "break down this content", "extract insights", "debate", "first principles", "expand framework", "ARCHITECT", "phân tích chuyên sâu", "trích xuất insights".
+---
+
 Perform deep multi-framework analysis on any article, book chapter, podcast transcript, or intellectual content. Combines Systems Thinking (stock-flow, feedback loops, leverage points, archetypes, constraints) with Meta-Learning (Feynman clarification, chunking, mnemonics, rubrics, drills) AND First-Principles Debate with ARCHITECT expanded framework generation.
 
 Triggers: "analyze this article", "deep analysis", "phan tich sau", "break down this content", "extract insights", "debate", "first principles", "expand framework", "ARCHITECT", or when user pastes substantial text requesting comprehensive analysis.

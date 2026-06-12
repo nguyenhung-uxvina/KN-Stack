@@ -1,0 +1,8 @@
+# Notebook Index — mentor-naval-architect-council
+
+| Facet | Notebook ID | NLM URL | Sources | Scope | Last refresh | Primary? |
+|-------|------------|---------|:-------:|-------|:------------:|:--------:|
+| primary | 41390b69-f462-47a5-806a-41126df09a0d | https://notebooklm.google.com/notebook/41390b69-f462-47a5-806a-41126df09a0d | 18 | Full corpus: Taylor "Speed and Power of Ships" (Archive.org) + Taylor "Resistance of Ships and Screw Propulsion" (1893, text compilation) + Gertler DTMB Report 806 (text compilation) + PNA Vol I Stability and Strength (text compilation) + PNA Vol II Resistance Propulsion and Vibration (text compilation) + PNA Vol III Motions in Waves and Controllability (text compilation) + Molland/Turnock/Hudson "Ship Resistance and Propulsion" Cambridge 2017 (text compilation) + MIT OCW 2.20 Marine Hydrodynamics (URL) + Tupper "Introduction to Naval Architecture" (Archive.org) + Tunaley TSS PDF (URL) + PNA resistance excerpts (rexresearch1 URL) + Shallow Water River Craft Hydrodynamics (text compilation) + David W. Taylor Wikipedia (URL) + NAS Biographical Memoir Taylor (text compilation) + Li & Ellingsen 2016 shear current wave resistance J.FluidMech (arXiv:1604.06608) + TC 5-210 Ch.4 Improved Float Bridge Ribbon US Army (ugliboats URL) + MDPI JMSE 2025 CFD shallow water ship waves + arXiv:1702.06275 shallow water wave patterns experiments (Pethiyagoda et al.) | 2026-05-28 | ✓ |
+
+**Split trigger:** >45 sources → split into `taylor-hydrodynamics` (resistance/propulsion/shallow water) + `lewis-stability-structures` (stability, strength, seakeeping)
+**Current: single facet** — all queries use primary notebook.

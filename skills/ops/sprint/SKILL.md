@@ -1,3 +1,14 @@
+---
+name: sprint
+description: >-
+  Drive a weekly design sprint for a specific project — generates a focused
+  Sprint Driver with max 3 priority items, decisions needed, Human-AI handoff
+  plan, phase deliverables tracker, and dP/dt pulse. Use every Monday to set the
+  week's engineering focus for a single active project. Triggers on: "sprint",
+  "weekly sprint", "sprint driver", "tuần này làm gì", "sprint planning",
+  "focus this week", "project sprint".
+---
+
 Drive a weekly design sprint for a specific project — the operational heartbeat between CEO Dashboard reviews.
 
 Usage: /sprint [project_name] OR provide details interactively.

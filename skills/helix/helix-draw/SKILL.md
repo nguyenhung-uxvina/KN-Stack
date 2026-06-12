@@ -1,4 +1,5 @@
 ---
+name: helix-draw
 description: "Generate Excalidraw diagrams for HELIX pipeline outputs. Creates .excalidraw.md files viewable in Obsidian. Supports 12 diagram types across Phase 1-3 blocks. Triggers on 'draw', 'diagram', 'excalidraw', 'vẽ sơ đồ', 'biểu đồ', 'chart', 'visual', or when a block-skill output would benefit from a visual representation."
 allowed-tools: ["Read", "Write", "Glob", "Grep", "Bash", "Agent"]
 ---

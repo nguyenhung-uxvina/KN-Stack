@@ -1,3 +1,7 @@
+---
+name: concept
+description: Runs Pahl-Beitz Phase 2 Conceptual Design, producing a refined Function Structure, Working Principles Search, Morphological Matrix, and VDI 2225 concept evaluation to select the winning concept variant. Use after Phase 1 Gate is passed and requirements are locked. Triggers on: "phase 2", "conceptual design", "morphological matrix", "working principles", "thiết kế khái niệm", "ma trận hình thái", "giai đoạn 2".
+---
 Run Phase 2 Conceptual Design for a project following Pahl-Beitz systematic design.
 
 Usage: /concept [project_name] OR provide details interactively.

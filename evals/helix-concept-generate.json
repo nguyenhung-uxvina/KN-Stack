@@ -2,6 +2,7 @@
   "skill": "helix-concept-generate",
   "version": "3.1-pipeline",
   "description": "Binary assertions for /helix-concept-generate v3.1 multi-agent pipeline orchestration",
+  "mode": "static",
   "test_input": "generate concepts for VN-12.7MM-SIM recoil simulation system",
   "assertions": [
     {

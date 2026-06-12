@@ -1,3 +1,14 @@
+---
+name: convert_md_to_docx
+description: >-
+  Convert a Markdown file to DOCX format using python-docx. Handles headings,
+  tables, bullet and numbered lists, bold/italic, checkboxes, YAML frontmatter
+  stripping, and horizontal rules. Use when a Vietnamese defense document or
+  project report needs to be delivered as a Word file. Triggers on: "convert to
+  docx", "markdown to word", "xuất file Word", "chuyển sang docx", "tạo file
+  docx".
+---
+
 Convert a Markdown file to DOCX format.
 
 Usage: /splash <file_path>

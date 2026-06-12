@@ -1,3 +1,15 @@
+---
+name: physical-sprint
+description: >-
+  Force 1 physical action commitment per session before any analytical work
+  begins — reads Tier 1 project open items, presents only physical actions
+  (material orders, tests, calls, document submissions), logs the CEO's
+  commitment, and tracks previous commitments for DONE/MISSED outcomes. Triggers
+  Analyst Trap after 3 consecutive sessions with no physical commitment. Triggers
+  on: "physical-sprint", "physical action", "force physical", "hành động thực
+  tế", "không có gì physical", "break analyst trap", "commit physical".
+---
+
 Force 1 physical action per session. Not analysis — hardware, test, or document sent.
 
 Breaks the Infrastructure Trap (B1b) by requiring a physical commitment before any analytical work.

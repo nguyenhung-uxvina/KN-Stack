@@ -1,3 +1,7 @@
+---
+name: cycle
+description: Plans a structured D-M-I-R (Diagnose → Map → Improve → Reflect) learning cycle for a topic or skill, with weekly activities, output milestones, and a measurable capability goal. Use when starting deliberate study of a new domain or after a failure that exposed a knowledge gap. Triggers on: "learning cycle", "DMIR", "study plan", "skill cycle", "chu kỳ học", "kế hoạch học tập", "D-M-I-R".
+---
 Plan a D-M-I-R learning cycle for a specific topic, project, or skill.
 
 Usage: /cycle [topic] OR provide details interactively.

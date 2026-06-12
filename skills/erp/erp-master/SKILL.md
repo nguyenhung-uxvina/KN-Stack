@@ -1,4 +1,5 @@
 ---
+name: erp-master
 description: "ERPNext Master Data management — Item, Workstation, Operation, Routing. The foundation layer per ERP Dependency Chain. Gate rule: master data quality ≥90% before any Work Orders. Triggers on: 'erp master', 'erp item', 'item master', 'workstation', 'operation', 'routing', 'master data', 'dữ liệu gốc', 'tạo item', 'create item'."
 allowed-tools: ["Read", "Write", "Edit", "Bash", "Grep", "Glob", "Agent"]
 ---

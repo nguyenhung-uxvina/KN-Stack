@@ -1,0 +1,96 @@
+{
+  "skill": "forge-fabrication",
+  "version": "1.0-pipeline",
+  "description": "Binary assertions for /forge-fabrication 6-block manufacturing orchestrator (F0-F5)",
+  "mode": "static",
+  "test_input": "fab BB-01 --qty 10 --customer VKTHQ --dry-run",
+  "assertions": [
+    {
+      "id": "FF-ORCH",
+      "name": "pipeline_orchestration",
+      "check": "skill defines 6-block deterministic pipeline F0-F5",
+      "regex": "F0|F1|F2|F3|F4|F5|preflight.*material.*release|6.?block",
+      "required": true
+    },
+    {
+      "id": "FF-PREFLIGHT",
+      "name": "block_preflight",
+      "check": "preflight block verifies design freeze / handoff inputs",
+      "regex": "preflight|Handoff_to_Fabrication|design freeze|P3/P4|đầu vào",
+      "required": true
+    },
+    {
+      "id": "FF-MATERIAL",
+      "name": "block_material",
+      "check": "material block covers BOM allocation and stock",
+      "regex": "material|BOM.*alloc|stock|vật tư|nguyên liệu|erp-stock",
+      "required": true
+    },
+    {
+      "id": "FF-RELEASE",
+      "name": "block_release",
+      "check": "release block creates Work Orders",
+      "regex": "release|Work Order|WO-|erp-production|lệnh sản xuất",
+      "required": true
+    },
+    {
+      "id": "FF-EXECUTE",
+      "name": "block_execute",
+      "check": "execute block tracks Job Cards and shop-floor progress",
+      "regex": "execute|Job Card|shop.?floor|tiến độ|phân xưởng",
+      "required": true
+    },
+    {
+      "id": "FF-ACCEPTANCE",
+      "name": "block_acceptance",
+      "check": "acceptance block covers QC stamps and NCR linkage",
+      "regex": "acceptance|QC|NCR|nghiệm thu|erp-quality|inspection",
+      "required": true
+    },
+    {
+      "id": "FF-INVOICE",
+      "name": "block_invoice",
+      "check": "invoice block covers delivery and milestone billing",
+      "regex": "invoice|billing|milestone|giao hàng|erp-finance|hóa đơn",
+      "required": true
+    },
+    {
+      "id": "FF-FLAGS",
+      "name": "cli_flags",
+      "check": "skill documents --product/--qty/--dry-run flags",
+      "regex": "--product|--qty|--dry-run|--customer|--from|--only",
+      "required": true
+    },
+    {
+      "id": "FF-CAPACITY",
+      "name": "capacity_arbitration",
+      "check": "cross-product capacity arbitration is defined",
+      "regex": "capacity|arbitrat|năng lực|cross.?product|xưởng",
+      "required": true
+    },
+    {
+      "id": "FF-TRACE",
+      "name": "traceability",
+      "check": "traceability per Work Order is defined",
+      "regex": "traceab|lineage|truy xuất|truy vết",
+      "required": true
+    },
+    {
+      "id": "FF-CEO",
+      "name": "ceo_checkpoint",
+      "check": "blocks pause for CEO approval",
+      "regex": "CEO|Approve|checkpoint|phê duyệt|xác nhận",
+      "required": false
+    },
+    {
+      "id": "FF-DEFENSE",
+      "name": "defense_context",
+      "check": "defense contract/milestone context present",
+      "regex": "defense|BQP|contract|hợp đồng|quốc phòng",
+      "required": false
+    }
+  ],
+  "passing_score": 10,
+  "total_required": 10,
+  "total_optional": 2
+}
