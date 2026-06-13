@@ -21,6 +21,8 @@ User cung cấp YouTube URL. Accepted formats:
 - `https://youtu.be/XXXXXXXXXXX`
 - `https://youtube.com/shorts/XXXXXXXXXXX`
 
+> To *find* a video worth learning from (semantic discovery), use `/yt-search` or `/research` Channel 0 (Exa) first — see `../../galaxy/research/references/exa-discovery.md`. `/yt-learn` itself assumes the URL is already chosen.
+
 ## Workflow
 
 ### STEP 1 — Preflight & URL Validation

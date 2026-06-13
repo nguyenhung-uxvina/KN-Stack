@@ -85,3 +85,13 @@ Q3: "<topic> patent OR utility model site:lens.org"
 - Tier C contradicts S/A → flag as ★ LOW + note conflict
 - Tier B contradicts S/A → flag for CEO review
 - Tier S contradicts Tier A → flag as research gap, both may be valid
+
+## Exa Result Tiering (v4.1)
+
+When sources come from Exa Channel 0 (see `exa-discovery.md`), assign tier in this order:
+
+1. Exa `category: "research paper"` or `"financial report"` → **S** (primary).
+2. Result domain ∈ any Authority Domain list above (ti.com, dtic.mil, ieee.org, …) → **A**.
+3. Otherwise → apply the URL heuristic table above (S/A/B/C).
+
+Exa returns a relevance score per result — use it for sort order only, never to override tier. Exa `includeDomains` maps directly onto the "Authority Domain Queries" lists above: pass the same domains to Exa instead of running `site:` WebSearch queries.

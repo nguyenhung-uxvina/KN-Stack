@@ -50,7 +50,7 @@ Identify what the CEO wants to learn from:
 | URL / article | Fetch or add to NLM | WebFetch / nlm source add |
 | YouTube video(s) | Run /yt-search first | yt-dlp |
 | Book chapter (PDF) | Read + extract | Read tool (PDF mode) |
-| Raw topic (no source) | Search → gather | /research pipeline |
+| Raw topic (no source) | Search → gather (Exa Channel 0 when available) | /research pipeline — see `../research/references/exa-discovery.md` |
 | Voice transcript | Process via MCP | tana-iparag-bridge |
 | Past analysis output | Read from 3_Resources/ | Read tool |
 
