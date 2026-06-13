@@ -1,5 +1,9 @@
 # Changelog
 
+## [Unreleased] - 2026-06-13
+### Added
+- **Exa semantic source discovery ("Channel 0")** across NLM discovery pipelines, encoded once in `skills/galaxy/research/references/exa-discovery.md`. Augment + fallback: Exa preferred when the Exa MCP/Connector is available; WebSearch/yt-dlp fallback otherwise; `--no-exa` escape; free-tier 429 guard. Touched: `/research` (→ v4.1), `source-tiers.md`, `mentor-board` (A2), `learning` (Step 1), `yt-search`, `yt-learn`.
+
 ## v1.1.0 — 2026-06-12
 
 System grows 143 → 230 skills (15 domains). Full-system audit + hygiene pass.
