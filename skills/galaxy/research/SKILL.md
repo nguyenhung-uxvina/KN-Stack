@@ -3,9 +3,9 @@ name: research
 description: End-to-end research pipeline v4.0 with multi-channel source discovery (Web + YouTube + Authority + Patents), source tier classification (S/A/B/C), cross-validation, and structured NLM extraction. The super-skill combining WebSearch + /yt-search + /nlm into one workflow with CEO approval gates. Use when starting a new research sprint on any technical, defense, or market topic. Triggers on: "research topic", "find sources on", "nghien cuu chu de", "tim tai lieu", "nghiên cứu chuyên sâu", "tìm nguồn tham khảo", "patent search", "literature review".
 ---
 
-End-to-end research pipeline v4.0 with multi-channel source discovery (Web + YouTube + Authority + Patents), source tier classification (S/A/B/C), analysis routing by quality, cross-validation, and structured NLM extraction templates. The "super skill" combining WebSearch + /yt-search + /nlm + Deep Content Analyzer into one workflow. v4.0 adds 3 extraction modes for deep NLM analysis.
+End-to-end research pipeline v4.1 with multi-channel source discovery (Exa + Web + YouTube + Authority + Patents), source tier classification (S/A/B/C), analysis routing by quality, cross-validation, and structured NLM extraction templates. The "super skill" combining WebSearch + /yt-search + /nlm + Deep Content Analyzer into one workflow. v4.0 adds 3 extraction modes for deep NLM analysis. v4.1 adds Channel 0 — Exa semantic discovery (preferred when the Exa MCP/Connector is available; WebSearch fallback otherwise). See references/exa-discovery.md.
 
-Usage: /research <topic> [--notebook <alias>] [--output report|audio|mindmap|quiz] [--count N] [--deep] [--patents] [--update] [--extract miner|cross-std|structure]
+Usage: /research <topic> [--notebook <alias>] [--output report|audio|mindmap|quiz] [--count N] [--deep] [--patents] [--update] [--extract miner|cross-std|structure] [--no-exa]
 
 PATH setup (required for all commands):
 ```bash
@@ -20,9 +20,10 @@ export NO_COLOR=1
 
 ```
 [1] MULTI-CHANNEL SEARCH (parallel)
-    ├── Channel 1: WebSearch academic/OEM/standards
+    ├── Channel 0: Exa semantic discovery (when available — see exa-discovery.md)
+    ├── Channel 1: WebSearch academic/OEM/standards (Exa fallback / supplement)
     ├── Channel 2: YouTube (yt-dlp)
-    ├── Channel 3: Known authority domains
+    ├── Channel 3: Known authority domains (→ Exa includeDomains when Exa active)
     └── Channel 4: Patent search (engineering topics or --patents)
      ↓
 [2] MERGE + TIER CLASSIFY (S/A/B/C)
@@ -83,7 +84,11 @@ Quick reference: **S** (Standards/Primary) → **A** (Authority/OEM) → **B** (
 
 ## STEP 1: MULTI-CHANNEL SEARCH
 
-Run 4 search channels in parallel:
+Run search channels in parallel. **First, detect Exa availability** (see `references/exa-discovery.md` §1). When Exa is available and `--no-exa` is not set, Channel 0 is the preferred discovery engine and Channels 1 & 3 become supplementary; otherwise the pipeline runs exactly as the 4-channel WebSearch/yt-dlp flow below.
+
+### Channel 0 — Exa Semantic Discovery (when available)
+
+Neural-embedding search via the Exa MCP/Connector. Replaces keyword Channels 1 & 3 when active. Map topic → Exa categories + `includeDomains` (from source-tiers.md) per `references/exa-discovery.md` §2; tier results per §3. On Exa 429/quota or zero results → fall back to WebSearch (§4). Channels 2 (yt-dlp) and 4 (patents) always run.
 
 ### Channel 1 — Web Search
 
