@@ -42,6 +42,8 @@ yt-dlp "ytsearch8:<topic>" \
 
 Adjust count: `ytsearch5:`, `ytsearch10:`, etc. theo `--count`.
 
+> **Exa option (when available):** for *concept-based* video discovery (not just keyword match), run Exa with `includeDomains:["youtube.com"]` first (see `../../galaxy/research/references/exa-discovery.md`), then merge with yt-dlp results and dedup by video ID. yt-dlp remains the fallback.
+
 Nếu `yt-dlp` không tìm được → báo CEO, dừng.
 
 ### Step 2: Present Results Table
