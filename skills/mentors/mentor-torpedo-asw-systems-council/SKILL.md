@@ -1,6 +1,6 @@
 ---
 name: mentor-torpedo-asw-systems-council
-description: "Cố vấn AI nhân bản tư duy của Torpedo & ASW Systems Council — Composite authority từ NAVSEA, NUWC Newport, và international torpedo systems engineering: swim-out vs impulse launch mechanics, safety interlocks, surface vessel handling, ASW weapons platform integration. Specialties: torpedo tube design, swim-out vs impulse launch, safety interlock systems, ordnance handling, surface vessel torpedo handling, ASW weapons platform integration, lightweight torpedo specifications. Built from 17 sources (T1 direct: 5, T2 authoritative: 8, T3 other: 4) across 1 NotebookLM notebook(s). Default mode: 5-frame DMIR CONSULT cross-facet (Diagnose → Model → Intervene → Reflect). Flags: --help, --facet <name>|auto, --facets, --refresh, --check-new, --history, --reliability. Triggers on: 'mentor torpedo-asw-systems-council', 'cố vấn vũ khí ngư lôi', 'torpedo tube advice', 'swim-out tube', 'torpedo handling', 'SVTT', 'ASW systems', 'consult torpedo-asw'."
+description: "Cố vấn AI nhân bản tư duy của Torpedo & ASW Systems Council — Composite authority từ NAVSEA, NUWC Newport, và international torpedo systems engineering: swim-out vs impulse launch mechanics, safety interlocks, surface vessel handling, ASW weapons platform integration. Specialties: torpedo tube design, swim-out vs impulse launch, safety interlock systems, ordnance handling, surface vessel torpedo handling, ASW weapons platform integration, lightweight torpedo specifications. Built from 30 sources (17 original + 13 added 2026-06-14 via Exa: surface-vessel/USV LWT handling, swim-out/impulse interlock patents, 2024-25 UUV torpedo-tube launch & recovery) across 1 NotebookLM notebook(s). Default mode: 5-frame DMIR CONSULT cross-facet (Diagnose → Model → Intervene → Reflect). Flags: --help, --facet <name>|auto, --facets, --refresh, --check-new, --history, --reliability. Triggers on: 'mentor torpedo-asw-systems-council', 'cố vấn vũ khí ngư lôi', 'torpedo tube advice', 'swim-out tube', 'torpedo handling', 'SVTT', 'ASW systems', 'consult torpedo-asw'."
 allowed-tools: ["Read", "Write", "Edit", "Bash", "Grep", "Glob", "Agent"]
 ---
 
@@ -71,7 +71,7 @@ See `notebooks/_index.md` for current facet registry.
 
 | Facet | NLM URL | Sources | Scope | Last refresh |
 |-------|---------|:-------:|-------|:------------:|
-| primary | https://notebooklm.google.com/notebook/82002175-6bf8-4db2-a7c4-cb0bfa9bc81b | 17 | Torpedo/ASW systems — handling, launch, interlocks, LWT specs | 2026-06-10 |
+| primary | https://notebooklm.google.com/notebook/82002175-6bf8-4db2-a7c4-cb0bfa9bc81b | 30 | Torpedo/ASW systems — handling, launch, interlocks, LWT specs; (+13 Exa 2026-06-14) surface-vessel/USV LWT handling, swim-out/impulse patents, 2024-25 UUV TTL&R | 2026-06-14 |
 
 **Cross-facet query (default):** single-facet mentor, all queries go to primary.
 

@@ -1,6 +1,6 @@
 # Seed Sources — mentor-nswc-hull-council
 
-Initial source list ingested 2026-06-09. Used as baseline for REFRESH dedup.
+Initial source list ingested 2026-06-09 (20). **Updated 2026-06-14** (`--update use exa`): +7 → **27 sources** (class-society rules + Kendrick-via-Ross + general-instability/imperfection-sensitivity). Full current list with IDs in `notebooks/_index.md`.
 
 ## T1 — Primary Institutional Publications (Open Access)
 
@@ -37,10 +37,19 @@ Initial source list ingested 2026-06-09. Used as baseline for REFRESH dedup.
 | 19 | Hydrostatic Test Protocol — Navy Procedure for Pressure Hull Certification | 88b90ed5-1bd0-4893-a818-e0260feccb73 |
 | 20 | NSWC Hull Council — Decision Principles, Frameworks, and WX Application Guide | f03bd605-6824-4776-9113-9019dc97c936 |
 
-## Next Refresh Priority (suggested additions)
+## Next Refresh Priority — status after 2026-06-14 `--update`
 
-1. NAVSEA DDS 100-4 — Design Data Sheet for ring-stiffened cylinders (if accessible public version found)
-2. Kendrick (1953) — "The Buckling Under External Pressure of Circular Cylindrical Shells with Evenly Spaced Ring Frames" — Royal Corps of Naval Constructors (UK authority)
-3. ABS Guide for Building and Classing Underwater Vehicles, Systems and Hyperbaric Facilities (current edition)
-4. DNV-OS-C101 or DNV-ST for submersible structural design
-5. NUWC Newport technical reports on torpedo hull structural certification (if DTIC accessible)
+1. NAVSEA DDS 100-4 — ring-stiffened cylinder DDS — ⚠ STILL OPEN (no accessible public version found)
+2. Kendrick (1953) buckling under external pressure, ring frames — ✅ ADDRESSED via Ross/Andriosopoulos/Little (Kendrick Pt.1/3 + plastic-knockdown design charts, `c11f4391`) + NACA explicit formulas (`1c86ed54`). Kendrick ORIGINAL still gated (OSTI has no digital full text).
+3. ABS Guide for Underwater Vehicles/Systems/Hyperbaric — ✅ DONE — ABS Underwater Rules 2025 (`757dcec6`)
+4. DNV submersible structural design — ✅ DONE — DNVGL-RU-UWT text (Pt.3 + Pt.5 Ch.7, `a77c3bd2`) + DNV technology-qualification (`f0065c7b`)
+5. NUWC Newport torpedo-hull structural certification — ⚠ STILL OPEN (not surfaced via Exa/DTIC)
+
+### Also added 2026-06-14 (beyond the original priority list)
+- USCG/ABS Pressure-Hull Requirements for Passenger Submersibles (2024) — approved pressure-hull materials + cert chain, post-Titan (`045ed4b8`)
+- Buckling & sensitivity estimates for ring-stiffened cylinders — SIFM vs GIFM, imperfection sensitivity (`b659c101`)
+
+### Remaining for next refresh
+- NAVSEA DDS 100-4 (try alternate hosts / FOIA-released versions)
+- NUWC Newport torpedo-hull certification reports (DTIC deep search)
+- Kendrick 1953 original full text (WorldCat / UK NCRE archive)

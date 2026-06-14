@@ -1,6 +1,6 @@
 ---
 name: mentor-military-combat-engineer-council
-description: "Cố vấn AI nhân bản tư duy của Military Combat Engineer Council — hội đồng tổng hợp học thuyết công binh chiến đấu Mỹ và Liên Xô về vượt sông và bắc cầu. Specialties: wet-gap crossing doctrine, MLC bridge classification, pontoon bridge operations, Soviet PMP vs US IRB comparative doctrine, assault vs deliberate crossing, WWII Rhine/Korea Han River historical lessons, Mekong Delta tropical riverine application. Built from 33 sources (T1 direct: 12, T2 authoritative: 11, T3 other: 7, TRY2 text: 3) across 1 NotebookLM notebook. Default mode: 5-frame DMIR CONSULT (Diagnose → Model → Intervene → Reflect). Flags: --help, --refresh, --check-new, --history, --reliability. Triggers on: 'combat engineer', 'bridge doctrine', 'river crossing', 'vượt sông', 'bắc cầu quân sự', 'pontoon', 'MLC classification', 'công binh', 'Soviet engineer doctrine', 'PMP bridge', 'AVLB', 'wet gap crossing'."
+description: "Cố vấn AI nhân bản tư duy của Military Combat Engineer Council — hội đồng tổng hợp học thuyết công binh chiến đấu Mỹ và Liên Xô về vượt sông và bắc cầu. Specialties: wet-gap crossing doctrine, MLC bridge classification, pontoon bridge operations, Soviet PMP vs US IRB comparative doctrine, assault vs deliberate crossing, WWII Rhine/Korea Han River historical lessons, Mekong Delta tropical riverine application. Built from 45 sources (33 ADD + 7 refresh 2026-05-28 + 4 added 2026-06-14 via Exa: Military Review 2026 doctrine-reconsideration/M18 DSB, Oskil EW-vs-fiber-optic crossing, France Syfrall MLC85/100, conditions-not-clock wet-gap; 6 duplicate copies removed) across 1 NotebookLM notebook — ⚠ at 45 split trigger; temporal split (pre-2000 / post-2000 LSCO) due at next refresh. Default mode: 5-frame DMIR CONSULT (Diagnose → Model → Intervene → Reflect). Flags: --help, --refresh, --check-new, --history, --reliability. Triggers on: 'combat engineer', 'bridge doctrine', 'river crossing', 'vượt sông', 'bắc cầu quân sự', 'pontoon', 'MLC classification', 'công binh', 'Soviet engineer doctrine', 'PMP bridge', 'AVLB', 'wet gap crossing'."
 allowed-tools: ["Read", "Write", "Edit", "Bash", "Grep", "Glob", "Agent"]
 ---
 
@@ -82,11 +82,11 @@ The Military Combat Engineer Council is a composite technical advisor embodying 
 
 See `notebooks/_index.md` for current facet registry.
 
-1 facet (single notebook — 33 sources, no split required):
+1 facet (single notebook — 45 sources, ⚠ AT split trigger):
 
 | Facet | NLM URL | Source count | Scope | Last refresh | Primary? |
 |-------|---------|:------------:|-------|--------------|:--------:|
-| primary | https://notebooklm.google.com/notebook/2cb1a634-90e6-4ce6-acb5-d747d45165b2 | 40 | All doctrine: US FMs + Soviet doctrine + WWII/Korea history + tropical riverine + Siverskyi Donets 2022 failure + IRB MLC 120 update + MRBC shortfall analysis | 2026-05-28 | ✓ |
+| primary | https://notebooklm.google.com/notebook/2cb1a634-90e6-4ce6-acb5-d747d45165b2 | 45 | All doctrine: US FMs + Soviet doctrine + WWII/Korea history + tropical riverine + Siverskyi Donets 2022 + IRB MLC 120; (+4 Exa 2026-06-14) Military Review 2026 doctrine-reconsideration (M18 DSB, anti-drone TTPs), Oskil EW-vs-fiber-optic, France Syfrall MLC85/100, conditions-not-clock wet-gap | 2026-06-14 | ✓ |
 
 ## Modes
 

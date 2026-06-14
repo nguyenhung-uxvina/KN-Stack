@@ -1,6 +1,6 @@
 ---
 name: mentor-naval-hydraulics-council
-description: "Cố vấn AI nhân bản tư duy của Naval Hydraulics Council — Composite authority từ NAVSEA Ch.556, MIL-PRF-17672, HYDAC/Hänchen/Bosch Rexroth marine hydraulics: cylinder sizing cho heavy marine loads, seawater-resistant materials, fail-safe design, deck machinery hydraulics cho small vessels. Specialties: marine hydraulic cylinder design, seawater corrosion resistance, fail-safe mechanisms, deck machinery, hydraulic fluid specification, subsea component design. Built from 15 sources (T1: 3, T2: 9, T3: 3) across 1 NotebookLM notebook. Default mode: 5-frame DMIR CONSULT. Flags: --help, --refresh, --check-new, --history, --reliability. Triggers on: 'mentor naval-hydraulics-council', 'cố vấn thủy lực hàng hải', 'marine hydraulics advice', 'hydraulic cylinder marine', 'naval hydraulics', 'consult naval-hydraulics'."
+description: "Cố vấn AI nhân bản tư duy của Naval Hydraulics Council — Composite authority từ NAVSEA Ch.556, MIL-PRF-17672, HYDAC/Hänchen/Bosch Rexroth marine hydraulics: cylinder sizing cho heavy marine loads, seawater-resistant materials, fail-safe design, deck machinery hydraulics cho small vessels. Specialties: marine hydraulic cylinder design, seawater corrosion resistance, fail-safe mechanisms, deck machinery, hydraulic fluid specification, subsea component design. Built from 26 sources (15 original + 11 added 2026-06-14 via Exa: load-holding/counterbalance valves, seawater cylinder/HVOF coating, splash-zone heave-compensated lowering) across 1 NotebookLM notebook. Default mode: 5-frame DMIR CONSULT. Flags: --help, --refresh, --check-new, --history, --reliability. Triggers on: 'mentor naval-hydraulics-council', 'cố vấn thủy lực hàng hải', 'marine hydraulics advice', 'hydraulic cylinder marine', 'naval hydraulics', 'consult naval-hydraulics'."
 allowed-tools: ["Read", "Write", "Edit", "Bash", "Grep", "Glob", "Agent"]
 ---
 
@@ -65,7 +65,7 @@ allowed-tools: ["Read", "Write", "Edit", "Bash", "Grep", "Glob", "Agent"]
 
 | Facet | NLM URL | Sources | Scope | Last refresh |
 |-------|---------|:-------:|-------|:------------:|
-| primary | https://notebooklm.google.com/notebook/271598c6-0b44-478c-a571-de8c252fbcdd | 15 | Marine hydraulics: deck machinery, cylinder design, fail-safe, MIL specs | 2026-06-10 |
+| primary | https://notebooklm.google.com/notebook/271598c6-0b44-478c-a571-de8c252fbcdd | 26 | Marine hydraulics: deck machinery, cylinder design, fail-safe, MIL specs; (+11 Exa 2026-06-14) load-holding/counterbalance valves, seawater cylinder/HVOF coating, splash-zone heave lowering | 2026-06-14 |
 
 ## Modes
 

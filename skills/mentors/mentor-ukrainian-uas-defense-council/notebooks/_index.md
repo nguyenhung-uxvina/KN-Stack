@@ -2,14 +2,14 @@
 name: ukrainian-uas-defense-council-notebooks
 type: facet-index
 mentor: ukrainian-uas-defense-council
-last_updated: 2026-05-22
+last_updated: 2026-06-14
 ---
 
 # Notebooks Index — mentor-ukrainian-uas-defense-council
 
 | Facet | NLM URL | Notebook ID | Sources | Scope | Primary? | Last refresh |
 |-------|---------|-------------|:-------:|-------|:--------:|:------------:|
-| primary | https://notebooklm.google.com/notebook/dcc34486-21b4-473d-b3ff-9bdce223c494 | dcc34486-21b4-473d-b3ff-9bdce223c494 | 40 | Fedorov + Brave1 cluster (Ukrspecsystems, Kvertus, Farsight Vision) + KSE Institute + TRADOC + CSIS/CSET + Ukraine EW Wikipedia + Sky Fortress + I-SEE + Aero Azimuth SIGINT + DefTech 2025 | ✓ | 2026-05-22 |
+| primary | https://notebooklm.google.com/notebook/dcc34486-21b4-473d-b3ff-9bdce223c494 | dcc34486-21b4-473d-b3ff-9bdce223c494 | 45 | Fedorov + Brave1 cluster + KSE Institute (incl. Mar-2026 market report) + TRADOC + CSIS/CSET + Ukraine EW + Sky Fortress + I-SEE + Aero Azimuth SIGINT + DefTech 2025; (+4 Exa 2026-06-14) autonomous Shahed interception (Brave1/MaXon 95%), interceptor scaling (Brave1 CEO), AI mid-range deep-strike | ✓ | 2026-06-14 |
 
 ## Facet scope notes
 
@@ -23,9 +23,17 @@ last_updated: 2026-05-22
 
 Default: all queries go to `primary` facet (only 1 facet exists).
 
-**Current: 40 sources.** Split trigger: if source count exceeds 45 at next refresh, consider temporal split:
+**Current: 45 sources — ✓ no split (trigger raised 45→50 on 2026-06-14, CEO decision).** Rationale: this council is *entirely* 2022-2026 and tightly cross-temporal (e.g. Bukovel-AD 2022 → Brave1 95%-automated interception 2026 are one thread), and most sources are undated web articles spanning the whole war — a `2022-2024 / 2025-2026` partition would cut linked threads and add little. Keep whole; if it ever exceeds 50, the documented split below is the fallback:
 - `primary-2022-2024` — early war period, EW adaptation, first AI deployments
-- `primary-2025-2026` — autonomous systems maturity, Brave1 Dataroom, remote C2 interceptors
+- `primary-2025-2026` — autonomous systems maturity, Brave1 Dataroom, remote C2 interceptors, autonomous interception, AI mid-range deep-strike
+NLM caveat: sources can't be moved between notebooks — a split would mean a 2nd notebook + re-ingest of the 2025-2026 set. Use `cross_notebook_query` before resorting to a split.
+
+### Added 2026-06-14 via Exa Channel 0 (4; freshest 2026-H1)
+- KSE Institute "Ukrainian Defense Technology Market" Mar 2026 `441f5568`
+- UNITED24 — Brave1/MaXon 95%-automated autonomous Shahed interception (Jun 2026) `d7e6ab34`
+- TWZ — Inside Ukraine's interceptor-drone innovations (Brave1 CEO; 2,000/day) `e545a6c2`
+- TWZ — AI-enabled mid-range deep-strike vs Russian logistics (Jun 2026) `57ed0c3a`
+> Deleted 1 junk Cloudflare stub (`43c5440b`). Notebook 42→45 (clean). Deferred (held for post-split): AI gun-turret vs fiber-optic, counter-drone lasers/DEW, HORNET VISION Ctrl 500km, Euromaidan/BBC AI middle-strike.
 
 ## NLM alias
 

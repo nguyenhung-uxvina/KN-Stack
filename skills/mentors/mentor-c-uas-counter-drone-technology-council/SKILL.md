@@ -113,7 +113,9 @@ Focus: Independent capability assessment, cost-exchange analysis, adversarial ad
 
 | Facet | NLM URL | Sources | Scope | Last refresh |
 |-------|---------|:-------:|-------|:------------:|
-| primary | https://notebooklm.google.com/notebook/107cde20-217d-4429-9f81-91ed979637e1 | 10 | DIU Blue UAS + Army ATP 3-01.81 + DoD C-sUAS Strategy + DoD Fact Sheet + CNAS "Countering the Swarm" + CSIS + GAO-22-105705 + RUSI + RAND RR3023 + CRS R48477 | 2026-05-22 |
+| primary | https://notebooklm.google.com/notebook/107cde20-217d-4429-9f81-91ed979637e1 | 22 | (orig 10) DIU Blue UAS + Army ATP 3-01.81 + DoD C-sUAS Strategy + DoD Fact Sheet + CNAS "Countering the Swarm" + CSIS + GAO-22-105705 + RUSI + RAND RR3023 + CRS R48477 · (+12 Exa 2026-06-14) Gulf-procurement/interceptor-economics, Iran-Israel depletion, Shahed saturation, NATO Flytrap, FPV Bumblebee, SkyValor, CNAS Insights, AUSA JCO, EU drone plan, RUSI Iran decade, NPS naval autonomy | 2026-06-14 |
+
+> ✅ Hygiene (2026-06-14): removed 17 junk/error ingests + off-topic RAND pollutant; live notebook now 28 sources (22 curated + 6 valid extras). See `references/seed-sources.md`.
 
 ## Studio Artifacts (generated 2026-05-23)
 
