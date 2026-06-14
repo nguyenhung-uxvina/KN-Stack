@@ -273,7 +273,8 @@ Naval Architecture Council pairs naturally with:
 ## Evolution — Refresh Log
 
 *(Initial build — 2026-05-28 — 14 sources ingested)*
-- **2026-06-14** — +2 offshore mooring/anchoring sources (G2 for VN-FWTP-001): "Review of the state of the art of mooring and anchoring designs + relevant DLCs" + MDPI "Anchor Chain Optimization of a Catenary Anchor Leg Mooring System." Extends council to catenary mooring / station-keeping / anchor-load for shallow-water (25–40 m) floating platforms. Now 20 sources.
+- **(prior, un-logged)** — mooring/anchoring + ABS/ISO scantlings + DNV-ts301 + floating-wind expansion (~13 sources; G2 for VN-FWTP-001), incl. "Review of the state of the art of mooring and anchoring designs + relevant DLCs" + MDPI "Anchor Chain Optimization of a Catenary Anchor Leg Mooring System." → catenary mooring / station-keeping / anchor-load for shallow-water (25–40 m) floating platforms.
+- **2026-06-14** (`--update use exa`) — +11 sources via Exa: floating pontoon/ribbon-bridge hydrodynamics, multi-hull/demihull interference, shallow-water squat; 1 junk stub deleted. Live notebook now **42 sources** (see `references/seed-sources.md` + `notebooks/_index.md`).
 
 ## Reliability Log Link
 
