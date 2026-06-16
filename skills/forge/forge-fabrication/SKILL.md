@@ -247,6 +247,7 @@ For each block:
 
 **Pre-conditions:**
 - HELIX P3 handoff package exists (path passed via --helix-handoff, or scan 1_Projects/<product>/Phase3-Embody/)
+- **Geometry interface present** — per-part STEP files from `helix-cad-bridge` (git-tracked, CEO-verified). No loose binary CAD: each STEP traces to a parametric `.py` source + `cad_manifest.md` rev. MẬT parts: confirm egress guard PASS.
 - Master data quality score ≥90% (from `/erp-master audit`)
 - BOM exists and complete (from `/erp-bom check <product>`)
 - Routing exists in `_routing.md`

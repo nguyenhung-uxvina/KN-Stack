@@ -68,6 +68,8 @@ For each main function carrier:
 - Material selection rationale
 - Manufacturing method assumption
 
+> **CAD generation:** To turn CEO's dimensioned sketch into parametric geometry, invoke `helix-cad-bridge` — AI writes code-CAD from CEO's **explicit numbers only** (not spatial inference), exports STEP + render for CEO verification. This is the sanctioned escape from the Spatial Blindness gate: code with explicit params, never AI-invented arrangement. Output STEP feeds Block BB (DfX) + Phase 4.
+
 ### Step A3: Auxiliary Function Solutions (P&B 7.1 Step 7)
 
 > **Spatial Guard:** Cable routing, thermal paths, and component retention are inherently spatial. AI lists options and constraints — CEO decides routing and placement. AI outputs "Options: X, Y, Z — CEO selects and sketches routing."

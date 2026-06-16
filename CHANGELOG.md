@@ -2,6 +2,7 @@
 
 ## [Unreleased] - 2026-06-13
 ### Added
+- **`helix-cad-bridge`** (helix/) — cross-phase code-CAD bridge: AI writes parametric build123d/CadQuery/OpenSCAD from CEO's explicit dimensions, executes 100% LOCAL, exports STEP + render for CEO verification. Classification router (MẬT/HẠN-CHẾ/THƯỜNG) with egress guard blocks cloud/network for sensitive geometry — defense-safe alternative to SaaS CAD copilots (Leo/Zoo/Fusion). Operationalizes the LLM Spatial Blindness law (explicit params, CEO verifies render). Wired into `helix-p3-layout` (sketch→geometry), `helix-p4-drawing` (3D source), `forge-fabrication` F0 (STEP handoff gate). Static eval 7/7. POC verified end-to-end (UUV nose cone, STEP+PNG, mass 1.645 kg Al). Skill count 230 → 231.
 - **Exa semantic source discovery ("Channel 0")** across NLM discovery pipelines, encoded once in `skills/galaxy/research/references/exa-discovery.md`. Augment + fallback: Exa preferred when the Exa MCP/Connector is available; WebSearch/yt-dlp fallback otherwise; `--no-exa` escape; free-tier 429 guard. Touched: `/research` (→ v4.1), `source-tiers.md`, `mentor-board` (A2), `learning` (Step 1), `yt-search`, `yt-learn`.
 
 ## v1.1.0 — 2026-06-12

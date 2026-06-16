@@ -1,0 +1,60 @@
+{
+  "skill": "helix-cad-bridge",
+  "version": "1.0",
+  "description": "Static assertions for helix-cad-bridge — local code-CAD bridge with classification router + Spatial Blindness gate",
+  "mode": "static",
+  "test_input": "generate parametric geometry for a UUV nose cone part, export STEP",
+  "total_required": 7,
+  "passing_score": 7,
+  "assertions": [
+    {
+      "id": "CB-LOCAL",
+      "name": "local_codecad_only",
+      "check": "skill mandates local code-CAD backend, not cloud SaaS",
+      "regex": "build123d|CadQuery|OpenSCAD|code-CAD|LOCAL|offline",
+      "required": true
+    },
+    {
+      "id": "CB-ROUTER",
+      "name": "classification_router",
+      "check": "skill routes by geometry classification and guards MẬT against egress",
+      "regex": "MẬT|HẠN.?CHẾ|THƯỜNG|classification|egress|CLASSIFICATION-VIOLATION|network",
+      "required": true
+    },
+    {
+      "id": "CB-SPATIAL",
+      "name": "spatial_blindness_gate",
+      "check": "skill enforces LLM Spatial Blindness gate — CEO verifies render, AI never self-approves",
+      "regex": "Spatial Blindness|100%.*geometry|CEO.*verif|render.*proof|never self-approv|explicit.*number",
+      "required": true
+    },
+    {
+      "id": "CB-STEP",
+      "name": "step_interface",
+      "check": "skill uses STEP as the cross-phase geometry interface + PNG render",
+      "regex": "STEP|\\.step|PNG|render|B-Rep|bounding box|mass propert",
+      "required": true
+    },
+    {
+      "id": "CB-CORE",
+      "name": "ceo_core_intent",
+      "check": "spatial intent + dimensions classified as CEO Core, non-delegable",
+      "regex": "Core \\(C\\)|non-delegable|CEO.*intent|dimensions.*Core|Parametric Intent",
+      "required": true
+    },
+    {
+      "id": "CB-GIT",
+      "name": "git_source_of_truth",
+      "check": "parametric .py script committed as source of truth, registered in ICD",
+      "regex": "git|source of truth|commit|ICD|manifest|version",
+      "required": true
+    },
+    {
+      "id": "CB-INTEGRATION",
+      "name": "phase_integration_map",
+      "check": "skill maps to P2/P3/P4 callers + forge-fabrication handoff",
+      "regex": "helix-p2-develop|helix-p3-layout|helix-p3-bom|helix-p4-drawing|forge-fabrication",
+      "required": true
+    }
+  ]
+}

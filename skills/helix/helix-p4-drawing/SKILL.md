@@ -56,6 +56,8 @@ PCB LAYOUT APPROVAL:
 
 ### Step A.2: AI Completes 3D Model
 
+> **3D source:** the parametric model comes from `helix-cad-bridge` (code-CAD `.py` → STEP, git source of truth from Phase 3). Manufacturing features below are added by editing those parameters/script and re-exporting STEP — not by redrawing. Keeps drawing ↔ model single-sourced and rev-tracked.
+
 From CEO spec + frozen layout:
 
 ```
