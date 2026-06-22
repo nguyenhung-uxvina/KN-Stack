@@ -176,6 +176,8 @@ Route the certified extract to the consumer:
 - **Cross-sheet conflict (detail vs nesting)**: the same part can disagree between its detail sheet and the laser **nesting/sắp-hình sheet** (material and/or qty) — e.g. SS400/SL01 on the detail vs Nhôm 5083/SL02 on the nesting. The **nesting sheet is the authoritative cut-list** for material×thickness×qty; emit the disagreement as a `CONFLICT`, do not silently pick one.
 - **Assembly (tổng-lắp) drawings mix parts**: a `*-tong lap` / assembly DXF aggregates many parts' geometry — its dims/holes are assembly-level, NOT a single fabricable part. Exclude assembly files from any cut-list; use them only for the BOM tree.
 - **Windows console encoding**: when running the bundled scripts, set `PYTHONUTF8=1`/`PYTHONIOENCODING=utf-8` or Vietnamese prints crash on cp1252. File output is always written UTF-8.
+- **DWG via ODA → `\U+XXXX` escapes** (field-confirmed): SHX/Vietnamese text read from a converted DWG comes through as AutoCAD unicode escapes (e.g. `\U+0110\U+1ED3NG` for "ĐỒNG"), unlike a clean DXF export. Decode `\U\+([0-9A-Fa-f]{4})`→`chr()` before matching codes/materials/text (`dwg_dxf_diff.decode_acad`), else material/token comparisons under-count.
+- **Drift check is directional**: native DWG is a *superset* (it holds BOM/assembly sheets the per-part DXF folder lacks), so "DWG-only" content is expected, NOT drift. Real export drift = content present in the DXF but ABSENT from the DWG (DXF-only). A few DXF-only dim values are usually override-text/leader dims (the DWG carries them as text, not associative DIMENSION) — verify, don't alarm.
 
 ## Integration Map (who consumes this ingest)
 | Consumer | Uses the extract for |
