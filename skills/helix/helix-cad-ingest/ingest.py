@@ -42,6 +42,18 @@ def clean_inline(s: str) -> str:
 
 
 def load(path):
+    """Load DXF directly, or DWG via the ODA File Converter (ezdxf odafc add-on).
+    DWG = native source-of-truth; DXF = export. Prefer DWG when ODA is available."""
+    if path.lower().endswith(".dwg"):
+        from ezdxf.addons import odafc
+        if not odafc.is_installed():
+            raise SystemExit(
+                "[ODA-NOT-INSTALLED] Reading .dwg needs the ODA File Converter (free).\n"
+                "  Install: download 'ODA File Converter' from opendesign.com (free account),\n"
+                "  install to the default path C:\\Program Files\\ODA\\ODAFileConverter\\,\n"
+                "  then re-run. ezdxf auto-detects it. Or export the DWG to DXF R2013 and pass the .dxf.\n"
+                f"  Expected exe: {odafc.get_win_exec_path()}")
+        return odafc.readfile(path), "odafc(dwg)"   # converts DWG->DXF in a temp dir, then loads
     try:
         return ezdxf.readfile(path), "readfile"
     except Exception:
@@ -256,12 +268,21 @@ def main():
     ap.add_argument("path")
     ap.add_argument("--out", default=None, help="output dir (default: alongside source)")
     ap.add_argument("--classification", default="MẬT")
+    ap.add_argument("--prefer", default="dwg", choices=["dwg", "dxf"],
+                    help="when a folder has both <stem>.dwg and .dxf, which to ingest (default: dwg = native source)")
     a = ap.parse_args()
 
     targets = []
     if os.path.isdir(a.path):
-        targets = [os.path.join(a.path, f) for f in sorted(os.listdir(a.path))
-                   if f.lower().endswith(".dxf")]
+        cad = [f for f in sorted(os.listdir(a.path)) if f.lower().endswith((".dxf", ".dwg"))]
+        # de-duplicate by stem, honoring --prefer (DWG = source-of-truth by default)
+        by_stem = {}
+        for f in cad:
+            stem, ext = os.path.splitext(f)
+            ext = ext.lower().lstrip(".")
+            if stem not in by_stem or ext == a.prefer:
+                by_stem[stem] = f
+        targets = [os.path.join(a.path, by_stem[s]) for s in sorted(by_stem)]
     else:
         targets = [a.path]
 

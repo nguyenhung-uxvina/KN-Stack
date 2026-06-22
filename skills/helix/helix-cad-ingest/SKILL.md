@@ -69,8 +69,15 @@ pip install ezdxf pymupdf pdfplumber          # core parsers, all local
 ```
 Library roles: **ezdxf** → DXF entities/layers/blocks/dimensions (`ezdxf.recover` for flawed files). **PyMuPDF** → PDF `get_text("dict"/"rawdict")` for positioned text+fonts, `get_drawings()` for vector linework, `get_textpage_ocr()` for scanned fallback. **pdfplumber** → table extraction (BOM / revision tables).
 
+### Reading native DWG (source-of-truth) — ODA File Converter
+DWG is the designer's native file; DXF is an export. To read DWG **directly** (defeats export drift), `ingest.py` routes `.dwg` through ezdxf's `odafc` add-on → **ODA File Converter** (free, runs LOCAL — no cloud, MẬT-safe). One-time install:
+- Download **"ODA File Converter"** from opendesign.com (free account) — it is NOT on winget/choco/pip.
+- Install to the default path `C:\Program Files\ODA\ODAFileConverter\` — ezdxf auto-detects it (`odafc.is_installed()`); no config needed.
+- Verify: `python -c "from ezdxf.addons import odafc; print(odafc.is_installed())"` → `True`.
+- Until installed, `.dwg` ingest fails fast with `[ODA-NOT-INSTALLED]` + instructions; `.dxf` always works without ODA. odafc converts DWG→DXF in a temp dir then loads — same downstream extraction.
+
 **Bundled runners** (in this skill folder — run with `PYTHONUTF8=1`):
-1. **`ingest.py`** — Steps 2/4/5 for DXF: `python ingest.py <file.dxf|folder> --out <dir> --classification MẬT` → emits `<filename>.cad_extract.json` + `.md` per part. Keys output by **filename** (reliable), records `code_in_dxf` separately at LOW confidence (title-block codes can be stale/copy-pasted), keeps full `raw_text` so nothing is dropped, flags break-view dim overrides into `conflicts[]`. Extend `MATERIALS` for new alloys.
+1. **`ingest.py`** — Steps 2/4/5 for **DXF or DWG**: `python ingest.py <file.dxf|.dwg|folder> --out <dir> --classification MẬT [--prefer dwg|dxf]` → emits `<filename>.cad_extract.json` + `.md` per part. `.dwg` is read via ODA (see above); a folder with both `<stem>.dwg` + `.dxf` ingests one per stem honoring `--prefer` (default `dwg` = native source). Keys output by **filename** (reliable), records `code_in_dxf` separately at LOW confidence (title-block codes can be stale/copy-pasted), keeps full `raw_text` so nothing is dropped, flags break-view dim overrides into `conflicts[]`. Extend `MATERIALS` for new alloys.
 2. **`aggregate.py`** — `python aggregate.py <extract_dir>` → rolls all per-part JSON into `MASTER_BOM.md` + `MASTER_BOM.csv` (ERP import) + `CRITICAL_DIMS.md`, with material/process rollups and a data-quality section listing stale-code / no-code parts.
 3. **`authoritative_bom.py`** — when the project's PDF parts-list/BOM page is available (the source of truth), embed the corrected master here → emits `PARTS_MASTER.md/.csv` + `FAB_ROUTING.md` (routing grouped by station). Use this to override stale title-block codes and fill material/qty/thickness the per-file heuristics miss.
 

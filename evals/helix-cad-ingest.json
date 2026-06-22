@@ -76,6 +76,13 @@
       "check": "skill documents the ingest -> aggregate -> authoritative_bom script pipeline",
       "regex": "aggregate\\.py|authoritative_bom\\.py|MASTER_BOM|FAB_ROUTING|PARTS_MASTER",
       "required": false
+    },
+    {
+      "id": "CI-DWG",
+      "name": "dwg_via_oda",
+      "check": "skill reads native DWG via local ODA File Converter (odafc), MAT-safe, with clear not-installed fallback",
+      "regex": "DWG|odafc|ODA File Converter|is_installed|ODA-NOT-INSTALLED|--prefer",
+      "required": false
     }
   ]
 }
