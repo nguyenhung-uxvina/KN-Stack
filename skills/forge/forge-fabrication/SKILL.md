@@ -262,6 +262,8 @@ For each block:
 
 **Artifact:** `<run_dir>/F0_Handoff_Gate.md` (audit results + handoff package summary)
 
+**Optional artifact — Defense process document (Quy trình công nghệ):** When the run is a defense product for a Viện/Nhà máy QP customer, or CEO asks to "xuất quy trình chế tạo / quy trình công nghệ cho xưởng" (no live ERPNext needed), also emit `<run_dir>/QUY_TRINH_CONG_NGHE.md` using the 11-section TCVN/defense template in [references/quy-trinh-cong-nghe-template.md](references/quy-trinh-cong-nghe-template.md) — doc-control + approval block, standards references (§2), per-process operation sheets (Phiếu công nghệ nguyên công §5.4 with bậc thợ + thiết bị + chế độ cắt), material norms with waste % (§7), QC + VT/PT/UT + NCR (§8), ATLĐ (§9), packaging/handover (§10), and a mandatory data-quality warnings section (§11) listing any stale-code/conflict/missing flags surfaced by `helix-cad-ingest`. Then convert via `/convert_md_to_docx` → DOCX for sign-off. This is the F0 deliverable when handoff source is read-from-drawings (helix-cad-ingest) rather than a HELIX P3 package.
+
 #### F1 — Material Availability
 
 **Invoke:**
