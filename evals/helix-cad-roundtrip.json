@@ -1,0 +1,81 @@
+{
+  "skill": "helix-cad-roundtrip",
+  "version": "1.0",
+  "description": "Static assertions for helix-cad-roundtrip — cross-phase orchestrator sequencing the two mirror CAD bridges (bridge OUT / ingest IN) across HELIX P1-P4 with classification spine and a verify loop",
+  "mode": "static",
+  "test_input": "orchestrate the CAD geometry round-trip for a UUV part across phase 1-2-3-4, from RE intake through forward synthesis to export-drift verification",
+  "total_required": 8,
+  "passing_score": 8,
+  "assertions": [
+    {
+      "id": "CR-MIRROR",
+      "name": "commands_both_bridges",
+      "check": "skill commands both mirror bridges helix-cad-bridge (OUT) and helix-cad-ingest (IN)",
+      "regex": "helix-cad-bridge.*helix-cad-ingest|helix-cad-ingest.*helix-cad-bridge|OUTBOUND.*INBOUND|mirror",
+      "required": true
+    },
+    {
+      "id": "CR-THIN",
+      "name": "thin_orchestrator_delegates",
+      "check": "skill is a thin orchestrator that never parses DXF / writes code-CAD itself, always delegates",
+      "regex": "NEVER does bridge work|never parses|delegate|NOT a P-phase block|thin commander|chỉ huy",
+      "required": true
+    },
+    {
+      "id": "CR-FLOWS",
+      "name": "three_flows",
+      "check": "skill defines 3 flows: ingest-first, forward, verify",
+      "regex": "--ingest-first|--forward|--verify|Ingest-first|Forward|Verify",
+      "required": true
+    },
+    {
+      "id": "CR-PHASES",
+      "name": "p1_p2_p3_p4_mapping",
+      "check": "skill maps flows across HELIX Phase 1-2-3-4 blocks",
+      "regex": "helix-p1-requirements|helix-p2-develop|helix-p3-(layout|integrate)|helix-p4-(drawing|inspection)",
+      "required": true
+    },
+    {
+      "id": "CR-CLASS",
+      "name": "classification_spine",
+      "check": "skill reads (not sets) the classification label from p1-validate and enforces egress guard for MẬT",
+      "regex": "classification|helix-p1-validate|MẬT|egress|CLASSIFICATION-VIOLATION|label is READ",
+      "required": true
+    },
+    {
+      "id": "CR-SPATIAL",
+      "name": "spatial_blindness_gate",
+      "check": "skill preserves the LLM Spatial Blindness gate — CEO certifies, AI never self-certifies geometry",
+      "regex": "Spatial Blindness|self-certif|Core \\(C\\)|non-delegable|render is the proof|certif",
+      "required": true
+    },
+    {
+      "id": "CR-LOOP",
+      "name": "export_drift_verify_loop",
+      "check": "skill closes the round-trip with a verify loop using dwg_dxf_diff.py and treats drift as directional",
+      "regex": "dwg_dxf_diff|export.?drift|round-trip|directional|DXF-only|released drawing",
+      "required": true
+    },
+    {
+      "id": "CR-HANDOFF",
+      "name": "mirror_handoff_contract",
+      "check": "skill threads only the mirror interfaces STEP (out) and cad_extract.json (in), and rev-locks handoffs in ICD",
+      "regex": "STEP.*cad_extract|cad_extract.*STEP|ICD|rev-lock|mirror interface|handoff contract",
+      "required": true
+    },
+    {
+      "id": "CR-FAB",
+      "name": "fabrication_handoff",
+      "check": "skill routes to forge-fabrication (STEP F0-F5 and extract -> TCVN Quy trinh cong nghe)",
+      "regex": "forge-fabrication|F0|STEP F0|TCVN|QTCN|Quy trình công nghệ",
+      "required": false
+    },
+    {
+      "id": "CR-ROUTER",
+      "name": "smart_flow_router",
+      "check": "skill provides a smart router that asks lifecycle position when no flag is given",
+      "regex": "smart router|no flag|đang ở đâu|lifecycle|propose a flow|đề xuất flow",
+      "required": false
+    }
+  ]
+}

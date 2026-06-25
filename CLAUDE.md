@@ -12,7 +12,7 @@ KN-Stack/
 │   ├── forge/        (15) — Product strategy skills (+ forge-fabrication mega-skill: 6-block manufacturing pipeline F0-F5
 │   │                       — closes R&D → production loop via Handoff_to_Fabrication.md from helix-detail-finalize;
 │   │                       + forge-proposal-khcn for KHCN proposal drafting)
-│   ├── helix/        (42) — Design execution pipeline (Pahl-Beitz phases — P1/P2/P3/P4 all 6-block mega-skill pipelines; + helix-cad-bridge code→CAD, helix-cad-ingest CAD→info)
+│   ├── helix/        (43) — Design execution pipeline (Pahl-Beitz phases — P1/P2/P3/P4 all 6-block mega-skill pipelines; + helix-cad-bridge code→CAD, helix-cad-ingest CAD→info, helix-cad-roundtrip orchestrates the two across P1-P4)
 │   ├── galaxy/       (12) — Knowledge management (+ skill-to-public, codify, mentor-board — Naval outbound + code + mentor leverage)
 │   ├── mentors/      (54, dynamic) — Per-mentor advisor skills (add more via /mentor-board --add <leader>); orchestrator at galaxy/mentor-board/
 │   ├── book/         (23) — Book pipelines: codebase-to-book (9-phase, book-* blocks), book-to-codebase (btc-* blocks), book-to-skill, notebook-to-book
