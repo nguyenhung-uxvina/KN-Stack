@@ -1,11 +1,11 @@
 {
   "skill": "helix-cad-roundtrip",
   "version": "1.0",
-  "description": "Static assertions for helix-cad-roundtrip — cross-phase orchestrator sequencing the two mirror CAD bridges (bridge OUT / ingest IN) across HELIX P1-P4 with classification spine and a verify loop",
+  "description": "Static assertions for helix-cad-roundtrip — cross-phase orchestrator sequencing the two mirror CAD bridges (bridge OUT / ingest IN) across HELIX P1-P4 with a classification spine, a per-part geometry-source gate (AI-parametric vs human-drawn-externally), a human-CAD design-import flow, and a verify loop",
   "mode": "static",
-  "test_input": "orchestrate the CAD geometry round-trip for a UUV part across phase 1-2-3-4, from RE intake through forward synthesis to export-drift verification",
-  "total_required": 8,
-  "passing_score": 8,
+  "test_input": "orchestrate the CAD geometry round-trip for a UUV part across phase 1-2-3-4, including parts the AI cannot auto-generate that a designer draws externally and imports back",
+  "total_required": 10,
+  "passing_score": 10,
   "assertions": [
     {
       "id": "CR-MIRROR",
@@ -24,8 +24,22 @@
     {
       "id": "CR-FLOWS",
       "name": "three_flows",
-      "check": "skill defines 3 flows: ingest-first, forward, verify",
-      "regex": "--ingest-first|--forward|--verify|Ingest-first|Forward|Verify",
+      "check": "skill defines 4 flows: ingest-first, forward, design-import, verify",
+      "regex": "--ingest-first|--forward|--design-import|--verify|Ingest-first|Forward|Design-import|Verify",
+      "required": true
+    },
+    {
+      "id": "CR-HUMANCAD",
+      "name": "human_cad_external_import",
+      "check": "skill has a Flow D where the AI cannot auto-generate geometry, a human designer draws externally in a real CAD app and the drawing is imported back and reconciled",
+      "regex": "Design-import|design-import|người (thiết kế )?vẽ|drawn EXTERNAL|external.*designer|Human-CAD|vẽ ngoài|Design Brief|reconcile vs Brief",
+      "required": true
+    },
+    {
+      "id": "CR-GATE",
+      "name": "geometry_source_gate",
+      "check": "skill has a per-part Geometry Source Gate routing AI-parametric (Flow B) vs human-CAD (Flow D), defaulting to human when unsure",
+      "regex": "Geometry Source Gate|nguồn hình học|AI-parametric.*Human-CAD|tham số.*phức tạp|mặc định.*D|default.*D",
       "required": true
     },
     {
