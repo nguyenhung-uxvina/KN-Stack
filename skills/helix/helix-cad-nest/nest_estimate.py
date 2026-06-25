@@ -151,8 +151,49 @@ def shelf_pack(rects, sheet_w, sheet_h, gap):
     return max(len(sheets_list), 0), oversize
 
 
+def selftest():
+    """DXF-mode self-test: generate flat-pattern DXFs in a temp dir, harvest via
+    ezdxf, group + pack, and assert the pipeline holds. No fixtures committed."""
+    import tempfile
+    try:
+        import ezdxf
+    except ImportError:
+        sys.exit("[SKIP] selftest needs ezdxf: pip install ezdxf")
+    d = tempfile.mkdtemp(prefix="nest_selftest_")
+
+    def rect(name, w, h):
+        doc = ezdxf.new("R2013")
+        doc.modelspace().add_lwpolyline([(0, 0), (w, 0), (w, h), (0, h)], close=True)
+        doc.saveas(os.path.join(d, name))
+
+    rect("BR-01.dxf", 400, 300)
+    rect("BR-02.dxf", 250, 180)
+    rect("PL-09.dxf", 900, 650)
+    meta = {
+        "BR-01": {"code": "BR-01", "material": "Nhom 5083", "thickness_mm": 3, "qty": 6},
+        "BR-02": {"code": "BR-02", "material": "Nhom 5083", "thickness_mm": 3, "qty": 10},
+        "PL-09": {"code": "PL-09", "material": "SS400", "thickness_mm": 6, "qty": 3},
+    }
+    parts = harvest_dxf(d, meta)
+    assert len(parts) == 3, f"expected 3 parts, got {len(parts)}"
+    by_code = {p["code"]: p for p in parts}
+    # closed-polyline area read from DXF (shoelace), not bbox fallback
+    assert abs(by_code["BR-01"]["area_mm2"] - 400 * 300) < 1, "BR-01 area mis-read"
+    assert abs(by_code["PL-09"]["bbox_w"] - 900) < 1, "PL-09 bbox mis-read"
+    groups = defaultdict(list)
+    for p in parts:
+        groups[(p["material"], p["thickness_mm"])].append(p)
+    assert len(groups) == 2, f"expected 2 material x thickness groups, got {len(groups)}"
+    sheets, oversize = shelf_pack(
+        [(p["bbox_w"], p["bbox_h"], p["code"]) for p in parts for _ in range(p["qty"])],
+        1500, 3000, 5.2)
+    assert sheets >= 1 and not oversize, "pack failed / unexpected oversize"
+    print(f"[PASS] selftest: 3 DXF harvested, 2 groups, areas+bbox OK, pack={sheets} sheet(s)")
+
+
 def main():
     ap = argparse.ArgumentParser()
+    ap.add_argument("--selftest", action="store_true", help="run DXF-mode self-test and exit")
     ap.add_argument("--parts", help="parts.csv or parts.json")
     ap.add_argument("--dxf", help="dir of flat-pattern .dxf")
     ap.add_argument("--meta", help="CSV/JSON of code->material,thickness_mm,qty (for --dxf)")
@@ -161,6 +202,10 @@ def main():
     ap.add_argument("--gap", type=float, default=5.0, help="part-to-part gap mm")
     ap.add_argument("--out", default=".", help="output dir")
     args = ap.parse_args()
+
+    if args.selftest:
+        selftest()
+        return
 
     sw, sh = (float(x) for x in args.sheet.lower().split("x"))
     spacing = args.gap + args.kerf

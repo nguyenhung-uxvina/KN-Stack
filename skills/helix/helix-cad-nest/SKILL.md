@@ -45,7 +45,7 @@ pip install ezdxf            # read flat-profile DXF (areas, bounding boxes)
 ```
 
 **Bundled runner** (in this skill folder — run with `PYTHONUTF8=1`):
-- **`nest_estimate.py`** — `python nest_estimate.py <parts.csv|parts.json|dxf_dir> --sheet 1500x3000 --kerf 0.2 --gap 5 --out <dir>`. Reads per-part `{code, material, thickness_mm, area_mm2, bbox_w, bbox_h, qty}` (from a CSV/JSON, or harvested from flat DXF via ezdxf), groups by material×thickness, runs a **shelf/first-fit bounding-box bin-pack** per sheet size → emits `NEST_PLAN.md` (per group: parts, qty, total part-area, sheets needed, est. utilization%, scrap%) + `CUT_LIST.csv` (per-sheet rows for ERP/shop). Utilization is explicitly tagged `ESTIMATE (bbox lower-bound)`.
+- **`nest_estimate.py`** — `python nest_estimate.py <parts.csv|parts.json|dxf_dir> --sheet 1500x3000 --kerf 0.2 --gap 5 --out <dir>`. Reads per-part `{code, material, thickness_mm, area_mm2, bbox_w, bbox_h, qty}` (from a CSV/JSON, or harvested from flat DXF via ezdxf), groups by material×thickness, runs a **shelf/first-fit bounding-box bin-pack** per sheet size → emits `NEST_PLAN.md` (per group: parts, qty, total part-area, sheets needed, est. utilization%, scrap%) + `CUT_LIST.csv` (per-sheet rows for ERP/shop). Utilization is explicitly tagged `ESTIMATE (bbox lower-bound)`. Verify the DXF-read path with `python nest_estimate.py --selftest` (generates temp flat-pattern DXFs, harvests area+bbox via ezdxf, asserts grouping+packing — no fixtures committed).
 
 ## Workflow
 
