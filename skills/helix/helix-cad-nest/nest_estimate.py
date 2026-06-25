@@ -108,16 +108,20 @@ def harvest_dxf(dxf_dir, meta_by_code):
 
 def shelf_pack(rects, sheet_w, sheet_h, gap):
     """First-fit-decreasing shelf bin-pack of (w,h) rects. Returns sheet count.
-    A rect taller/wider than the sheet (after rotation) is flagged oversize."""
-    # rotate each rect so longer side = width; sort by height desc (shelf packing)
+    Each part is oriented long-side along the sheet's long side (so a part longer
+    than the sheet width but shorter than its length still fits). A part that
+    exceeds the sheet in BOTH orientations is flagged oversize."""
+    sheet_short, sheet_long = sorted((sheet_w, sheet_h))
+    # pack space oriented as W=sheet_long (shelf run), H=sheet_short (shelf stack)
+    sheet_w, sheet_h = sheet_long, sheet_short
     norm = []
     oversize = []
     for w, h, code in rects:
-        w, h = (w, h) if w >= h else (h, w)
-        if w + gap > sheet_w or h + gap > sheet_h:
+        p_long, p_short = max(w, h), min(w, h)   # long side runs along sheet_long
+        if p_long + gap > sheet_w or p_short + gap > sheet_h:
             oversize.append(code)
             continue
-        norm.append((w, h))
+        norm.append((p_long, p_short))
     norm.sort(key=lambda r: r[1], reverse=True)
 
     sheets = 0
