@@ -17,7 +17,7 @@ Usage: /gate3 [project_name] OR provide details interactively.
    - Score 8 criteria independently (0-4 each):
      A. Requirements Traceability (15%) -- every D-requirement maps to >=1 subsystem?
      B. Interface Completeness (15%) -- all subsystem interfaces documented in ICD? No TBDs in critical interfaces?
-     C. Layout Feasibility (15%) -- spatial arrangement fits envelope? Assembly sequence defined?
+     C. Layout Feasibility (15%) -- spatial arrangement fits envelope? Assembly sequence defined? Every fabricable part has a CEO-certified geometry-of-record (STEP from helix-cad-bridge OR cad_extract.json from helix-cad-ingest) registered in ICD v3 -- a part with no certified geometry-of-record scores <=1 here.
      D. BOM Completeness (10%) -- all components listed? Cost rollup vs budget?
      E. Local Content (10%) -- >=60% by value? Import items flagged?
      F. DfX Review (10%) -- DfM, DfA, DfT, DfMaint all assessed? No category scored <=1?

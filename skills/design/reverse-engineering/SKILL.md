@@ -1018,6 +1018,8 @@ CEO DECISION: ___
 
 ### 1A — Artifact Deconstruction
 
+> **If a drawing pair exists, ingest it FIRST:** If the artifact ships with (or you can export) a PDF+DXF/DWG drawing pair, run [[helix-cad-ingest]] before manual teardown — its `cad_extract.json` (dims, tolerances, GD&T flags, BOM, title-block) seeds the deconstruction with source-pointed, confidence-tagged measured data (Param|Value|Tol|Source|Confidence) instead of manual transcription. Treat LOW-confidence/OCR reads as needing physical confirmation in the layers below.
+
 4-layer systematic analysis:
 
 **Layer 1 — Geometric & Dimensional:**

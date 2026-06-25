@@ -53,6 +53,8 @@ IN-PROCESS GATES:
 
 ### Step C.3: Final Acceptance Test (FAT) Procedures
 
+> **Seed dimensional accept criteria from the geometry-of-record, don't re-transcribe:** When an ingested record exists for the part, seed dimensional acceptance criteria directly from its geometry-of-record `cad_extract.json` critical-dim rows (Param|Value|Tol|Source|Confidence) via [[helix-cad-ingest]] — don't re-transcribe from the BA drawing by hand. Carry the Source pointer + Confidence into the inspection plan; LOW-confidence dims require CEO certification before becoming accept criteria.
+
 For each D-requirement → one test procedure:
 
 ```
@@ -158,6 +160,7 @@ CEO:
 
 ## COD
 
+- cad_extract dimensional accept-criteria seeding: Offload (O1) — LOW-confidence dims need CEO certification
 - Incoming + in-process checklist drafting: Offload (O2)
 - Req-ID → Test-ID matrix: Offload (O1) — mechanical mapping
 - Serialization scheme: Offload (O1)

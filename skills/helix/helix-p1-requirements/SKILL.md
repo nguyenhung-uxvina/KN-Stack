@@ -112,6 +112,10 @@ Check forge-library for requirements from similar WX products:
 - BB-01 (if acoustic/detection), VN-AST (if marine), VN-CUAV-SIM (if sim), etc.
 - Mark reused requirements as `[REUSE: {{source_product}}]`
 
+### Step A3b: Seed from Ingested CAD (optional — if a drawing pair exists)
+
+If a customer-supplied or RE PDF+DXF/DWG pair exists, run [[helix-cad-ingest]] and seed the **Geometry / Forces / Material** requirement categories from its `cad_extract.json` critical-dim rows (Param|Value|Tol|Source|Confidence). This grounds requirements in a real measured part rather than assumptions. Carry the Source pointer into the `Source` column. CEO confirms LOW-confidence values before they become requirement targets.
+
 ### Step A4: Three-Step Refinement (P&B 5.2)
 
 For any vague requirement, apply 3-step refinement:
@@ -214,6 +218,7 @@ CEO:
 ```
 
 ## COD
+- cad_extract ingestion (seed Geometry/Forces/Material): Offload (O1) — CEO confirms LOW-confidence values
 - 16-category systematic generation: Offload (O1)
 - Standards-based requirements: Offload (O1) — AI templates
 - Similar product import: Offload (O1) — AI cross-references

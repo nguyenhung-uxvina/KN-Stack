@@ -61,6 +61,8 @@ Cost target (from requirements): ___
 Status: [WITHIN / OVER by ___% / UNDER by ___%]
 ```
 
+> **Extract from geometry-of-record, don't transcribe:** Where a geometry-of-record exists, extract the part list + per-part volumes/mass directly from the model via [[helix-cad-bridge]] (or read the cad_extract.json BOM rows from [[helix-cad-ingest]]) instead of transcribing from the layout .md. Reconcile against the ICD v3 geometry-of-record registry ([[helix-p3-integrate]] Step C3a) so every BOM line has a matching geometry row (no orphans).
+
 ### Step D2: VN Sourcing Verification
 
 ```
@@ -125,7 +127,8 @@ CEO:
 ```
 
 ## COD
-- BOM compilation: Offload (O1) — AI from layout
+- BOM compilation: Offload (O1) — AI from geometry-of-record ([[helix-cad-bridge]]/[[helix-cad-ingest]]) where it exists, else layout
+- BOM↔geometry-of-record reconciliation (no orphan lines): Offload (O2) — AI cross-checks ICD v3 registry
 - Cost estimation: Offload (O2) — AI estimates from catalogs
 - **Cost target decision: Core (C)** — CEO accepts or demands VE
 - Sourcing check: Offload (O2)

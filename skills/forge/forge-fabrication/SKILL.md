@@ -45,7 +45,7 @@ Run ID:   <product>-<YYYYMMDD>-<seq> (e.g., BB-01-20260511-001)
 
 | Block | Reused Skill(s) | Purpose | CEO Gate |
 |-------|----------------|---------|----------|
-| **F0** | `/erp-master audit` + `/erp-bom check` | Verify HELIX handoff, master data ≥90%, BOM exists + complete, routing exists | Approve handoff gate |
+| **F0** | `/erp-master audit` + `/erp-bom check` (or `import-cad`) | Verify design-freeze (`--source helix-p3` package OR `helix-cad-ingest` aggregate), master data ≥90%, BOM exists + complete, routing exists, BOM↔geometry-of-record cross-check (no orphans) | Approve handoff gate |
 | **F1** | `/erp-stock` (availability + reorder) | Material Availability Check (MAC) — calculate `max_builds`, flag BLOCKING items, draft PO if shortage | Approve PO if needed |
 | **F2** | `/erp-production wo add` | Draft Work Order, show material impact + capacity impact, **CEO releases** = production commitment | **CORE — release WO** |
 | **F3** | `/erp-production` (job cards) + `/erp-quality` (inline gates) | Job Card lifecycle WS-CKCX → WS-DT → WS-DC → WS-VL with inline QC gates after each PX | Review gate pass rate |
@@ -101,6 +101,7 @@ FLAGS:
   --from Fx       → resume from block F0-F5
   --only Fx       → run single block
   --run ID        → run identifier (auto-generated if new)
+  --source S      → design-freeze input: helix-p3 (default) | helix-cad-ingest (F0)
   --dry-run       → no ERPNext writes
   --check-conflicts → F0 sub-mode: capacity + material conflict report only
 ```
@@ -245,24 +246,39 @@ For each block:
 
 #### F0 — Preflight (HELIX Handoff Gate)
 
+**Design-freeze source selector — `--source helix-p3 | helix-cad-ingest`:** F0 accepts EITHER input as its frozen design baseline:
+- `--source helix-p3` (default) — a HELIX P3/P4 handoff package (BOM_Draft, Routing_v3, ICD_v3) with per-part STEP geometry from [[helix-cad-bridge]].
+- `--source helix-cad-ingest` — a read-from-drawings ingest aggregate produced by [[helix-cad-ingest]]: `MASTER_BOM.csv` + `CRITICAL_DIMS.md` (from `aggregate.py`) and `PARTS_MASTER` + `FAB_ROUTING` (from `authoritative_bom.py`, routing grouped by station). Use when no formal P3 package exists but the CEO has drawings to fabricate from.
+
 **Pre-conditions:**
-- HELIX P3 handoff package exists (path passed via --helix-handoff, or scan 1_Projects/<product>/Phase3-Embody/)
-- **Geometry interface present** — per-part STEP files from `helix-cad-bridge` (git-tracked, CEO-verified). No loose binary CAD: each STEP traces to a parametric `.py` source + `cad_manifest.md` rev. MẬT parts: confirm egress guard PASS.
+- Design-freeze input present per `--source`:
+  - `helix-p3`: HELIX P3 handoff package exists (path via --helix-handoff, or scan 1_Projects/<product>/Phase3-Embody/).
+  - `helix-cad-ingest`: ingest aggregate exists (`MASTER_BOM.csv`, `PARTS_MASTER`, `FAB_ROUTING`) from a `helix-cad-ingest` run.
+- **Geometry-of-record present** — per-part STEP files from [[helix-cad-bridge]] (git-tracked, CEO-verified; each STEP traces to a parametric `.py` source + `cad_manifest.md` rev), OR per-part `cad_extract.json` from [[helix-cad-ingest]] when source = helix-cad-ingest. No loose binary CAD. MẬT parts: confirm egress guard PASS.
 - Master data quality score ≥90% (from `/erp-master audit`)
-- BOM exists and complete (from `/erp-bom check <product>`)
-- Routing exists in `_routing.md`
+- BOM exists and complete (from `/erp-bom check <product>`, or `MASTER_BOM.csv` when source = helix-cad-ingest)
+- Routing exists in `_routing.md` (or `FAB_ROUTING` when source = helix-cad-ingest)
+
+**Data routing (source = helix-cad-ingest):** Route `PARTS_MASTER` + `FAB_ROUTING` + `MASTER_BOM.csv` into BOTH:
+1. The Quy trình công nghệ doc (operation sheets §5.4 ← FAB_ROUTING stations; material norms §7 ← PARTS_MASTER), AND
+2. The **F1 material/BOM allocation tables** — `MASTER_BOM.csv` lines become the F1 `required = qty_per_unit × <qty>` rows, and `FAB_ROUTING` stations seed the F2 Job Card plan. The ingest aggregate is a first-class WO/BOM data feed, not a doc-only branch.
 
 **Invoke:**
 ```
 /erp-master audit
-/erp-bom check <product>
+/erp-bom check <product>          (helix-p3)  | /erp-bom import-cad <MASTER_BOM.csv>  (helix-cad-ingest, diff-review)
 ```
 
 **Pass criteria:** Both return GREEN. If RED → STOP, instruct CEO which gap to close first.
 
-**Artifact:** `<run_dir>/F0_Handoff_Gate.md` (audit results + handoff package summary)
+**BOM-vs-geometry orphan check (sub-check):** Cross-reference each BOM line against a corresponding geometry-of-record (a STEP registered in `cad_manifest.md`, or a `cad_extract.json` part). Flag orphans both ways:
+- BOM line with no STEP / cad_extract part → "phantom BOM item" (review or remove).
+- Geometry-of-record with no BOM line → "un-costed part" (add to BOM).
+Any orphan → list in F0 artifact + the §11 data-quality warnings; CEO resolves before F1.
 
-**Optional artifact — Defense process document (Quy trình công nghệ):** When the run is a defense product for a Viện/Nhà máy QP customer, or CEO asks to "xuất quy trình chế tạo / quy trình công nghệ cho xưởng" (no live ERPNext needed), also emit `<run_dir>/QUY_TRINH_CONG_NGHE.md` using the 11-section TCVN/defense template in [references/quy-trinh-cong-nghe-template.md](references/quy-trinh-cong-nghe-template.md) — doc-control + approval block, standards references (§2), per-process operation sheets (Phiếu công nghệ nguyên công §5.4 with bậc thợ + thiết bị + chế độ cắt), material norms with waste % (§7), QC + VT/PT/UT + NCR (§8), ATLĐ (§9), packaging/handover (§10), and a mandatory data-quality warnings section (§11) listing any stale-code/conflict/missing flags surfaced by `helix-cad-ingest`. Then convert via `/convert_md_to_docx` → DOCX for sign-off. This is the F0 deliverable when handoff source is read-from-drawings (helix-cad-ingest) rather than a HELIX P3 package.
+**Artifact:** `<run_dir>/F0_Handoff_Gate.md` (audit results + handoff package summary + source selector + orphan-check table)
+
+**Optional artifact — Defense process document (Quy trình công nghệ):** When the run is a defense product for a Viện/Nhà máy QP customer, or CEO asks to "xuất quy trình chế tạo / quy trình công nghệ cho xưởng" (no live ERPNext needed), also emit `<run_dir>/QUY_TRINH_CONG_NGHE.md` using the 11-section TCVN/defense template in [references/quy-trinh-cong-nghe-template.md](references/quy-trinh-cong-nghe-template.md) — doc-control + approval block, standards references (§2), per-process operation sheets (Phiếu công nghệ nguyên công §5.4 with bậc thợ + thiết bị + chế độ cắt), material norms with waste % (§7), QC + VT/PT/UT + NCR (§8), ATLĐ (§9), packaging/handover (§10), and a mandatory data-quality warnings section (§11) listing any stale-code/conflict/missing flags surfaced by `helix-cad-ingest`. Then convert via `/convert_md_to_docx` → DOCX for sign-off. This is the F0 deliverable when `--source helix-cad-ingest` (read-from-drawings) rather than a HELIX P3 package. Note the same `PARTS_MASTER`/`FAB_ROUTING`/`MASTER_BOM.csv` that feeds this doc ALSO feeds the F1 BOM/material tables (see Data routing above) — not doc-only.
 
 #### F1 — Material Availability
 
@@ -271,6 +287,8 @@ For each block:
 /erp-stock                        → balance check
 /erp-stock reorder                → reorder suggestions if shortage
 ```
+
+**BOM source:** the `BOM Master` sheet (source = helix-p3) OR the `MASTER_BOM.csv` lines routed in from [[helix-cad-ingest]] at F0 (source = helix-cad-ingest).
 
 **Logic:**
 - For each BOM item: `required = qty_per_unit × <qty>`
@@ -478,7 +496,13 @@ forge-fabrication (ORCHESTRATOR) COMMANDS:
   → /erp-finance po                (F1 — if shortage)
 
 forge-fabrication READS FROM:
-  - 1_Projects/<product>/Phase3-Embody/ → HELIX handoff package
+  - 1_Projects/<product>/Phase3-Embody/ → HELIX handoff package (--source helix-p3)
+  - helix-cad-ingest aggregate (--source helix-cad-ingest):
+      · MASTER_BOM.csv      → BOM feed (F0 import-cad → F1 allocation)
+      · PARTS_MASTER        → part list + material norms (F0 doc + F1)
+      · FAB_ROUTING         → routing-by-station (F0 doc + F2 Job Card plan)
+  - Geometry-of-record (ICD v3): per-part STEP via cad_manifest.md (helix-cad-bridge)
+      OR per-part cad_extract.json (helix-cad-ingest) → BOM↔geometry orphan check
   - 1_Projects/<product>/_routing.md   → routing per product/variant
   - WX-OPS.xlsx (BOM Master, Stock Ledger, Customers, Suppliers) → master data
   - ERPNext → live state via MCP (through erp-* skills)
@@ -505,6 +529,7 @@ forge-fabrication COMPLEMENTS:
 
 - Pipeline orchestration: **Offload (O1)** — mechanical sequencing
 - F0 audit / F1 material check: **Offload (O2)** — AI analyzes, CEO approves
+- F0 BOM↔geometry-of-record orphan check (helix-cad-ingest source): **Offload (O2)** — AI cross-references MASTER_BOM ↔ STEP/cad_extract, flags orphans; CEO resolves
 - F2 WO **release**: **Core (C)** — production commitment, non-delegable
 - F3 job card progress logging: **Offload (O2)** — AI logs from shop floor inputs
 - F3 NCR root cause: **Core (C)** — must be observed on floor
