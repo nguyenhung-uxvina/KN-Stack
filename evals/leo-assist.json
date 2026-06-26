@@ -4,8 +4,8 @@
   "description": "Static assertions for leo-assist — phase-aware Leo AI prompt suite (P0-P4 + QC + Install) grounded in Leo's verified strengths (calc-with-citation, part-search, standards), classification-gated, geometry redirected to helix-cad-bridge/leo-prompt",
   "mode": "static",
   "test_input": "generate Leo prompts to support the design lifecycle P0 to P4 plus QC and installation, using Leo for what it is actually good at",
-  "total_required": 8,
-  "passing_score": 8,
+  "total_required": 9,
+  "passing_score": 9,
   "assertions": [
     {
       "id": "LA-PHASES",
@@ -13,6 +13,20 @@
       "check": "covers P0 P1 P2 P3 P4 + QC + Installation",
       "regex": "P0.*P1.*P2.*P3.*P4|Pre-Study|Requirements|Concept|Embodiment|Detail|QC|Lắp đặt|Install",
       "required": true
+    },
+    {
+      "id": "LA-MODES",
+      "name": "six_strength_modes",
+      "check": "6 strength-based modes A-F (Part-Search, Q&A, Calculation, DFM-Inspect, Documentation/BOM, Material-Selection) as a phase×mode matrix",
+      "regex": "Part Search|Engineering Q&A|Calculation|DFM|Material Selection|phase.?.?mode|6 MODE|mode-templates",
+      "required": true
+    },
+    {
+      "id": "LA-ROUTER",
+      "name": "router_meta_prompt",
+      "check": "ships a router meta-prompt that picks mode from a one-line task",
+      "regex": "Router|router|điều phối tác vụ|chọn 1.?2 mode|1 dòng tác vụ",
+      "required": false
     },
     {
       "id": "LA-STRENGTH",

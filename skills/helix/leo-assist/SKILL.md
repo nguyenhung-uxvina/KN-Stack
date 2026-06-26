@@ -1,6 +1,6 @@
 ---
 name: leo-assist
-description: "Phase-aware Leo AI (getleo.ai) prompt/template generator across the design lifecycle (P0 Pre-Study, P1 Requirements, P2 Concept, P3 Embodiment, P4 Detail) + QC + Installation. Built on deep research of Leo's REAL strengths — citation-backed calculations, 120M+ vendor/PLM part-search, DFMA reasoning, documentation — NOT production CAD geometry (Leo only outputs mesh; it pivoted to part-search). Routes each task to a phase template that plays to those strengths, forces quantified load case + real interface dims + source-citation + search-before-generate, and gates on classification: THƯỜNG/COTS/generic-knowledge → Leo cloud OK; MẬT/HẠN-CHẾ geometry/PLM → STOP (never upload), route to helix-cad-bridge (local). Geometry-generation subtasks → delegate to leo-prompt. Triggers on: 'leo assist', 'leo skill', 'leo cho thiết kế', 'prompt leo theo phase', 'leo P1 P2 P3 P4', 'leo QC', 'leo lắp đặt', 'getleo theo giai đoạn', 'leo tìm part', 'leo tính toán', 'leo tiêu chuẩn', 'bộ prompt leo'."
+description: "Phase × Mode Leo AI (getleo.ai) prompt suite. Two axes: 7 lifecycle PHASES (P0 Pre-Study · P1 Requirements · P2 Concept · P3 Embodiment · P4 Detail · QC · Installation) crossed with 6 strength-based MODES (A Part-Search & Reuse · B Engineering Q&A · C Calculation/Sizing · D DFM/Standards-Inspect · E Documentation/BOM · F Material-Selection). Built on deep research of Leo's REAL strengths — citation-backed calc, 120M+ vendor/PLM part-search, DFM inspect, docs, material — NOT production CAD geometry (Leo only outputs mesh; pivoted to part-search; 60-80% 'new' parts are duplicates). Each task → the right mode template (references/leo-mode-templates.md) or phase template, forcing quantified load + real interface dims + mandatory source-citation + search-before-generate, with a router meta-prompt. Classification-gated: THƯỜNG/COTS/generic → Leo cloud OK; MẬT/HẠN-CHẾ geometry/PLM → STOP+abstract, production geometry → helix-cad-bridge (local). Geometry-concept subtasks → leo-prompt (lowest-priority concept-only mode). Triggers on: 'leo assist', 'leo skill', 'leo cho thiết kế', 'prompt leo theo phase', 'leo mode', 'leo part search', 'leo P1 P2 P3 P4', 'leo QC', 'leo lắp đặt', 'leo tìm part', 'leo tính toán', 'leo tiêu chuẩn', 'leo DFM inspect', 'leo chọn vật liệu', 'bộ prompt leo', 'leo router'."
 ---
 
 # leo-assist — Phase-Aware Leo AI Prompt Suite (research-grounded)
@@ -26,18 +26,32 @@ description: "Phase-aware Leo AI (getleo.ai) prompt/template generator across th
 
 > Nguyên tắc vàng cho MẬT: prompt Leo phải **trừu tượng hóa** — hỏi "bạc lót trục Ø40h7 chịu X N, vật liệu?" KHÔNG hỏi "bạc cho UUV GIÁ TRƯỢT".
 
-## Step 1: Route theo Phase + loại nhiệm vụ
-Đọc phase (P0–P4/QC/Install) + loại việc → chọn template trong [references/leo-phase-templates.md](references/leo-phase-templates.md). Nếu việc là **sinh hình học** → chuyển [[leo-prompt]] (và nhắc Leo chỉ ra mesh concept).
+## 6 MODE theo thế mạnh (A–F) — trục "LOẠI việc"
+> Đây là **lõi** — Leo mạnh ở 6 loại tác vụ. Template điền-sẵn: [references/leo-mode-templates.md](references/leo-mode-templates.md).
 
-| Phase | Leo hỗ trợ (đúng thế mạnh) | Skill nội bộ tiêu thụ kết quả |
+| Mode | Tác vụ | Dùng khi |
 |----|----|----|
-| **P0** Pre-Study | tra tiêu chuẩn/sản phẩm tương đương, khả thi sơ bộ + COTS, ước cost generic | forge-pre-study · odi · forge-cost |
-| **P1** Requirements | liệt kê tiêu chuẩn áp dụng + **giá trị mục tiêu** có cite, tra interface COTS, điều kiện môi trường | helix-p1-requirements · helix-p1-validate |
-| **P2** Concept | tìm **nguyên lý/part** hiện thực, chọn vật liệu, DFMA trade-off, concept mesh (THƯỜNG) | helix-concept-generate |
-| **P3** Embodiment ⭐ | **part-search COTS** (bạc đạn/ray/fastener), **tính sức bền/sizing** có cite, vật liệu, DFMA review, BOM standard-part | helix-p3-layout/-dfx/-bom |
-| **P4** Detail | **kiểm quy phạm** (GD&T/ASME/ISO), tra dung sai/ren/fit, verify vendor-part BOM | helix-p4-drawing/-inspection |
-| **QC** | tiêu chí nghiệm thu + phương pháp kiểm (VT/PT/UT/NDT) theo tiêu chuẩn, tính đo | helix-p4-inspection · erp-quality |
-| **Lắp đặt** | trình tự lắp, **mô-men siết/preload** có cite, fit/căn chỉnh, checklist ATLĐ | forge-fabrication · helix-p4-handoff |
+| **A** Part Search & Reuse ⭐ | tìm part COTS/PDM trước khi vẽ (60–80% part mới là trùng lặp) | cần 1 chi tiết |
+| **B** Engineering Q&A | tra tiêu chuẩn/fit/quy tắc, có cite | hỏi kỹ thuật |
+| **C** Calculation / Sizing | tính hiện công thức+logic+nguồn | thay bảng tính |
+| **D** DFM / Standards Inspect | soi vi phạm DFM/quy phạm, mỗi flag có cite | review thiết kế (THƯỜNG) |
+| **E** Documentation / BOM | draft tài liệu/spec/BOM | sinh tài liệu nhanh |
+| **F** Material Selection | so vật liệu có cite + trade-off | chọn vật liệu |
+
+## Step 1: Route theo Phase × Mode
+Phase = *khi nào* · Mode = *loại việc*. Chọn phase → các mode trội → điền template mode (mode-templates) hoặc template phase ([references/leo-phase-templates.md](references/leo-phase-templates.md)). **Sinh hình học** → [[leo-prompt]] (mesh concept, mode "concept-only" ưu tiên thấp nhất).
+
+| Phase | Mode trội | Skill nội bộ tiêu thụ |
+|----|----|----|
+| **P0** Pre-Study | B (tiêu chuẩn/tương đương) · A (COTS) | forge-pre-study · odi · forge-cost |
+| **P1** Requirements | B (tiêu chuẩn) · C (giá trị mục tiêu) · A (interface COTS) | helix-p1-requirements · helix-p1-validate |
+| **P2** Concept | A (part nguyên lý) · F (vật liệu) · B | helix-concept-generate (+leo-prompt concept) |
+| **P3** Embodiment ⭐ | **A (part-search COTS)** · C (sizing) · F · D | helix-p3-layout/-dfx/-bom |
+| **P4** Detail | D (GD&T/ISO inspect) · B (fit) · E (BOM verify) | helix-p4-drawing/-inspection |
+| **QC** | B (tiêu chí nghiệm thu) · D (inspect) · C (đo) | helix-p4-inspection · erp-quality |
+| **Lắp đặt** | B (mô-men/tiêu chuẩn) · C (preload) · E (quy trình) | forge-fabrication · helix-p4-handoff |
+
+> **Router nhanh:** dán "Router meta-prompt" (cuối mode-templates) + 1 dòng tác vụ → tự chọn mode + điền template.
 
 ## Step 2: Emit prompt (cấu trúc bắt buộc — 5 nguyên tắc Leo)
 Mọi prompt Leo phải có (đây là điểm Leo > ChatGPT, **phải ép dùng**):

@@ -8,6 +8,7 @@ description: "Generate a standardized, buildable text-to-CAD prompt (getleo.ai /
 > **Role:** Turn a rough part idea into a **buildable** text-to-CAD prompt for getleo.ai (or Leo/Zoo/any text→CAD). NOT a CAD generator itself — it writes the *prompt* that makes the cloud tool produce correct geometry on the first try.
 > **Why:** A good design brief (CPTRF) still fails text-to-CAD because the AI is **spatially blind** ([[LLM Spatial Blindness]]): it needs explicit numbers, build order, and a datum — not adjectives like "gọn nhẹ". This skill forces those in.
 > **Mirror:** for cloud-disqualified (MẬT) geometry, this skill refuses Leo and routes to [[helix-cad-bridge]] (local code-CAD).
+> **Priority note (research-reframed):** geometry generation is Leo's **weakest** output (mesh only, not production). This skill = the **concept-only, lowest-priority Leo mode**. For real value use [[leo-assist]]'s strength-based modes first (A part-search · B Q&A · C calc · D DFM-inspect · E docs · F material); only reach for text→CAD geometry when a quick *visual concept* (THƯỜNG) genuinely helps.
 
 ## Step 0: Classification Gate (FIRST — non-negotiable)
 Ask / infer the part's classification:
