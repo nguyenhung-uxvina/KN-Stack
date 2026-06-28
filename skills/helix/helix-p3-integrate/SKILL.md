@@ -94,11 +94,30 @@ ICD v3 FREEZE CHECKLIST (P&B):
 □ EMC zones identified
 □ Software API contracts frozen (if applicable)
 □ Shadow assumptions all verified OR explicitly accepted as risks
+□ Geometry-of-record registered for every fabricable part (see Geometry Interface table below)
 
 STATUS: [FROZEN / PENDING — {{items remaining}}]
 ```
 
-**Rule:** ICD v3 freeze requires EXPLICIT CEO approval — no silent freeze.
+### Step C3a: Geometry-of-Record Registry (ICD geometry interface)
+> The ICD freezes not only signal/mechanical-tolerance interfaces but the **geometry interface** — the authoritative shape of each fabricable part. This is the receiving slot the CAD trio writes into: [[helix-cad-bridge]] registers a STEP, [[helix-cad-ingest]] registers a `cad_extract.json`, and [[helix-cad-roundtrip]] threads either one here. Both forms occupy the **same per-part slot** — geometry-of-record.
+
+```
+GEOMETRY-OF-RECORD — {{project}} (frozen at ICD v3)
+
+| Part ID | Source type | Artifact | Rev | CEO-certified? | Spatial-Blindness gate |
+|---------|-------------|----------|-----|----------------|------------------------|
+|         | STEP (cad-bridge) / cad_extract.json (cad-ingest, incl. human-drawn import) | path | r{{n}} | [Y/N] | [render-verified / dim-certified] |
+
+Rules:
+- Every part on the BOM tree MUST have a geometry-of-record row before ICD v3 freezes.
+- CEO-certified = bridge Step 5 render-verify OR ingest Step 6 / roundtrip D4-D5 reconcile.
+  An UNCERTIFIED geometry-of-record blocks the freeze (AI never self-certifies — [[LLM Spatial Blindness]]).
+- Rev-locked: a part re-issued (STEP→drawing, or design change) bumps its rev here.
+- A part whose geometry is deferred to Phase 4 = [LATE], explicitly listed, not silently absent.
+```
+
+**Rule:** ICD v3 freeze requires EXPLICIT CEO approval — no silent freeze. Geometry-of-record completeness (every fabricable part has a CEO-certified row) is part of that approval.
 
 ### Step CX: Requirements Backflow at Integration (VDI 2221:2019)
 
@@ -157,7 +176,7 @@ DOMAIN ALIGNMENT:
 ## Output
 Save to `1_Projects/{{project}}/Phase3-Embodiment/`:
 - `BC_Integration_Check.md`
-- `BC_ICD_v3.md`
+- `BC_ICD_v3.md` (includes the Geometry-of-Record registry — Step C3a)
 - `BC_Shadow_Assumptions.md`
 
 ## CEO Checkpoint
@@ -178,5 +197,7 @@ CEO:
 ## COD
 - Interface verification: Offload (O2)
 - Shadow assumption extraction: Offload (O2)
+- Geometry-of-record registry compilation (collect STEP/cad_extract rows): Offload (O2)
 - **ICD v3 freeze approval: Core (C)** — commitment with consequences
 - **Unverified assumption acceptance: Core (C)** — risk decision
+- **Geometry-of-record CEO certification (per part): Core (C)** — [[LLM Spatial Blindness]] gate, blocks freeze if any part uncertified

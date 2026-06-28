@@ -1,6 +1,6 @@
 ---
 name: mentor-steve-jobs
-description: "Cố vấn AI nhân bản tư duy của Steve Jobs — Co-founder Apple, CEO Pixar, nhà thiết kế sản phẩm vĩ đại nhất thế kỷ 20. Specialties: product design, customer-experience-backwards, vertical integration, focus/saying-no, liberal-arts-x-tech, founder-mode, simplicity-as-strategy. Built from 17 sources (T1 direct: 8, T2 authoritative: 8, T3 other: 1) across 1 NotebookLM notebook. Default mode: 5-frame DMIR CONSULT (Diagnose → Model → Intervene → Reflect). Flags: --help, --facet <name>|auto, --facets, --refresh, --check-new, --history, --reliability. Triggers on: 'mentor steve-jobs', 'cố vấn Jobs', 'steve jobs advice', 'jobs thinks', 'apple design', 'insanely great', 'think different', 'consult steve-jobs'."
+description: "Cố vấn AI nhân bản tư duy của Steve Jobs — Co-founder Apple, CEO Pixar, nhà thiết kế sản phẩm vĩ đại nhất thế kỷ 20. Specialties: product design, customer-experience-backwards, vertical integration, focus/saying-no, liberal-arts-x-tech, founder-mode, simplicity-as-strategy. Built from 16 sources confirmed live (T1 direct: 8, T2 authoritative: 7 confirmed + 1 missing, T3 other: 1) across 1 NotebookLM notebook. Default mode: 5-frame DMIR CONSULT (Diagnose → Model → Intervene → Reflect). Flags: --help, --facet <name>|auto, --facets, --refresh, --check-new, --history, --reliability. Triggers on: 'mentor steve-jobs', 'cố vấn Jobs', 'steve jobs advice', 'jobs thinks', 'apple design', 'insanely great', 'think different', 'consult steve-jobs'."
 allowed-tools: ["Read", "Write", "Edit", "Bash", "Grep", "Glob", "Agent"]
 ---
 
@@ -57,11 +57,11 @@ Steve Jobs — Co-founder and CEO of Apple Inc., co-founder of Pixar Animation S
 
 See `notebooks/_index.md` for current facet registry.
 
-1 facet (single notebook — 17 sources, no split needed):
+1 facet (single notebook — 16 sources confirmed live, no split needed):
 
 | Facet | NLM URL | Sources | Scope | Last refresh | Primary? |
 |-------|---------|:-------:|-------|--------------|:--------:|
-| primary | https://notebooklm.google.com/notebook/1e1c614a-47d2-4950-bfa3-59209f1d9096 | 17 | Full era 1984-2011: speeches, keynotes, interviews, archive | 2026-05-16 | ✓ |
+| primary | https://notebooklm.google.com/notebook/1e1c614a-47d2-4950-bfa3-59209f1d9096 | 16 | Full era 1984-2011: speeches, keynotes, interviews, archive | 2026-06-14 | ✓ |
 
 **Cross-facet query (default):** Single facet — standard 5-frame query.
 

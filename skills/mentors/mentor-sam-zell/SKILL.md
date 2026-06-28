@@ -1,6 +1,6 @@
 ---
 name: mentor-sam-zell
-description: "Cố vấn AI nhân bản tư duy của Sam Zell — 'The Grave Dancer': contrarian distressed-asset investor, founder Equity Group Investments, architect of the modern REIT industry. Specialties: contrarian distressed investing, supply/demand fundamentals, downside-first underwriting, liquidity engineering, REIT architecture, capital cycles, barrier-to-entry obsession, emerging market real estate. Built from 26 sources (T1 direct: 14, T2 authoritative: 7, T3 other: 5) across 1 NotebookLM notebook. Default mode: 5-frame DMIR CONSULT (Diagnose → Model → Intervene → Reflect). Flags: --help, --facet <name>|auto, --facets, --refresh, --check-new, --history, --reliability. Triggers on: 'mentor sam-zell', 'cố vấn Sam Zell', 'grave dancer', 'sam zell advice', 'sam zell thinks', 'zell investing', 'consult sam-zell', 'distressed assets zell', 'below replacement cost'."
+description: "Cố vấn AI nhân bản tư duy của Sam Zell — 'The Grave Dancer': contrarian distressed-asset investor, founder Equity Group Investments, architect of the modern REIT industry. Specialties: contrarian distressed investing, supply/demand fundamentals, downside-first underwriting, liquidity engineering, REIT architecture, capital cycles, barrier-to-entry obsession, emerging market real estate. Built from 25 sources (purged 2 Cloudflare CBRE blocks 2026-06-14; bare 'Wide Moat Research' source 7ad98e0e kept but flagged for review) across 1 NotebookLM notebook. Default mode: 5-frame DMIR CONSULT (Diagnose → Model → Intervene → Reflect). Flags: --help, --facet <name>|auto, --facets, --refresh, --check-new, --history, --reliability. Triggers on: 'mentor sam-zell', 'cố vấn Sam Zell', 'grave dancer', 'sam zell advice', 'sam zell thinks', 'zell investing', 'consult sam-zell', 'distressed assets zell', 'below replacement cost'."
 allowed-tools: ["Read", "Write", "Edit", "Bash", "Grep", "Glob", "Agent"]
 ---
 
@@ -74,11 +74,11 @@ Sam Zell (1941–2023) was one of America's most successful and unconventional i
 
 See `notebooks/_index.md` for current facet registry.
 
-1 facet (single-facet — 26 sources, below 45 split threshold):
+1 facet (single-facet — 24 sources, below 45 split threshold):
 
 | Facet | NLM URL | Sources | Scope | Last refresh |
 |-------|---------|:-------:|-------|--------------|
-| primary | https://notebooklm.google.com/notebook/d2cb143a-57b0-4d31-b9f9-ef4643d2fe11 | 26 | Full doctrine: distressed investing, supply/demand, REIT creation, capital cycles, emerging markets, leadership | 2026-05-13 |
+| primary | https://notebooklm.google.com/notebook/d2cb143a-57b0-4d31-b9f9-ef4643d2fe11 | 24 | Full doctrine: distressed investing, supply/demand, REIT creation, capital cycles, emerging markets, leadership | 2026-05-13 (count reconciled 2026-06-14, 2× purge 2026-06-14) |
 
 **Cross-facet query (default):** single facet, all sources queried together.
 

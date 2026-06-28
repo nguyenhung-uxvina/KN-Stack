@@ -146,7 +146,9 @@ Phase4-Detail/{{variant}}/
 ├── _pipeline_state.md
 ├── B0_Preflight_Report.md
 ├── BA_Drawing_Index.md
-├── Manufacturing_Drawings/   (DXF + PDF)
+├── Geometry/                 (STEP/ + code-CAD .py source — from [[helix-cad-bridge]], rev-locked geometry-of-record; THE geometry master)
+│   └── cad_extract.json      (for any human-drawn/imported parts, via [[helix-cad-ingest]])
+├── Manufacturing_Drawings/   (DXF + PDF — derived 2D views, NOT the master)
 ├── Schematics/               (PCB sch)
 ├── Gerber/                   (PCB production files)
 ├── BOM_Final.md
@@ -184,9 +186,12 @@ Date: {{today}}  Version: v1.0  Workshop verdict: GIA CONG DUOC
 ## Files for forge-fabrication F0 verification
 | File | Used by F0 check |
 |----|----|
+| Geometry/ (STEP/ + code-CAD .py source) | geometry master from [[helix-cad-bridge]] (rev-locked geometry-of-record) — fabrication receives the 3D master, not just 2D |
+| Geometry/cad_extract.json | for any human-drawn/imported parts, via [[helix-cad-ingest]] |
 | BOM_Final.md | erp-bom check {{product}} |
 | _routing.md | erp-master audit (Routing check) |
 | Workshop_Review.md | F0 handoff gate |
+| Manufacturing_Drawings/ (DXF+PDF) | derived 2D views for shop floor (NOT the geometry master) |
 
 ## Pre-Run Reminders for CEO
 - Long-lead items already ordered? {{Y/N — list pending}}

@@ -57,10 +57,10 @@ This pipeline implements VDI 2221:2019 (Blatt 1 + Blatt 2) principles:
 | Block | Skill Name | P&B Section | Purpose | CEO Checkpoint |
 |-------|-----------|-------------|---------|----------------|
 | **B0** | `/helix-p3-preflight` | 7.1 | Verify Phase 2 done, identify embodiment-determining reqs, spatial constraints | Confirm layout strategy |
-| **BA** | `/helix-p3-layout` | 7.1 (Steps 2-6) | CEO creates preliminary layout, maritime P50/P51 auto-invoke | **Approve layout** (Core) |
+| **BA** | `/helix-p3-layout` | 7.1 (Steps 2-6) | CEO creates preliminary layout, maritime P50/P51 auto-invoke. **Per part, a Geometry Source Gate routes to [[helix-cad-bridge]] (AI-parametric .py→STEP) or [[helix-cad-roundtrip]] --design-import (human-drawn external import → ingested via [[helix-cad-ingest]]); the resulting STEP / cad_extract.json becomes the per-part geometry-of-record candidate** | **Approve layout** (Core) |
 | **BA→BB** | *(early error-check)* | 7.1 Step 6 | Lightweight error + cost check on layout BEFORE detailed DfX — catch flawed layouts early | CEO: fix layout or proceed |
 | **BB** | `/helix-p3-dfx` | 7.3-7.5 | 3 basic rules (PASS/FAIL) → 5 principles rapid audit → DfX review (DfM/DfA/DfR/DfT/DfW/DfU/DfQC + DfCorrosion/DfThermal/DfDurability/DfWear/DfTransport/DfCreep; optional: DfAesthetics/DfRecycling), PLAUSIBLE 9-check | Resolve FAIL items |
-| **BC** | `/helix-p3-integrate` | 7.4 | Cross-domain integration, ICD v2→v3, thermal/EMC, shadow assumptions | **Approve ICD v3 freeze** |
+| **BC** | `/helix-p3-integrate` | 7.4 | Cross-domain integration, ICD v2→v3, thermal/EMC, shadow assumptions. **Step C3a freezes the geometry-of-record registry in ICD v3 — per part, the STEP (from [[helix-cad-bridge]]) or cad_extract.json (from [[helix-cad-ingest]], for human-drawn parts) is registered as the single geometry source of truth** | **Approve ICD v3 freeze** |
 | **BD** | `/helix-p3-bom` | 7.1 (Steps 14) | Draft BOM, long-lead items, cost estimate, VN sourcing check | Review BOM feasibility |
 | **BE** | `/helix-p3-compile` | 7.6-7.7 | **Prerequisite check** (all variants same concreteness? costs estimable?) → Embodiment eval (Rt/Re + S-diagram), weak spot elimination (value profile chart), P02 QC gate, deliverables. **Return-to-concept trigger:** any D=0 or ≥3 D=1 → flag RECOMMEND RETURN TO PHASE 2 | Approve for Gate 3 |
 
@@ -347,6 +347,7 @@ When variant is specified, all filenames are prefixed with `{{prefix}}` (e.g. `V
 | `{{prefix}}Basic_Rules_Audit.md` | BB | BE | Clarity/Simplicity/Safety assessment |
 | `{{prefix}}Integration_Check.md` | BC | BD, BE | Interface verification, thermal, EMC |
 | `{{prefix}}ICD_v3.md` | BC | Phase 4 | Frozen interfaces (after CEO approval) |
+| `{{prefix}}Geometry_Of_Record.md` + `Geometry/` (STEP + .py / cad_extract.json) | BA (generates), BC (freezes at C3a) | Phase 4, fabrication | Per-part geometry source of truth — STEP+code from [[helix-cad-bridge]] or cad_extract.json from [[helix-cad-ingest]] (human-drawn imports); rev-locked at ICD v3 freeze |
 | `{{prefix}}Shadow_Assumptions.md` | BC | BE | Cross-domain assumption validation |
 | `{{prefix}}BOM_Draft.md` | BD | BE | Preliminary BOM with costs, sourcing |
 | `{{prefix}}Long_Lead_Items.md` | BD | BE | Items requiring early procurement |
@@ -440,12 +441,16 @@ helix-embody-realize READS FROM:
   - helix-task-clarify → requirements for DfX checks
   - forge-cost → cost envelope
   - forge-shift → ACH/fallback constraints for DfU
+  - helix-cad-bridge → BA per-part STEP+code (AI-parametric geometry)
+  - helix-cad-ingest → BA ingested cad_extract.json (human-drawn imported parts)
+  - helix-cad-roundtrip → BA Geometry Source Gate orchestration (Flow B / Flow D)
 
 helix-embody-realize WRITES TO:
   - 1_Projects/{{project}}/Phase3-Embodiment/ → all deliverables
-  - helix-detail-finalize → frozen layout + BOM for Phase 4
+  - helix-cad-roundtrip → BA per-part geometry-source requests (parametric vs design-import)
+  - helix-detail-finalize → frozen layout + BOM + geometry-of-record for Phase 4
   - helix-quality-gate → Gate 3 readiness
-  - ICD v3 → frozen interfaces
+  - ICD v3 → frozen interfaces + geometry-of-record registry (C3a)
   - bridge-risk-radar → integration risks
   - forge-library → new components cataloged
   - helix-design-journal → session log
@@ -497,5 +502,7 @@ SHARED REFERENCES (in helix-embody-realize/references/):
 - CEO checkpoints: **Core (C)** — inspect, approve, adjust
 - **Initial layout creation: Core (C)** — non-delegable
 - **Design trade-off resolution: Core (C)**
-- **ICD v3 freeze: Core (C)** — commitment with consequences
+- **Per-part Geometry Source Gate decision (BA — parametric vs human-drawn import): Core (C)** — CEO routes
+- Geometry generation/ingest (via [[helix-cad-bridge]]/[[helix-cad-ingest]]/[[helix-cad-roundtrip]]): Offload (O2)
+- **ICD v3 freeze + geometry-of-record registration (C3a): Core (C)** — commitment with consequences
 - Framework flag decisions (--icdm, --maritime): **Core (C)** — CEO chooses

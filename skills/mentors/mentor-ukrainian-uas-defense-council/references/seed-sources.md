@@ -2,12 +2,28 @@
 name: ukrainian-uas-defense-council-seed-sources
 type: source registry
 notebook_id: dcc34486-21b4-473d-b3ff-9bdce223c494
-last_updated: 2026-05-22
+last_updated: 2026-06-14
 ---
 
 # Seed Sources — mentor-ukrainian-uas-defense-council
 
-Total ingested: 40 sources (T1×14, T2×15, T3×11)
+Total: **45 sources** live (was 40 registry / 42 live incl. 1 junk; +4 via Exa 2026-06-14, −1 junk Cloudflare stub).
+⚠ **AT 45 SPLIT TRIGGER** — next refresh should execute the temporal split (`primary-2022-2024` / `primary-2025-2026`) before adding more. See "Added 2026-06-14".
+
+## Added 2026-06-14 — Exa Channel 0 (4; freshest 2026-H1 only, to stay at split trigger)
+
+| # | Title | URL | Source ID | Coverage |
+|---|-------|-----|-----------|---------|
+| X-01 | KSE Institute — "The Ukrainian Defense Technology Market" (Mar 2026) | https://institute.kse.ua/wp-content/uploads/2026/03/the-ukrainian_defense_technology_market_eng_march_2026.pdf | 441f5568 | ⭐ Successor to Nov-2025 KSE report; autonomy/ATR/interceptor segment maturity, market structure 2026 |
+| X-02 | UNITED24 — Brave1/MaXon automates 95% of Shahed interception (Jun 2026) | https://united24media.com/war-in-ukraine/ukrainian-ai-interceptors-are-now-downing-russian-shahed-drones-autonomously-19054 | d7e6ab34 | ⭐ Autonomous interception breakthrough; radar-integrated; human-on-loop; Kharkiv combat trials — D4 |
+| X-03 | TWZ — Inside Ukraine's interceptor-drone innovations (Brave1 CEO; 2,000/day, 150 cos) (May 2026) | https://www.twz.com/news-features/inside-ukraines-interceptor-drone-innovations-swatting-down-thousands-of-shahed-drones | e545a6c2 | Interceptor industry at scale; human-on-loop doctrine; export interest — D2, D4 |
+| X-04 | TWZ — AI-enabled mid-range deep-strike vs Russian logistics (150 mi; Hornet+Starlink+AI terminal) (Jun 2026) | https://www.twz.com/news-features/inside-ukraines-ai-enabled-drone-campaign-targeting-russian-logistics-deep-behind-the-lines | 57ed0c3a | ⭐ NEW capability: AI middle-strike, autonomous terminal guidance under EW — D1, D2 |
+
+**Deferred (queued for the post-split refresh — strong but held to respect the 45 cap):**
+- Khyzhak/"Predator" AI gun-turret vs fiber-optic FPV (battlepolicy / wesodonnell, May–Jun 2026)
+- Counter-drone laser/DEW systems in Ukraine 2026 (Ukraine War Analytics) — NEW DEW topic
+- The Insider — HORNET VISION Ctrl 500km remote interceptor + Shield AI Hivemind (Jun 2026)
+- Euromaidan / BBC — AI long-range "middle strike" corroboration
 
 ## Tier 1 — Direct Primary (own writings, speeches, official docs)
 

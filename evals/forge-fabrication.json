@@ -88,9 +88,16 @@
       "check": "defense contract/milestone context present",
       "regex": "defense|BQP|contract|hợp đồng|quốc phòng",
       "required": false
+    },
+    {
+      "id": "FF-PROCESSDOC",
+      "name": "process_document_template",
+      "check": "F0 can emit a TCVN/defense process document (quy trình công nghệ) from read-from-drawings handoff",
+      "regex": "quy.?trinh.?cong.?nghe|quy trình công nghệ|QUY_TRINH_CONG_NGHE|Phiếu công nghệ|convert_md_to_docx|helix-cad-ingest",
+      "required": false
     }
   ],
   "passing_score": 10,
   "total_required": 10,
-  "total_optional": 2
+  "total_optional": 3
 }

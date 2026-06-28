@@ -1,6 +1,6 @@
 ---
 name: mentor-nswc-hull-council
-description: "Cố vấn AI thể hiện thẩm quyền kết cấu của Naval Surface Warfare Center Carderock (NSWCDD) + David Taylor Model Basin (DTMB) — external pressure buckling, ring-stiffened cylinder design, ovalization knockdown, hydrostatic test protocols, MIL-SPEC depth certification. Built from 20 sources (T1 direct: 12, T2 authoritative: 2, T3 text council: 6) across 1 NotebookLM notebook. Default mode: 5-frame DMIR CONSULT (Diagnose → Model → Intervene → Reflect). Triggers on: 'mentor nswc-hull-council', 'hội đồng vỏ tàu', 'external pressure buckling', 'windenburg trilling', 'ring stiffened cylinder', 'hydrostatic test', 'torpedo hull structural', 'depth rating certification', 'buckling pressure hull', 'áp suất ngoài', 'vỏ chịu áp'."
+description: "Cố vấn AI thể hiện thẩm quyền kết cấu của Naval Surface Warfare Center Carderock (NSWCDD) + David Taylor Model Basin (DTMB) — external pressure buckling, ring-stiffened cylinder design, ovalization knockdown, hydrostatic test protocols, MIL-SPEC depth certification. Built from 27 sources (20 original + 7 added 2026-06-14 via Exa: ABS Underwater Rules 2025, DNV-UWT submersible rules, USCG/ABS passenger-sub pressure-hull materials, Kendrick plastic-knockdown design charts, general-instability theory, SIFM/GIFM imperfection sensitivity) across 1 NotebookLM notebook. Default mode: 5-frame DMIR CONSULT (Diagnose → Model → Intervene → Reflect). Triggers on: 'mentor nswc-hull-council', 'hội đồng vỏ tàu', 'external pressure buckling', 'windenburg trilling', 'ring stiffened cylinder', 'hydrostatic test', 'torpedo hull structural', 'depth rating certification', 'buckling pressure hull', 'áp suất ngoài', 'vỏ chịu áp'."
 allowed-tools: ["Read", "Write", "Edit", "Bash", "Grep", "Glob", "Agent"]
 ---
 
@@ -85,7 +85,7 @@ allowed-tools: ["Read", "Write", "Edit", "Bash", "Grep", "Glob", "Agent"]
 
 | Facet | NLM URL | Sources | Scope | Last refresh |
 |-------|---------|:-------:|-------|--------------|
-| primary | https://notebooklm.google.com/notebook/329aca7c-c03d-4bc1-ba50-9ee32c1eff8b | 20 | All domains: Windenburg-Trilling theory, NASA SP-8007, DTIC naval reports, ring-stiffened design, ovalization, MIL-SPEC framework, hydrostatic test protocols, AUV/torpedo practice, WX TN-03-02-000 application | 2026-06-09 |
+| primary | https://notebooklm.google.com/notebook/329aca7c-c03d-4bc1-ba50-9ee32c1eff8b | 27 | Windenburg-Trilling, NASA SP-8007, DTIC naval reports, ring-stiffened design, ovalization, MIL-SPEC framework, hydrostatic test, AUV/torpedo practice; (+7 Exa 2026-06-14) ABS Underwater Rules 2025 + DNV-UWT + USCG/ABS materials, Kendrick plastic-knockdown charts, general-instability + SIFM/GIFM sensitivity | 2026-06-14 |
 
 See `notebooks/_index.md` for current facet registry.
 

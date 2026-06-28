@@ -2,8 +2,8 @@
 
 Curated source list for NLM notebook `1e1c614a-47d2-4950-bfa3-59209f1d9096`.
 
-Last updated: 2026-05-16
-Total ingested: 17 sources (8 T1 + 8 T2 + 1 T3)
+Last updated: 2026-06-14
+Total ingested: 16 sources confirmed live (originally 17 declared — 1 missing; see reconcile note below)
 
 ## Tier 1 — Direct Sources (Steve Jobs' Own Words)
 
@@ -29,7 +29,7 @@ Total ingested: 17 sources (8 T1 + 8 T2 + 1 T3)
 | 13 | Charlie Rose — Pixar Interview (1996) | https://charlierose.com/videos/1397 | Oct 1996 | 467e5119-c8e6-49c9-a6b2-9ae13e9b3c12 |
 | 14 | SIGGRAPH 1995 — Toy Story Animation keynote | https://www.youtube.com/watch?v=16O5g1fD-1U | 1995 | be5f0410-5fb3-478a-bc1c-2c00136f2c2a |
 | 15 | Stanford GSB: Guy Kawasaki on Jobs | https://www.gsb.stanford.edu/insights/guy-kawasaki-lessons-learned-steve-jobs | Various | a7f97820-1b97-47e6-93b1-9e044d6f9381 |
-| 16 | Smithsonian Oral History 1995 | https://americanhistory.si.edu/comphist/sj1.html | Apr 1995 | (ingested — verify ID) |
+| 16 | ⚠ Smithsonian Oral History 1995 | https://americanhistory.si.edu/comphist/sj1.html | Apr 1995 | ABSENT from live notebook as of 2026-06-14 — likely failed ingest or deleted; re-add if wanted |
 
 ## Tier 3 — Other Sources
 

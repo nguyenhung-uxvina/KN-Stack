@@ -135,9 +135,20 @@ Cash-on-Cash = Annual Cash Flow / Cash Invested × 100%
 - "Financial freedom is available to those who learn about it and work for it."
 - "Find the game where you can win, and then commit your life to playing it."
 
-## Sources
-- Kiyosaki Core Frameworks Text — Early Works 1997-2005 (T1 - synthesized + filtered)
-- NLM ID: 8397f2e5-5ef1-4db4-a9b3-797446c5931f
+## Sources (8 total — rebuilt 2026-06-14 via Exa Channel 0)
+
+| # | Title | Tier |
+|---|-------|------|
+| 1 | Core Frameworks — Early Works 1997-2005 (synthesized text) | T1 |
+| 2 | What is Bad Debt? — Rich Dad | T1 |
+| 3 | Learn How to Use Good Debt vs. Bad Debt — Rich Dad | T1 |
+| 4 | Robert Kiyosaki on Making Rich Dad Poor Dad a Mega-Bestseller | T1 |
+| 5 | You Are The President Of Your Own Life — Get Rich Education interview | T1 |
+| 6 | Rich Dad Best-Selling Personal Finance Author — George Gammon interview | T1 |
+| 7 | Rich Dad's Cashflow Quadrant Book Summary (Shortform) | T2 |
+| 8 | 30 Mins with Robert Kiyosaki on Millionaire Mindset | T2 |
+
+NLM ID: 8397f2e5-5ef1-4db4-a9b3-797446c5931f
 
 ## Integration với Board
 - **Unique role:** Mindset baseline và vocabulary provider — khi các mentor khác debate phức tạp, Kiyosaki cung cấp simple litmus test: "asset hay liability?"

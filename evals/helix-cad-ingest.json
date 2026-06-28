@@ -1,0 +1,88 @@
+{
+  "skill": "helix-cad-ingest",
+  "version": "1.0",
+  "description": "Static assertions for helix-cad-ingest — local inbound CAD reader (PDF+DXF) with export requirements, confidence gate, and classification router",
+  "mode": "static",
+  "test_input": "read the exported PDF + DXF pair for a pontoon bracket part and extract dimensions, BOM, and notes",
+  "total_required": 8,
+  "passing_score": 8,
+  "assertions": [
+    {
+      "id": "CI-LOCAL",
+      "name": "local_parsers_only",
+      "check": "skill mandates local parsers ezdxf + PyMuPDF/pdfplumber, offline",
+      "regex": "ezdxf|PyMuPDF|pymupdf|pdfplumber|LOCAL|offline",
+      "required": true
+    },
+    {
+      "id": "CI-PAIR",
+      "name": "pdf_dxf_pair",
+      "check": "skill reads a PDF + DXF pair and reconciles them",
+      "regex": "PDF.*DXF|DXF.*PDF|pair|reconcile|CONFLICT|geometry truth",
+      "required": true
+    },
+    {
+      "id": "CI-EXPORT",
+      "name": "export_requirements",
+      "check": "skill specifies export settings to maximize extraction (version, no-explode, vector PDF)",
+      "regex": "R2013|R2018|do NOT.*explode|not.*explode|vector PDF|ASCII DXF|selectable text|Export Requirements",
+      "required": true
+    },
+    {
+      "id": "CI-CONFIDENCE",
+      "name": "confidence_gate",
+      "check": "skill assigns HIGH/MED/LOW confidence and flags missing/conflict, AI never self-certifies",
+      "regex": "HIGH|MED|LOW|confidence|self-certif|MISSING|CONFLICT|Spatial Blindness",
+      "required": true
+    },
+    {
+      "id": "CI-ROUTER",
+      "name": "classification_router",
+      "check": "skill routes by classification and blocks cloud OCR for MẬT",
+      "regex": "MẬT|HẠN.?CHẾ|THƯỜNG|classification|cloud OCR|egress|CLASSIFICATION-VIOLATION",
+      "required": true
+    },
+    {
+      "id": "CI-ENTITIES",
+      "name": "dxf_entity_harvest",
+      "check": "skill harvests layers, text/mtext, dimensions, blocks/attrib, geometry",
+      "regex": "MTEXT|DIMENSION|INSERT|ATTRIB|LWPOLYLINE|layer|block",
+      "required": true
+    },
+    {
+      "id": "CI-OUTPUT",
+      "name": "structured_extract_output",
+      "check": "skill emits machine JSON + CEO-readable MD with source pointers",
+      "regex": "cad_extract\\.json|cad_extract\\.md|source pointer|title.?block|BOM",
+      "required": true
+    },
+    {
+      "id": "CI-INTEGRATION",
+      "name": "consumer_integration_map",
+      "check": "skill routes extract to requirements/RE, fabrication, inspection, and bridge round-trip",
+      "regex": "helix-p1-requirements|reverse-engineering|forge-fabrication|helix-p4-inspection|helix-cad-bridge",
+      "required": true
+    },
+    {
+      "id": "CI-STALECODE",
+      "name": "stale_titleblock_code",
+      "check": "skill handles stale/copy-pasted title-block part codes — filename is reliable key, code_in_dxf is LOW, never auto-fix",
+      "regex": "stale|code_in_dxf|copy-pasted|filename.*reliable|parts.?list|BOM page",
+      "required": false
+    },
+    {
+      "id": "CI-PIPELINE",
+      "name": "ingest_aggregate_authoritative",
+      "check": "skill documents the ingest -> aggregate -> authoritative_bom script pipeline",
+      "regex": "aggregate\\.py|authoritative_bom\\.py|MASTER_BOM|FAB_ROUTING|PARTS_MASTER",
+      "required": false
+    },
+    {
+      "id": "CI-DWG",
+      "name": "dwg_via_oda",
+      "check": "skill reads native DWG via local ODA File Converter (odafc), MAT-safe, with clear not-installed fallback",
+      "regex": "DWG|odafc|ODA File Converter|is_installed|ODA-NOT-INSTALLED|--prefer",
+      "required": false
+    }
+  ]
+}

@@ -1,0 +1,81 @@
+{
+  "skill": "helix-cad-nest",
+  "version": "1.0",
+  "description": "Static assertions for helix-cad-nest — geometry->cut-plan bridge that groups sheet parts by material x thickness, estimates sheet count/utilization (bbox lower bound), and hands true-shape nesting to a LOCAL tool; honest about LLM spatial blindness",
+  "mode": "static",
+  "test_input": "turn the flat-profile geometry-of-record into a fabrication cut plan: group by material and thickness, estimate sheets and material yield, and produce a per-sheet cut list",
+  "total_required": 8,
+  "passing_score": 8,
+  "assertions": [
+    {
+      "id": "CN-SPATIAL",
+      "name": "spatial_blindness_honesty",
+      "check": "skill is honest that true-shape nesting is geometric packing the LLM cannot do, and hands it to a local tool/human; AI never draws a fake nest",
+      "regex": "Spatial Blindness|never draws a fake nest|true-shape|hands? (it )?off|local (nesting )?tool|AI (does not|never) place",
+      "required": true
+    },
+    {
+      "id": "CN-LOCAL",
+      "name": "local_offline",
+      "check": "skill parses locally with ezdxf and routes nest geometry to a local tool only, no cloud nesting",
+      "regex": "ezdxf|LOCAL|offline|Deepnest|SVGnest|no cloud nesting",
+      "required": true
+    },
+    {
+      "id": "CN-GROUP",
+      "name": "material_thickness_grouping",
+      "check": "skill groups parts by material x thickness as the cut-list axis",
+      "regex": "material.?.?thickness|material x thickness|material×thickness|cut-list axis|group",
+      "required": true
+    },
+    {
+      "id": "CN-ESTIMATE",
+      "name": "sheet_count_estimate_labeled",
+      "check": "skill estimates sheet count + utilization via bounding-box bin-pack and explicitly labels it an estimate / lower bound, not the production nest",
+      "regex": "ESTIMATE|lower bound|utilization|bin-?pack|sheet count|not (the|a) production nest",
+      "required": true
+    },
+    {
+      "id": "CN-CLASS",
+      "name": "classification_router",
+      "check": "skill reads the Geometry Classification label and blocks cloud nesting for MẬT/HẠN-CHẾ",
+      "regex": "Geometry Classification|MẬT|HẠN.?CHẾ|THƯỜNG|helix-p1-validate|egress|CLASSIFICATION-VIOLATION",
+      "required": true
+    },
+    {
+      "id": "CN-INPUT",
+      "name": "flat_profile_geometry_of_record",
+      "check": "skill takes the flat-profile geometry-of-record (cad_extract.json or unfolded STEP flat pattern) as input",
+      "regex": "geometry-of-record|cad_extract|flat pattern|flat.?profile|unfold|helix-cad-ingest|helix-cad-bridge",
+      "required": true
+    },
+    {
+      "id": "CN-OUTPUT",
+      "name": "cut_plan_output",
+      "check": "skill emits NEST_PLAN.md + CUT_LIST.csv per-sheet cut list",
+      "regex": "NEST_PLAN|CUT_LIST|cut.?list|nest_estimate\\.py",
+      "required": true
+    },
+    {
+      "id": "CN-FORGE",
+      "name": "feeds_production",
+      "check": "skill feeds forge-fabrication F0/F1 and reconciles vs the authoritative nesting/sap-hinh sheet",
+      "regex": "forge-fabrication|F1|nesting.*sheet|sắp.?hình|authoritative cut-list|material order",
+      "required": true
+    },
+    {
+      "id": "CN-UNFOLD",
+      "name": "folded_step_cannot_nest",
+      "check": "skill flags that folded sheet-metal STEP must be unfolded first (AI cannot unfold 3D)",
+      "regex": "UNFOLD-REQUIRED|unfold|folded STEP|cannot unfold|flat pattern first",
+      "required": false
+    },
+    {
+      "id": "CN-CONFLICT",
+      "name": "nesting_sheet_authoritative",
+      "check": "skill treats the nesting/sap-hinh sheet as authoritative cut-list and emits conflicts instead of auto-resolving",
+      "regex": "authoritative cut-list|CONFLICT|nesting.?sheet|sắp.?hình|never auto-resolve|do not silently",
+      "required": false
+    }
+  ]
+}

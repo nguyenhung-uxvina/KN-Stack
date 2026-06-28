@@ -35,7 +35,7 @@ Run the formal gate review for Pahl-Beitz phase transitions. Each gate has auto-
 
 ### Gate 3: Phase 3 (Embodiment) to Phase 4 (Detail Design)
 
-**Auto-Check:** A1: 0 critical DfX issues open | A2: >= 80% ICD frozen | A3: Integration debt trend decreasing | A4: CAD assembly complete | A5: BOM draft with suppliers | A6: Weight/stability check passed | A7: DfU items DfU-06 to DfU-09 all OK/WARN (no FAIL)
+**Auto-Check:** A1: 0 critical DfX issues open | A2: >= 80% ICD frozen | A3: Integration debt trend decreasing | A4: **Geometry-of-record complete** — every fabricable part has a CEO-certified geometry-of-record row in ICD v3 (STEP from helix-cad-bridge OR cad_extract.json from helix-cad-ingest, incl. human-drawn imports); 0 uncertified, 0 missing (BOM-vs-geometry orphans = FAIL) | A5: BOM draft with suppliers | A6: Weight/stability check passed | A7: DfU items DfU-06 to DfU-09 all OK/WARN (no FAIL)
 
 **Cross-Domain Sync Check:** S1: Mech/Elec/AI domain states synchronized (no domain >1 phase behind)? | S2: ICD v3 versions aligned across all domains? | S3: Shadow assumptions validated at last sync point? | S4: AI team testing on real hardware data (not synthetic)?
 
@@ -43,7 +43,7 @@ Run the formal gate review for Pahl-Beitz phase transitions. Each gate has auto-
 
 ### Gate 4: Phase 4 (Detail) to Manufacturing/Prototype
 
-**Auto-Check:** A1: All drawings complete (DXF/PDF vs BOM count) | A2: BOM final with part numbers | A3: Inspection checklist exists | A4: Integration debt = 0 | A5: All ICD frozen (100%) | A6: Test plan with acceptance criteria | A7: DfU lifecycle document complete (update, rollback, monitoring procedures)
+**Auto-Check:** A1: All drawings complete (DXF/PDF vs BOM count) AND each drawing traces to a CEO-certified geometry-of-record (STEP `.py` source from helix-cad-bridge, or imported cad_extract.json) — no orphan drawings | A2: BOM final with part numbers | A3: Inspection checklist exists (critical-dim acceptance seeded from the geometry-of-record cad_extract / drawing) | A4: Integration debt = 0 | A5: All ICD frozen (100%, incl. geometry-of-record registry) | A6: Test plan with acceptance criteria | A7: DfU lifecycle document complete (update, rollback, monitoring procedures)
 
 **Cross-Domain Sync Check:** S1: All domains confirm "ready for prototype" independently? | S2: Integration test plan covers all ICD interfaces? | S3: No unresolved cross-domain assumptions remaining? | S4: OTA/update pipeline tested end-to-end (if ACH product)?
 

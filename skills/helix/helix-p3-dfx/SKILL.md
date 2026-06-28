@@ -24,6 +24,8 @@ description: "Block B of Phase 3 pipeline — full DfX review (DfM/DfA/DfR/DfT/D
 
 ## Workflow
 
+> **Geometry-derived inputs (not hand-estimated):** Mass properties, bounding box, and interference inputs come from the layout's **geometry-of-record** (STEP via [[helix-cad-bridge]], or cad_extract.json via [[helix-cad-ingest]]) — not hand-estimated. Use the bridge's computed mass/CoG/volume for force-flow (B2), DfR mass/MTBF, and PLAUSIBLE Physics/Integration/Boundary (B4) checks.
+
 ### Step B1: 3 Basic Rules Audit (P&B 7.3)
 
 ```
@@ -196,6 +198,7 @@ CEO:
 ```
 
 ## COD
+- Mass/CoG/interference inputs from geometry-of-record ([[helix-cad-bridge]]/[[helix-cad-ingest]]): Offload (O2) — read from model, not estimated
 - DfX checklist execution: Offload (O2) — AI runs systematically
 - PLAUSIBLE check: Offload (O2) — AI assesses
 - Basic rules audit: Offload (O2) — AI evaluates against criteria

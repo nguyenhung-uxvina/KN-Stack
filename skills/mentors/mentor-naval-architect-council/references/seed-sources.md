@@ -1,8 +1,8 @@
 # Seed Sources — mentor-naval-architect-council
 
-Curated source list ingested during ADD pipeline (2026-05-28).
+Curated source list ingested during ADD pipeline (2026-05-28). **Updated 2026-06-14** (`--update use exa`): live notebook = **42 sources** (the original 18 below + an un-logged prior expansion of ~13 mooring/scantlings/floating-wind sources + 11 added via Exa 2026-06-14; 1 junk stub deleted). See `notebooks/_index.md` for the full current source list with IDs.
 
-## Source Registry
+## Source Registry (original ADD-pipeline 18)
 
 | NLM ID | Title | Tier | Method | Notes |
 |--------|-------|------|--------|-------|

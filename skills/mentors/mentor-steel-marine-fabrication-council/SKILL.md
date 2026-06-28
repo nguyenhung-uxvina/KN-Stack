@@ -1,6 +1,6 @@
 ---
 name: mentor-steel-marine-fabrication-council
-description: "Cố vấn AI hội đồng chế tạo thép hàng hải — composite authority từ Eurocode 3/BS EN 1993-1-8, AWS D1.1, ISO 12944, và các nhà sản xuất boiler/hull thép hàng hải. Specialties: structural steel connections, SMAW/E7018 welding procedures, marine corrosion protection (tropical seawater), duplex coating systems, NDT inspection for small workshops. Built from 17 sources (T1 standards: 4, T2 authoritative: 8, T3 other: 5) across 1 NotebookLM notebook. Default mode: 5-frame DMIR CONSULT cross-facet (Diagnose → Model → Intervene → Reflect). Flags: --help, --facet <name>|auto, --facets, --refresh, --check-new, --history, --reliability. Triggers on: 'mentor steel-marine', 'cố vấn thép hàng hải', 'steel-marine-fabrication-council advice', 'steel fabrication', 'welding marine', 'marine corrosion', 'slip-critical connection', 'duplex coating', 'consult steel-marine-fabrication-council'."
+description: "Cố vấn AI hội đồng chế tạo thép hàng hải — composite authority từ Eurocode 3/BS EN 1993-1-8, AWS D1.1, ISO 12944, và các nhà sản xuất boiler/hull thép hàng hải. Specialties: structural steel connections, SMAW/E7018 welding procedures, marine corrosion protection (tropical seawater), duplex coating systems, NDT inspection for small workshops. Built from 29 sources (17 original + 12 added 2026-06-14 via Exa: offshore coatings/TSA — NORSOK M-501/ISO 12944-9/thermally-sprayed aluminium; AWS D1.1 code + WPS practice; marine fatigue — DNV RP-C203 + EN 1993-1-9; slip-critical bolted connections) across 1 NotebookLM notebook. Default mode: 5-frame DMIR CONSULT cross-facet (Diagnose → Model → Intervene → Reflect). Flags: --help, --facet <name>|auto, --facets, --refresh, --check-new, --history, --reliability. Triggers on: 'mentor steel-marine', 'cố vấn thép hàng hải', 'steel-marine-fabrication-council advice', 'steel fabrication', 'welding marine', 'marine corrosion', 'slip-critical connection', 'duplex coating', 'consult steel-marine-fabrication-council'."
 allowed-tools: ["Read", "Write", "Edit", "Bash", "Grep", "Glob", "Agent"]
 ---
 
@@ -76,7 +76,7 @@ See `notebooks/_index.md` for current facet registry.
 
 | Facet | NLM UUID | URL | Sources | Scope |
 |-------|----------|-----|:-------:|-------|
-| primary | 0d4d0c47-1bfa-45a0-8abd-c50b4eaa9d3b | https://notebooklm.google.com/notebook/0d4d0c47-1bfa-45a0-8abd-c50b4eaa9d3b | 17 | Steel marine fabrication: structural connections, welding, corrosion protection, coating systems, NDT inspection |
+| primary | 0d4d0c47-1bfa-45a0-8abd-c50b4eaa9d3b | https://notebooklm.google.com/notebook/0d4d0c47-1bfa-45a0-8abd-c50b4eaa9d3b | 29 | Steel marine fabrication: structural connections + slip-critical bolts, welding + AWS D1.1, corrosion protection, coating systems incl. offshore TSA/NORSOK, marine fatigue (DNV RP-C203 / EN 1993-1-9), NDT inspection |
 
 **Cross-facet query (default):** when CEO calls `/mentor-steel-marine-fabrication-council "<problem>"`, primary facet queried.
 
@@ -164,7 +164,7 @@ Steel Marine Fabrication Council facets:
 
 | Facet | NLM URL | Sources | Scope | Last refresh |
 |-------|---------|:-------:|-------|--------------|
-| primary | https://notebooklm.google.com/notebook/0d4d0c47-1bfa-45a0-8abd-c50b4eaa9d3b | 17 | Steel marine fabrication, welding, corrosion protection, coating, NDT | 2026-06-10 |
+| primary | https://notebooklm.google.com/notebook/0d4d0c47-1bfa-45a0-8abd-c50b4eaa9d3b | 29 | Steel marine fabrication, welding + AWS D1.1, corrosion protection, coating incl. offshore TSA/NORSOK, marine fatigue (DNV RP-C203), slip-critical bolts, NDT | 2026-06-14 |
 ```
 
 ## WX TLS-001 / LK101 Context

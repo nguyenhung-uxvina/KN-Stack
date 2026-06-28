@@ -61,6 +61,7 @@ STATUS: [FROZEN / PENDING — {{N}} items to resolve]
 DETAIL-DETERMINING COMPONENTS — {{project}}
 
 CRITICAL DIMENSIONS (GD&T mandatory — datum/tolerance stack):
+> If a `cad_extract.json` geometry-of-record exists for the part, pre-fill this table from its critical-dim rows (via [[helix-cad-ingest]]) for CEO confirmation, rather than listing them from scratch.
 | Component | Why critical | Datum surface | Tolerance class |
 |----|----|----|----|
 
@@ -136,5 +137,6 @@ CEO:
 - Phase 3 verification: Offload (O1)
 - Requirements freeze audit: Offload (O2) — AI lists, CEO approves freeze
 - Detail-determining identification: Offload (O2) — AI proposes from drawings, CEO confirms
+- cad_extract critical-dim pre-fill: Offload (O1) — CEO confirms geometry-of-record rows
 - ACH detection: Offload (O1)
 - **Requirements freeze decision: Core (C)** — CEO accountable for "no more changes"

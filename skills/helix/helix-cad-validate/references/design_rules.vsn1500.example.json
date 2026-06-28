@@ -1,0 +1,46 @@
+{
+  "meta": {
+    "product": "VSN-1500-HKN",
+    "rev": "A",
+    "contract_version": "1.0.0",
+    "classification": "HẠN-CHẾ",
+    "engineer_of_record": "(gán tên KS định danh)",
+    "approved_by": "",
+    "notes": "PILOT contract — nguồn: RE VSN-1500 (5083 hull, junction plate bắt buộc, MLC70 không MLC85). Số liệu min/max là PLACEHOLDER — kỹ sư định danh PHẢI hiệu chỉnh theo tính toán kết cấu thật trước khi dùng làm gate sản xuất."
+  },
+  "rules": {
+    "conflicts_block": { "enabled": true, "severity": "critical" },
+    "confidence_gate": { "min_for_critical": "HIGH" },
+    "materials": {
+      "allowed": ["5083", "5083-H116", "5083-H321", "6061-T6", "6082-T6"],
+      "forbidden": ["SS400", "thép thường", "mild steel"],
+      "required": true,
+      "severity": "critical"
+    },
+    "plate_thickness_mm": {
+      "min": 5.0,
+      "required": true,
+      "min_confidence": "MED",
+      "severity": "critical"
+    },
+    "mass_kg": { "max": 1800, "required": false, "severity": "major" },
+    "safety_factor": { "min": 1.5, "required": true, "severity": "critical" },
+    "tolerance_mm": { "max": 2.0, "min_confidence": "MED", "severity": "major" },
+    "mandatory_components": {
+      "items": [
+        ["junction plate", "tấm liên kết", "junction"],
+        ["bushing", "bạc", "delrin"]
+      ],
+      "severity": "critical"
+    },
+    "weld_standard": {
+      "required_any": ["ISO 9606-2", "AWS D1.2"],
+      "severity": "critical"
+    },
+    "load_class": {
+      "required": ["MLC70"],
+      "forbidden": ["MLC85"],
+      "severity": "critical"
+    }
+  }
+}

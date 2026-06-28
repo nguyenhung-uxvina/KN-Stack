@@ -1,0 +1,74 @@
+{
+  "skill": "leo-prompt",
+  "version": "1.0",
+  "description": "Static assertions for leo-prompt — text-to-CAD prompt generator that forces explicit dimensions + build-order + datum, gates on classification (THUONG->Leo cloud, MAT->helix-cad-bridge local)",
+  "mode": "static",
+  "test_input": "make a standard getleo.ai prompt for a one-handed lateral-raise cable handle wrist support, FDM PETG + TPU grip",
+  "total_required": 7,
+  "passing_score": 7,
+  "assertions": [
+    {
+      "id": "LP-CLASS",
+      "name": "classification_gate_first",
+      "check": "skill gates on classification first — THUONG/personal allows cloud Leo, MAT/HAN-CHE routes to helix-cad-bridge (no cloud)",
+      "regex": "THƯỜNG|HẠN.?CHẾ|MẬT|classification|phân loại|cloud OK|egress",
+      "required": true
+    },
+    {
+      "id": "LP-BRIDGE",
+      "name": "mat_routes_to_local",
+      "check": "MAT/defense geometry refuses cloud Leo and routes to helix-cad-bridge local",
+      "regex": "helix-cad-bridge|local|no cloud|build123d|STOP|đẩy.*cloud|refus",
+      "required": true
+    },
+    {
+      "id": "LP-DIMS",
+      "name": "explicit_dimensions_table",
+      "check": "prompt forces an explicit parametric DIMENSIONS table (real numbers, not adjectives)",
+      "regex": "DIMENSIONS|Tham số|Ký hiệu|Giá trị|dimensions table|số thật",
+      "required": true
+    },
+    {
+      "id": "LP-BUILDORDER",
+      "name": "build_order_sequence",
+      "check": "TASK described as a build-order feature sequence (base -> op -> fillet -> pattern), not a static description",
+      "regex": "TRÌNH TỰ DỰNG|build.?order|Base feature|Op2|extrude|revolve|pattern|feature sequence",
+      "required": true
+    },
+    {
+      "id": "LP-DATUM",
+      "name": "datum_orientation",
+      "check": "prompt specifies a datum: origin + symmetry plane + print orientation",
+      "regex": "DATUM|gốc|mặt đối xứng|hướng in|origin|orientation|\\+Z",
+      "required": true
+    },
+    {
+      "id": "LP-ACCEPT",
+      "name": "measurable_acceptance",
+      "check": "prompt includes measurable acceptance checks (bbox, mass, wall thickness) + negative constraints",
+      "regex": "ACCEPTANCE|Bounding box|bbox|Khối lượng|KHÔNG|negative constraint|đo được",
+      "required": true
+    },
+    {
+      "id": "LP-SPATIAL",
+      "name": "spatial_blindness_no_invent",
+      "check": "operationalizes LLM Spatial Blindness — AI never invents dimensions, asks or marks [CEO điền]",
+      "regex": "Spatial Blindness|never invent|không.*invent|CEO điền|không.*guess|đừng.*đoán|don't guess",
+      "required": true
+    },
+    {
+      "id": "LP-FDM",
+      "name": "fdm_print_constraints",
+      "check": "bakes FDM printability constraints (wall >=3x nozzle, support minimal, overhang)",
+      "regex": "FDM|support tối thiểu|overhang|nozzle|PETG|TPU|in nhanh",
+      "required": false
+    },
+    {
+      "id": "LP-VARIANTS",
+      "name": "variants",
+      "check": "supports variants (basic/padded/adjustable)",
+      "regex": "biến thể|variant|basic|padded|adjustable",
+      "required": false
+    }
+  ]
+}

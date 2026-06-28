@@ -87,6 +87,17 @@ IFR (Ideal Final Result) — {{project_id}}
 using ZERO {{eliminated dependency}}, while maintaining {{key performance}} under
 {{operational conditions}}."
 
+GEOMETRY CLASSIFICATION (CEO Core — defense data control):
+| Field | Value | Note |
+|-------|-------|------|
+| Geometry Classification | [MẬT / HẠN-CHẾ / THƯỜNG] | Governs every CAD/geometry tool's egress rule (default MẬT for any defense product) |
+
+  → This is the SINGLE upstream source the CAD trio reads: [[helix-cad-bridge]],
+    [[helix-cad-ingest]], [[helix-cad-roundtrip]] all gate their network/cloud-OCR
+    behaviour on this label. MẬT = offline-only, no cloud OCR/vision ever.
+  → Carried forward verbatim into 003_IFR_Sacred_Constraints_v1.0.md (helix-p1-compile)
+    so the geometry tools can read it at any phase.
+
 SACRED CONSTRAINTS (non-negotiable physics/operations/safety):
 | # | Constraint | Basis | Type | Status |
 |---|-----------|-------|------|--------|
@@ -204,5 +215,6 @@ CEO:
 - Gap analysis checklist: Offload (O2) — AI flags gaps
 - **IFR statement: Core (C) — CEO defines**
 - **Sacred constraints: Core (C) — CEO decides**
+- **Geometry Classification (MẬT/HẠN-CHẾ/THƯỜNG): Core (C) — defense data control; the upstream label the CAD trio reads**
 - Failure mode scan: Offload (O2) — AI drafts, CEO validates severity
 - SPOF identification: Offload (O2) — AI flags, CEO validates

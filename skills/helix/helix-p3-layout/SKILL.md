@@ -68,6 +68,10 @@ For each main function carrier:
 - Material selection rationale
 - Manufacturing method assumption
 
+> **CAD generation:** To turn CEO's dimensioned sketch into parametric geometry, invoke `helix-cad-bridge` — AI writes code-CAD from CEO's **explicit numbers only** (not spatial inference), exports STEP + render for CEO verification. This is the sanctioned escape from the Spatial Blindness gate: code with explicit params, never AI-invented arrangement. Output STEP feeds Block BB (DfX) + Phase 4.
+>
+> **Per-part Geometry Source Gate (B vs D):** Decide the geometry path per part. For organic/complex parts the AI cannot parametrize (castings, hulls, ergonomic shells), do NOT force code-CAD — route via [[helix-cad-roundtrip]] --design-import (Flow D): AI writes a Design Brief from the layout envelope + interfaces, a human designer draws it externally, [[helix-cad-ingest]] imports + reconciles it. Either way the part's STEP or cad_extract.json registers as its **geometry-of-record** in ICD v3 ([[helix-p3-integrate]] Step C3a).
+
 ### Step A3: Auxiliary Function Solutions (P&B 7.1 Step 7)
 
 > **Spatial Guard:** Cable routing, thermal paths, and component retention are inherently spatial. AI lists options and constraints — CEO decides routing and placement. AI outputs "Options: X, Y, Z — CEO selects and sketches routing."
@@ -133,5 +137,7 @@ CEO:
 ## COD
 - **Layout creation: Core (C)** — non-delegable, CEO judgment
 - Layout documentation: Offload (O1) — AI records
+- Geometry Source Gate (B parametric vs D design-import) per part: **Core (C)** — CEO judges parametrizability
+- Design Brief for Flow D parts ([[helix-cad-roundtrip]] --design-import): Offload (O2) — human designer draws, [[helix-cad-ingest]] reconciles
 - P50/P51 calculations: Offload (O2) — AI computes
 - **Layout approval: Core (C)**

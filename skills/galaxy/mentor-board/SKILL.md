@@ -211,7 +211,7 @@ See `references/decide-matrix.md` for matrix template + scoring rubric.
 ### ADD — create new mentor-X skill (~2h, 5 CEO gates)
 
 1. **A1** Resolve leader (canonical slug, e.g., "naval-ravikant" not "Naval"). Check not duplicate in registry.
-2. **A2** Discover sources via multi-channel (reuse `/research` Step 4 logic). Tier classify T1/T2/T3 (see facet-split-strategies.md cho T criteria).
+2. **A2** Discover sources via multi-channel (reuse `/research` Step 1 + Step 4G logic — **Exa Channel 0 when available**, see `../research/references/exa-discovery.md`; WebSearch fallback otherwise). Tier classify T1/T2/T3 (see facet-split-strategies.md cho T criteria).
 3. **A3** CEO reviews discovery, selects sources — **C**
 4. **A3.5** **Facet split detection** — **C** if N > 45:
    - Read `references/facet-split-strategies.md` for strategy options (temporal/topical/hybrid)

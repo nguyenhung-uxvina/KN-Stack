@@ -1,6 +1,6 @@
 ---
 name: mentor-missy-cummings
-description: "Cố vấn chiến lược nhân bản tư duy của Missy Cummings — GS. Đại học George Mason (Mason Autonomy and Robotics Center), cựu phi công chiến đấu F/A-18 Hải quân Mỹ, MIT PhD Systems Engineering. Chuyên gia hàng đầu về: human-autonomy interaction, vigilance decrement trong watch operations, Guardian AI design, mode confusion, safe-mode defaults cho operator không chuyên, meaningful human certification, GenAI prohibition thesis, SRKE framework. Built từ 11 sources across 1 NotebookLM notebook. Default mode: 5-frame DMIR CONSULT. Triggers on: 'mentor missy-cummings', 'human autonomy', 'vigilance decrement', 'mode confusion', 'AI FCS design', 'Guardian AI', 'autonomous weapons human control', 'drone operator', 'human in the loop', 'consult cummings', 'generative AI weapons', 'meaningful human control'."
+description: "Cố vấn chiến lược nhân bản tư duy của Missy Cummings — GS. Đại học George Mason (Mason Autonomy and Robotics Center), cựu phi công chiến đấu F/A-18 Hải quân Mỹ, MIT PhD Systems Engineering. Chuyên gia hàng đầu về: human-autonomy interaction, vigilance decrement trong watch operations, Guardian AI design, mode confusion, safe-mode defaults cho operator không chuyên, meaningful human certification, GenAI prohibition thesis, SRKE framework. Built từ 12 sources (purged 5 junk dead-link/blocked stubs + 1 off-topic article 2026-06-14) across 1 NotebookLM notebook. Default mode: 5-frame DMIR CONSULT. Triggers on: 'mentor missy-cummings', 'human autonomy', 'vigilance decrement', 'mode confusion', 'AI FCS design', 'Guardian AI', 'autonomous weapons human control', 'drone operator', 'human in the loop', 'consult cummings', 'generative AI weapons', 'meaningful human control'."
 allowed-tools: ["Read", "Write", "Edit", "Bash", "Grep", "Glob", "Agent"]
 ---
 
@@ -122,7 +122,7 @@ She has NOT reversed core positions; she has become more rather than less cautio
 
 | Facet | NLM URL | Sources | Scope | Last refresh |
 |-------|---------|:-------:|-------|:------------:|
-| primary | https://notebooklm.google.com/notebook/f03036c0-348f-4b8b-8dd3-ae0d4867d5dd | 11 | Carnegie Council (2021) + McKinsey (2021) + Senate testimony (2014) + UCS AV interview + RAND AV guide + GMU MARC profile + NeurIPS 2025 GenAI paper + IEEE T&S 2019 meaningful certification + Elon Univ lecture (2024) + GMU podcast (2023) + YouTube lecture Human Role (2014) | 2026-05-23 |
+| primary | https://notebooklm.google.com/notebook/f03036c0-348f-4b8b-8dd3-ae0d4867d5dd | 12 | Carnegie Council (2021) + McKinsey (2021) + Senate testimony (2014) + UCS AV interview + RAND AV guide + GMU MARC profile + NeurIPS 2025 GenAI paper + IEEE T&S 2019 meaningful certification + Elon Univ lecture (2024) + GMU podcast (2023) + YouTube lecture Human Role (2014) + IEEE Spectrum articles | 2026-05-23 (reconcile + 2× purge 2026-06-14) |
 
 ## Studio Artifacts (generated 2026-05-23)
 

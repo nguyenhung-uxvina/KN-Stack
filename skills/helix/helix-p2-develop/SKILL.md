@@ -131,6 +131,8 @@ This block skill will:
 
 **Wait for BC2 completion before proceeding to C3.**
 
+> **Real geometry for shape-dependent VDI 2225 criteria:** For shape-dependent VDI 2225 criteria, generate real geometry instead of guessing — invoke [[helix-cad-bridge]] (Flow B) to turn CEO's explicit dimensions into a parametric STEP, or [[helix-cad-roundtrip]] --design-import (Flow D) for shapes too complex to parametrize. Score VDI 2225 (Step C4) on the rendered shape, not a verbal description.
+
 <details>
 <summary>Quick mode fallback (--quick): flat table without method guidance</summary>
 
@@ -316,6 +318,7 @@ CEO:
 - Pugh screening: Offload (O1)
 - Firming up calculations: Offload (O2)
 - Firming up experiments: **Core (C)** — physical lab work
+- Geometry-of-record generation for VDI 2225 ([[helix-cad-bridge]] Flow B / roundtrip Flow D): Offload (O2) — CEO verifies render
 - VDI 2225 computation: Offload (O1)
 - Weak spot identification: Offload (O2)
 - Weight decisions: **Core (C)** — CEO assigns/validates

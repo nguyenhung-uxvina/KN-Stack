@@ -74,7 +74,23 @@ Specific analogies:
 
 5. The pre-sales model risk: Vietnam's off-plan sales model (where buyers pay 70-90% before completion) creates the same delivery-trust dynamic as Brazil's. Horn's insistence on delivery reliability as the primary metric is the correct north star for Vietnamese developers seeking to build decade-long brand equity.
 
+## Sources (10 total — rebuilt 2026-06-14 via Exa Channel 0)
+
+| # | Title | Tier | Lang |
+|---|-------|------|------|
+| 1 | Cyrela Brazil Realty: Investment Philosophy, Frameworks (synthesized) | T1/T2 | EN |
+| 2 | Brazil Cycle Case Studies, Cyrela Decision Framework (synthesized) | T1/T2 | EN |
+| 3 | "My strategy now is to stay quiet" — Knowledge@Wharton | T1 | EN |
+| 4 | Elie Horn, 60 anos da Cyrela — Exame 2022 | T1 | PT |
+| 5 | 'Deus é meu sócio' — Estadão 2024 | T1 | PT |
+| 6 | Taxação de fortunas e o que faz 'um país apanhar' — NeoFeed 2024 | T1 | PT |
+| 7 | 'Entra um novo presidente, muda todo mundo' — Estadão 2022 | T1 | PT |
+| 8 | As obras invisíveis de Elie Horn — Brazil Journal | T1 | PT |
+| 9 | Entrevista Elie Horn (2009, first BR press interview) | T1 | PT |
+| 10 | 'Quero ganhar muito dinheiro para doar mais ainda' — VEJA 2025 | T1 | PT |
+
 ## NLM Notebook
 - URL: https://notebooklm.google.com/notebook/999dcc10-990d-4604-8d5f-6705008e8fc9
 - ID: 999dcc10-990d-4604-8d5f-6705008e8fc9
 - Created: 2026-06-03
+- Last Refresh: 2026-06-14

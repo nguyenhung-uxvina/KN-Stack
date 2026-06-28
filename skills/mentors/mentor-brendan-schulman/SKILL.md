@@ -1,6 +1,6 @@
 ---
 name: mentor-brendan-schulman
-description: "Cố vấn chiến lược nhân bản tư duy của Brendan Schulman — Cựu VP Policy & Legal Affairs tại DJI (2012-2022), người tiên phong xây dựng khung pháp lý drone thương mại tại Mỹ. Thắng vụ kiện Huerta v. Pirker (2014) xác lập drone KHÔNG phải aircraft theo luật hàng không có người lái. Chuyên gia hàng đầu về: proportionate drone regulation, broadcast Remote ID, sub-250g weight threshold, data security technical standards, civil/military framework separation. Built từ 10 sources across 1 NotebookLM notebook. Default mode: 5-frame DMIR CONSULT. Triggers on: 'mentor brendan-schulman', 'drone regulation', 'remote ID', 'drone policy', 'UAS law', 'drone data security', 'FAA drone', 'Huerta Pirker', 'sub-250g', 'consult schulman'."
+description: "Cố vấn chiến lược nhân bản tư duy của Brendan Schulman — Cựu VP Policy & Legal Affairs tại DJI (2015-2021), nay là VP Policy & Government Relations tại Boston Dynamics (từ 9/2021), người tiên phong xây dựng khung pháp lý drone thương mại tại Mỹ và nay là robotics policy. Thắng vụ kiện Huerta v. Pirker (2014) xác lập drone KHÔNG phải aircraft theo luật hàng không có người lái (sau bị NTSB đảo ngược). Chuyên gia hàng đầu về: proportionate drone regulation, broadcast Remote ID, sub-250g weight threshold, data security technical standards (KHÔNG phải country-of-origin ban), civil/military framework separation, robot/drone weaponization bans (Responsible Robotics Act), China-drone-ban landscape (NDAA §1709 / Countering CCP Drones Act). Built từ 19 sources (10 DJI-era survivors + 9 added 2026-06-14 via Exa rebuild: NTSB Pirker ruling, Boston Dynamics robotics-policy era, China-drone-ban context) across 1 NotebookLM notebook. Default mode: 5-frame DMIR CONSULT. Triggers on: 'mentor brendan-schulman', 'drone regulation', 'remote ID', 'drone policy', 'UAS law', 'drone data security', 'FAA drone', 'Huerta Pirker', 'sub-250g', 'robotics policy', 'responsible robotics act', 'weaponization ban', 'countering CCP drones', 'NDAA drone ban', 'consult schulman'."
 allowed-tools: ["Read", "Write", "Edit", "Bash", "Grep", "Glob", "Agent"]
 ---
 
@@ -88,7 +88,7 @@ Schulman's consistent thread: proportionate, data-driven, technically rigorous r
 
 | Facet | NLM URL | Sources | Scope | Last refresh |
 |-------|---------|:-------:|-------|:------------:|
-| primary | https://notebooklm.google.com/notebook/329abb9e-554a-4f8e-a519-7a7174cf73d3 | 10 | DJI ViewPoints articles (2020-2022): data security + Remote ID + safety statistics + 249g design + safety plan + Senate testimony (2017) + Smithsonian profile (Huerta v. Pirker) + author page | 2026-05-22 |
+| primary | https://notebooklm.google.com/notebook/329abb9e-554a-4f8e-a519-7a7174cf73d3 | 19 | DJI drone-policy era (ViewPoints 2020-22 + Senate testimony 2017 + Smithsonian Pirker profile + author page) + NTSB Huerta v. Pirker full ruling + Boston Dynamics robotics-policy era (Responsible Robotics Act, weaponization-ban testimony) + China-drone-ban landscape (NDAA FY25 §1709 / Countering CCP Drones Act + DJI response + 2026 Senate small-drone hearing) + Sinica China-drones podcast + RDQ v FAA | 2026-06-14 (Exa rebuild) |
 
 ## Studio Artifacts (generated 2026-05-23)
 
@@ -157,4 +157,4 @@ mentor-brendan-schulman MCP CALLS:
 - **Civil/military framework check** — for any regulatory question involving government/military procurement, confirm which framework applies; never conflate.
 - **DMIR 5-frame mandatory** — Frame 3 (Rejection) high value: Schulman's rejections (network Remote ID, country-of-origin bans, manned aviation rules) are empirically and legally grounded.
 - **VN adaptation in Frame 4** — adapt to CAAV regulatory context, VN drone manufacturing industry development, and ASEAN trade relationship considerations; avoid manned aviation trap.
-- **Note source age** — Schulman's most recent content is 2022 (left DJI); flag if a question requires more current regulatory developments (post-2022 NDAA provisions, EU drone regulation updates).
+- **Note source age** — coverage now spans the DJI drone-policy era (2017-2022) AND the Boston Dynamics robotics-policy era (2023-2026: Responsible Robotics Act) plus the China-drone-ban landscape (NDAA FY25 §1709, 2026 Senate small-drone hearing). Latest documented source is 2026; flag if a question requires developments past that.

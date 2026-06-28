@@ -1,0 +1,95 @@
+{
+  "skill": "leo-assist",
+  "version": "1.0",
+  "description": "Static assertions for leo-assist — phase-aware Leo AI prompt suite (P0-P4 + QC + Install) grounded in Leo's verified strengths (calc-with-citation, part-search, standards), classification-gated, geometry redirected to helix-cad-bridge/leo-prompt",
+  "mode": "static",
+  "test_input": "generate Leo prompts to support the design lifecycle P0 to P4 plus QC and installation, using Leo for what it is actually good at",
+  "total_required": 9,
+  "passing_score": 9,
+  "assertions": [
+    {
+      "id": "LA-PHASES",
+      "name": "covers_all_phases",
+      "check": "covers P0 P1 P2 P3 P4 + QC + Installation",
+      "regex": "P0.*P1.*P2.*P3.*P4|Pre-Study|Requirements|Concept|Embodiment|Detail|QC|Lắp đặt|Install",
+      "required": true
+    },
+    {
+      "id": "LA-MODES",
+      "name": "six_strength_modes",
+      "check": "6 strength-based modes A-F (Part-Search, Q&A, Calculation, DFM-Inspect, Documentation/BOM, Material-Selection) as a phase×mode matrix",
+      "regex": "Part Search|Engineering Q&A|Calculation|DFM|Material Selection|phase.?.?mode|6 MODE|mode-templates",
+      "required": true
+    },
+    {
+      "id": "LA-ROUTER",
+      "name": "router_meta_prompt",
+      "check": "ships a router meta-prompt that picks mode from a one-line task",
+      "regex": "Router|router|điều phối tác vụ|chọn 1.?2 mode|1 dòng tác vụ",
+      "required": false
+    },
+    {
+      "id": "LA-STRENGTH",
+      "name": "leo_real_strengths",
+      "check": "grounded in Leo's verified strengths — citation-backed calc, part-search (120M vendor/PLM), standards, DFMA — NOT production geometry",
+      "regex": "trích nguồn|part-search|tìm part|120M|vendor|DFMA|tính toán có cite|standards",
+      "required": true
+    },
+    {
+      "id": "LA-NOGEN",
+      "name": "no_production_geometry",
+      "check": "explicitly states Leo does NOT generate production CAD (mesh only), redirects geometry to helix-cad-bridge / leo-prompt",
+      "regex": "mesh|KHÔNG sinh|không production|helix-cad-bridge|leo-prompt|pivot.*part-search|không.*vẽ",
+      "required": true
+    },
+    {
+      "id": "LA-CLASS",
+      "name": "classification_gate",
+      "check": "classification gate THUONG vs MAT, never upload MAT geometry/PLM to cloud, abstraction rule",
+      "regex": "THƯỜNG|MẬT|HẠN.?CHẾ|Phân loại|KHÔNG upload|trừu tượng|abstraction|egress",
+      "required": true
+    },
+    {
+      "id": "LA-5PRIN",
+      "name": "five_leo_principles",
+      "check": "enforces quantified load case + FoS, real interface dims, source citation, search-before-generate",
+      "regex": "load case|FoS|interface.*thật|search-before-generate|bắt buộc trích nguồn|định lượng",
+      "required": true
+    },
+    {
+      "id": "LA-ROUTE",
+      "name": "phase_to_internal_skill",
+      "check": "routes each phase to the internal HELIX/forge skill that consumes Leo's output",
+      "regex": "helix-p1-requirements|helix-concept-generate|helix-p3-|helix-p4-|forge-fabrication|forge-pre-study",
+      "required": true
+    },
+    {
+      "id": "LA-VERIFY",
+      "name": "verify_before_use",
+      "check": "Leo outputs are approximate — CEO/CAD verify before entering MAT drawing/BOM",
+      "regex": "verify|gần đúng|CEO.*chốt|cite-check|kiểm.*trước khi|Core",
+      "required": true
+    },
+    {
+      "id": "LA-TEMPLATES",
+      "name": "fillin_templates",
+      "check": "ships ready-to-fill per-phase prompt templates in a reference",
+      "regex": "template|phase-templates|GIẢ ĐỊNH|điền|\\[Phân loại",
+      "required": true
+    },
+    {
+      "id": "LA-P3STAR",
+      "name": "p3_partsearch_strongest",
+      "check": "P3 embodiment flagged as Leo's strongest (COTS part-search: bearings, rails, fasteners)",
+      "regex": "P3.*⭐|mạnh nhất|bạc đạn|ray tuyến tính|fastener|COTS|mua ngoài",
+      "required": false
+    },
+    {
+      "id": "LA-RESEARCH",
+      "name": "research_grounded",
+      "check": "references the getleo.ai research and LLM Spatial Blindness",
+      "regex": "RESEARCH_getleo|research|Large Mechanical Model|LMM|Spatial Blindness",
+      "required": false
+    }
+  ]
+}

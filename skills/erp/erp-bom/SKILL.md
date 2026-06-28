@@ -9,7 +9,7 @@ allowed-tools: ["Read", "Write", "Edit", "Bash", "Grep", "Glob", "Agent"]
 > **HOK Layer:** Knowledge (procedural knowledge for BOM CRUD + versioning)
 > **MCP Tools used:** `@casys/mcp-erpnext` — BOM CRUD, BOM comparison
 > **Galaxy anchor:** [[ERP Dependency Chain — Thứ Tự Bắt Buộc Không Thể Đảo]]
-> **COD:** Offload (AI drafts BOM from WX-OPS.xlsx) / Core (CEO approves final BOM)
+> **COD:** Offload (AI drafts BOM from WX-OPS.xlsx, or maps [[helix-cad-ingest]] MASTER_BOM.csv → diff via `import-cad`) / Core (CEO accepts diff + approves final BOM)
 
 ## Why This Skill Exists
 
@@ -23,6 +23,7 @@ BOM Immutability Law: a submitted BOM cannot be edited — only amended (new ver
 /erp-bom compare V1 V2         → Compare two BOM versions
 /erp-bom check PRODUCT         → Validate BOM completeness (all items exist?)
 /erp-bom sync                  → Sync WX-OPS.xlsx BOM Master ↔ ERPNext
+/erp-bom import-cad CSV        → Import [[helix-cad-ingest]] MASTER_BOM.csv as a feeder → DIFF vs BOM Master → CEO accepts → write
 ```
 
 ## Procedural Knowledge
@@ -48,6 +49,16 @@ ERPNext BOMs are **immutable once submitted**. To change:
 - **Sync direction:** XLSX → ERPNext (Phase 0-1), ERPNext → XLSX (Phase 2+)
 - When syncing: flag any discrepancies for CEO review
 
+### Import-CAD Feeder Path (`/erp-bom import-cad <MASTER_BOM.csv>`)
+Alternate IMPORT path that lets a [[helix-cad-ingest]] aggregate seed BOM Master — WITHOUT bypassing the guardrail. The CSV is an **import feeder only**; `BOM Master` stays the source of truth AFTER the CEO accepts the diff.
+1. Read `MASTER_BOM.csv` produced by [[helix-cad-ingest]] `aggregate.py`.
+2. **Column mapping** (ingest → BOM Master): `item`→item_name, `code`→item_code, `name`→description, `qty`→qty_per_unit, `material`→material, `thickness`→thickness/spec. Flag any unmapped or blank-code rows.
+3. **Build a DIFF** against the existing `BOM Master` sheet (added lines / changed qty or material / removed lines / unchanged). NEVER write yet.
+4. **Present the DIFF to the CEO** (Core decision — same approval bar as `create`). 
+5. On CEO accept → merge accepted lines into `BOM Master`; on reject → discard, no change.
+6. After acceptance, the normal `create`/`sync` flow runs against the now-updated `BOM Master`.
+This closes the [[helix-cad-ingest]] → ERPNext BOM loop (read-from-drawings BOM → reviewed → BOM Master) while keeping the immutability + source-of-truth rules intact.
+
 ### Cross-check with Stock
 When creating or reviewing BOM:
 1. For each BOM item: check `Stock Ledger` sheet → qty_on_hand
@@ -66,5 +77,6 @@ When creating or reviewing BOM:
 ## Guardrails
 - NEVER create BOM with items that don't exist in Item master
 - NEVER delete a submitted BOM — amend only
-- NEVER generate BOM quantities from general knowledge — only from WX-OPS.xlsx data
+- NEVER generate BOM quantities from general knowledge — only from WX-OPS.xlsx data OR a [[helix-cad-ingest]] `MASTER_BOM.csv` feeder via `import-cad` (CEO-reviewed diff before any write)
+- `import-cad` is a FEEDER, not a new source of truth — `BOM Master` remains authoritative AFTER the CEO accepts the diff; NEVER write CSV rows directly to ERPNext without the diff-accept step
 - BOM approval = Core (CEO judgment) — AI drafts only

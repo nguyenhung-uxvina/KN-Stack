@@ -63,7 +63,7 @@ This pipeline implements VDI 2221:2019 (Blatt 1 + Blatt 2) principles:
 | **B0** | `/helix-p2-preflight` | 6.1-6.3.3 | Verify Phase 1 inputs, abstraction, function structure, design type, **verify all SFs appear as morpho rows (G11)**, **classify constraints as genuine vs fictitious (§6.2)** | Approve design type + constraint classification |
 | **BA** | `/helix-p2-frame` | 6.2 + TRIZ + §6.3.3 G7 | Solution-determining SF (cascade×breadth scoring), TRIZ contradictions, TESE trends, **CARS function structure variants (≥2)**, **solution-neutral test (≥3 solution classes)**, **enumerate-first if unclear** | Approve essential problems + **select function structure(s) for BB** |
 | **BB** | `/helix-p2-search` | 6.4 | WP search (7 methods incl. **M5 catalogue lookup** + **M7 TRIZ→WP resolution**), **DEMAND hard filter**, DSO ranking, morphological matrix (**WP = [Effect]+[Geometry]+[Material] 3-component cells**, **[HYB] marking for cross-domain WPs**), **8-type compatibility check (Energy, Geometric, Material, Signal, Temporal, Environmental, Manufacturing, Supply chain)**, **recommended column grouping by energy domain** | Add creative WPs (H) |
-| **BC** | `/helix-p2-develop` | 6.5 | Pugh screening, **AD coupling check (C1.5, Filter Before Score)**, **firming up (delegates to `/helix-p2-firmup` = Block BC2 with CRUMPLE-S method selection) → MANDATORY `Firming_Up.md` output (9 P&B properties × N concepts: performance, reliability MTBF, fault susceptibility, size L×W×H, weight, cost ±30%, service life, manufacturability, ACH readiness)**, VDI 2225 (8-step incl. **mandatory S-diagram plot via `/helix-draw s-diagram`**), TRIZ improve, **iteration exit: if concept fails feasibility → Back to BB with reason (CEO approves loop)** | Review coupling + weak spots + S-diagram + **firming-up property table** |
+| **BC** | `/helix-p2-develop` | 6.5 | Pugh screening, **AD coupling check (C1.5, Filter Before Score)**, **firming up (delegates to `/helix-p2-firmup` = Block BC2 with CRUMPLE-S method selection) → MANDATORY `Firming_Up.md` output (9 P&B properties × N concepts: performance, reliability MTBF, fault susceptibility, size L×W×H, weight, cost ±30%, service life, manufacturability, ACH readiness)**, VDI 2225 (8-step incl. **mandatory S-diagram plot via `/helix-draw s-diagram`**), TRIZ improve, **concept geometry for VDI 2225 "real shapes" (P&B §6.5.2 scale layouts) produced via [[helix-cad-bridge]] (Flow B, AI-parametric) or [[helix-cad-roundtrip]] (Flow D, human-draws-externally→import for complex shapes)**, **iteration exit: if concept fails feasibility → Back to BB with reason (CEO approves loop)** | Review coupling + weak spots + S-diagram + **firming-up property table** |
 | **BC→BA** | *Backflow Assessment* | VDI 2221:2019 | If BC weak spots affect solution-determining SF → recommend BA revisit. CEO decides: loop back or proceed. See Backflow Rules below. | Approve loop / proceed |
 | **BD** | `/helix-p2-risk` | WX ext. | Coupling (multi-perspective via `/helix-domain-debate` for AMBER/RED), assumptions, 3-scenario, CFMA, sensitivity | Acknowledge risks |
 | **BE** | `/helix-p2-select` | 6.5.3 | P02 QC gate, CEO concept selection, handoff package (**incl. structured org transition: team/supplier/budget**) | **SELECT CONCEPT** |
@@ -362,6 +362,7 @@ When variant is specified, all filenames are prefixed with `{{prefix}}` (e.g. `V
 | `{{prefix}}Pugh_Screening.md` | BC | BC | Pugh elimination results (if >3 concepts) |
 | `{{prefix}}Firming_Up.md` | BC | BC, BD | **MANDATORY** 9 P&B properties × N concepts (performance DQM, reliability MTBF, fault susceptibility, size L×W×H, weight ±30%, cost ±30%, service life, manufacturability, ACH readiness) |
 | `{{prefix}}VDI_2225_Evaluation.md` | BC | BD, BE | Full 8-step VDI evaluation with scores |
+| `Concept_Geometry/` (STEP+PNG) | BC (via [[helix-cad-bridge]] Flow B / [[helix-cad-roundtrip]] Flow D) | BC, BE | VDI 2225 "real shapes" — concept scale layouts for evaluation; not yet geometry-of-record (frozen later at Phase 3 [[helix-p3-integrate]] C3a) |
 | `{{prefix}}Coupling_Analysis.md` | BD | BE | Cross-domain coupling per concept |
 | `{{prefix}}Assumption_Register.md` | BD | BE | Assumptions + shadow assumptions |
 | `{{prefix}}CFMA.md` | BD | BE | Conceptual failure mode analysis |
@@ -558,9 +559,12 @@ helix-concept-generate READS FROM:
   - forge-library → existing solution principles
   - forge-shift → ACH go/no-go
   - forge-cost → cost envelope
+  - helix-cad-ingest → cad_extract.json from prior-art / RE drawings (optional, for WP shapes)
 
 helix-concept-generate WRITES TO:
   - 1_Projects/{{project}}/Phase2-Concept/ → all deliverables
+  - helix-cad-bridge → BC concept-geometry requests (Flow B parametric → STEP+PNG)
+  - helix-cad-roundtrip → BC complex-shape requests (Flow D human-draws-externally→import)
   - helix-embody-realize → handoff package
   - helix-quality-gate → gate 2 readiness
   - forge-library → new solution principles
@@ -640,3 +644,4 @@ SHARED REFERENCES (in helix-concept-generate/references/):
 - CEO checkpoints: **Core (C)** — inspect, approve, adjust
 - Concept selection (BE): **Core (C)** — non-delegable
 - Framework flag decisions (--icdm): **Core (C)** — CEO chooses methodology
+- Concept geometry generation (BC via [[helix-cad-bridge]]/[[helix-cad-roundtrip]]): Offload (O2) — AI-parametric or human-drawn import under CEO review

@@ -1,6 +1,6 @@
 ---
 name: mentor-al-build-council
-description: "Cố vấn AI nhân bản tư duy của Al-Build Council — Hội Đồng Gia Công Nhôm Vũ Khí Dưới Nước, đại diện quyền lực kỹ thuật của Aluminum Association + AWS D1.2 + Alcoa Marine + NSWC Carderock + DTMB. Specialties: external pressure buckling (Windenburg-Trilling), Al 5083 HAZ behavior, TIG welding qualification, ring-stiffened cylinder fabrication, Sequence B mandrel calibration, hydrostatic test procedures, DNV/BV naval aluminum rules. Built from 11 sources (T1 direct: 7, T2 authoritative: 3, T3 other: 1) across 1 NotebookLM notebook. Default mode: 5-frame DMIR CONSULT. Flags: --help, --refresh, --check-new, --history, --reliability. Triggers on: 'mentor al-build', 'hội đồng nhôm', 'al-build council', 'aluminum fabrication', 'torpedo hull', 'ngư lôi nhôm', 'gia công nhôm', 'buckling nhôm', 'lốc nhôm', 'hàn nhôm áp suất'."
+description: "Cố vấn AI nhân bản tư duy của Al-Build Council — Hội Đồng Gia Công Nhôm Vũ Khí Dưới Nước, đại diện quyền lực kỹ thuật của Aluminum Association + AWS D1.2 + Alcoa Marine + NSWC Carderock + DTMB. Specialties: external pressure buckling (Windenburg-Trilling), Al 5083 HAZ behavior, TIG welding qualification, ring-stiffened cylinder fabrication, Sequence B mandrel calibration, hydrostatic test procedures, DNV/BV naval aluminum rules. Built from 27 sources (17 original + 10 added 2026-06-14 via Exa: DTIC/MDPI/ISEC buckling, IRClass WPS qualification, ESAB HAZ, Nature filler science) across 1 NotebookLM notebook. Default mode: 5-frame DMIR CONSULT. Flags: --help, --refresh, --check-new, --history, --reliability. Triggers on: 'mentor al-build', 'hội đồng nhôm', 'al-build council', 'aluminum fabrication', 'torpedo hull', 'ngư lôi nhôm', 'gia công nhôm', 'buckling nhôm', 'lốc nhôm', 'hàn nhôm áp suất'."
 allowed-tools: ["Read", "Write", "Edit", "Bash", "Grep", "Glob", "Agent"]
 ---
 
@@ -72,7 +72,7 @@ allowed-tools: ["Read", "Write", "Edit", "Bash", "Grep", "Glob", "Agent"]
 
 | Facet | NLM URL | Sources | Scope | Last refresh |
 |-------|---------|:-------:|-------|--------------|
-| primary | https://notebooklm.google.com/notebook/a0e354c4-1004-4944-b448-3c3bfe4a7241 | 11 | All domains: buckling theory, AWS D1.2, Al 5083 properties, TIG process, fabrication sequence, international practice | 2026-06-09 |
+| primary | https://notebooklm.google.com/notebook/a0e354c4-1004-4944-b448-3c3bfe4a7241 | 27 | All domains: buckling theory + modern FE/experimental (DTIC, MDPI, ISEC), AWS D1.2, Al 5083/5383 properties + HAZ tables (ESAB), TIG process, WPS qualification (IRClass), filler science (Nature), fabrication sequence, international practice | 2026-06-14 |
 
 See `notebooks/_index.md` for current facet registry.
 

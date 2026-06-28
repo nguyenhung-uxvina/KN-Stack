@@ -70,3 +70,5 @@ The core discipline transfers directly: enumerate every risk (including sovereig
 - URL: https://notebooklm.google.com/notebook/aa93ee03-e0cb-412d-83c6-284f8a99396c
 - ID: aa93ee03-e0cb-412d-83c6-284f8a99396c
 - Created: 2026-06-03
+- Sources: 12 (3 synthesized + 9 real-world sources — Exa rebuild 2026-06-14)
+- Last Refresh: 2026-06-14

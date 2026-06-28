@@ -2,9 +2,26 @@
 
 | Facet | NLM UUID | NLM URL | Sources | Scope | Last refresh | Primary? |
 |-------|----------|---------|:-------:|-------|:------------:|:--------:|
-| primary | a0e354c4-1004-4944-b448-3c3bfe4a7241 | https://notebooklm.google.com/notebook/a0e354c4-1004-4944-b448-3c3bfe4a7241 | 17 | All: buckling theory, AWS D1.2, Al 5083 HAZ, TIG process, Sequence B, international practice | 2026-06-09 | ✓ |
+| primary | a0e354c4-1004-4944-b448-3c3bfe4a7241 | https://notebooklm.google.com/notebook/a0e354c4-1004-4944-b448-3c3bfe4a7241 | 27 | All: buckling theory + modern FE/experimental, AWS D1.2, Al 5083/5383 HAZ, TIG process, Sequence B, WPS qualification, international practice | 2026-06-14 | ✓ |
 
-## Source List (11 sources)
+## Source List (27 sources)
+
+### Added 2026-06-14 via Exa Channel 0 (10 — full-text)
+**Buckling / external pressure (4):**
+- DTIC ADA592293 — Submarine pressure-hull structural integrity (PRHDEF, BS5500, interframe/overall buckling, out-of-circularity) `e4f5ee0b`
+- MDPI — Buckling Analysis of AUV Pressure Vessel with Sliding Stiffeners `3a07f5b1`
+- MDPI — Failure of Corrugated Aluminum Pressure Shells under External Pressure (2024) `9690d1be`
+- ISEC PDF — Buckling Behavior of Ring-Stiffened Aluminum Cylinders (FE, 3–17 stiffeners) `fe29af81`
+
+**Welding / HAZ / qualification (6):**
+- IRClass — Guidelines on WPS Qualification Tests of Aluminium Alloys for Hull Construction (Sep 2022) `7302d0f4`
+- ESAB — The HAZ in Aluminum Welds (as-welded vs base tensile tables) `91d4d221` *(text — Cloudflare blocked URL ingest)*
+- Nature Sci. Reports — Filler effects (ER4043 vs ER5356) on GTAW Al 5083/6082 joints (2023) `d80ff9fd`
+- Lloyd's Register — Section 8 Specific requirements for welded aluminium `c3d01776`
+- ESAB Aluminum Technical Guide (PDF) `cd523589`
+- BlueScope — Aluminium 5383 Data Sheet `9655fb17`
+
+### Original 17 sources
 
 ### Text Sources (10)
 1. AWS D1.2 – Structural Welding Code for Aluminum: Key Principles

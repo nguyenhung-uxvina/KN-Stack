@@ -79,3 +79,4 @@ Câu hỏi Ngô Minh Tuấn luôn hỏi đầu tiên: "Anh đo lường đầu r
 - URL: https://notebooklm.google.com/notebook/1aa94893-71bf-438b-a1a7-7ac5a3786350
 - ID: 1aa94893-71bf-438b-a1a7-7ac5a3786350
 - Created: 2026-06-06
+- Sources: 10 (4 synthesized + 6 Exa URL — rebuild 2026-06-14)

@@ -1,6 +1,6 @@
 ---
 name: mentor-naval-architect-council
-description: "Cố vấn AI nhân bản tư duy của Naval Architecture Council (D.W. Taylor / E.V. Lewis) — Composite technical council: Taylor (Taylor Standard Series, resistance/propulsion empiricism) + Lewis (Principles of Naval Architecture synthesis, seakeeping, stability). Specialties: hull resistance prediction, TSS Gertler charts, Froude Law, shallow water hydrodynamics, stability analysis (GM/GZ), propulsion power chain (EHP-DHP-BHP), aluminum structural design with HAZ penalty, roll resonance, military craft power margins, MIL-STD naval standards. Built from 14 sources (T1 direct: 5, T2 authoritative: 4, T3 other: 5) across 1 NotebookLM notebook. Default mode: 5-frame DMIR CONSULT cross-facet (Diagnose → Model → Intervene → Reflect). Flags: --help, --facet <name>|auto, --facets, --refresh, --check-new, --history, --reliability. Triggers on: 'mentor naval-architect-council', 'cố vấn kiến trúc hải quân', 'naval architect advice', 'Taylor Standard Series', 'hull resistance', 'ship stability', 'propulsion sizing', 'shallow water', 'VSN-1500 hydrodynamics', 'consult naval-architect-council'."
+description: "Cố vấn AI nhân bản tư duy của Naval Architecture Council (D.W. Taylor / E.V. Lewis) — Composite technical council: Taylor (Taylor Standard Series, resistance/propulsion empiricism) + Lewis (Principles of Naval Architecture synthesis, seakeeping, stability). Specialties: hull resistance prediction, TSS Gertler charts, Froude Law, shallow water hydrodynamics, stability analysis (GM/GZ), propulsion power chain (EHP-DHP-BHP), aluminum structural design with HAZ penalty, roll resonance, military craft power margins, MIL-STD naval standards. Built from 42 sources (Taylor/PNA/Gertler classics + a prior mooring/scantlings/floating-wind expansion + 11 added 2026-06-14 via Exa: floating pontoon/ribbon-bridge hydrodynamics, multi-hull/demihull interference, shallow-water squat) across 1 NotebookLM notebook. Default mode: 5-frame DMIR CONSULT cross-facet (Diagnose → Model → Intervene → Reflect). Flags: --help, --facet <name>|auto, --facets, --refresh, --check-new, --history, --reliability. Triggers on: 'mentor naval-architect-council', 'cố vấn kiến trúc hải quân', 'naval architect advice', 'Taylor Standard Series', 'hull resistance', 'ship stability', 'propulsion sizing', 'shallow water', 'VSN-1500 hydrodynamics', 'consult naval-architect-council'."
 allowed-tools: ["Read", "Write", "Edit", "Bash", "Grep", "Glob", "Agent"]
 ---
 
@@ -160,7 +160,7 @@ See `notebooks/_index.md` for current facet registry.
 
 | Facet | NLM URL | Sources | Scope | Last refresh | Primary? |
 |-------|---------|:-------:|-------|:------------:|:--------:|
-| primary | https://notebooklm.google.com/notebook/41390b69-f462-47a5-806a-41126df09a0d | 14 | Taylor corpus (Speed & Power, Resistance & Screw Propulsion) + Gertler DTMB 806 + Lewis PNA Vols I-III + Molland/Turnock/Hudson (2017) + MIT OCW 2.20 + Tupper Intro to Naval Architecture + shallow water river craft hydrodynamics + Taylor Wikipedia + Tunaley TSS + PNA resistance excerpts + NAS Taylor biography | 2026-05-28 | ✓ |
+| primary | https://notebooklm.google.com/notebook/41390b69-f462-47a5-806a-41126df09a0d | 42 | Taylor corpus + Gertler DTMB 806 + Lewis PNA I-III + Molland + MIT OCW 2.20 + Tupper + shallow-water/shear-current; mooring/anchoring + ABS/ISO scantlings + DNV ts301 + floating-wind; (+11 Exa 2026-06-14) floating pontoon/ribbon-bridge hydrodynamics, multi-hull interference, shallow-water squat | 2026-06-14 | ✓ |
 
 **Split trigger:** >45 sources → split into `taylor-hydrodynamics` (resistance/propulsion/shallow water) + `lewis-stability-structures` (stability, strength, seakeeping)
 
@@ -273,6 +273,8 @@ Naval Architecture Council pairs naturally with:
 ## Evolution — Refresh Log
 
 *(Initial build — 2026-05-28 — 14 sources ingested)*
+- **(prior, un-logged)** — mooring/anchoring + ABS/ISO scantlings + DNV-ts301 + floating-wind expansion (~13 sources; G2 for VN-FWTP-001), incl. "Review of the state of the art of mooring and anchoring designs + relevant DLCs" + MDPI "Anchor Chain Optimization of a Catenary Anchor Leg Mooring System." → catenary mooring / station-keeping / anchor-load for shallow-water (25–40 m) floating platforms.
+- **2026-06-14** (`--update use exa`) — +11 sources via Exa: floating pontoon/ribbon-bridge hydrodynamics, multi-hull/demihull interference, shallow-water squat; 1 junk stub deleted. Live notebook now **42 sources** (see `references/seed-sources.md` + `notebooks/_index.md`).
 
 ## Reliability Log Link
 

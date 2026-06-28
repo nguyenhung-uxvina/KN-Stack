@@ -111,7 +111,7 @@ See `notebooks/_index.md` for current facet registry.
 
 | Facet | NLM URL | Sources | Scope | Last refresh |
 |-------|---------|:-------:|-------|:------------:|
-| primary | https://notebooklm.google.com/notebook/bf646ebc-530b-4988-af37-737d837d7a72 | 19 | van Creveld (Technology/Command/Transformation of War) + Rubin (Iron Dome/counter-drone) + Gold (acquisition) + IDF/IAI/Elbit/Rafael doctrine | 2026-05-22 |
+| primary | https://notebooklm.google.com/notebook/bf646ebc-530b-4988-af37-737d837d7a72 | 31 | van Creveld + Rubin + Gold + IDF/IAI/Elbit/Rafael doctrine; (+12 Exa 2026-06-14) 2024-26 Iran-war A&MD lessons, cost-exchange/stockpile data, Iron Beam laser economics, Barak naval + EW C-UAS, integration/C3 | 2026-06-14 |
 
 ## Modes
 

@@ -67,6 +67,24 @@ Curated source list ingested during ADD pipeline (2026-05-28).
 
 **Tier summary (post-REFRESH 2026-05-28):** T1×13 + T2×17 (including 2 TRY2 text) + T3×7 + 4 TRY2 text total = **40 sources**
 
+## REFRESH Sources — 2026-06-14 (`--update use exa`; +4, with hygiene −7) → **45 sources (AT split trigger)**
+
+> ⚠ On open, the live notebook had drifted to **47** (registry said 40) with **6 duplicate pairs** from an unlogged URL bulk-add (the original `*(retrieve)*` FMs got added as URLs alongside the TOC/text versions, several twice). Deleted the 6 dup copies + 1 async Yahoo stub, added 4 fresh 2026 sources → 45.
+
+| NLM ID | Title | Tier | Method | Notes |
+|--------|-------|------|--------|-------|
+| `1c18a12b` | Military Review (Mar–Apr 2026) — "Tactical River Crossings: Is It Time to Reconsider the Current Doctrine?" | T1 | URL ✓ | ⭐ Landmark doctrinal critique: ATP 3-90.4 is WWII-era. Anti-drone crossing TTPs — use kedge anchors/shore guys/overhead cables (NOT BEBs as anchors); cut EM signature (wire/visual/couriers); be able to MOVE the bridge. **M18 Dry Support Bridge** (4 sets/MRBC; 131-ft MLC70T/96W; replacing MGB). Floating pedestrian bridges for dismounted assault. |
+| `6c7f39e3` | Oskil River 2026 — "Drones and EW Are Not Enough to Get Russia Across" | T2 | text (Yahoo URL blocked) | ⭐ Russian Pole-21 + R-330Zh Zhitel EW "umbrella" over a pontoon crossing — defeated by **fiber-optic drones immune to jamming** + recon-cued artillery; EW emissions self-reveal the crossing. Modern wet-gap threat picture; extends Siverskyi Donets. |
+| `a3c40657` | France awards €697M **Syfrall** heavy floating-bridge contract (Feb 2026) | T2 | URL ✓ | MLC 85C / 100R modular ferry+bridge (Leclerc XLR); PFM F2 context. MLC-inflation response; NATO interoperability. |
+| `3760f0e3` | Military Review/Engineer — "Condition Checks: Wet-Gap Crossings" (Operation Remagen Ready, 1st Cav) | T2 | URL (PDF) ✓ | Conditions-not-clock transition doctrine; ADA over MRBCs at crossing sites; two-way traffic for sustainment tempo; suppression+obscuration before assault. |
+
+**Tier summary (post-2026-06-14):** T1×14 + T2×19 + T3×7 + 5 TRY2 text → **45 sources**. ⚠ Split now due.
+
+### Deferred (held to respect the 45 trigger; ingest after the temporal split)
+- SAE 2026 (USMA) — Survivability/Mobility for future wet-gap crossings (WGRS NLP on ISW+Oryx: pontoon losses cluster ≤2 days of crossings).
+- Russian **PP-2005M** modern pontoon park (268 m / 120 t / 3 m/s) — updates the Soviet-era PMP content.
+- U.S. Army Chinook air-delivery of IRB/BEB for NATO crossings; RAND DEW-for-C-UAS (better fit C-UAS council).
+
 ## TRY2 Text Compilations
 
 | NLM ID | Original URL | Failure reason | Content compiled |

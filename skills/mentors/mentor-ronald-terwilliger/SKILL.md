@@ -59,3 +59,5 @@ Key applications of his framework in Vietnam:
 - URL: https://notebooklm.google.com/notebook/7c155d4d-753b-42c6-a6f1-e0fb0d8b62e7
 - ID: 7c155d4d-753b-42c6-a6f1-e0fb0d8b62e7
 - Created: 2026-06-03
+- Sources: 10 (2 synthesized + 8 real-world sources — Exa rebuild 2026-06-14)
+- Last Refresh: 2026-06-14

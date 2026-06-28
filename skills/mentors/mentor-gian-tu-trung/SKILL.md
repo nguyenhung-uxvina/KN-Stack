@@ -74,3 +74,5 @@ Câu hỏi chẩn đoán văn hóa Workshop X: "Khi 3 chuyên gia phát hiện v
 - URL: https://notebooklm.google.com/notebook/860b643a-2367-44c6-95ce-e31bf7c52a4b
 - ID: 860b643a-2367-44c6-95ce-e31bf7c52a4b
 - Created: 2026-06-06
+- Sources: 9 (rebuilt 2026-06-14, Exa Channel 0 — 3 synthesized text + 6 live URLs incl. YouTube talk)
+- Last refresh: 2026-06-14

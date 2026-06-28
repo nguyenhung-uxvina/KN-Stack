@@ -252,7 +252,8 @@ All files in `{{output_path}}/` with `{{prefix}}` prefix:
 |----|----|----|----|
 | `_pipeline_state.md` | Orchestrator | All blocks | Progress, ledger, CEO decisions |
 | `B0_Preflight_Report.md` | B0 | BA, BE | P3 verification + reqs freeze + detail-determining + ACH flag |
-| `Manufacturing_Drawings/` (dir) | BA | BB, BC, BD | DXF + PDF per part |
+| `Geometry/` (STEP + .py / cad_extract.json) | [[helix-cad-bridge]] / [[helix-cad-ingest]] (P3 carry-forward) | BA, **forge-fabrication F0** | Geometry-of-record (frozen at P3 ICD v3 C3a) — BA 3D/STEP source for drawing generation |
+| `Manufacturing_Drawings/` (dir) | BA | BB, BC, BD | DXF + PDF per part — derived FROM geometry-of-record, not the master |
 | `Schematics/`, `Gerber/` (dirs) | BA | BD, fabrication | PCB production files |
 | `BA_Drawing_Index.md` | BA | BB | Drawing list + revisions |
 | `BOM_Final.md` + `BOM_Final.csv` | BB | BC, BD, BE, **forge-fabrication F0** | Hierarchical BOM + vendor + cost |
@@ -289,6 +290,8 @@ helix-detail-finalize READS FROM:
   - forge-cost → cost envelope (variance check)
   - forge-shift → ACH assessment (BE lifecycle decision)
   - forge-library → standard component specs
+  - helix-cad-bridge → BA 3D/STEP source (geometry-of-record, git-tracked .py + STEP)
+  - helix-cad-ingest → optional ingested-geometry record / human-drawn imports (cad_extract.json)
 
 helix-detail-finalize WRITES TO:
   - 1_Projects/{{project}}/Phase4-Detail/{{variant}}/ → all deliverables

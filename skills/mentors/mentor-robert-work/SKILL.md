@@ -1,6 +1,6 @@
 ---
 name: mentor-robert-work
-description: "Cố vấn chiến lược nhân bản tư duy của Robert O. Work — Cựu Thứ trưởng Quốc phòng Mỹ (2014-2017), kiến trúc sư Third Offset Strategy và human-machine combat teaming doctrine. Chuyên gia hàng đầu về: AI/autonomy trong chiến tranh, mosaic warfare, kill web design, DIUx commercial-to-defense bridge, competitive military balance, data as operational asset. Built từ 13 sources (T1×11, T2×2) across 1 NotebookLM notebook. Default mode: 5-frame DMIR CONSULT. Triggers on: 'mentor robert-work', 'third offset strategy', 'human-machine teaming', 'combat autonomy', 'mosaic warfare', 'kill web', 'autonomous weapons policy', 'AI military doctrine', 'DIUx', 'consult robert-work'."
+description: "Cố vấn chiến lược nhân bản tư duy của Robert O. Work — Cựu Thứ trưởng Quốc phòng Mỹ (2014-2017), kiến trúc sư Third Offset Strategy và human-machine combat teaming doctrine. Chuyên gia hàng đầu về: AI/autonomy trong chiến tranh, mosaic warfare, kill web design, DIUx commercial-to-defense bridge, competitive military balance, data as operational asset. Built từ 17 sources (purged 7 dead-link 404 stubs + 4 CNAS 404-page stubs 2026-06-14) across 1 NotebookLM notebook. Default mode: 5-frame DMIR CONSULT. Triggers on: 'mentor robert-work', 'third offset strategy', 'human-machine teaming', 'combat autonomy', 'mosaic warfare', 'kill web', 'autonomous weapons policy', 'AI military doctrine', 'DIUx', 'consult robert-work'."
 allowed-tools: ["Read", "Write", "Edit", "Bash", "Grep", "Glob", "Agent"]
 ---
 
@@ -104,7 +104,7 @@ Core principle has deepened not reversed: human-machine teaming is the decisive 
 
 | Facet | NLM URL | Sources | Scope | Last refresh |
 |-------|---------|:-------:|-------|:------------:|
-| primary | https://notebooklm.google.com/notebook/7cd03ea2-513d-4089-9f28-614899f13133 | 13 | CNAS 20YY (2014) + Pentagon speeches (2015-2016) + JFQ-84 interview + WotR articles (2019-2021) + CNAS Autonomous Weapons + Data Principles op-ed + CNAS profile | 2026-05-22 |
+| primary | https://notebooklm.google.com/notebook/7cd03ea2-513d-4089-9f28-614899f13133 | 17 | CNAS 20YY (2014) + Pentagon speeches (2015-2016) + JFQ-84 interview + WotR articles (2019-2021) + CNAS Autonomous Weapons + Data Principles op-ed + CNAS profile + Breaking Defense + Nextgov/FCW | 2026-05-22 (reconcile + 2× purge 2026-06-14) |
 
 ## Studio Artifacts (generated 2026-05-23)
 

@@ -127,7 +127,7 @@ PHASE 1 DELIVERABLES — {{project_id}}
 COMPILED FILES (in Phase1-Task/):
   □ 001_Stakeholder_Analysis_v1.0.md ← from B0 (stakeholder register)
   □ 002_Requirements_List_v1.0.md ← from BB (validated D/W list)
-  □ 003_IFR_Sacred_Constraints_v1.0.md ← from BB (IFR + SC + resources)
+  □ 003_IFR_Sacred_Constraints_v1.0.md ← from BB (IFR + SC + resources + Geometry Classification MẬT/HẠN-CHẾ/THƯỜNG — the label the CAD trio reads)
   □ 004_Failure_Analysis_v1.0.md ← from BB (failure-derived + SPOF)
   □ 005_Standards_Compliance_Matrix_v1.0.md ← from B0 + BA (standards mapped)
   □ 006_Essential_Problem_v1.0.md ← from BC (CEO-approved EP)
