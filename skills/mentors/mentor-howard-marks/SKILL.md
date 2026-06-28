@@ -60,13 +60,12 @@ Howard Marks — Co-founder and co-chairman of Oaktree Capital Management, one o
 
 See `notebooks/_index.md` for current facet registry.
 
-4 facets:
+3 facets (37 sources; empty `marks-books` facet deleted 2026-06-14):
 
 | Facet | NLM URL | Sources | Scope | Last refresh | Primary? |
 |-------|---------|:-------:|-------|:------------:|:--------:|
 | marks-memos-classic | https://notebooklm.google.com/notebook/3a47d304-7dd1-4392-b546-404812a2c498 | 7 | Oaktree memos 1990–2015 (foundational era) | 2026-05-13 | ✓ |
 | marks-memos-recent | https://notebooklm.google.com/notebook/ecd6378e-0f4e-4ad8-8d56-7aba9a02dfce | 18 | Oaktree memos 2016–2025 (current era) | 2026-05-13 | |
-| marks-books | https://notebooklm.google.com/notebook/81f3b80f-dbcd-4967-9a81-74df73af9f7b | 0 | Books + shareholder letters (pending file upload) | — | |
 | marks-interviews | https://notebooklm.google.com/notebook/243585a7-a8a0-4060-b539-d31f40ee4b5f | 12 | Podcasts, Bloomberg, CFA talks, YouTube | 2026-05-13 | |
 
 **Cross-facet query (default):** when CEO calls `/mentor-howard-marks "<problem>"`, all active facets queried in parallel, output synthesizes with `[facet_name]` citation tags.
@@ -76,7 +75,7 @@ See `notebooks/_index.md` for current facet registry.
 **Auto routing:** `/mentor-howard-marks --facet auto "<problem>"` — AI picks:
 - Problem mentions current cycle / rates / sea change → `marks-memos-recent`
 - Problem mentions foundational frameworks / risk definition / second-level thinking → `marks-memos-classic`
-- Problem mentions specific books / systematic framework → `marks-books`
+- Problem mentions specific books / systematic framework → `marks-memos-classic` (the books facet was deleted; foundational framework content lives in the classic memos)
 - Problem mentions career / candid views / advice to individuals → `marks-interviews`
 
 ## Modes
@@ -120,7 +119,7 @@ For full pipeline detail, see `galaxy/mentor-board/references/dmir-template.md`.
 **Facet routing for refresh:**
 - New memos 2016+ → `marks-memos-recent`
 - Classic memos if newly digitized → `marks-memos-classic`
-- New books → `marks-books`
+- New books → (recreate a `marks-books` notebook first — old empty one deleted 2026-06-14)
 - New interviews → `marks-interviews`
 
 ## Integration
@@ -154,7 +153,7 @@ mentor-howard-marks MCP CALLS:
 
 - **Persona purity strict** — cite per claim; if no source → "[UNCERTAIN — not in sources]". Never fabricate Marks quotes.
 - **DMIR 5-frame mandatory** — no skipping Frame 3 (Rejection) or Frame 4 (Adaptation). These are the contrarian and VN-adapt layers.
-- **Cross-facet default** — query all active facets (skip marks-books until populated). Use `--facet` to narrow.
+- **Cross-facet default** — query all 3 active facets (marks-memos-classic, marks-memos-recent, marks-interviews). Use `--facet` to narrow.
 - **CHECK-NEW monthly** — Oaktree publishes frequently; marks-memos-recent should be refreshed every 60–90 days.
 - **Reliability is empirical** — accuracy comes from `--retro` history. Show "low confidence (n=<N>)" when reliability log thin.
 - **Append-only history** — never overwrite consult outputs or profile history.

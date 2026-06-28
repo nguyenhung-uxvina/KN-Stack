@@ -79,3 +79,4 @@ Alan Phan sẽ hỏi ngay:
 - URL: https://notebooklm.google.com/notebook/7cf0bea3-c838-4595-9aa2-b37f58d9e6b4
 - ID: 7cf0bea3-c838-4595-9aa2-b37f58d9e6b4
 - Created: 2026-06-06
+- Sources: 9 (3 synthesized + 6 Exa URL/text — rebuild 2026-06-14)

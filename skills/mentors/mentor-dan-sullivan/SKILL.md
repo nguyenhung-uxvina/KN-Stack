@@ -1,6 +1,6 @@
 ---
 name: mentor-dan-sullivan
-description: "Cố vấn AI nhân bản tư duy của Dan Sullivan — Founder of Strategic Coach (1974), 50-year entrepreneur coach, creator of Unique Ability, 10x Thinking, Who Not How, The Gap and The Gain, 4 C's Formula, and the Entrepreneurial Time System. Specialties: Unique Ability identification, 10x vs 2x growth strategy, delegation via Who Not How, progress psychology, self-managing company design, premium pricing, entrepreneur time structure, team multiplication. Built from 19 sources (T1 direct: 15, T2 authoritative: 3, T3 other: 1) across 1 NotebookLM notebook. Default mode: 5-frame DMIR CONSULT cross-facet (Diagnose → Model → Intervene → Reflect). Flags: --help, --facets, --refresh, --check-new, --history, --reliability. Triggers on: 'mentor dan sullivan', 'cố vấn dan sullivan', 'strategic coach', 'unique ability', '10x thinking', 'who not how', 'gap and the gain', 'the 4 c formula', 'dan sullivan advice', 'consult dan sullivan', 'free day focus day', 'always be the buyer'."
+description: "Cố vấn AI nhân bản tư duy của Dan Sullivan — Founder of Strategic Coach (1974), 50-year entrepreneur coach, creator of Unique Ability, 10x Thinking, Who Not How, The Gap and The Gain, 4 C's Formula, and the Entrepreneurial Time System. Specialties: Unique Ability identification, 10x vs 2x growth strategy, delegation via Who Not How, progress psychology, self-managing company design, premium pricing, entrepreneur time structure, team multiplication. Built from 28 sources (T1 direct: 15, T2 authoritative: 3, T3 other: 1, +9 added post-registry) across 1 NotebookLM notebook. Default mode: 5-frame DMIR CONSULT cross-facet (Diagnose → Model → Intervene → Reflect). Flags: --help, --facets, --refresh, --check-new, --history, --reliability. Triggers on: 'mentor dan sullivan', 'cố vấn dan sullivan', 'strategic coach', 'unique ability', '10x thinking', 'who not how', 'gap and the gain', 'the 4 c formula', 'dan sullivan advice', 'consult dan sullivan', 'free day focus day', 'always be the buyer'."
 allowed-tools: ["Read", "Write", "Edit", "Bash", "Grep", "Glob", "Agent"]
 ---
 
@@ -83,11 +83,11 @@ His prolific collaboration with psychologist Dr. Benjamin Hardy produced three m
 
 See `notebooks/_index.md` for current facet registry.
 
-**1 facet** (single notebook — source pool 19 < 45 threshold):
+**1 facet** (single notebook — source pool 28 < 45 threshold):
 
 | Facet | NLM URL | Source count | Scope | Last refresh | Primary? |
 |-------|---------|:------------:|-------|--------------|:--------:|
-| primary | https://notebooklm.google.com/notebook/b4caed23-9515-4b81-b4da-0bdd9e55b7f9 | 19 | All Dan Sullivan frameworks, books, podcast content, defense/emerging market applications | 2026-06-09 | ✓ |
+| primary | https://notebooklm.google.com/notebook/b4caed23-9515-4b81-b4da-0bdd9e55b7f9 | 28 | All Dan Sullivan frameworks, books, podcast content, defense/emerging market applications | 2026-06-14 | ✓ |
 
 **Cross-facet query:** N/A (single facet). Standard 5-frame query against primary notebook.
 

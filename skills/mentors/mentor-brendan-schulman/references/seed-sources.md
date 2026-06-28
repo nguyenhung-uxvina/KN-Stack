@@ -2,12 +2,12 @@
 name: brendan-schulman-seed-sources
 type: source registry
 notebook_id: 329abb9e-554a-4f8e-a519-7a7174cf73d3
-last_updated: 2026-05-22
+last_updated: 2026-06-14
 ---
 
 # Seed Sources — mentor-brendan-schulman
 
-Total ingested: 10 sources (T1×9, T2×1)
+Total: 19 sources (10 DJI-era survivors + 9 added 2026-06-14 via Exa). See "Rebuild 2026-06-14" section at the bottom for the new sources. The 10 DJI-era sources below are the survivors after the 2026-06-14 junk purge (11 dead-link/Cloudflare stubs removed).
 
 ## Tier 1 — Direct Primary (own writings, testimony, case coverage)
 
@@ -35,15 +35,40 @@ Total ingested: 10 sources (T1×9, T2×1)
 
 ## Refresh Strategy
 
-**Important note:** Schulman left DJI in 2022. New public writings are expected at Covington & Burling and in aviation law publications post-2022.
+**Important note (corrected 2026-06-14):** Schulman left DJI in Sept 2021 (not 2022) and is **VP of Policy & Government Relations at Boston Dynamics** — NOT Covington & Burling (prior note was wrong). He has pivoted to robotics policy (Responsible Robotics Act) while retaining drone-law expertise.
 
 **Primary new content to watch:**
-- Covington & Burling aviation/drone law publications by Schulman
-- Congressional testimony (Schulman is periodically called as expert witness)
-- Law review articles on drone regulation
-- NDAA-related commentary (Section 848, Section 899, Section 1043)
-- EU drone regulation commentary (EASA updates)
+- Boston Dynamics robotics-policy output by Schulman (Responsible Robotics Act in new states, weaponization-ban advocacy, UN/Geneva AI-for-Good)
+- Congressional / state-legislature testimony (Schulman is periodically called as expert witness)
+- Commentary on the China-drone-ban arc (NDAA §1709, Countering CCP Drones Act, FCC Covered List, Section 848/899/1043)
+- EU drone & AI/robotics regulation commentary (EASA, EU AI Act)
+- @robotpolicy / @dronelaws posts
 
-**Refresh trigger:** New Congressional testimony, significant NDAA drone provision, or Covington aviation law publication.
+**Refresh trigger:** New Schulman testimony, significant NDAA drone/robotics provision, Responsible Robotics Act movement in a new state, or a new China-drone-ban development.
 
 **Split trigger:** Unlikely to exceed 45 sources given scope; no split planned.
+
+---
+
+## Rebuild 2026-06-14 (Exa Channel 0 semantic discovery) — +9 → 19 total
+
+CEO source-selection gate → Tier 1 + Tier 2. Discovery: Exa `web_search_exa`, 4 queries. AI-Business robot-ethics piece dropped as thin/video-only; 1 async raw-URL dup deleted.
+
+### Tier 1 — Schulman's own voice + the landmark ruling
+| Title | URL | Source ID | Coverage |
+|-------|-----|-----------|----------|
+| NTSB *Huerta v. Pirker* full decision (Order EA-5730, Nov 18 2014) | https://www.ntsb.gov/legal/alj/OnODocuments/Aviation/5730.pdf | fd839441 | The actual landmark ruling: UAS are "aircraft" under 14 CFR §1.1 / 49 USC §40102; §91.13(a) careless/reckless applies; ALJ reversed & remanded. Schulman's defining case. |
+| "Grounding China's Drones" — Sinica/The China Project podcast (May 2020) | https://thechinaproject.com/podcast/grounding-chinas-drones-leading-drone-maker-djis-brendan-schulman-on-u-s-regulatory-challenges/ | 8530a7b4 | Schulman first-person on US Country-of-Origin scrutiny of DJI, draft executive order, DOI program, no signs of CCP influence in 5 yrs, COVID drone use |
+| Boston Dynamics + MassRobotics testimony to ban arming robots (WCVB, Nov 2023) | https://www.wcvb.com/article/massachusetts-armed-robots-legislation-terminator-robocop/45919791 | a3d618a2 | Schulman MA Joint Judiciary testimony on S2483/H4103 — covers robotic devices AND drone aircraft; DoD/LE/AG-waiver carve-outs; ACLU partnership |
+| Boston Dynamics' push for the Responsible Robotics Act (TechHQ, Oct 2024) | https://techhq.com/news/boston-dynamics-push-for-the-responsible-robotics-act/ | e3e048ba | In-depth Schulman interview: warrants for robot entry; anti-weaponization; MA→CA (Weber)→NY; UN Geneva AI-for-Good; "manufacturers can't police customer use" |
+| RDQ v. FAA lawsuit & Remote ID with Schulman (DroneXL/PiXL show, Aug 2022) | https://dronexl.co/2022/08/03/rdq-faa-lawsuit-remote-id-brendan-schulman/ | 42a47fd2 | RaceDayQuads (Tyler Brennan) v. FAA over Remote ID — Schulman's last major drone-era legal commentary |
+| Schulman DJI→Boston Dynamics farewell + career (DroneDJ, Sep 2021) [text] | https://dronedj.com/2021/09/10/breaking-brendan-schulman-leaving-dji/ | bc885855 | His farewell statement: "end of a mission" on Remote ID/ops frameworks; politicization as threat to innovation; 730+ rescues; @robotpolicy launch; full CV |
+
+### Tier 2 — China-drone-ban landscape (WX-critical context)
+| Title | URL | Source ID | Coverage |
+|-------|-----|-----------|----------|
+| Countering CCP Drones Act in NDAA FY2025 §1709 (DRONELIFE, Dec 2024) | https://dronelife.com/2024/12/08/fy-2025-ndaa-conference-text-what-happened-with-the-countering-ccp-drones-act/ | 76e37e11 | §1709: national-security agency must assess DJI/Autel within 1 yr; FCC Covered List in 30 days; auto-add if no study; bandwidth ban mechanism |
+| DJI official NDAA response (DRONELIFE, Dec 2024) | https://dronelife.com/2024/12/09/dji-responds-calls-for-fair-assessment-in-ndaa-drone-legislation/ | 07341415 | DJI's due-process argument: technical/evidence-based audit + right-of-reply, not automatic origin-based listing — the Schulman doctrine |
+| Senate Armed Services hearing — American small-drone industrial base (Mar 3 2026) | https://www.armed-services.senate.gov/download/full-transcript_03-03-2026 | ba8933ee | §1709 implemented by FCC; "Drone Dominance" program; JIATF-401 counter-UAS; China-component onshoring; per-unit cost gap below $2k |
+
+**Dropped:** AI Business "Schulman on AI-enabled robot ethics" (2024) — thin 1-min video page, no substantive text.

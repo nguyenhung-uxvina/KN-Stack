@@ -84,3 +84,5 @@ SPECIFIC OPPORTUNITY ANALOG: Ross's Hudson Yards thesis — invest in an underpr
 - URL: https://notebooklm.google.com/notebook/289400d6-e65e-4a58-96f8-925f299ee3bf
 - ID: 289400d6-e65e-4a58-96f8-925f299ee3bf
 - Created: 2026-06-03
+- Sources: 11 (2 synthesized + 9 real-world URLs — Exa rebuild 2026-06-14)
+- Last Refresh: 2026-06-14

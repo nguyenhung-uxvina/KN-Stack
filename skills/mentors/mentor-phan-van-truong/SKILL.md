@@ -73,3 +73,5 @@ Workshop X phải pitch: "Chúng tôi không chỉ bán sản phẩm — chúng 
 - URL: https://notebooklm.google.com/notebook/c9e0a46b-1029-4767-9fc3-ccd485b03956
 - ID: c9e0a46b-1029-4767-9fc3-ccd485b03956
 - Created: 2026-06-06
+- Sources: 9 (rebuilt 2026-06-14, Exa Channel 0 — 3 synthesized text + 6 live sources incl. Cấy Nền Radio, VnExpress, Vietcetera)
+- Last refresh: 2026-06-14

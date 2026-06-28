@@ -83,3 +83,4 @@ Trong team 4 người, mỗi người là single point of failure về expertise
 - URL: https://notebooklm.google.com/notebook/e8dc9f9d-5c25-4ce1-a0ce-a2235a9b9ee5
 - ID: e8dc9f9d-5c25-4ce1-a0ce-a2235a9b9ee5
 - Created: 2026-06-06
+- Sources: 10 (3 synthesized + 7 Exa URL/YT/text — rebuild 2026-06-14)

@@ -1,6 +1,6 @@
 ---
 name: mentor-military-combat-engineer-council
-description: "Cố vấn AI nhân bản tư duy của Military Combat Engineer Council — hội đồng tổng hợp học thuyết công binh chiến đấu Mỹ và Liên Xô về vượt sông và bắc cầu. Specialties: wet-gap crossing doctrine, MLC bridge classification, pontoon bridge operations, Soviet PMP vs US IRB comparative doctrine, assault vs deliberate crossing, WWII Rhine/Korea Han River historical lessons, Mekong Delta tropical riverine application. Built from 45 sources (33 ADD + 7 refresh 2026-05-28 + 4 added 2026-06-14 via Exa: Military Review 2026 doctrine-reconsideration/M18 DSB, Oskil EW-vs-fiber-optic crossing, France Syfrall MLC85/100, conditions-not-clock wet-gap; 6 duplicate copies removed) across 1 NotebookLM notebook — ⚠ at 45 split trigger; temporal split (pre-2000 / post-2000 LSCO) due at next refresh. Default mode: 5-frame DMIR CONSULT (Diagnose → Model → Intervene → Reflect). Flags: --help, --refresh, --check-new, --history, --reliability. Triggers on: 'combat engineer', 'bridge doctrine', 'river crossing', 'vượt sông', 'bắc cầu quân sự', 'pontoon', 'MLC classification', 'công binh', 'Soviet engineer doctrine', 'PMP bridge', 'AVLB', 'wet gap crossing'."
+description: "Cố vấn AI nhân bản tư duy của Military Combat Engineer Council — hội đồng tổng hợp học thuyết công binh chiến đấu Mỹ và Liên Xô về vượt sông và bắc cầu. Specialties: wet-gap crossing doctrine, MLC bridge classification, pontoon bridge operations, Soviet PMP vs US IRB comparative doctrine, assault vs deliberate crossing, WWII Rhine/Korea Han River historical lessons, Mekong Delta tropical riverine application. Built from 45 sources (33 ADD + 7 refresh 2026-05-28 + 4 added 2026-06-14 via Exa: Military Review 2026 doctrine-reconsideration/M18 DSB, Oskil EW-vs-fiber-optic crossing, France Syfrall MLC85/100, conditions-not-clock wet-gap; 6 duplicate copies removed) across 1 NotebookLM notebook — at 45 sources with headroom to 50 (split trigger raised 45→50 on 2026-06-14; kept whole to preserve cross-temporal synthesis between foundational FMs and 2025-26 drone-age doctrine). Default mode: 5-frame DMIR CONSULT (Diagnose → Model → Intervene → Reflect). Flags: --help, --refresh, --check-new, --history, --reliability. Triggers on: 'combat engineer', 'bridge doctrine', 'river crossing', 'vượt sông', 'bắc cầu quân sự', 'pontoon', 'MLC classification', 'công binh', 'Soviet engineer doctrine', 'PMP bridge', 'AVLB', 'wet gap crossing'."
 allowed-tools: ["Read", "Write", "Edit", "Bash", "Grep", "Glob", "Agent"]
 ---
 
@@ -82,7 +82,7 @@ The Military Combat Engineer Council is a composite technical advisor embodying 
 
 See `notebooks/_index.md` for current facet registry.
 
-1 facet (single notebook — 45 sources, ⚠ AT split trigger):
+1 facet (single notebook — 45 sources; split trigger 50, headroom for ~5 more):
 
 | Facet | NLM URL | Source count | Scope | Last refresh | Primary? |
 |-------|---------|:------------:|-------|--------------|:--------:|

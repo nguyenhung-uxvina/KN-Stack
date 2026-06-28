@@ -123,11 +123,24 @@ Credit expansion = amplifier của feedback loop.
 5. Liquidity = bảo hiểm — illiquid buyers = forced sellers khi cycle turn
 6. Diversify địa lý — concentration trong 1 thành phố = maximum risk
 
-## Sources
-- Nobel Prize Lecture "Speculative Asset Prices" 2013 (T1 - PDF)
-- Yale Open Courses: Financial Markets (T1 - free online)
-- Shiller Core Frameworks Text (T1 - synthesized)
-- NLM ID: 08bf1f64-df08-499e-97e1-7fcf4a2885df
+## Sources (12 total — rebuilt 2026-06-14 via Exa Channel 0)
+
+| # | Title | Tier |
+|---|-------|------|
+| 1 | Nobel Prize Lecture "Speculative Asset Prices" 2013 | T1 |
+| 2 | Financial Markets (2011) — Open Yale Courses | T1 |
+| 3 | Shiller: Core Frameworks for Real Estate and Market Cycle Investors (synthesized) | T1 |
+| 4 | Shiller — Narrative Economics, Behavioral Biases, Emerging Market Bubble Detection (synthesized) | T1 |
+| 5 | Narrative Economics — AEA Presidential Address 2017 (Yale fair-model) | T1 |
+| 6 | Narrative Economics — NBER Working Paper w23075 | T1 |
+| 7 | Robert Shiller on Narrative Economics — EconTalk | T1 |
+| 8 | Understanding Recent Trends in House Prices — NBER w13553 | T1 |
+| 9 | Speculative Asset Prices — American Economic Review 2014 | T1 |
+| 10 | Narrative Economics — LSE Lecture 2019 | T1 |
+| 11 | Robert Shiller on the power of narratives — Yale News | T2 |
+| 12 | MIB: Talking Ourselves into Trouble — Barry Ritholtz interview | T2 |
+
+NLM ID: 08bf1f64-df08-499e-97e1-7fcf4a2885df
 
 ## Integration với Board
 - **Đối trọng tự nhiên với:** Yardney (Yardney optimistic về growth; Shiller warns về narrative overshoot)

@@ -1,8 +1,8 @@
 ---
 mentor: steve-jobs
-total_sources: 17
+total_sources: 16
 facet_count: 1
-last_refresh: 2026-05-16
+last_refresh: 2026-06-14
 split_strategy: none (single facet)
 ---
 
@@ -12,7 +12,7 @@ split_strategy: none (single facet)
 
 | Facet | NLM URL | Source count | Scope | Last refresh | Primary? |
 |-------|---------|:------------:|-------|--------------|:--------:|
-| primary | https://notebooklm.google.com/notebook/1e1c614a-47d2-4950-bfa3-59209f1d9096 | 17 | Full 1984-2011 era: speeches, keynotes, interviews, writings, archive | 2026-05-16 | ✓ |
+| primary | https://notebooklm.google.com/notebook/1e1c614a-47d2-4950-bfa3-59209f1d9096 | 16 | Full 1984-2011 era: speeches, keynotes, interviews, writings, archive | 2026-06-14 | ✓ |
 
 **Notebook ID:** `1e1c614a-47d2-4950-bfa3-59209f1d9096`
 
@@ -32,6 +32,12 @@ Last 30 days:
 
 ## Notes
 
-Single facet — 17 sources under the 45-source threshold, no split needed.
+Single facet — 16 sources under the 45-source threshold, no split needed.
 Split should be considered if sources grow to >45 (e.g., adding new Steve Jobs Archive releases, newly published essays).
 Suggested future split strategy if needed: Strategy B (Topical) — `jobs-keynotes` / `jobs-interviews` / `jobs-writings`.
+
+## Reconcile Note (2026-06-14)
+
+Count reconciled 17→16. Live notebook confirmed 16 sources. Cross-check against seed-sources.md identified the missing source:
+
+⚠ Source 'Smithsonian Oral History 1995' (NLM ID: not confirmed — registry noted `(ingested — verify ID)`) listed in registry (seed-sources.md line 16) but ABSENT from live notebook as of 2026-06-14 — likely failed to ingest or was deleted; re-add from https://americanhistory.si.edu/comphist/sj1.html if still wanted.

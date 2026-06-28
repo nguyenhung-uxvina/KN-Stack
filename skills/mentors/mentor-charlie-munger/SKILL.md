@@ -1,6 +1,6 @@
 ---
 name: mentor-charlie-munger
-description: "Cố vấn AI nhân bản tư duy của Charlie Munger — Vice Chairman Berkshire Hathaway, Chairman DJCO, pioneer of multidisciplinary mental model thinking and author of Poor Charlie's Almanack. Specialties: latticework of mental models, inversion, lollapalooza effect, circle of competence, cognitive bias mitigation, long-term capital allocation, owner-operator leadership. Built from 37 sources (T1 direct: 8, T2 authoritative: 20, T3 other: 9) across 3 NotebookLM notebooks (temporal split: early/middle/recent). Default mode: 5-frame DMIR CONSULT cross-facet (Diagnose → Model → Intervene → Reflect). Flags: --help, --facet <name>|auto, --facets, --refresh, --check-new, --history, --reliability. Triggers on: 'mentor charlie-munger', 'cố vấn Munger', 'charlie munger advice', 'munger thinks', 'munger, charlie, poor charlie, almanack, latticework, lollapalooza, mental models', 'consult charlie-munger'."
+description: "Cố vấn AI nhân bản tư duy của Charlie Munger — Vice Chairman Berkshire Hathaway, Chairman DJCO, pioneer of multidisciplinary mental model thinking and author of Poor Charlie's Almanack. Specialties: latticework of mental models, inversion, lollapalooza effect, circle of competence, cognitive bias mitigation, long-term capital allocation, owner-operator leadership. Built from 26 sources (early 7 / middle 10 / recent 9; junk + ambiguous-landing stubs purged 2026-06-14) across 3 NotebookLM notebooks (temporal split: early/middle/recent). Default mode: 5-frame DMIR CONSULT cross-facet (Diagnose → Model → Intervene → Reflect). Flags: --help, --facet <name>|auto, --facets, --refresh, --check-new, --history, --reliability. Triggers on: 'mentor charlie-munger', 'cố vấn Munger', 'charlie munger advice', 'munger thinks', 'munger, charlie, poor charlie, almanack, latticework, lollapalooza, mental models', 'consult charlie-munger'."
 allowed-tools: ["Read", "Write", "Edit", "Bash", "Grep", "Glob", "Agent"]
 ---
 
@@ -76,9 +76,9 @@ See `notebooks/_index.md` for current facet registry.
 
 | Facet | NLM URL | Source count | Scope | Last refresh | Primary? |
 |-------|---------|:------------:|-------|--------------|:--------:|
-| munger-early | https://notebooklm.google.com/notebook/11962225-52d5-4d8a-8e69-529058617159 | 15 | 1965–2000: Wesco letters, foundational BRK meetings, USC speeches, Poor Charlie's Almanack foundation | 2026-05-13 | |
-| munger-middle | https://notebooklm.google.com/notebook/83c37dc3-7b25-4f06-953c-9cdf2ee32aaa | 12 | 2001–2015: BRK + DJCO + Poor Charlie's Almanack (framework consolidation era) | 2026-05-13 | ✓ |
-| munger-recent | https://notebooklm.google.com/notebook/4f52bc94-f69a-48b6-8e5e-cba3446b3653 | 10 | 2016–2023: Final decade DJCO + BRK + late interviews + 2023 tribute letter | 2026-05-13 | |
+| munger-early | https://notebooklm.google.com/notebook/11962225-52d5-4d8a-8e69-529058617159 | 7 | 1965–2000: Wesco letters, foundational BRK meetings, USC speeches, Poor Charlie's Almanack foundation | 2026-05-13 | |
+| munger-middle | https://notebooklm.google.com/notebook/83c37dc3-7b25-4f06-953c-9cdf2ee32aaa | 10 | 2001–2015: BRK + DJCO + Poor Charlie's Almanack (framework consolidation era) | 2026-05-13 | ✓ |
+| munger-recent | https://notebooklm.google.com/notebook/4f52bc94-f69a-48b6-8e5e-cba3446b3653 | 9 | 2016–2023: Final decade DJCO + BRK + late interviews + 2023 tribute letter | 2026-05-13 | |
 
 **Cross-facet query (default):** when CEO calls `/mentor-charlie-munger "<problem>"`, all facets queried in parallel, output synthesizes with `[facet_name]` citation tags.
 
