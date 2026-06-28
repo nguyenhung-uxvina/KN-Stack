@@ -10,7 +10,7 @@
 | **B** Engineering Q&A | trả lời có cite từ 1M+ nguồn | tra tiêu chuẩn/fit/quy tắc | P0,P1,P4,QC,Install |
 | **C** Calculation / Sizing | tính hiện công thức + logic + nguồn | thay bảng tính (ứng suất/nhiệt/lưu chất) | P1,P3,QC,Install |
 | **D** DFM / Standards Inspect | soi vi phạm, mỗi flag có cite | review thiết kế trước phát hành | P3,P4 |
-| **E** Documentation / BOM | draft tài liệu từ dữ liệu dự án | sinh BOM/spec/báo cáo nhanh | P4,Install |
+| **E** Documentation / BOM | E1 9-point summary · E2 datasheet/BOM-text · E3 gắp mfg-data có sẵn (KHÔNG làm quy trình CN/QMS/nghiệm thu) | đặc tả thiết kế + tài liệu nhanh | P1,P4,Install |
 | **F** Material Selection | so vật liệu có cite + trade-off | chọn vật liệu theo ràng buộc | P2,P3 |
 
 ---
@@ -74,15 +74,50 @@ Xếp theo mức nghiêm trọng. Ưu tiên gợi ý part đã validated thay v�
 ```
 
 ## E. DOCUMENTATION / BOM / SPEC
+
+> **Ranh giới tài liệu của Leo (research-confirmed):** Leo CHỈ sinh tài liệu **giai đoạn thiết kế (upstream)** — 3 việc E1/E2/E3 dưới. Leo **KHÔNG** sinh: ❌ Quy trình công nghệ chế tạo/routing · ❌ Sổ tay QLCL/QMS ISO 9001 · ❌ Quy trình thử nghiệm/nghiệm thu/inspection plan. Ba thứ đó → skill nội bộ: `forge-fabrication` F0 (quy trình công nghệ TCVN) · `helix-p4-inspection` (nghiệm thu) · `erp-quality` (QLCL) — chạy LOCAL, an toàn MẬT. Đừng ép Leo làm; nó sẽ trả lời chung chung vô dụng.
+
+### E1. 9-POINT ENGINEERING SUMMARY (Leo Ideation) — *đặc tả thiết kế từ ý tưởng*
+```
+[Phân loại: THƯỜNG | MẬT→trừu tượng hóa, không tên khí tài]
+[MODE] LEO IDEATION — sinh Bản tóm tắt kỹ thuật 9 điểm
+[IDEA] Mô tả sản phẩm 1 đoạn: [chức năng + bối cảnh dùng + ràng buộc chính]
+[KNOWNS] Tải/kích thước/môi trường/vật liệu đã biết: [... kèm đơn vị]
+[ASK] Sinh 9-point engineering summary đầy đủ:
+ (1) Giới thiệu (2) Tổng quan sản phẩm (3) Yêu cầu cơ khí (4) Yêu cầu điện
+ (5) Yêu cầu phần mềm (6) Giao diện/công thái (7) Môi trường & điều kiện
+ (8) An toàn & tuân thủ (cite tiêu chuẩn) (9) Phụ lục bản vẽ.
+ Đánh dấu rõ mục nào "N/A" và mục nào thiếu dữ liệu đầu vào. Xuất được PDF/Word.
+[GIẢ ĐỊNH] [...]
+LƯU Ý: đây là ĐẶC TẢ thiết kế (input cho helix-p1-requirements), KHÔNG phải quy trình chế tạo.
+```
+
+### E2. TECH SUMMARY / DATASHEET / BOM-TEXT — *draft tài liệu kỹ thuật*
 ```
 [Phân loại: ...]
-[MODE] DOCUMENT — draft tài liệu kỹ thuật
-[DOCTYPE] Loại: [BOM / spec sheet / báo cáo thiết kế / hướng dẫn]
-[SOURCE] Dữ liệu nguồn: [assembly / part / dữ liệu dự án — THƯỜNG]
+[MODE] DOCUMENT — draft datasheet / spec sheet / BOM-text / báo cáo thiết kế
+[DOCTYPE] Loại: [datasheet 1 part / spec sheet cụm / BOM dạng bảng / design report]
+[SOURCE] Dữ liệu nguồn: [part/assembly/thông số dự án — THƯỜNG/COTS]
 [STRUCTURE] Section bắt buộc: [...]
-[FIELDS] Trường bắt buộc: [part no, vật liệu, SL, nhà cung cấp, tiêu chuẩn]
-[ASK] Sinh draft theo cấu trúc trên, đánh dấu rõ chỗ thiếu dữ liệu.
-LƯU Ý: đây là DRAFT, kỹ sư review trước khi phát hành.
+[FIELDS] Trường bắt buộc: [part no, vật liệu, SL, nhà cung cấp, tiêu chuẩn, khối lượng]
+[ASK] Sinh draft theo cấu trúc trên; mỗi số kỹ thuật kèm nguồn; đánh dấu rõ chỗ thiếu dữ liệu.
+       Xuất PDF/Word/Google Docs để chia sẻ nhóm.
+[GIẢ ĐỊNH] [...]
+LƯU Ý: DRAFT — kỹ sư review trước khi phát hành; số liệu → CEO/CAD verify trước khi vào hồ sơ MẬT.
+```
+
+### E3. RETRIEVE EXISTING MANUFACTURING DATA — *gắp dữ liệu sản xuất CÓ SẴN (không viết mới)*
+```
+[Phân loại: THƯỜNG — chỉ chạy được nếu PLM/PDM nội bộ đã kết nối Leo]
+[MODE] PART SEARCH → PULL MFG DATA (biến thể của Mode A)
+[PART] Tìm part/cụm: [mô tả + envelope/mating thật]
+[ASK]
+1. Tìm part khớp trong PDM/PLM nội bộ.
+2. Với mỗi part khớp, KÉO RA dữ liệu sản xuất đã kiểm định ĐI KÈM:
+   revision history · bản vẽ liên quan · manufacturing data · nhà cung cấp đã duyệt.
+3. KHÔNG tự "viết" quy trình mới — chỉ truy xuất cái đã tồn tại & validated.
+[GIẢ ĐỊNH] [...]
+LƯU Ý: đây là tái dùng hồ sơ sản xuất CŨ; để LẬP quy trình công nghệ MỚI → forge-fabrication F0 (local).
 ```
 
 ## F. MATERIAL SELECTION
@@ -126,4 +161,5 @@ Tác vụ: [__1 dòng__]
 - [ ] Mode B/C/F: đã ÉP trích nguồn cho mọi số liệu?
 - [ ] Mode C: đã cho knowns + đơn vị + yêu cầu hiện công thức?
 - [ ] Mode D: đã nêu process + tiêu chuẩn áp dụng?
+- [ ] Mode E: tài liệu cần thuộc 3 việc Leo làm (E1/E2/E3)? Nếu là **quy trình công nghệ / QMS / nghiệm thu** → KHÔNG dùng Leo, chuyển `forge-fabrication` F0 / `helix-p4-inspection` / `erp-quality`.
 - [ ] Dữ liệu đưa lên là THƯỜNG/COTS — không có gì MẬT?

@@ -1,0 +1,42 @@
+{
+  "skill": "helix-cad-validate",
+  "mode": "static",
+  "description": "Audit helix-cad-validate SKILL.md + validate.py for the harness-engineering contract: deterministic Computational Sensor + Gate, fail-safe, contract read-only, engineer sign-off.",
+  "checks": [
+    {
+      "id": "frontmatter-valid",
+      "desc": "Frontmatter has name == directory and a description with Vietnamese + English 'Triggers on:' phrases.",
+      "assert": "name: helix-cad-validate present; description includes 'Triggers on:' and both VI + EN trigger phrases."
+    },
+    {
+      "id": "deterministic-not-prompt",
+      "desc": "Validator is deterministic CPU code, not an LLM judging safety.",
+      "assert": "validate.py uses only stdlib (json, hashlib, argparse, sys, datetime); no network/LLM import; SKILL states 'cơ-chế-không-phải-prompt' and 'No LLM'."
+    },
+    {
+      "id": "fail-safe",
+      "desc": "Missing or low-confidence data for a critical rule yields FAIL, never silent skip.",
+      "assert": "run_checks emits FAIL when required data absent; confidence below min_confidence for critical rule => FAIL."
+    },
+    {
+      "id": "gate-blocks-handoff",
+      "desc": "FAIL closes the gate (non-zero exit) and blocks forge-fabrication handoff / ICD freeze.",
+      "assert": "main returns 2 on FAIL; report 'gate' field = CLOSED; SKILL Step 5 blocks handoff."
+    },
+    {
+      "id": "contract-read-only",
+      "desc": "Contract integrity guarded against agent self-editing the rules.",
+      "assert": "--approved-hash compares sha256; mismatch => contract_integrity FAIL; SKILL marks contract Core (C), read-only-to-agent."
+    },
+    {
+      "id": "human-gate-preserved",
+      "desc": "PASS is minimum-bar only; engineer-of-record sign-off remains mandatory, no auto-merge.",
+      "assert": "MD report includes engineer sign-off block; SKILL Step 6 + COD mark final sign-off Core (C), 'PASS ≠ an toàn'."
+    },
+    {
+      "id": "trigger-based-roadmap",
+      "desc": "Documents BƯỚC 1 scope and defers middleware/eval/inferential to explicit triggers (no over-engineering).",
+      "assert": "SKILL 'When to add the next tier' table ties each added tier to a concrete trigger, citing the DEBATE."
+    }
+  ]
+}

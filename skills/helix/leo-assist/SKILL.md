@@ -35,7 +35,7 @@ description: "Phase × Mode Leo AI (getleo.ai) prompt suite. Two axes: 7 lifecyc
 | **B** Engineering Q&A | tra tiêu chuẩn/fit/quy tắc, có cite | hỏi kỹ thuật |
 | **C** Calculation / Sizing | tính hiện công thức+logic+nguồn | thay bảng tính |
 | **D** DFM / Standards Inspect | soi vi phạm DFM/quy phạm, mỗi flag có cite | review thiết kế (THƯỜNG) |
-| **E** Documentation / BOM | draft tài liệu/spec/BOM | sinh tài liệu nhanh |
+| **E** Documentation / BOM | E1 9-point summary · E2 datasheet/BOM-text · E3 gắp mfg-data có sẵn | đặc tả thiết kế + tài liệu nhanh (KHÔNG: quy trình CN/QMS/nghiệm thu → forge-fabrication/helix-p4-inspection/erp-quality) |
 | **F** Material Selection | so vật liệu có cite + trade-off | chọn vật liệu |
 
 ## Step 1: Route theo Phase × Mode
