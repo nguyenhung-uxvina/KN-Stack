@@ -1,0 +1,68 @@
+{
+  "skill": "bridge-risk-radar",
+  "version": "1.0",
+  "description": "Binary assertions for /bridge-risk-radar early warning system static structure check",
+  "mode": "static",
+  "test_input": "run the risk radar — what could go wrong across the portfolio?",
+  "assertions": [
+    {
+      "id": "RR-1",
+      "name": "red_yellow_green",
+      "check": "classifies risks as RED/YELLOW/GREEN",
+      "regex": "RED/YELLOW/GREEN|RED Alerts|YELLOW Warnings|GREEN Monitored",
+      "required": true
+    },
+    {
+      "id": "RR-2",
+      "name": "scans_data_sources",
+      "check": "scans vault data sources for risk signals",
+      "regex": "Scan Data Sources|scans vault|Status.md|Scan Data|vault data",
+      "required": true
+    },
+    {
+      "id": "RR-3",
+      "name": "risk_categories",
+      "check": "covers organizational / product / strategic risk categories",
+      "regex": "Organizational Risks|Product Risks|Strategic Risks|organizational, product, and strategic",
+      "required": true
+    },
+    {
+      "id": "RR-4",
+      "name": "severity_scoring",
+      "check": "scores severity by impact x likelihood x urgency",
+      "regex": "Impact x Likelihood|Score Severity|Impact × Likelihood|severity",
+      "required": true
+    },
+    {
+      "id": "RR-5",
+      "name": "risk_register",
+      "check": "generates a risk register",
+      "regex": "Risk Register|Risk Radar —|Risk Radar",
+      "required": true
+    },
+    {
+      "id": "RR-6",
+      "name": "top_risk_action",
+      "check": "names top risk and a recommended action",
+      "regex": "TOP RISK|RECOMMENDED ACTION|recommended action|Action Required",
+      "required": true
+    },
+    {
+      "id": "RR-7",
+      "name": "ceo_decides_response",
+      "check": "response decision is CEO Core",
+      "regex": "Response decision|Core \\(C\\)|CEO decides|CEO validates|CEO attention",
+      "required": false
+    },
+    {
+      "id": "RR-8",
+      "name": "specific_signals",
+      "check": "names specific risk signals (key-person, fallback level 0, integration debt)",
+      "regex": "Key-person|Fallback Level 0|integration debt|Analyst Trap|Trust decay",
+      "required": false
+    }
+  ],
+  "passing_score": 6,
+  "total_required": 6,
+  "total_optional": 2
+}

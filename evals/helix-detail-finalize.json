@@ -1,0 +1,82 @@
+{
+  "skill": "helix-detail-finalize",
+  "version": "1.0",
+  "description": "Binary assertions for /helix-detail-finalize Phase 4 orchestrator static structure check",
+  "mode": "static",
+  "test_input": "detail design for VN-XUONG-UUV — produce manufacturing-ready package",
+  "assertions": [
+    {
+      "id": "DF-1",
+      "name": "six_block_pipeline",
+      "check": "documents a Phase 4 6-block pipeline B0-BE",
+      "regex": "6 block|six.*block|B0.*BA.*BB.*BC.*BD.*BE|B0 → BE|ORCHESTRATOR — 6 blocks",
+      "required": true
+    },
+    {
+      "id": "DF-2",
+      "name": "block_names",
+      "check": "names blocks preflight/drawing/bom/inspection/assembly/handoff",
+      "regex": "preflight|drawing|bom|inspection|assembly|handoff|helix-p4-",
+      "required": true
+    },
+    {
+      "id": "DF-3",
+      "name": "phase4_pahl_beitz",
+      "check": "is Pahl-Beitz Phase 4 detail design",
+      "regex": "Phase 4|Pahl-Beitz|P&B|Detail Design|Chapter 9",
+      "required": true
+    },
+    {
+      "id": "DF-4",
+      "name": "requirements_freeze",
+      "check": "B0 enforces requirements freeze per VDI 2221:2019",
+      "regex": "requirements freeze|VDI 2221|reqs freeze|frozen before detail|Phase 4 = freeze",
+      "required": true
+    },
+    {
+      "id": "DF-5",
+      "name": "manufacturing_outputs",
+      "check": "produces drawings, final BOM, inspection, assembly outputs",
+      "regex": "BOM_Final|Manufacturing_Drawings|Inspection_Checklist|Assembly_Instructions|GD&T|ISO 128",
+      "required": true
+    },
+    {
+      "id": "DF-6",
+      "name": "one_block_per_turn",
+      "check": "executes one block per turn and waits for CEO",
+      "regex": "ONE BLOCK PER TURN|EXACTLY ONE block|STOP AND WAIT|WAIT for CEO",
+      "required": true
+    },
+    {
+      "id": "DF-7",
+      "name": "workshop_verdict_core",
+      "check": "BE workshop master verdict is CORE non-delegable",
+      "regex": "workshop master|gia cong duoc|GIA CONG DUOC|workshop verdict|CORE|non-delegable",
+      "required": true
+    },
+    {
+      "id": "DF-8",
+      "name": "feeds_fabrication",
+      "check": "BE handoff feeds forge-fabrication F0",
+      "regex": "forge-fabrication F0|Handoff_to_Fabrication|forge-fabrication|R&D → production",
+      "required": true
+    },
+    {
+      "id": "DF-9",
+      "name": "ceo_checkpoint_format",
+      "check": "CEO checkpoint with approve/re-run/pause options",
+      "regex": "✅.*Approve|🔄.*Chạy lại|⏸.*Dừng|BLOCK.*COMPLETE|tiếp tục Block",
+      "required": false
+    },
+    {
+      "id": "DF-10",
+      "name": "local_content_60",
+      "check": "BB enforces Vietnam vendor selection >=60% local",
+      "regex": "≥60% local|60% local|local content|Vietnam vendor",
+      "required": false
+    }
+  ],
+  "passing_score": 8,
+  "total_required": 8,
+  "total_optional": 2
+}

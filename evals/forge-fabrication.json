@@ -1,0 +1,82 @@
+{
+  "skill": "forge-fabrication",
+  "version": "1.0",
+  "description": "Binary assertions for /forge-fabrication static structure check",
+  "mode": "static",
+  "test_input": "forge fabrication BB-01 qty 4 for Cuc KH-CN BQP — release to production",
+  "assertions": [
+    {
+      "id": "FB-1",
+      "name": "six_block_pipeline",
+      "check": "documents a 6-block pipeline F0-F5",
+      "regex": "6.block|F0.*F1.*F2.*F3.*F4.*F5|F0→F5|F0 → F5|six.*block",
+      "required": true
+    },
+    {
+      "id": "FB-2",
+      "name": "block_names",
+      "check": "names the blocks preflight/material/release/execute/acceptance/invoice",
+      "regex": "PRE-?FLT|MATERIAL|RELEASE|EXECUTE|ACCEPT|INVOICE|preflight.*material.*release",
+      "required": true
+    },
+    {
+      "id": "FB-3",
+      "name": "reuses_erp_skills",
+      "check": "orchestrator reuses existing erp-* block skills",
+      "regex": "erp-master|erp-bom|erp-stock|erp-production|erp-quality|erp-finance",
+      "required": true
+    },
+    {
+      "id": "FB-4",
+      "name": "helix_handoff",
+      "check": "F0 reads HELIX handoff package / Handoff_to_Fabrication",
+      "regex": "HELIX.*handoff|Handoff_to_Fabrication|handoff package|--helix-handoff|Phase3-Embody",
+      "required": true
+    },
+    {
+      "id": "FB-5",
+      "name": "one_block_per_turn",
+      "check": "executes one block per turn and stops for CEO",
+      "regex": "ONE BLOCK PER TURN|EXACTLY ONE block|STOP AND WAIT|WAIT for CEO",
+      "required": true
+    },
+    {
+      "id": "FB-6",
+      "name": "core_gates",
+      "check": "WO release / acceptance / invoice are CORE non-delegable",
+      "regex": "CORE|production commitment|final acceptance|non-delegable|Core \\(C\\)",
+      "required": true
+    },
+    {
+      "id": "FB-7",
+      "name": "cross_product_capacity",
+      "check": "cross-product capacity arbitration scan before F0",
+      "regex": "CROSS-PRODUCT|capacity arbitration|capacity scan|PX.*util|capacity conflict",
+      "required": true
+    },
+    {
+      "id": "FB-8",
+      "name": "ceo_checkpoint_format",
+      "check": "presents CEO checkpoint with approve/re-run/pause options",
+      "regex": "✅.*Approve|🔄.*Chạy lại|⏸.*Dừng|BLOCK F.*COMPLETE|tiếp tục Block",
+      "required": true
+    },
+    {
+      "id": "FB-9",
+      "name": "traceability_run_dir",
+      "check": "produces traceability artifacts per run folder",
+      "regex": "Fabrication-Runs|run_dir|_pipeline_state|Traceability|run_id",
+      "required": false
+    },
+    {
+      "id": "FB-10",
+      "name": "defense_milestone_billing",
+      "check": "defense milestone billing schedule 30/40/30",
+      "regex": "30/40/30|milestone.*invoice|defense milestone|milestone billing",
+      "required": false
+    }
+  ],
+  "passing_score": 8,
+  "total_required": 8,
+  "total_optional": 2
+}

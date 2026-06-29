@@ -1,0 +1,82 @@
+{
+  "skill": "codebase-to-book",
+  "version": "1.0",
+  "description": "Binary assertions for /codebase-to-book 9-phase orchestrator static structure check",
+  "mode": "static",
+  "test_input": "codebase to book for d:/KN-Stack — turn this repo into a technical book",
+  "assertions": [
+    {
+      "id": "CB-1",
+      "name": "nine_phase_pipeline",
+      "check": "documents a 9-phase / 9-block pipeline P1-P9",
+      "regex": "9-Phase|9 block|nine.*block|P1.*P2.*P3.*P4.*P5.*P6.*P7.*P8.*P9|ORCHESTRATOR — 9 blocks",
+      "required": true
+    },
+    {
+      "id": "CB-2",
+      "name": "block_names",
+      "check": "names blocks explore/position/outline/write/review/revise/audit/notebook/ceo-insight",
+      "regex": "book-explore|book-position|book-outline|book-write|book-review|book-revise|book-audit|book-notebook|book-ceo-insight",
+      "required": true
+    },
+    {
+      "id": "CB-3",
+      "name": "parallel_fanout",
+      "check": "Phase 1 and 4 fan out parallel Task subagents",
+      "regex": "parallel|fan-out|fanout|N agents|Task subagent|∥",
+      "required": true
+    },
+    {
+      "id": "CB-4",
+      "name": "one_block_per_turn",
+      "check": "executes one block per turn and waits for CEO",
+      "regex": "ONE BLOCK PER TURN|EXACTLY ONE block|STOP AND WAIT|WAIT for CEO",
+      "required": true
+    },
+    {
+      "id": "CB-5",
+      "name": "ceo_core_gates",
+      "check": "thesis / outline / IP sign-off / insights are CEO Core",
+      "regex": "CEO Core|thesis.*Core|outline.*Core|IP sign-off|non-delegable",
+      "required": true
+    },
+    {
+      "id": "CB-6",
+      "name": "notebooklm_ingest",
+      "check": "P8 builds a NotebookLM notebook and ingests the book",
+      "regex": "NotebookLM|notebooklm-mcp|notebook_create|NLM|source_add",
+      "required": true
+    },
+    {
+      "id": "CB-7",
+      "name": "insight_lenses",
+      "check": "P9 queries NLM with 5 insight lenses (HELIX/FORGE/Galaxy/ACH/IP)",
+      "regex": "insight lens|5 lens|HELIX/FORGE/Galaxy/ACH/IP|HELIX Applicability|FORGE Transfers",
+      "required": true
+    },
+    {
+      "id": "CB-8",
+      "name": "pseudocode_ip_rule",
+      "check": "enforces pseudocode rule / IP audit (no verbatim source)",
+      "regex": "Pseudocode|verbatim|IP check|IP sign-off|SAFE/REVIEW/SENSITIVE",
+      "required": true
+    },
+    {
+      "id": "CB-9",
+      "name": "pipeline_state_ledger",
+      "check": "uses _pipeline_state.md ledger as sole communication channel",
+      "regex": "_pipeline_state|Block Ledger|State Ledger|Data Bus",
+      "required": false
+    },
+    {
+      "id": "CB-10",
+      "name": "flags",
+      "check": "supports --deep / --quick / --no-nlm flags",
+      "regex": "--deep|--quick|--no-nlm|--from|--only",
+      "required": false
+    }
+  ],
+  "passing_score": 8,
+  "total_required": 8,
+  "total_optional": 2
+}
