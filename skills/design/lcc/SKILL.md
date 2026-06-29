@@ -1,3 +1,8 @@
+---
+name: lcc
+description: Generate a detailed unit cost breakdown and Life Cycle Cost estimate across production volumes, with import-equivalent target check (<=70%), 5-year LCC horizon, and local-content value confirmation. Triggers on "lcc", "life cycle cost", "unit cost", "cost breakdown", "gia thanh", "chi phi vong doi".
+---
+
 Generate a detailed unit cost breakdown and Life Cycle Cost estimate.
 
 Usage: /lcc [project_name] OR provide BOM/design details interactively.

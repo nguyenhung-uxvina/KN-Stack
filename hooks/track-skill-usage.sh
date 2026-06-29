@@ -21,12 +21,16 @@ if [[ "$PROMPT" =~ ^/([a-zA-Z0-9_-]+) ]]; then
   TIMESTAMP=$(date '+%Y-%m-%d,%H:%M:%S')
 
   # Classify command tier: MAKE > CHECK > THINK
+  # Glob patterns cover skill families; keep in sync with skills/ domains.
   case "$CMD" in
-    req|morpho|eval|layout|dfx|bom|gate|mil|plan)
+    # MAKE — produce artifacts / move toward physical or production output
+    helix-p[1-4]-*|helix-task-clarify|helix-concept-generate|helix-embody-realize|helix-detail-finalize|helix-project-init|helix-draw|forge-fabrication|erp-*|bom|lcc|6flow|icd|arch|init|clarify|concept|embody|detail|layout|dfx|physical-sprint|pr)
       TIER="MAKE" ;;
-    analyst-trap|catchup|reflect|review-plan)
+    # CHECK — verify / gate / review
+    analyst-trap|ratio-check|qc|aigate|verify|helix-quality-gate|gate0|gate1|gate2|gate3|bridge-deploy-gate|helix-shadow-dev|catchup|reflect|code-review|review-plan)
       TIER="CHECK" ;;
-    analyze|systems|odi|yckt|research|nlm-query|skill-upgrade|first-principles)
+    # THINK — analysis / strategy / research
+    analyze|first-principles|decide|cld|leverage|archetype|constraint|paradigm|research|research-to-skill|skill-from-research|learning|learn-*|forge-job-map|forge-shift|forge-scout|forge-evolve|jobs|odi|opp|seg|outcomes|bridge-judgment|teach|mentor-*|nlm)
       TIER="THINK" ;;
     *)
       TIER="OTHER" ;;

@@ -1,3 +1,8 @@
+---
+name: bom
+description: Generate a structured Bill of Materials from an embodiment/detail design layout, with MIL-STD flags, local-content accounting (>=60% by value), and supply-chain risk identification. Triggers on "bom", "bill of materials", "danh sach vat tu", "BOM generation", or when finalizing components for a Vietnamese defense program.
+---
+
 Generate a structured Bill of Materials from an embodiment design layout.
 
 Usage: /bom [project_name] OR provide design details interactively.

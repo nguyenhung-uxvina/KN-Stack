@@ -185,12 +185,12 @@ Glob for each file pattern in `Phase0-Plan/`, `Phase0-Plan/{{variant}}/`, `Phase
   - ACH_Assessment_v*.md — /forge-shift chưa chạy
 
 ❌ MISSING (required — may block pipeline quality):
-  - Product_Proposal_v*.md — /plan chưa tạo proposal
+  - Product_Proposal_v*.md — /helix-project-init chưa tạo proposal
 
 CEO:
 (1) ▶️ Tiếp tục với inputs hiện có
 (2) 🔄 Quay lại chạy skill bổ sung:
-    → /plan {{project}} (tạo Product Proposal)
+    → /helix-project-init {{project}} (tạo Project Charter / Product Proposal)
     → /forge-job-map {{project}} (tạo Job Map + ODI)
     → /forge-shift {{project}} (tạo ACH Assessment)
     → /forge-cost {{project}} (tạo Cost Envelope)
@@ -441,7 +441,7 @@ helix-task-clarify (ORCHESTRATOR) COMMANDS:
 
 helix-task-clarify READS FROM:
   - helix-project-init → charter, ICD v0
-  - /plan outputs (if available):
+  - /helix-project-init outputs (if available):
       Product_Proposal_v*.md → IFR, sacred constraints, TRIZ resources
       Product_Planning_v*.md → scope, stakeholders, cost targets, timeline
       Portfolio_Planning_v*.md → variant strategy, shared platform, synergy map
