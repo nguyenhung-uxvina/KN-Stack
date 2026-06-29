@@ -1,6 +1,6 @@
 ---
 name: research-to-skill
-description: End-to-end pipeline from deep research to skill upgrade/creation. Orchestrates /research --deep → NLM extraction → /first-principles adaptation → surgical Edit → validate. Use when CEO says "research and upgrade skill", "nâng cấp skill từ research", "build skill from topic", "research to skill", "tạo skill từ nghiên cứu", or wants to systematically enhance a Claude skill with grounded domain knowledge.
+description: End-to-end pipeline from deep research to skill upgrade/creation (CREATE + UPGRADE modes). Orchestrates /research --deep → NLM extraction → /first-principles adaptation → surgical Edit → validate. Use when CEO says "research and upgrade skill", "nâng cấp skill từ research", "build skill from topic", "research to skill", "tạo skill từ nghiên cứu", "build skill from research", "skill from NLM", "deep research to skill", "xây dựng kỹ năng chuyên sâu", "cải tiến skill", "add knowledge to skill", "bổ sung kiến thức cho skill", or wants to systematically create/enhance a Claude skill with grounded domain knowledge.
 ---
 
 # Research-to-Skill — Full Pipeline Super-Skill
@@ -308,6 +308,7 @@ Append to `3_Resources/Deep-Content-Analyzer-Outputs/RESEARCH_<topic>_<date>.md`
 
 ## NLM Reference
 
+- **CREATE-mode mechanics, NLM CLI commands, eval JSON, Galaxy→Skill bridge, Quick Upgrade:** see `references/nlm-mechanics.md` (folded in from the former `skill-from-research` skill).
 - Pipeline concept: `2_Areas/CEO-Self/Pipeline-Reference/Research-to-Skill-Upgrade-Pipeline.md`
 - Proven case: NLM notebook `icdm` (11 sources) → helix-concept-generate + helix-quality-gate (8/8 ICDM tools)
 

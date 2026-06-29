@@ -10,6 +10,7 @@
 #   bash setup.sh --status                Show deployment summary
 
 set -euo pipefail
+shopt -s nullglob  # empty globs (e.g., empty mentors/ domain) return [] instead of literal pattern
 
 KNSTACK_DIR="$(cd "$(dirname "$0")" && pwd)"
 COMMANDS_DIR="${HOME}/.claude/commands"
@@ -139,7 +140,8 @@ do_unlink() {
     done
 
     log_ok "Removed $count junctions"
-    echo "Restore from backup: cp -r ~/.claude/commands.bak.*/* ~/.claude/commands/"
+    echo "Junctions are non-destructive: removing them does not touch skills/ (the source)."
+    echo "To restore, re-run: bash setup.sh --install <vault>"
 }
 
 # ── Status: show summary ──
