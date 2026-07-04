@@ -35,3 +35,20 @@ def test_load_denylist_missing_key_fails():
     import pytest
     with pytest.raises(ValueError):
         gate._validate_denylist({"product_codes": []})
+
+
+def test_drawing_hit_term_is_matched_text():
+    r = gate.classify("theo bản vẽ TN-03-02-000")
+    assert any(h.term == "TN-03-02-000" and h.category == "drawing_pattern" for h in r.hits)
+
+
+def test_lowercase_generic_codename_words_are_thuong():
+    r = gate.classify("the sentinel value returns a verdict on the bastion of quality")
+    assert r.verdict == "THUONG"
+
+
+def test_overlapping_hits_redact_merged():
+    r = gate.classify("bạc cho VN-XUONG-UUV chịu 2 kN")
+    assert r.verdict == "MAT"
+    assert "UUV" not in r.redacted
+    assert "2 kN" in r.redacted

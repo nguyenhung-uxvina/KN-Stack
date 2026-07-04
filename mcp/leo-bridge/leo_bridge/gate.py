@@ -39,15 +39,15 @@ def _term_regex(term: str, case_sensitive: bool) -> re.Pattern:
 
 
 def classify(text: str, denylist: dict | None = None) -> ClassifyResult:
-    dl = denylist or load_denylist()
+    dl = denylist if denylist is not None else load_denylist()
     spans: list[tuple[int, int]] = []
-    hits: dict[str, Hit] = {}
+    hits: dict[tuple[str, str], Hit] = {}
 
     def scan(terms, category, case_sensitive=False):
         for term in terms or []:
             for m in _term_regex(term, case_sensitive).finditer(text):
                 spans.append((m.start(), m.end()))
-                hits.setdefault(term, Hit(term, category))
+                hits.setdefault((term, category), Hit(term, category))
 
     scan(dl["product_codes"], "product_code")
     scan(dl["codenames"], "codename", case_sensitive=True)
@@ -55,7 +55,7 @@ def classify(text: str, denylist: dict | None = None) -> ClassifyResult:
     for pat in dl["drawing_patterns"]:
         for m in re.finditer(pat, text):
             spans.append((m.start(), m.end()))
-            hits.setdefault(pat, Hit(pat, "drawing_pattern"))
+            hits.setdefault((m.group(0), "drawing_pattern"), Hit(m.group(0), "drawing_pattern"))
 
     if not hits:
         return ClassifyResult("THUONG")
