@@ -97,6 +97,7 @@ Giữ BƯỚC 1 tối thiểu. CHỈ thêm khi gặp trigger thật:
 | helix-cad-ingest (`cad_extract.json`) | → | **SENSOR+GATE** | → | forge-fabrication (chỉ khi PASS + ký) |
 | helix-cad-bridge (mass-props) | → | | → | helix-p3-integrate (ICD freeze chỉ khi PASS) |
 | design_rules.json (kỹ sư định danh) | → | (yardstick, read-only) | | helix-p4-inspection (kế thừa luật→plan đo) |
+| helix-s2c-validate (Spec-to-CAD BE — contract compiled từ CAD Constitution ở s2c-preflight) | → | (delegator) | → | Spec-to-CAD close-out |
 
 ## Gotchas
 - **BOM thickness = MED confidence** (BOM rows không mang confidence field). Đặt `plate_thickness_mm.min_confidence: "MED"` nếu chấp nhận nguồn BOM/nesting; để `"HIGH"` thì buộc có dimension đã-certify.

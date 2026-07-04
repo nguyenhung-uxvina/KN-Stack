@@ -1,18 +1,18 @@
 # CLAUDE.md — KN-Stack Developer Guide
 
 > Agentic system for IPARAG vaults. Source of truth for skills, hooks, rules, evals.
-> Version: 1.1.0
+> Version: 1.2.0
 
 ## Structure
 
 ```
 KN-Stack/
-├── skills/           ← 242 skills organized by domain (15 domains)
+├── skills/           ← 249 skills organized by domain (15 domains)
 │   ├── bridge/       (10) — Operations skills
 │   ├── forge/        (15) — Product strategy skills (+ forge-fabrication mega-skill: 6-block manufacturing pipeline F0-F5
 │   │                       — closes R&D → production loop via Handoff_to_Fabrication.md from helix-detail-finalize;
 │   │                       + forge-proposal-khcn for KHCN proposal drafting)
-│   ├── helix/        (48) — Design execution pipeline (Pahl-Beitz phases — P1/P2/P3/P4 all 6-block mega-skill pipelines; CAD chain: helix-cad-bridge code→CAD, helix-cad-ingest CAD→info, helix-cad-validate design-rule Computational Sensor+Gate, helix-cad-roundtrip orchestrates across P1-P4 with human-draw import, helix-cad-nest geometry→cut-plan/nesting, helix-cad-to-fab drawing-folder→fab bundle)
+│   ├── helix/        (55) — Design execution pipeline (Pahl-Beitz phases — P1/P2/P3/P4 all 6-block mega-skill pipelines; CAD chain: helix-cad-bridge code→CAD, helix-cad-ingest CAD→info, helix-cad-validate design-rule Computational Sensor+Gate, helix-cad-roundtrip orchestrates across P1-P4 with human-draw import, helix-cad-nest geometry→cut-plan/nesting, helix-cad-to-fab drawing-folder→fab bundle; Spec-to-CAD: helix-spec-to-cad SDD orchestrator + 6 helix-s2c-* blocks — spec-kit methodology as disciplined Flow-B front-end)
 │   ├── galaxy/       (12) — Knowledge management (+ skill-to-public, codify, mentor-board — Naval outbound + code + mentor leverage)
 │   ├── mentors/      (58, dynamic) — Per-mentor advisor skills (add more via /mentor-board --add <leader>); orchestrator at galaxy/mentor-board/
 │   ├── book/         (23) — Book pipelines: codebase-to-book (9-phase, book-* blocks), book-to-codebase (btc-* blocks), book-to-skill, notebook-to-book
