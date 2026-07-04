@@ -21,17 +21,23 @@ def build_prompt(mode, params, classification="THƯỜNG", assumptions=None, tpl
     mode = (mode or "").upper()
     if mode not in REQUIRED_FIELDS:
         raise BuildError(f"Mode không hợp lệ: '{mode}'. Hợp lệ: {sorted(REQUIRED_FIELDS)}")
-    missing = [f for f in REQUIRED_FIELDS[mode] if not str(params.get(f, "")).strip()]
+    upper_params = {k.upper(): v for k, v in params.items()}
+    missing = [f for f in REQUIRED_FIELDS[mode] if not str(upper_params.get(f, "")).strip()]
     if missing:
         raise BuildError(
             f"Mode {mode} thiếu tham số bắt buộc: {missing}. "
             "KHÔNG sinh prompt mơ hồ — cấp giá trị ĐỊNH LƯỢNG (tải+đơn vị, kích thước interface thật)."
         )
     tpl = (tpl_map or _templates.load_templates())[mode]
-    upper_params = {k.upper(): v for k, v in params.items()}
     lines = []
+    skip_continuations = False
     for line in tpl.splitlines():
         stripped = line.strip()
+        if skip_continuations:
+            if stripped.startswith("["):
+                skip_continuations = False
+            else:
+                continue
         if stripped.startswith("[Phân loại"):
             lines.append(f"[Phân loại: {classification}]")
             continue
@@ -44,5 +50,9 @@ def build_prompt(mode, params, classification="THƯỜNG", assumptions=None, tpl
              if stripped.startswith(f"[{fld}]")),
             None,
         )
-        lines.append(filled if filled is not None else line)
+        if filled is not None:
+            lines.append(filled)
+            skip_continuations = True
+        else:
+            lines.append(line)
     return "\n".join(lines)
