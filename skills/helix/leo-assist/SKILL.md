@@ -65,6 +65,9 @@ Mọi prompt Leo phải có (đây là điểm Leo > ChatGPT, **phải ép dùng
 ## Step 3: Handoff
 Output = prompt Leo dán thẳng + nêu **skill nội bộ tiêu thụ** kết quả Leo (vd part Leo tìm → forge-fabrication "mua ngoài"; calc Leo → helix-p3-dfx verify). **Số liệu Leo trả về luôn CEO/CAD verify** trước khi vào bản vẽ/BOM MẬT.
 
+## Programmatic path — [[leo-bridge]] (MCP)
+Vòng thủ công ở trên nay có bản khép kín qua MCP server local `mcp/leo-bridge` (6 tools: classify → prompt_build → send → ingest → route → ledger; gate MẬT hard-block 2 lần; propose-only). Dùng [[leo-bridge]] khi muốn ledger + verify checklist + route tự động; leo-assist vẫn là source of truth cho template + doctrine.
+
 ## Vòng kết hợp (Leo ⨉ bộ skill nội bộ)
 ```
 Leo (THƯỜNG/generic): tìm part chuẩn · tính có cite · tra tiêu chuẩn · concept/docs

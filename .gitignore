@@ -21,3 +21,7 @@ desktop.ini
 # Binary office artifacts
 *.xlsx
 *.docx
+
+# leo-bridge runtime ledger (traceability data, không phải source)
+mcp/leo-bridge/ledger/
+__pycache__/
