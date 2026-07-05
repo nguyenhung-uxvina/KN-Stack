@@ -54,10 +54,24 @@ def leo_prompt_build(mode: str, params: dict, assumptions: list[str] | None = No
     }
 
 
+# Map mode → nhóm intent trên UI chat thống nhất của app.getleo.ai
+# (xác nhận theo screenshot CEO 2026-07-05: 1 khung chat, 4 nhóm gợi ý)
+UI_INTENT = {
+    "A": "Part search",
+    "B": "Learn (lý thuyết/tiêu chuẩn) hoặc Develop (how-to/best-practice)",
+    "C": "Calculate (có thể yêu cầu Leo vẽ plot)",
+    "D": "Develop (DFM/design practices)",
+    "E1": "chat thường — yêu cầu 9-point engineering summary",
+    "E2": "chat thường — yêu cầu datasheet/BOM-text",
+    "E3": "Part search (kèm yêu cầu kéo mfg-data)",
+    "F": "Calculate (so vật liệu định lượng) hoặc Learn",
+}
+
+
 @mcp.tool()
 def leo_send(prompt: str, mode: str, note: str = "") -> dict:
     """Gate lần 2 (defense-in-depth, hard block) → copy prompt vào clipboard →
-    tạo exchange_id + ghi ledger. CEO dán vào app.getleo.ai."""
+    tạo exchange_id + ghi ledger. CEO dán vào app.getleo.ai (1 khung chat thống nhất)."""
     if mode.upper() not in builder.REQUIRED_FIELDS:
         return {
             "status": "ERROR",
@@ -75,6 +89,8 @@ def leo_send(prompt: str, mode: str, note: str = "") -> dict:
     ex_id = _ledger.new_id()
     transport = get_transport()
     instructions = transport.send(prompt)
+    intent = UI_INTENT[mode.upper()]
+    instructions += f" Gợi ý UI: prompt này thuộc nhóm '{intent}' — dán vào khung chat chung, dòng [MODE] đầu prompt sẽ giúp Leo route đúng."
     _ledger.append(ex_id, "created", status="SENT", mode=mode.upper(), note=note,
                    transport=transport.name, classification="THUONG", prompt=prompt)
     return {"status": "SENT", "exchange_id": ex_id, "instructions": instructions}

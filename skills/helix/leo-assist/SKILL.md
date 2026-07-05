@@ -38,6 +38,21 @@ description: "Phase × Mode Leo AI (getleo.ai) prompt suite. Two axes: 7 lifecyc
 | **E** Documentation / BOM | E1 9-point summary · E2 datasheet/BOM-text · E3 gắp mfg-data có sẵn | đặc tả thiết kế + tài liệu nhanh (KHÔNG: quy trình CN/QMS/nghiệm thu → forge-fabrication/helix-p4-inspection/erp-quality) |
 | **F** Material Selection | so vật liệu có cite + trade-off | chọn vật liệu |
 
+## Giao diện Leo hiện hành (xác nhận 2026-07-05, screenshot CEO)
+> app.getleo.ai giờ là **MỘT khung chat thống nhất** ("Hi, I'm Leo, your engineering copilot") với **4 nhóm intent gợi ý: Calculate · Develop · Part search · Learn** — KHÔNG còn tab/pillar riêng (Ideation không còn trên màn hình vào; 9-point summary vẫn gọi được qua chat). Dán prompt nào cũng vào cùng một ô — dòng `[MODE]` đầu template chính là tín hiệu route cho Leo.
+
+| Nhóm UI Leo | Mode leo-assist tương ứng | Ghi chú |
+|----|----|----|
+| **Calculate** | **C** (calc/sizing) · **F** (so vật liệu định lượng) | ✨ Calculate giờ **vẽ được plot** ("Calculate and plot…") — Mode C có thể yêu cầu đồ thị (phân bố ứng suất, Mach…) |
+| **Develop** | **D** (DFM/standards inspect) · B dạng how-to/best-practice | Ví dụ chính hãng của Develop là câu hỏi DFM FDM — khớp 1-1 Mode D |
+| **Part search** | **A** · **E3** (gắp mfg-data) | Thế mạnh số 1, không đổi |
+| **Learn** | **B** (lý thuyết/tiêu chuẩn) | Q&A có cite |
+| *(qua chat, không có tile)* | **E1/E2** (9-point summary, datasheet) · concept mesh ([[leo-prompt]]) | Tutorial "Generate a Product Summary" vẫn tồn tại |
+
+**2 kênh mới chưa khai thác (THƯỜNG only):**
+- **Leo in CAD (desktop app .exe)** — "Leo in CAD (Installed Version)" chạy cạnh CAD; tiện cho part-search trong lúc vẽ. ⛔ MẬT: KHÔNG cài trên máy chứa bản vẽ khí tài (app index thư mục/PLM).
+- **Build Complete Assemblies** (homepage flagship mới) + **CAD-to-CAD search** (upload STEP tìm part tương đồng) + sketch-upload — chỉ dùng cho hình học THƯỜNG; classification gate như cũ, upload hình học MẬT vẫn TUYỆT ĐỐI cấm.
+
 ## Step 1: Route theo Phase × Mode
 Phase = *khi nào* · Mode = *loại việc*. Chọn phase → các mode trội → điền template mode (mode-templates) hoặc template phase ([references/leo-phase-templates.md](references/leo-phase-templates.md)). **Sinh hình học** → [[leo-prompt]] (mesh concept, mode "concept-only" ưu tiên thấp nhất).
 
