@@ -54,7 +54,7 @@ def test_api_transport_is_stub(monkeypatch):
 @pytest.mark.skipif(sys.platform != "win32", reason="PowerShell fallback is Windows-only")
 def test_powershell_fallback_roundtrip_vietnamese(monkeypatch):
     t = transports.ClipboardTransport()
-    # force the fallback branch by making pyperclip unavailable inside the methods
+    saved = t._paste()  # snapshot user's clipboard before we touch anything
     import builtins
     real_import = builtins.__import__
 
@@ -65,5 +65,8 @@ def test_powershell_fallback_roundtrip_vietnamese(monkeypatch):
 
     monkeypatch.setattr(builtins, "__import__", no_pyperclip)
     text = "bạc lót Ø40h7 — tải 2 kN, nhiệt 80°C, đường ống ø25"
-    t._copy(text)
-    assert t._paste().rstrip("\r\n") == text
+    try:
+        t._copy(text)
+        assert t._paste().rstrip("\r\n") == text
+    finally:
+        t._copy(saved if saved else "")  # restore user's clipboard (fallback path works under the patch)
