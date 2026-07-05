@@ -98,6 +98,11 @@ def leo_route(exchange_id: str, target_type: str, target_path: str,
     confirm=true = CEO đã ra lệnh rõ. verified_items = index checklist CEO ĐÃ mở nguồn xác minh.
     Mục UNVERIFIED bị CHẶN vào parts_master_csv."""
     ex = _ledger.get(exchange_id)
+    if ex.get("status") not in ("INGESTED", "ROUTED"):
+        return {
+            "status": "BLOCKED",
+            "reason": f"Exchange {exchange_id} đang ở status {ex.get('status')} — chưa có kết quả ingest. Gọi leo_ingest trước.",
+        }
     checklist = ex.get("checklist", [])
     if verified_items:
         for i in verified_items:
@@ -138,6 +143,8 @@ def _selftest() -> None:
 
 
 if __name__ == "__main__":
+    if hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
     if "--selftest" in sys.argv:
         _selftest()
     else:
