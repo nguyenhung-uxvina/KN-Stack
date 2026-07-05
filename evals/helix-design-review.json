@@ -1,0 +1,74 @@
+{
+  "skill": "helix-design-review",
+  "version": "1.0",
+  "description": "Binary assertions for helix-design-review — Inferential Sensor (propose-only) complementing helix-cad-validate",
+  "mode": "static",
+  "test_input": "review thiết kế junction plate VSN-1500 sau khi cad-validate PASS",
+  "total_required": 9,
+  "passing_score": 8,
+  "assertions": [
+    {
+      "id": "DR-INFERENTIAL",
+      "name": "inferential_llm_judge",
+      "check": "skill is an Inferential LLM-as-judge sensor with a rubric, complementing Computational helix-cad-validate",
+      "regex": "Inferential|LLM-as-Judge|LLM as judge|rubric",
+      "required": true
+    },
+    {
+      "id": "DR-PROPOSE-ONLY",
+      "name": "propose_only_never_gate",
+      "check": "propose-only — never a hard gate, never blocks freeze/handoff (that is helix-cad-validate's job)",
+      "regex": "propose.?only|KHÔNG bao giờ.*gate|không block|KHÔNG.*chặn cứng|not a gate",
+      "required": true
+    },
+    {
+      "id": "DR-NO-GEOMETRY-EDIT",
+      "name": "never_edits_geometry_or_contract",
+      "check": "never writes geometry-of-record or design_rules.json contract",
+      "regex": "KHÔNG.*sửa.*geometry|KHÔNG.*sửa.*design_rules|không sửa contract|Tự sửa",
+      "required": true
+    },
+    {
+      "id": "DR-CONFIDENCE",
+      "name": "confidence_required",
+      "check": "every finding carries a confidence level; LOW-confidence never presented as certain",
+      "regex": "confidence|LOW.?confidence|LOW-confidence|độ tin cậy",
+      "required": true
+    },
+    {
+      "id": "DR-CLASSIFICATION",
+      "name": "classification_local_gate",
+      "check": "MẬT/HẠN-CHẾ routes to a LOCAL air-gapped model, no cloud egress",
+      "regex": "MẬT|HẠN-CHẾ|air-gapped|LOCAL|local.*model|egress",
+      "required": true
+    },
+    {
+      "id": "DR-HUMAN-DISPOSITION",
+      "name": "engineer_disposition",
+      "check": "identified engineer decides disposition (accept/reject/defer); AI proposes, human decides",
+      "regex": "kỹ sư định danh|accept.*reject.*defer|disposition|con người quyết|định đoạt",
+      "required": true
+    },
+    {
+      "id": "DR-COMPLEMENT",
+      "name": "complements_cad_validate",
+      "check": "runs AFTER helix-cad-validate PASS and BEFORE engineer sign-off / ICD freeze",
+      "regex": "helix-cad-validate|SAU.*PASS|sau cad-validate|BƯỚC 2|Computational",
+      "required": true
+    },
+    {
+      "id": "DR-IMPROVEMENT-ENGINE",
+      "name": "promote_to_computational",
+      "check": "confirmed recurring Inferential findings get promoted to Computational rules (fix-it-once loop)",
+      "regex": "Improvement Engine|nâng.*luật|promote|fix-it-once|sai một lần, chặn mãi|HẤP THU",
+      "required": true
+    },
+    {
+      "id": "DR-RUBRIC-DIMENSIONS",
+      "name": "rubric_dimensions",
+      "check": "catches what rules cannot encode: intent/naming, BOM-model, revision lineage, cross-doc conflict, non-structural judgment",
+      "regex": "intent_naming|bom_model|cross_doc|nonstructural|design-intent smell|revision_lineage|thủy động",
+      "required": true
+    }
+  ]
+}

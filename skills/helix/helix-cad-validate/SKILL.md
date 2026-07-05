@@ -88,7 +88,7 @@ Giữ BƯỚC 1 tối thiểu. CHỈ thêm khi gặp trigger thật:
 |----|----|----|
 | Agent doom-loop (sửa 1 lỗi > N lần) | LoopDetection middleware | Computational |
 | `design_rules.json` phình > ~10k token, agent bỏ sót luật | compaction / sub-agent RAG tra ISO | kiến trúc |
-| Cần chấm phi-cấu-trúc (thủy động khoang phao) | LLM-as-judge có rubric | **Inferential** |
+| Cần chấm phi-cấu-trúc (thủy động khoang phao) | LLM-as-judge có rubric → ✅ [[helix-design-review]] (BƯỚC 2, propose-only) | **Inferential** |
 | Sửa contract → lo phá thiết kế cũ | eval harness Capability/Regression, **pass^k** | Computational |
 
 ## Integration Map
