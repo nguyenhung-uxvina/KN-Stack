@@ -1,3 +1,5 @@
+import sys
+
 import pytest
 
 from leo_bridge import transports
@@ -47,3 +49,21 @@ def test_api_transport_is_stub(monkeypatch):
     assert t.name == "api"
     with pytest.raises(NotImplementedError):
         t.send("p")
+
+
+@pytest.mark.skipif(sys.platform != "win32", reason="PowerShell fallback is Windows-only")
+def test_powershell_fallback_roundtrip_vietnamese(monkeypatch):
+    t = transports.ClipboardTransport()
+    # force the fallback branch by making pyperclip unavailable inside the methods
+    import builtins
+    real_import = builtins.__import__
+
+    def no_pyperclip(name, *a, **k):
+        if name == "pyperclip":
+            raise ImportError("forced for test")
+        return real_import(name, *a, **k)
+
+    monkeypatch.setattr(builtins, "__import__", no_pyperclip)
+    text = "bạc lót Ø40h7 — tải 2 kN, nhiệt 80°C, đường ống ø25"
+    t._copy(text)
+    assert t._paste().rstrip("\r\n") == text

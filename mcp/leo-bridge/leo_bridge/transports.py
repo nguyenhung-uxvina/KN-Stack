@@ -6,6 +6,7 @@ KHÔNG bao giờ thêm browser automation (Cloudflare + ToS + khóa account — 
 """
 import os
 import subprocess
+import tempfile
 
 
 class TransportError(Exception):
@@ -35,25 +36,55 @@ class ClipboardTransport:
             import pyperclip
             pyperclip.copy(text)
         except Exception:
-            p = subprocess.run(
-                ["powershell", "-NoProfile", "-Command", "$input | Set-Clipboard"],
-                input=text, text=True, capture_output=True,
-            )
-            if p.returncode != 0:
-                raise TransportError(f"Không copy được vào clipboard: {p.stderr.strip()}")
+            # Piping text through PowerShell's stdin gets re-decoded via the
+            # console/OEM code page and corrupts non-ASCII (Vietnamese diacritics).
+            # Round-trip through a UTF-8 temp file instead — .NET's
+            # File::ReadAllText auto-detects "no BOM -> UTF-8" for files we
+            # write ourselves, sidestepping the code-page issue entirely.
+            fd, path = tempfile.mkstemp(suffix=".txt")
+            try:
+                with os.fdopen(fd, "w", encoding="utf-8") as f:
+                    f.write(text)
+                ps_path = path.replace("'", "''")
+                p = subprocess.run(
+                    [
+                        "powershell", "-NoProfile", "-Command",
+                        f"[System.IO.File]::ReadAllText('{ps_path}') | Set-Clipboard",
+                    ],
+                    capture_output=True, text=True, encoding="utf-8",
+                )
+                if p.returncode != 0:
+                    raise TransportError(f"Không copy được vào clipboard: {p.stderr.strip()}")
+            finally:
+                os.remove(path)
 
     def _paste(self) -> str:
         try:
             import pyperclip
             return pyperclip.paste()
         except Exception:
-            p = subprocess.run(
-                ["powershell", "-NoProfile", "-Command", "Get-Clipboard -Raw"],
-                text=True, capture_output=True,
-            )
-            if p.returncode != 0:
-                raise TransportError(f"Không đọc được clipboard: {p.stderr.strip()}")
-            return p.stdout
+            # Same rationale as _copy: capture via a UTF-8 (no BOM) temp file
+            # instead of decoding PowerShell's stdout through the console
+            # code page.
+            fd, path = tempfile.mkstemp(suffix=".txt")
+            os.close(fd)
+            try:
+                ps_path = path.replace("'", "''")
+                p = subprocess.run(
+                    [
+                        "powershell", "-NoProfile", "-Command",
+                        f"$c = Get-Clipboard -Raw; "
+                        f"[System.IO.File]::WriteAllText('{ps_path}', $c, "
+                        f"(New-Object System.Text.UTF8Encoding($false)))",
+                    ],
+                    capture_output=True, text=True, encoding="utf-8",
+                )
+                if p.returncode != 0:
+                    raise TransportError(f"Không đọc được clipboard: {p.stderr.strip()}")
+                with open(path, "r", encoding="utf-8") as f:
+                    return f.read()
+            finally:
+                os.remove(path)
 
 
 class ApiTransport:
