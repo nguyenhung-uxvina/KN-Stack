@@ -54,6 +54,10 @@ import sys
 import tempfile
 
 CONF_RANK = {"LOW": 0, "MED": 1, "HIGH": 2}
+METHOD_RANK = {
+    "ocr": 0, "title-block": 1, "schedule-table": 2, "dim-override": 2,
+    "dim-measured": 3, "geometry-counted": 3, "human-certified": 4,
+}
 _SEG_RE = re.compile(r"^([A-Za-z_][\w]*)?(\[.*\])?$")
 
 
@@ -148,13 +152,13 @@ def run_ingest(repo, specdir, spec, workdir):
     if not os.path.exists(dxf):                     # regenerate from committed generator
         gen = os.path.join(specdir, spec["fixture"]["generator"])
         subprocess.run([sys.executable, gen], check=True,
-                       env={**os.environ, "PYTHONUTF8": "1"})
+                       env={**os.environ, "PYTHONUTF8": "1", "OPENBLAS_NUM_THREADS": "1", "OMP_NUM_THREADS": "1"})
     script = os.path.join(repo, spec.get(
         "ingest_script", "skills/helix/helix-cad-ingest/ingest.py"))
     subprocess.run(
         [sys.executable, script, dxf, "--out", workdir,
          "--classification", spec["fixture"].get("classification", "MẬT")],
-        check=True, env={**os.environ, "PYTHONUTF8": "1"})
+        check=True, env={**os.environ, "PYTHONUTF8": "1", "OPENBLAS_NUM_THREADS": "1", "OMP_NUM_THREADS": "1"})
     base = os.path.splitext(os.path.basename(dxf))[0]
     with open(os.path.join(workdir, f"{base}.cad_extract.json"), encoding="utf-8") as f:
         return json.load(f)
@@ -177,9 +181,18 @@ def grade(extract, questions):
             got = CONF_RANK.get(str(conf), -1)
             if got < need:
                 ok = False
-                conf_note = f" [conf {conf} < {q['min_confidence']}]"
+                conf_note += f" [conf {conf} < {q['min_confidence']}]"
             else:
-                conf_note = f" [conf {conf}]"
+                conf_note += f" [conf {conf}]"
+        if ok and q.get("min_method"):
+            method = resolve(extract, q["method_query"])
+            need = METHOD_RANK[q["min_method"]]
+            got = METHOD_RANK.get(str(method), -1)
+            if got < need:
+                ok = False
+                conf_note += f" [method {method} < {q['min_method']}]"
+            else:
+                conf_note += f" [method {method}]"
         passed += 1 if ok else 0
         req_passed += 1 if (ok and req) else 0
         rows.append((q["id"], "PASS" if ok else "FAIL", req,
