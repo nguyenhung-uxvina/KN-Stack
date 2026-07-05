@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.4.0] - 2026-07-05
+### Added
+- **`forge-pulse`** (forge/) — cầu nối `/last30days` → IPARAG: đọc raw research briefing (social-listening) từ `LAST30DAYS_MEMORY_DIR`, chưng cất thành 1 note capture ở `0_Inbox` (bắt buộc why-context + bảng số cứng giữ nguyên citation), đề xuất 1-3 Galaxy permanent-note candidate (**propose-only**, không tự tạo file `5_Galaxy/`, test atomic loại tin-tức-30-ngày), route sang `forge-market-intel`/`mentor-board` với nhãn COD, và `--nlm` đẩy raw file vào NotebookLM qua notebooklm-mcp `source_add`. Vận hành đúng vòng THỊNH (Thu→Hóa→Ích→Hành). Static eval 9/9. Skill count 250 → 251. VERSION 1.3.1 → 1.4.0.
+- `evals/forge-pulse.json` (static, 9 checks: raw-file locate, inbox why-context, galaxy propose-only, atomic principle, ≥2 wikilinks, harvest routing + COD, NotebookLM push, citation integrity, đường dẫn vault `D:\Workshop_X` không dùng path E:\ cũ).
+
+### Changed
+- **`/last30days` save-dir → vault Workshop X**: raw research files giờ lưu `D:\Workshop_X\3_Resources\Last30Days-Research\` thay vì `~/Documents/Last30Days`. Set `LAST30DAYS_MEMORY_DIR` ở cả `~/.config/last30days/.env` (engine fallback khi bỏ `--save-dir`) và Windows User env (shell wrapper các session sau). Config máy-level, không đụng fork `D:\GitHub\last30days-skill`.
+
 ## [1.3.1] - 2026-07-05
 ### Changed
 - **leo-assist + leo-bridge: cập nhật theo UI Leo hiện hành** (screenshot CEO 2026-07-05): app.getleo.ai = 1 khung chat thống nhất với 4 nhóm intent (Calculate · Develop · Part search · Learn — Ideation rời màn hình vào, Calculations nằm trong chat, Calculate vẽ được plot). Thêm bảng map Mode A–F → nhóm intent vào leo-assist; `leo_send` kèm gợi ý nhóm trong instructions (UI_INTENT map); ghi nhận 2 kênh mới THƯỜNG-only (desktop app "Leo in CAD" — cấm cài máy chứa bản vẽ MẬT; Build Complete Assemblies / CAD-to-CAD).
