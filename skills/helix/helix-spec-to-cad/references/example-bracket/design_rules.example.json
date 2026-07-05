@@ -1,0 +1,18 @@
+{
+  "meta": {
+    "product": "DEMO-BRACKET",
+    "rev": "A",
+    "contract_version": "1.0.0",
+    "classification": "THUONG",
+    "engineer_of_record": "PILOT — kỹ sư điền tên trước khi dùng thật",
+    "approved_by": "",
+    "notes": "Compiled from CAD Constitution v1.0.0 Điều V–VII. PILOT numbers — hiệu chỉnh trước khi làm gate sản xuất."
+  },
+  "rules": {
+    "materials":          { "allowed": ["Al 6061", "6061-T6"], "forbidden": [], "required": true, "severity": "critical" },
+    "plate_thickness_mm": { "min": 3.0, "required": false, "min_confidence": "MED", "severity": "critical" },
+    "mass_kg":            { "max": 0.25, "required": true, "severity": "critical" },
+    "conflicts_block":    { "enabled": true, "severity": "critical" },
+    "confidence_gate":    { "min_for_critical": "HIGH" }
+  }
+}

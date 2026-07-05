@@ -64,6 +64,7 @@ description: "Cross-phase CAD orchestrator — sequences the two mirror bridges 
 | **C — Verify (loop)** | `--verify` | Sau P4: bản vẽ phát hành đã xuất | bridge-STEP/bản vẽ → ingest đọc lại bản vẽ phát hành → `dwg_dxf_diff.py` so khớp → xác nhận **no export-drift** |
 
 > **B và D là hai mặt của cùng một bước "forward"** — cùng tạo hình học cho thiết kế, khác ở *ai vẽ*. Cả hai đổ vào cùng consumer (p3-integrate ICD, p3-bom, p4-drawing). **Geometry Source Gate** ở Step 1 định tuyến từng part vào B hoặc D.
+> **Front-end kỷ luật cho Flow B:** [[helix-spec-to-cad]] (SDD: constitution→spec→plan→tasks) là con đường part-level có spec-gate trước khi gọi bridge; STEP của nó đăng ký vào cùng slot ICD geometry-of-record như Flow B.
 > Round-trip riêng (P3 legacy reuse): `--ingest-first` rồi `--forward` trên cùng part = đọc chi tiết cũ → tham số hóa lại thành code-CAD chỉnh sửa được.
 
 ## How to Use

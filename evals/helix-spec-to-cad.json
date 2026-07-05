@@ -1,0 +1,95 @@
+{
+  "skill": "helix-spec-to-cad",
+  "version": "1.0",
+  "description": "Static assertions for helix-spec-to-cad — SDD (spec-kit methodology, not a fork) orchestrator for part-level AI-assisted CAD: constitution→specify→clarify→plan→tasks→implement→validate over 6 helix-s2c-* blocks, delegating geometry to helix-cad-bridge and gating to helix-cad-validate, preserving the Spatial Blindness gate, Geometry Source Gate (complex parts exit to Flow D), classification spine, and one-block-per-turn ledger discipline",
+  "mode": "static",
+  "test_input": "design a simple aluminum mounting bracket from a written spec, end to end: constitution, spec with clarification markers, parametric plan with constitution check, feature-tree tasks, build123d generation, deterministic validation gate",
+  "total_required": 10,
+  "passing_score": 10,
+  "assertions": [
+    {
+      "id": "S2C-CHAIN",
+      "name": "full_sdd_chain",
+      "check": "skill implements the full SDD chain constitution -> specify -> clarify -> plan -> tasks -> implement -> validate",
+      "regex": "constitution.*specify.*clarify.*plan.*tasks.*implement.*validate",
+      "required": true
+    },
+    {
+      "id": "S2C-BLOCKS",
+      "name": "commands_six_blocks",
+      "check": "skill commands the 6 helix-s2c-* block skills",
+      "regex": "helix-s2c-preflight[\\s\\S]*helix-s2c-specify[\\s\\S]*helix-s2c-plan[\\s\\S]*helix-s2c-tasks[\\s\\S]*helix-s2c-implement[\\s\\S]*helix-s2c-validate",
+      "required": true
+    },
+    {
+      "id": "S2C-CONST",
+      "name": "constitution_compiles_to_design_rules",
+      "check": "constitution.md compiles to design_rules.json; engineer-only edit with --approved-hash anti-tamper preserved",
+      "regex": "design_rules\\.json[\\s\\S]*(approved-hash|sha256)|constitution[\\s\\S]*compile[\\s\\S]*design_rules",
+      "required": true
+    },
+    {
+      "id": "S2C-CONSTGATE",
+      "name": "constitution_check_gate_in_plan",
+      "check": "plan block has a Constitution Check gate that must PASS, with a Complexity Tracking table for accepted violations",
+      "regex": "Constitution Check[\\s\\S]*Complexity Tracking",
+      "required": true
+    },
+    {
+      "id": "S2C-CLARIFY",
+      "name": "needs_clarification_mechanic",
+      "check": "spec uses [NEEDS CLARIFICATION] markers, max 3, presented as option tables, resolved to zero before approval",
+      "regex": "NEEDS CLARIFICATION[\\s\\S]*(max 3|tối đa 3|3 marker)|option table",
+      "required": true
+    },
+    {
+      "id": "S2C-DELEGATE",
+      "name": "delegates_to_cad_backend",
+      "check": "implement delegates to helix-cad-bridge, validate to helix-cad-validate; orchestrator never writes CAD code itself",
+      "regex": "helix-cad-bridge[\\s\\S]*helix-cad-validate[\\s\\S]*(NEVER does block work|không viết code-CAD|never writes CAD)",
+      "required": true
+    },
+    {
+      "id": "S2C-SPATIAL",
+      "name": "spatial_blindness_gate",
+      "check": "Spatial Blindness gate preserved — CEO verifies the render PNG, AI never self-certifies geometry or invents dimensions",
+      "regex": "Spatial Blindness[\\s\\S]*(never invents a dimension|không bịa|self-certif)",
+      "required": true
+    },
+    {
+      "id": "S2C-GATE",
+      "name": "geometry_source_gate_exit",
+      "check": "Geometry Source Gate routes non-parametric parts out to helix-cad-roundtrip --design-import (Flow D), defaulting to D when unsure",
+      "regex": "Geometry Source Gate[\\s\\S]*(design-import|Flow D)[\\s\\S]*(nghiêng về D|default.*D|không chắc)",
+      "required": true
+    },
+    {
+      "id": "S2C-CLASS",
+      "name": "classification_read_not_set",
+      "check": "classification label is READ not set (standalone bootstrap at B0 flagged Core); MẬT triggers egress guard",
+      "regex": "label is READ|READ, not set[\\s\\S]*(standalone|B0)[\\s\\S]*(MẬT|egress)",
+      "required": true
+    },
+    {
+      "id": "S2C-ONEBLOCK",
+      "name": "one_block_per_turn_ledger",
+      "check": "one block per turn with blocking CEO checkpoint; _pipeline_state.md ledger is the sole inter-block channel",
+      "regex": "ONE BLOCK PER TURN[\\s\\S]*_pipeline_state\\.md",
+      "required": true
+    },
+    {
+      "id": "S2C-LOCAL",
+      "name": "local_airgapped",
+      "check": "everything runs 100% local/air-gapped with build123d, no SaaS CAD",
+      "regex": "100% LOCAL|air-gapped|build123d",
+      "required": false
+    },
+    {
+      "id": "S2C-ICD",
+      "name": "icd_geometry_of_record",
+      "check": "STEP output registers into the same ICD geometry-of-record slot as roundtrip Flow B; feeds p3-integrate / p4-drawing / forge-fabrication",
+      "regex": "geometry-of-record[\\s\\S]*(helix-p3-integrate|forge-fabrication)",
+      "required": false
+    }
+  ]
+}
