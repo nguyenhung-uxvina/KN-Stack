@@ -56,7 +56,7 @@ def write_route(exchange: dict, target_type: str, target_path: str, confirm: boo
     return str(path)
 
 
-_CSV_FORMULA_TRIGGERS = ("=", "+", "-", "@")
+_CSV_FORMULA_TRIGGERS = ("=", "+", "-", "@", "\t", "\r")
 
 
 def _csv_safe(value: str) -> str:

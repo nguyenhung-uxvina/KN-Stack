@@ -39,7 +39,10 @@ def leo_prompt_build(mode: str, params: dict, assumptions: list[str] | None = No
     """Sinh prompt Leo theo mode A/B/C/D/E1/E2/E3/F từ template leo-assist (source of truth).
     Ép 5 nguyên tắc: load case định lượng, interface thật, process, cite bắt buộc,
     search-before-generate. Thiếu tham số bắt buộc → lỗi liệt kê rõ."""
-    c = gate.classify(" ".join(str(v) for v in params.values()))
+    scan_text = " ".join(str(v) for v in params.values())
+    if assumptions:
+        scan_text += " " + " ".join(str(a) for a in assumptions)
+    c = gate.classify(scan_text)
     classification = "THƯỜNG" if c.verdict == "THUONG" else "MẬT→generic/COTS only"
     prompt = builder.build_prompt(mode, params, classification, assumptions)
     return {
@@ -55,6 +58,11 @@ def leo_prompt_build(mode: str, params: dict, assumptions: list[str] | None = No
 def leo_send(prompt: str, mode: str, note: str = "") -> dict:
     """Gate lần 2 (defense-in-depth, hard block) → copy prompt vào clipboard →
     tạo exchange_id + ghi ledger. CEO dán vào app.getleo.ai."""
+    if mode.upper() not in builder.REQUIRED_FIELDS:
+        return {
+            "status": "ERROR",
+            "reason": f"Mode không hợp lệ: {mode}. Hợp lệ: A/B/C/D/E1/E2/E3/F",
+        }
     r = gate.classify(prompt)
     if r.verdict == "MAT":
         return {
@@ -123,7 +131,10 @@ def leo_ledger(action: str = "list", exchange_id: str = "", status: str = "") ->
     if action == "show":
         return _ledger.get(exchange_id)
     if action == "pending":
-        return {"rows": _ledger.list("SENT") + _ledger.list("INGESTED")}
+        rows = _ledger.list("SENT") + _ledger.list("INGESTED")
+        return {"rows": [
+            {k: r.get(k) for k in ("exchange_id", "status", "mode", "ts", "note")} for r in rows
+        ]}
     rows = _ledger.list(status or None)
     return {"rows": [
         {k: r.get(k) for k in ("exchange_id", "status", "mode", "ts", "note")} for r in rows

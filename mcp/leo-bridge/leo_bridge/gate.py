@@ -33,9 +33,23 @@ def load_denylist(path=DENYLIST_PATH) -> dict:
     return _validate_denylist(yaml.safe_load(Path(path).read_text(encoding="utf-8")))
 
 
+_ASCII_TERM_RE = re.compile(r"^[A-Za-z\s-]+$")
+
+
 def _term_regex(term: str, case_sensitive: bool) -> re.Pattern:
     flags = 0 if case_sensitive else re.IGNORECASE
-    return re.compile(rf"(?<!\w){re.escape(term)}(?!\w)", flags)
+    if _ASCII_TERM_RE.match(term):
+        # ASCII-only term (letters/spaces/hyphens): allow space<->hyphen
+        # interchange between words, and an optional English plural suffix
+        # so "fire control" also catches "fire-control" and "torpedo" also
+        # catches "torpedoes". Non-ASCII (Vietnamese) terms skip this —
+        # Vietnamese doesn't pluralize, so exact matching stays as-is.
+        parts = term.split()
+        body = r"[\s-]+".join(re.escape(p) for p in parts)
+        pattern = rf"(?<!\w){body}(?:e?s)?(?!\w)"
+    else:
+        pattern = rf"(?<!\w){re.escape(term)}(?!\w)"
+    return re.compile(pattern, flags)
 
 
 def classify(text: str, denylist: dict | None = None) -> ClassifyResult:

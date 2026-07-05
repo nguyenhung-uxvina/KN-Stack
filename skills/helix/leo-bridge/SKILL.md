@@ -6,7 +6,7 @@ description: "Vòng khép kín bán tự động Workshop X ↔ getleo.ai qua MC
 # leo-bridge — Vòng khép kín Leo AI (MCP)
 
 > **Role:** Orchestrate 6 MCP tools của server `leo-bridge` thành vòng khép kín. Doctrine + template = [[leo-assist]] (source of truth); skill này là CÁCH THI HÀNH programmatic.
-> **Prereq:** MCP server `leo-bridge` trong `.mcp.json`. Kiểm tra: tool `leo_ledger` gọi được.
+> **Prereq:** MCP server `leo-bridge` trong `.mcp.json`. Cài dependency: `pip install -r mcp/leo-bridge/requirements.txt`. Kiểm tra: tool `leo_ledger` gọi được.
 
 ## Vòng chuẩn (mọi tác vụ Leo)
 
@@ -38,6 +38,7 @@ Skill tiêu thụ tiếp: part rows → [[forge-fabrication]] (BOM mua ngoài) �
 - **BLOCKED ≠ lỗi:** dùng `redacted_suggestion` làm khung, thay [REDACTED] bằng mô tả chức năng generic.
 - **Clipboard rỗng / kết quả <80 ký tự** → ingest từ chối; copy lại toàn bộ kết quả Leo.
 - **Ledger** = `mcp/leo-bridge/ledger/ledger.jsonl` (gitignored). `leo_ledger("pending")` xem exchange dở dang.
+- **Ingest lại = mất dấu VERIFIED:** gọi leo_ingest lần 2 sinh checklist mới toàn UNVERIFIED — phải verify lại từ đầu (fail-safe chủ ý).
 
 ## COD
 - Vòng tools (build/send/ingest/route): Offload (O)

@@ -10,8 +10,8 @@ Hi Leo AI team,
 
 We are Workshop X, a mechanical engineering and prototyping company based in
 Vietnam (26 engineers and technicians across mechanical, electronics, and
-embedded software teams). Several of our engineers already use Leo through
-the web app, primarily for standard-part search, citation-backed engineering
+embedded software teams). We have been using Leo through the web app,
+primarily for standard-part search, citation-backed engineering
 calculations, and standards Q&A.
 
 We are building an internal engineering-assistant workflow (prompt

@@ -52,3 +52,35 @@ def test_overlapping_hits_redact_merged():
     assert r.verdict == "MAT"
     assert "UUV" not in r.redacted
     assert "2 kN" in r.redacted
+
+
+def test_plural_torpedo_is_mat():
+    r = gate.classify("bracket for torpedoes launch tube")
+    assert r.verdict == "MAT"
+
+
+def test_plural_weapon_is_mat():
+    r = gate.classify("mounting weapons on the deck rail")
+    assert r.verdict == "MAT"
+
+
+def test_plural_uuv_is_mat():
+    r = gate.classify("ballast for UUVs")
+    assert r.verdict == "MAT"
+
+
+def test_plural_towed_target_is_mat():
+    r = gate.classify("winch sized for towed targets")
+    assert r.verdict == "MAT"
+
+
+def test_hyphen_variant_fire_control_is_mat():
+    r = gate.classify("fire-control bracket")
+    assert r.verdict == "MAT"
+
+
+def test_plain_bac_dan_skf_still_thuong():
+    r = gate.classify("bạc đạn SKF")
+    assert r.verdict == "THUONG"
+    assert r.hits == []
+    assert r.redacted is None
