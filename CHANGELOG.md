@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.3.1] - 2026-07-05
+### Changed
+- **leo-assist + leo-bridge: cập nhật theo UI Leo hiện hành** (screenshot CEO 2026-07-05): app.getleo.ai = 1 khung chat thống nhất với 4 nhóm intent (Calculate · Develop · Part search · Learn — Ideation rời màn hình vào, Calculations nằm trong chat, Calculate vẽ được plot). Thêm bảng map Mode A–F → nhóm intent vào leo-assist; `leo_send` kèm gợi ý nhóm trong instructions (UI_INTENT map); ghi nhận 2 kênh mới THƯỜNG-only (desktop app "Leo in CAD" — cấm cài máy chứa bản vẽ MẬT; Build Complete Assemblies / CAD-to-CAD).
+### Fixed
+- Clipboard fallback: copy chuỗi rỗng (restore) không còn crash Set-Clipboard ArgumentNullException (clear qua clip.exe); paste khi clipboard chứa ảnh/rỗng trả '' thay vì crash WriteAllText($null). +2 tests (45 total).
+
 ## [1.3.0] - 2026-07-05
 ### Added
 - **`leo-bridge` MCP server** (`mcp/leo-bridge/`) — vòng khép kín bán tự động Workshop X ↔ getleo.ai: 6 tools (`leo_classify`/`leo_prompt_build`/`leo_send`/`leo_ingest`/`leo_route`/`leo_ledger`) qua FastMCP stdio, 100% local. Gate MẬT deterministic (denylist.yaml: product codes + codenames case-sensitive + defense terms + drawing patterns) chạy 2 lần (classify + send), hard-block không override, tự sinh bản redacted để CEO trừu tượng hóa. Prompt builder parse template leo-assist RUNTIME (source of truth, fail-loudly khi format drift), ép 5 nguyên tắc + từ chối prompt thiếu tham số. Clipboard transport 2 chiều (UTF-8 PowerShell fallback, verified tiếng Việt round-trip) + ApiTransport stub hybrid-ready chờ Leo cấp API access. Parsers theo mode → verify checklist (mọi số/part mặc định UNVERIFIED; không cite → flag đỏ). Router propose-only: cần confirm CEO, chặn UNVERIFIED vào parts_master staging CSV (kèm chống CSV formula injection), journal/calc gắn nhãn. Ledger JSONL append-only traceability (gitignored). 38 pytest + selftest. Đăng ký `.mcp.json` repo root.

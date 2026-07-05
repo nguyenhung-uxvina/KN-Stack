@@ -36,6 +36,16 @@ class ClipboardTransport:
             import pyperclip
             pyperclip.copy(text)
         except Exception:
+            # Set-Clipboard throws ArgumentNullException on empty text —
+            # "copy empty" means CLEAR the clipboard (clip.exe with empty stdin).
+            if not text:
+                p = subprocess.run(
+                    ["cmd", "/c", "type nul | clip"],
+                    capture_output=True, text=True, encoding="utf-8",
+                )
+                if p.returncode != 0:
+                    raise TransportError(f"Không xóa được clipboard: {p.stderr.strip()}")
+                return
             # Piping text through PowerShell's stdin gets re-decoded via the
             # console/OEM code page and corrupts non-ASCII (Vietnamese diacritics).
             # Round-trip through a UTF-8 temp file instead — .NET's
@@ -73,7 +83,10 @@ class ClipboardTransport:
                 p = subprocess.run(
                     [
                         "powershell", "-NoProfile", "-Command",
-                        f"$c = Get-Clipboard -Raw; "
+                        # Get-Clipboard -Raw returns $null when the clipboard is
+                        # empty or holds non-text (image/files) — WriteAllText
+                        # would throw on $null, so coerce to ''.
+                        f"$c = Get-Clipboard -Raw; if ($null -eq $c) {{ $c = '' }}; "
                         f"[System.IO.File]::WriteAllText('{ps_path}', $c, "
                         f"(New-Object System.Text.UTF8Encoding($false)))",
                     ],

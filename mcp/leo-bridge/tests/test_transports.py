@@ -70,3 +70,24 @@ def test_powershell_fallback_roundtrip_vietnamese(monkeypatch):
         assert t._paste().rstrip("\r\n") == text
     finally:
         t._copy(saved if saved else "")  # restore user's clipboard (fallback path works under the patch)
+
+@pytest.mark.skipif(sys.platform != "win32", reason="PowerShell fallback is Windows-only")
+def test_powershell_fallback_empty_copy_and_null_paste(monkeypatch):
+    """Copy chuỗi rỗng (restore clipboard rỗng/ảnh) không được crash; paste
+    clipboard rỗng phải trả '' (Get-Clipboard -Raw trả $null được coerce)."""
+    t = transports.ClipboardTransport()
+    saved = t._paste()
+    import builtins
+    real_import = builtins.__import__
+
+    def no_pyperclip(name, *a, **k):
+        if name == "pyperclip":
+            raise ImportError("forced for test")
+        return real_import(name, *a, **k)
+
+    monkeypatch.setattr(builtins, "__import__", no_pyperclip)
+    try:
+        t._copy("")  # clear — trước fix: ArgumentNullException từ Set-Clipboard
+        assert t._paste() == ""  # trước fix: WriteAllText($null) crash
+    finally:
+        t._copy(saved if saved else "")

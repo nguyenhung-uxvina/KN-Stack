@@ -24,6 +24,11 @@ description: "Vòng khép kín bán tự động Workshop X ↔ getleo.ai qua MC
 - Mode A–F + phase: theo [[leo-assist]] (bảng Phase×Mode). Tham số bắt buộc từng mode: tool tự báo nếu thiếu — cấp giá trị ĐỊNH LƯỢNG (tải + đơn vị, kích thước interface thật).
 - Sinh hình học concept (mesh) → [[leo-prompt]], KHÔNG qua bridge (Leo không sinh CAD production).
 
+## UI Leo hiện hành (2026-07)
+- app.getleo.ai = **1 khung chat thống nhất**, 4 nhóm intent gợi ý: **Calculate · Develop · Part search · Learn** (xem bảng map Mode→nhóm trong [[leo-assist]]). `leo_send` tự kèm gợi ý nhóm trong instructions; dòng `[MODE]` đầu prompt là tín hiệu route cho Leo.
+- Mode C có thể yêu cầu Leo **vẽ plot** (Calculate hỗ trợ "Calculate and plot…").
+- Kênh ngoài bridge (THƯỜNG only, thao tác tay): desktop app "Leo in CAD" (⛔ KHÔNG cài trên máy chứa bản vẽ MẬT), CAD-to-CAD part search, sketch-upload — classification gate như cũ.
+
 ## Targets của leo_route
 | target_type | Đích | Ràng buộc |
 |---|---|---|
