@@ -43,17 +43,28 @@ def write_route(exchange: dict, target_type: str, target_path: str, confirm: boo
             f"{len(unverified)} mục UNVERIFIED — CẤM ghi vào parts_master/BOM. "
             "Verify từng mục (leo_route verified_items=[...]) rồi gọi lại."
         )
+    if target_type not in BOM_TARGETS | NOTE_TARGETS:
+        raise RouteBlockedError(
+            f"target_type '{target_type}' không hỗ trợ. Hợp lệ: {sorted(BOM_TARGETS | NOTE_TARGETS)}"
+        )
     path = Path(target_path)
     path.parent.mkdir(parents=True, exist_ok=True)
     if target_type == "parts_master_csv":
         _append_parts_csv(path, exchange)
-    elif target_type in NOTE_TARGETS:
-        _append_note_md(path, exchange, unverified)
     else:
-        raise RouteBlockedError(
-            f"target_type '{target_type}' không hỗ trợ. Hợp lệ: {sorted(BOM_TARGETS | NOTE_TARGETS)}"
-        )
+        _append_note_md(path, exchange, unverified)
     return str(path)
+
+
+_CSV_FORMULA_TRIGGERS = ("=", "+", "-", "@")
+
+
+def _csv_safe(value: str) -> str:
+    """Neutralize Excel formula injection: prefix with ' if cell would be interpreted as a formula."""
+    value = str(value)
+    if value and value[0] in _CSV_FORMULA_TRIGGERS:
+        return "'" + value
+    return value
 
 
 def _append_parts_csv(path: Path, exchange: dict) -> None:
@@ -64,10 +75,10 @@ def _append_parts_csv(path: Path, exchange: dict) -> None:
             w.writerow(["date", "exchange_id", "source", "part_raw"])
         for p in exchange.get("parsed", {}).get("parts", []):
             w.writerow([
-                datetime.now().strftime("%Y-%m-%d"),
-                exchange["exchange_id"],
-                "leo",
-                " | ".join(p["raw_cells"]),
+                _csv_safe(datetime.now().strftime("%Y-%m-%d")),
+                _csv_safe(exchange["exchange_id"]),
+                _csv_safe("leo"),
+                _csv_safe(" | ".join(p["raw_cells"])),
             ])
 
 

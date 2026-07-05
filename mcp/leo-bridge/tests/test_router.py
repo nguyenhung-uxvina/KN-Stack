@@ -46,3 +46,28 @@ def test_propose_routes_for_parts():
     routes = router.propose_routes("A", {"parts": [{"raw_cells": ["x"]}]})
     types = {r["target_type"] for r in routes}
     assert "parts_master_csv" in types and "journal_md" in types
+
+
+def test_invalid_target_type_creates_no_dirs(tmp_path):
+    target_path = tmp_path / "sub" / "x.csv"
+    with pytest.raises(router.RouteBlockedError):
+        router.write_route(_exchange(unverified=False), "evil_target", str(target_path), confirm=True)
+    assert not (tmp_path / "sub").exists()
+
+
+def test_csv_formula_injection_neutralized(tmp_path):
+    exchange = {
+        "exchange_id": "LEO-20260704-002",
+        "mode": "A",
+        "raw": "kết quả Leo dài...",
+        "parsed": {"parts": [{"raw_cells": ['=HYPERLINK("http://x")', "vendor"]}]},
+        "checklist": [{"item": "PN đã đối chiếu?", "status": "VERIFIED"}],
+    }
+    p = tmp_path / "staging.csv"
+    router.write_route(exchange, "parts_master_csv", str(p), confirm=True)
+    import csv
+    with p.open(newline="", encoding="utf-8-sig") as f:
+        rows = list(csv.reader(f))
+    part_raw = rows[1][3]
+    assert not part_raw.startswith("=")
+    assert part_raw.startswith("'=HYPERLINK")
