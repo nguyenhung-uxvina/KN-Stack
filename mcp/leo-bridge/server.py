@@ -3,6 +3,7 @@
 100% local: không network call. Transport = clipboard (API stub chờ Leo cấp access).
 Doctrine: gate MẬT hard-block (2 lần) · propose-only · mọi số Leo = UNVERIFIED tới khi CEO verify.
 """
+import os
 import sys
 from pathlib import Path
 
@@ -14,7 +15,7 @@ from leo_bridge import builder, gate, parsers, router, templates
 from leo_bridge.ledger import Ledger
 from leo_bridge.transports import get_transport
 
-LEDGER_DIR = Path(__file__).parent / "ledger"
+LEDGER_DIR = Path(os.environ.get("LEO_BRIDGE_LEDGER_DIR", str(Path(__file__).parent / "ledger")))
 
 mcp = FastMCP("leo-bridge")
 _ledger = Ledger(LEDGER_DIR)
