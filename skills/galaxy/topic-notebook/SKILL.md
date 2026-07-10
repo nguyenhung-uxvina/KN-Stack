@@ -59,6 +59,11 @@ Single source of truth: `D:\Workshop_X\3_Resources\Topic-Notebooks\_registry.md`
 1. Propose new source candidates (reuse `/research` Step 1 discovery or CEO-provided URLs), tier-classified.
 2. CEO approves (Core) → `source_add` → update registry (`source_count`, `last_refresh`).
 
+### --list
+1. Read the registry file. If it does not exist yet, report "registry not initialized" — do not fabricate rows.
+2. Render a table: alias · scope · status · source_count · last_refresh · pinned_projects.
+3. Show retired entries too (marked `status: retired`) — never silently hide them.
+
 ### --health
 For each registry entry flag: `last_refresh` > 90 days → STALE; `source_count` > 45 → propose facet split per `mentor-board/references/facet-split-strategies.md`; describe-call failure → BROKEN.
 
