@@ -2,14 +2,20 @@
 
 KHÔNG copy nội dung template vào đây. Format file đổi → TemplateFormatError (fail loudly).
 """
+import os
 import re
 from pathlib import Path
 
-# .../KN-Stack/mcp/leo-bridge/leo_bridge/templates.py → parents[3] = KN-Stack
-TEMPLATES_PATH = (
-    Path(__file__).resolve().parents[3]
-    / "skills" / "helix" / "leo-assist" / "references" / "leo-mode-templates.md"
-)
+# templates.py lives at <root>/mcp/leo-bridge/leo_bridge/templates.py.
+# <root> differs by layout: canonical KN-Stack has skills/helix/leo-assist/,
+# the flattened leo-ai plugin has skills/leo-assist/. Resolve both; env wins.
+_ROOT = Path(__file__).resolve().parents[3]
+_CANDIDATES = [
+    _ROOT / "skills" / "leo-assist" / "references" / "leo-mode-templates.md",         # flattened plugin
+    _ROOT / "skills" / "helix" / "leo-assist" / "references" / "leo-mode-templates.md",  # canonical KN-Stack
+]
+_ENV_PATH = os.environ.get("LEO_TEMPLATES_PATH")
+TEMPLATES_PATH = Path(_ENV_PATH) if _ENV_PATH else next((p for p in _CANDIDATES if p.exists()), _CANDIDATES[-1])
 EXPECTED_MODES = ["A", "B", "C", "D", "E1", "E2", "E3", "F"]
 HEADING_RE = re.compile(r"^#{2,3}\s+([A-F]\d?)[.\s]", re.MULTILINE)
 # Bounds every section (including the last mode section) — any heading of any

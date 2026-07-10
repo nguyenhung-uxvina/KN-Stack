@@ -29,6 +29,7 @@ find "$PLUGIN_DIR/mcp" -type f -name '*.pyc' -delete
 rm -rf "$PLUGIN_DIR/mcp/leo-bridge/tests"
 rm -f  "$PLUGIN_DIR/mcp/leo-bridge/ledger/ledger.jsonl"
 rm -f  "$PLUGIN_DIR/mcp/leo-bridge/docs/api-access-request-draft.md"
+rmdir "$PLUGIN_DIR/mcp/leo-bridge/docs" 2>/dev/null || true
 
 # 5. Keep an empty runtime ledger dir under version control
 mkdir -p "$PLUGIN_DIR/mcp/leo-bridge/ledger"
