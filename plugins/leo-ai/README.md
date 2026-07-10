@@ -4,12 +4,35 @@ Bộ công cụ LEO AI (getleo.ai) của Workshop X, đóng gói portable: 4 ski
 
 ## Cài đặt
 
-1. Copy thư mục `leo-ai/` này vào `~/.claude/plugins/`, **hoặc** chạy `/plugin install <đường-dẫn>/leo-ai`.
-2. Cài Python deps cho MCP server (bắt buộc để 6 tool tự động chạy):
-   ```bash
-   pip install -r mcp/leo-bridge/requirements.txt
-   ```
-   Không cài Python deps thì 4 skill prompt vẫn dùng được — chỉ mất `leo-bridge` MCP (classify/prompt_build/send/ingest/route/ledger).
+> ⚠️ **Đừng** copy thẳng vào `~/.claude/plugins/` — đó là cache do marketplace quản lý, không phải chỗ thả folder. Dùng 1 trong 3 cách dưới.
+
+Trước tiên, luôn cài Python deps cho MCP server (bắt buộc để 6 tool tự động chạy):
+```bash
+pip install -r mcp/leo-bridge/requirements.txt
+python mcp/leo-bridge/server.py --selftest   # kiểm tra: phải in "selftest OK — 8 templates ... 6 tools"
+```
+Bỏ bước này thì 4 skill prompt vẫn dùng được — chỉ mất `leo-bridge` MCP (classify/prompt_build/send/ingest/route/ledger). Nếu `python` không có trong PATH (Windows hay chỉ có `py`), sửa `command` trong `.mcp.json` thành `py`.
+
+**Cách A — skills-directory plugin (khuyến nghị, zero-config, tự nạp mọi session):**
+```bash
+cp -r <folder này> ~/.claude/skills/leo-ai
+# hoặc junction (Windows): cmd //c mklink /J "%USERPROFILE%\.claude\skills\leo-ai" "D:\...\leo-ai"
+```
+Khởi động lại Claude Code → `/plugin` sẽ thấy `leo-ai@skills-dir`. Chỉ hiệu lực từ session sau.
+
+**Cách B — marketplace (hiện trong `/plugin list`, có `/plugin update`):**
+```
+/plugin marketplace add <đường-dẫn tới folder này>
+/plugin install leo-ai@workshop-x-leo
+```
+(Folder này đã có `.claude-plugin/marketplace.json` nên `marketplace add` trỏ thẳng vào chính nó.)
+
+**Cách C — session tạm thời (không cài gì):**
+```bash
+claude --plugin-dir "<đường-dẫn tới folder này>"
+```
+
+Sau khi cài, nếu MCP `leo-bridge` chưa chạy: `/reload-plugins` hoặc khởi động lại Claude Code.
 
 ## Thành phần
 
