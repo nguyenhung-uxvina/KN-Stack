@@ -24,7 +24,7 @@ cp -r "$KN_ROOT/skills/mentors/mentor-getleo-ai" "$PLUGIN_DIR/skills/mentor-getl
 cp -r "$KN_ROOT/mcp/leo-bridge" "$PLUGIN_DIR/mcp/leo-bridge"
 
 # 4. Scrub excluded / sensitive files
-find "$PLUGIN_DIR/skills" "$PLUGIN_DIR/mcp" -type d -name '__pycache__' -prune -exec rm -rf {} +
+find "$PLUGIN_DIR/skills" "$PLUGIN_DIR/mcp" -type d \( -name '__pycache__' -o -name '.pytest_cache' \) -prune -exec rm -rf {} +
 find "$PLUGIN_DIR/mcp" -type f -name '*.pyc' -delete
 rm -rf "$PLUGIN_DIR/mcp/leo-bridge/tests"
 rm -f  "$PLUGIN_DIR/mcp/leo-bridge/ledger/ledger.jsonl"
@@ -36,7 +36,7 @@ touch    "$PLUGIN_DIR/mcp/leo-bridge/ledger/.gitkeep"
 
 # 6. Summary + assert clean
 echo "-- skills:"; ls "$PLUGIN_DIR/skills"
-if find "$PLUGIN_DIR/skills" "$PLUGIN_DIR/mcp" \( -name '__pycache__' -o -name 'ledger.jsonl' -o -name 'tests' \) | grep -q .; then
+if find "$PLUGIN_DIR/skills" "$PLUGIN_DIR/mcp" \( -name '__pycache__' -o -name '.pytest_cache' -o -name '*.pyc' -o -name 'ledger.jsonl' -o -name 'tests' -o -name 'api-access-request-draft.md' \) | grep -q .; then
   echo "DIRTY: excluded artifact leaked into build"; exit 1
 fi
 echo "== build clean, done =="
