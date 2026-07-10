@@ -38,7 +38,7 @@ Ad-hoc use: `/helix-research "<question>"` — the skill drafts the brief, CEO c
 | **T2 SPRINT** | `/research "<question>"` (v4.1: multi-channel discovery, S/A/B/C tiers, NLM ingest) | New sources needed with tier control; standards/prior-art not covered by a notebook | Offload — **CEO confirms before launch** |
 | **T3 DEEP** | `nlm` Mode 8 (NLM Deep Research native, background, token-free) OR `deep-research` plugin (fan-out + adversarial verify, faster, token-heavy) | Open/multi-faceted question, unclear sources; type = knowledge-gap or state-of-the-art | **CEO confirms + picks engine** |
 
-Type→alias defaults for T1: `standards`→`std` (when built; until then T2), methodology→`vdi-2221`/`vdi-2206`, harness→`harness`, plus any charter-pinned alias.
+Alias selection for T1: the only `type`→alias default is `type: standards`→`std` (when built; until then T2). All other aliases are chosen from `known_sources` (charter-pinned) or by topic match — e.g. methodology questions → `vdi-2221`/`vdi-2206`, harness-doctrine questions → `harness`. These are topic hints, NOT `type` values (the `type` enum has no `methodology`/`harness` member), so a `type: working-principle` brief still reaches them via `known_sources` or topic match.
 
 **Routing rules:**
 1. Always propose a tier + 1-line rationale. T1 runs immediately; T2/T3 wait for CEO.
