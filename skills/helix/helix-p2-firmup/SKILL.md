@@ -200,6 +200,17 @@ TASK E-001: {{descriptive name}}
   Time estimate: {{hours}}
   COD: [ ] Core  [ ] Offload  [ ] Skip
 
+**RESEARCH HOOK (L/E execution):** When CEO marks an L or E task **Offload**, do NOT
+"compile options" from model memory. Convert the task brief into a Research Brief and call
+`/helix-research`:
+- `question` = task Question · `type` = prior-art (L) / market (E) · `phase` = P2
+- `source_block` = helix-p2-firmup · `risk_if_wrong` = HIGH if the gap feeds a safety-critical
+  or high-weight VDI 2225 criterion, else MEDIUM
+- `known_sources` = charter-pinned topic-notebook aliases
+The dispatcher proposes T1/T2/T3 (CEO approves T2/T3). Feed the Response's cited findings
+back into the gap matrix; anything under **NOT FOUND** stays an open gap for F4 — never
+fill it with uncited estimates.
+
 ────────────────────────────────────────
 GROUP C: ROUGH CALCULATIONS
 ────────────────────────────────────────
