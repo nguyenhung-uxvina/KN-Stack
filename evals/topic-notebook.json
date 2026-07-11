@@ -1,0 +1,16 @@
+{
+  "skill": "topic-notebook",
+  "mode": "static",
+  "description": "Static audit: topic-notebook honors registry, citation-first persona, CEO source gate, capacity rules.",
+  "checks": [
+    {"id": "frontmatter-valid", "desc": "name matches directory; bilingual triggers", "assert": "frontmatter + triggers", "regex": "name: topic-notebook[\\s\\S]*Triggers on:[\\s\\S]*notebook chủ đề", "required": true},
+    {"id": "six-modes", "desc": "register/add/query/refresh/list/health all defined", "assert": "all six modes", "regex": "--register[\\s\\S]*--add[\\s\\S]*--query[\\s\\S]*--refresh[\\s\\S]*--list[\\s\\S]*--health", "required": true},
+    {"id": "ceo-source-gate", "desc": "seed-source selection is Core, STOP until approved", "assert": "CEO gate on sources", "regex": "CEO GATE \\(Core\\)|source selection = Core", "required": true},
+    {"id": "citation-first", "desc": "every claim cites; NOT FOUND instead of memory", "assert": "citation-first + fail-safe", "regex": "[Cc]itation-first[\\s\\S]*NOT FOUND", "required": true},
+    {"id": "registry-path", "desc": "unified vault registry path declared", "assert": "registry path present", "regex": "Topic-Notebooks..?_registry\\.md", "required": true},
+    {"id": "mentor-purity", "desc": "shared mentor notebooks keep their persona", "assert": "no persona reconfigure on shared", "regex": "persona.*mentor|mentor.*purity", "required": true},
+    {"id": "facet-split", "desc": ">45 sources triggers facet split proposal", "assert": "capacity rule", "regex": ">\\s?45[\\s\\S]*facet", "required": true},
+    {"id": "tcvn-no-fabricate", "desc": "TCVN numbers never fabricated", "assert": "TCVN rule", "regex": "NEVER fabricate", "required": true}
+  ],
+  "passing_score": 8
+}
