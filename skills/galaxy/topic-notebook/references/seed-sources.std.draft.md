@@ -1,6 +1,10 @@
-# DRAFT seed-sources — topic notebook `std` (MIL-STD / TCVN / STANAG)
+# seed-sources — topic notebook `std` (MIL-STD / TCVN / STANAG)
 
-> Status: AWAITING CEO APPROVAL (Core). Build via `/topic-notebook --add std` after approval.
+> Status: CEO-APPROVED 2026-07-11; rows 1-5 BUILT into notebook `514c700e-4449-47b4-b770-ad2d2dc3166a`.
+> TCVN/STANAG/ISO (rows 6-9) DEFERRED — CEO to supply. Refresh via `/topic-notebook --refresh std`.
+> ⚠ Ingest caveat: everyspec URLs captured LANDING-PAGE metadata (version/status/FSC) only, not the
+> standard body. Notebook is valid for revision/status lookup + fail-safe reference; clause-level
+> content (test method numbers, tolerances) needs the actual PDFs ingested as files — REFRESH follow-up.
 > Tier scheme: S = standard/primary · A = authority/OEM · B = professional · C = community.
 
 | # | Source | Tier | URL / access | Note |
