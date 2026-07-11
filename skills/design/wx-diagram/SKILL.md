@@ -47,7 +47,7 @@ Ví dụ:
 | Lệnh `<type>` | Nguồn (P&B / pipeline) | Kiểu drawio | Ghi chú engine |
 |---|---|---|---|
 | `function-structure` | P1 function structure (helix-p1-structure) | flowchart phân tầng | đọc `references/xml-authoring.md` của engine |
-| `block-diagram` | Block diagram SS1-S5 (P1/P3) | architecture | shapesearch.py cho icon chuẩn |
+| `block-diagram` | Block diagram SS1-SS5 (P1/P3) | architecture | shapesearch.py cho icon chuẩn |
 | `swimlane` | Quy trình công nghệ F0-F5 (forge-fabrication) | swimlane/BPMN | 1 lane / phân xưởng hoặc block F |
 | `org-process` | Org chart / process map (BRIDGE) | hierarchy / BPMN | |
 | `c4` | Kiến trúc hệ thống (helix-system-arch) | C4 drill-down | `scripts/c4.py` của engine |
