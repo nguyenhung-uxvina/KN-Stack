@@ -41,6 +41,16 @@
       "required": ["MLC70"],
       "forbidden": ["MLC85"],
       "severity": "critical"
-    }
+    },
+    "bom_master": {
+      "master_csv": "masters/parts_master.VSN-1500.csv",
+      "required": true,
+      "ignore_codes": ["GT.00.00.00"],
+      "enabled": true,
+      "severity": "critical"
+    },
+    "min_hole_dia_mm": { "min": 6.0, "required": false, "severity": "major" },
+    "hole_spacing_mm": { "min": 20.0, "severity": "major" },
+    "hole_depth_ratio": { "max_ratio": 6.0, "required": false, "severity": "major" }
   }
 }

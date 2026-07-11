@@ -1,0 +1,24 @@
+{
+  "meta": {
+    "product": "EXAMPLE",
+    "rev": "A",
+    "contract_version": "1.0.0",
+    "classification": "THƯỜNG",
+    "engineer_of_record": "(demo)",
+    "approved_by": "",
+    "notes": "Hermetic fixture contract for the regression-corpus seed — exercises the v2.0 deterministic DFM checks + basics. Self-contained (no external master CSV). NOT for production gating."
+  },
+  "rules": {
+    "conflicts_block": { "enabled": true, "severity": "critical" },
+    "materials": {
+      "allowed": ["5083", "6061-T6"],
+      "forbidden": ["SS400"],
+      "required": true,
+      "severity": "critical"
+    },
+    "plate_thickness_mm": { "min": 5.0, "required": true, "min_confidence": "MED", "severity": "critical" },
+    "min_hole_dia_mm": { "min": 6.0, "required": true, "severity": "major" },
+    "hole_spacing_mm": { "min": 20.0, "severity": "major" },
+    "hole_depth_ratio": { "max_ratio": 6.0, "required": false, "severity": "major" }
+  }
+}

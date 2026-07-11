@@ -1,11 +1,18 @@
 #!/usr/bin/env python3
 """
-helix-cad-validate / validate.py — Deterministic design-rule validator (Computational Sensor + Gate).
+helix-cad-validate / validate.py v2.0 — Deterministic design-rule validator (Computational Sensor + Gate).
 
 BƯỚC 1 of the harness-engineering validator (per mentor-harness-engineering-council DEBATE 2026-06-25):
 the thin, deterministic, CPU-only gate for the DESIGN phase. NO LLM, NO network — 100% local,
 air-gapped-safe (stdlib only). It reads a CAD extract (from helix-cad-ingest) + an optional mass-props
 file (from helix-cad-bridge) and scores them PASS/FAIL against a versioned design_rules.json contract.
+This is the Computational spine of the "Assay" AI Design-Review Gate; the inferential steps
+(KAN DFM / VLM 2D-3D / LLM-judge) live in helix-design-review as PROPOSE-ONLY. See
+references/assay-architecture.md.
+
+v2.0 adds: deterministic DFM checks (min_hole_dia_mm, hole_spacing_mm, hole_depth_ratio) reading
+holes[] geometry, and a provenance/receipt block (linter self-hash + contract hash) for the
+Military HITL audit gate.
 
 Harness principles encoded:
   - "Cơ chế, không phải prompt": rules are deterministic checks, not prompt text.
@@ -14,6 +21,7 @@ Harness principles encoded:
     (stops an agent silently editing rules to turn the gate green).
   - Fail-safe: a missing/low-confidence value feeding a CRITICAL rule => FAIL (never silent SKIP).
   - PASS ≠ an toàn: PASS only means "đạt chuẩn tối thiểu". Kỹ sư định danh still signs the final gate.
+  - Provenance: the receipt records WHICH linter version + WHICH contract produced the verdict.
 
 Exit codes: 0 = PASS (all gating checks pass), 2 = FAIL (>=1 gating check failed),
             3 = usage/IO error. (Non-zero => CI/handoff gate stays CLOSED.)
@@ -136,6 +144,27 @@ def _all_text(extract):
         parts.append(str(b.get("name") or ""))
         parts.append(str(b.get("item") or ""))
     return "\n".join(parts).lower()
+
+
+def _holes(extract):
+    """Flatten holes[] into normalized DFM records. cad_extract hole group =
+    {dia, count, positions:[[x,y]], source, confidence, note}. depth_mm is optional
+    (populated only by a 3D/STEP-derived extractor) — absent for pure-2D ingest."""
+    out = []
+    for h in extract.get("holes", []) or []:
+        try:
+            dia = float(h.get("dia")) if h.get("dia") is not None else None
+        except (TypeError, ValueError):
+            dia = None
+        depth = h.get("depth_mm")
+        try:
+            depth = float(depth) if depth is not None else None
+        except (TypeError, ValueError):
+            depth = None
+        pos = [p for p in (h.get("positions") or []) if isinstance(p, (list, tuple)) and len(p) >= 2]
+        out.append({"dia": dia, "depth": depth, "positions": pos,
+                    "conf": h.get("confidence", "LOW"), "source": h.get("source") or f"hole:Ø{h.get('dia')}"})
+    return out
 
 
 def run_checks(extract, rules, mass_props):
@@ -353,10 +382,94 @@ def run_checks(extract, rules, mass_props):
                 r.add("load_class", "FAIL", sev, "(none)", f"one of {req}",
                       f"Không thấy hạng tải yêu cầu {req}.", fix=f"Khai báo hạng tải {req}.", source="notes")
 
+    # ------------------------------------------------------------------
+    # Deterministic DFM checks (BƯỚC 1 geometry). Tất định, thuần số học — đây là
+    # phần "~80% giá trị KAN DFM nhưng bằng LUẬT, không ML"; observed/expected/fix_hint
+    # đóng vai trò "SHAP" (giải thích được). Cái tinh vi hơn → Inferential (helix-design-review).
+    # ------------------------------------------------------------------
+
+    # 9. DFM — minimum drillable hole diameter (dao khoan nhỏ nhất khả dụng). Chạy trên 2D.
+    mhd = rs.get("min_hole_dia_mm")
+    if mhd:
+        sev = mhd.get("severity", "major")
+        dmin = mhd.get("min")
+        dias = [h for h in _holes(extract) if h["dia"] is not None]
+        if not dias:
+            (r.add("min_hole_dia_mm", "FAIL", sev, "(no holes)", f">= {dmin} mm",
+                   "Không có dữ liệu lỗ để chấm DFM khoan — fail-safe.", source="holes")
+             if mhd.get("required", False) else
+             r.add("min_hole_dia_mm", "SKIP", sev, "(no holes)", f">= {dmin} mm",
+                   "Không có dữ liệu lỗ (rule không bắt buộc)."))
+        else:
+            for h in dias:
+                if dmin is not None and h["dia"] < float(dmin):
+                    r.add("min_hole_dia_mm", "FAIL", sev, f"Ø{h['dia']} mm", f">= {dmin} mm",
+                          f"Lỗ Ø{h['dia']}mm nhỏ hơn dao khoan tối thiểu Ø{dmin}mm — khó/không gia công.",
+                          fix=f"Tăng đường kính lỗ >= {dmin}mm hoặc đổi công nghệ (EDM/laser).", source=h["source"])
+                else:
+                    r.add("min_hole_dia_mm", "PASS", sev, f"Ø{h['dia']} mm", f">= {dmin} mm",
+                          f"Lỗ Ø{h['dia']}mm khoan được.", source=h["source"])
+
+    # 10. DFM — minimum hole center-to-center spacing (chống rách vật liệu giữa 2 lỗ). Chạy trên 2D.
+    hsp = rs.get("hole_spacing_mm")
+    if hsp:
+        sev = hsp.get("severity", "major")
+        smin = hsp.get("min")
+        pts = []
+        for h in _holes(extract):
+            for p in h["positions"]:
+                try:
+                    pts.append((float(p[0]), float(p[1]), h["source"]))
+                except (TypeError, ValueError):
+                    pass
+        if len(pts) < 2:
+            r.add("hole_spacing_mm", "SKIP", sev, f"{len(pts)} pos", f">= {smin} mm",
+                  "Chưa đủ tọa độ lỗ (>=2) để tính khoảng cách.", source="holes.positions")
+        else:
+            worst = None
+            for i in range(len(pts)):
+                for j in range(i + 1, len(pts)):
+                    d = ((pts[i][0] - pts[j][0]) ** 2 + (pts[i][1] - pts[j][1]) ** 2) ** 0.5
+                    if worst is None or d < worst[0]:
+                        worst = (d, pts[i][2], pts[j][2])
+            d, sa, sb = worst
+            if smin is not None and d < float(smin):
+                r.add("hole_spacing_mm", "FAIL", sev, f"{d:.1f} mm", f">= {smin} mm",
+                      f"Khoảng cách tâm-tâm 2 lỗ {d:.1f}mm < {smin}mm — rách vật liệu khi khoan/chấn.",
+                      fix=f"Giãn khoảng cách lỗ >= {smin}mm.", source=f"{sa} vs {sb}")
+            else:
+                r.add("hole_spacing_mm", "PASS", sev, f"{d:.1f} mm (min)", f">= {smin} mm",
+                      "Khoảng cách lỗ đạt.", source="holes.positions")
+
+    # 11. DFM — hole depth : diameter ratio (lỗ sâu quá tỉ lệ dao). OPT-IN: cần depth_mm
+    #     (chỉ có khi trích xuất 3D/STEP). Thiếu depth → SKIP (hoặc FAIL nếu required).
+    hdr = rs.get("hole_depth_ratio")
+    if hdr:
+        sev = hdr.get("severity", "major")
+        rmax = hdr.get("max_ratio")
+        holes = [h for h in _holes(extract) if h["dia"] and h["depth"] is not None]
+        if not holes:
+            (r.add("hole_depth_ratio", "FAIL", sev, "(no depth)", f"depth/dia <= {rmax}",
+                   "Không có depth_mm của lỗ (cần trích xuất 3D/STEP) — fail-safe.", source="holes.depth_mm")
+             if hdr.get("required", False) else
+             r.add("hole_depth_ratio", "SKIP", sev, "(no depth)", f"depth/dia <= {rmax}",
+                   "Chưa có depth_mm (kích hoạt khi có trích xuất 3D)."))
+        else:
+            for h in holes:
+                ratio = h["depth"] / h["dia"]
+                if rmax is not None and ratio > float(rmax):
+                    r.add("hole_depth_ratio", "FAIL", sev, f"{ratio:.1f}× (Ø{h['dia']}×{h['depth']}mm)",
+                          f"<= {rmax}×",
+                          f"Lỗ sâu {ratio:.1f}× đường kính > {rmax}× — dao khoan dễ gãy/lệch.",
+                          fix="Giảm chiều sâu, tăng đường kính, hoặc khoan 2 phía.", source=h["source"])
+                else:
+                    r.add("hole_depth_ratio", "PASS", sev, f"{ratio:.1f}×", f"<= {rmax}×",
+                          "Tỉ lệ sâu:đường-kính đạt.", source=h["source"])
+
     return r
 
 
-def render_md(extract, rules, report, contract_hash, approved_ok, verdict):
+def render_md(extract, rules, report, contract_hash, approved_ok, verdict, provenance=None):
     meta = extract.get("meta", {})
     rmeta = rules.get("meta", {})
     lines = []
@@ -367,6 +480,9 @@ def render_md(extract, rules, report, contract_hash, approved_ok, verdict):
     lines.append(f"- Contract: {rmeta.get('product','?')} rev {rmeta.get('rev','?')} "
                  f"v{rmeta.get('contract_version','?')} · sha256 `{contract_hash[:16]}…`")
     lines.append(f"- Contract approved-hash check: {'PASS' if approved_ok else 'NOT CHECKED / MISMATCH'}")
+    if provenance:
+        lines.append(f"- Provenance / receipt: linter `{provenance.get('linter_sha256','')[:16]}…` "
+                     f"· tool v{provenance.get('tool_version','?')} · Python {provenance.get('python_version','?')}")
     fails = report.gating_failed
     lines.append(f"- Result: **{verdict}** — {len(fails)} FAIL / {len(report.checks)} checks")
     lines.append("")
@@ -425,10 +541,25 @@ def main(argv=None):
                        source=args.rules)
 
     verdict = "FAIL" if report.gating_failed else "PASS"
+    validated_at = datetime.now(timezone.utc).isoformat()
+    # Provenance block = the deterministic "helix-receipt" for the Military HITL audit gate:
+    # a self-hash of the linter itself (which rule-code produced this verdict) + the contract hash.
+    # Truy vết ngược: kỹ sư ký biết CHÍNH XÁC phiên bản công cụ + luật nào đã chấm.
+    provenance = {
+        "tool": "helix-cad-validate",
+        "tool_version": "2.0",
+        "linter_sha256": _sha256(os.path.abspath(__file__)),
+        "contract_sha256": contract_hash,
+        "contract_approved_hash_ok": approved_ok,
+        "validated_at": validated_at,
+        "python_version": sys.version.split()[0],
+        "extract_source": os.path.basename(args.extract),
+        "mass_props_source": os.path.basename(args.mass_props) if args.mass_props else None,
+    }
     out_json = {
         "tool": "helix-cad-validate",
-        "version": "1.0",
-        "validated_at": datetime.now(timezone.utc).isoformat(),
+        "version": "2.0",
+        "validated_at": validated_at,
         "part_id": extract.get("meta", {}).get("part_id"),
         "product": extract.get("meta", {}).get("product"),
         "contract": {"product": rules.get("meta", {}).get("product"),
@@ -441,11 +572,12 @@ def main(argv=None):
         "checks": report.checks,
         "gate": "OPEN (handoff/freeze allowed pending engineer sign-off)" if verdict == "PASS"
                 else "CLOSED (handoff to forge-fabrication / ICD freeze BLOCKED)",
+        "provenance": provenance,
     }
     with open(args.out + ".json", "w", encoding="utf-8") as f:
         json.dump(out_json, f, ensure_ascii=False, indent=2)
     with open(args.out + ".md", "w", encoding="utf-8") as f:
-        f.write(render_md(extract, rules, report, contract_hash, approved_ok, verdict))
+        f.write(render_md(extract, rules, report, contract_hash, approved_ok, verdict, provenance))
 
     if not args.quiet:
         print(f"=== helix-cad-validate: {verdict} === "

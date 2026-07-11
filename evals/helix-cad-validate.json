@@ -11,7 +11,7 @@
     {
       "id": "deterministic-not-prompt",
       "desc": "Validator is deterministic CPU code, not an LLM judging safety.",
-      "assert": "validate.py uses only stdlib (json, hashlib, argparse, sys, datetime); no network/LLM import; SKILL states 'cơ-chế-không-phải-prompt' and 'No LLM'."
+      "assert": "validate.py uses only stdlib (argparse, csv, hashlib, io, json, os, sys, datetime); no network/LLM import; SKILL states 'cơ-chế-không-phải-prompt' and 'No LLM'."
     },
     {
       "id": "fail-safe",
@@ -37,6 +37,21 @@
       "id": "trigger-based-roadmap",
       "desc": "Documents BƯỚC 1 scope and defers middleware/eval/inferential to explicit triggers (no over-engineering).",
       "assert": "SKILL 'When to add the next tier' table ties each added tier to a concrete trigger, citing the DEBATE."
+    },
+    {
+      "id": "dfm-geometry-deterministic",
+      "desc": "v2.0 adds deterministic DFM checks over holes[] geometry, computed with plain arithmetic (no ML).",
+      "assert": "run_checks emits min_hole_dia_mm / hole_spacing_mm / hole_depth_ratio reading extract.holes[] (dia, positions, depth_mm); still stdlib-only; SKILL rule-key list + schema document them; hole_depth_ratio is opt-in (SKIP when depth absent unless required)."
+    },
+    {
+      "id": "provenance-receipt",
+      "desc": "Output is a provenance-signed receipt for the Military HITL audit gate (Step 5).",
+      "assert": "out_json carries a 'provenance' block with tool_version '2.0', linter_sha256 (self-hash of validate.py), contract_sha256; MD report prints a provenance line; SKILL/schema describe the helix-receipt."
+    },
+    {
+      "id": "inferential-stays-propose-only",
+      "desc": "KAN DFM / VLM 2D-3D / LLM-judge (spec Steps 2-4) map to helix-design-review propose-only, never folded into the hard gate.",
+      "assert": "SKILL 'Bản đồ kiến trúc 5-bước' + references/assay-architecture.md route Steps 2-4 to helix-design-review as Inferential propose-only; exit-code gate depends ONLY on deterministic rules (Sensor-not-Generator preserved)."
     }
   ]
 }

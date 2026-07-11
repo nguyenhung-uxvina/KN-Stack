@@ -34,6 +34,9 @@
 | `load_class` | Hạng tải phải có / cấm | `required[]`, `forbidden[]`, `severity` |
 | `conflicts_block` | Chặn nếu extract còn CONFLICT | `enabled` (bool), `severity` |
 | `bom_master` | Đối chiếu mã chi tiết với parts_master authoritative (đóng "BOM=0") | `master_csv` (đường dẫn CSV từ authoritative_bom.py), `required`, `ignore_codes[]` (mã gốc cụm bỏ qua), `enabled`, `severity` |
+| `min_hole_dia_mm` | DFM: đường kính lỗ tối thiểu khoan được (dao nhỏ nhất) | `min`, `required`, `severity` — chấm trên `holes[].dia` (2D) |
+| `hole_spacing_mm` | DFM: khoảng cách tâm-tâm 2 lỗ tối thiểu (chống rách) | `min`, `severity` — chấm trên `holes[].positions` (2D) |
+| `hole_depth_ratio` | DFM: tỉ lệ chiều-sâu:đường-kính lỗ tối đa (lỗ sâu quá tỉ lệ dao) | `max_ratio`, `required`, `severity` — **opt-in**, cần `holes[].depth_mm` (3D/STEP) |
 | `confidence_gate` | Ngưỡng tin cậy mặc định cho rule critical | `min_for_critical` (HIGH) |
 
 ### `bom_master` chi tiết (2 check con)
@@ -53,3 +56,28 @@ chứng nhận → FAIL "uncertified".
 Chạy với `--approved-hash <sha256>`: nếu file contract không khớp hash kỹ sư đã duyệt → FAIL
 `contract_integrity`. Ngăn agent lặng lẽ sửa luật để gate xanh. Lấy hash:
 `python -c "import hashlib;print(hashlib.sha256(open('design_rules.json','rb').read()).hexdigest())"`
+
+## DFM tất định (v2.0 — Bước 1 hình học)
+Ba luật DFM chạy bằng số học thuần trên `holes[]` của `cad_extract.json` (không ML) — `observed`/
+`expected`/`fix_hint` đóng vai "SHAP" giải thích được:
+- **`min_hole_dia_mm`** — lỗ nhỏ hơn dao khoan nhỏ nhất khả dụng → FAIL. Chấm trên `holes[].dia`. Chạy trên 2D.
+- **`hole_spacing_mm`** — khoảng cách tâm-tâm 2 lỗ gần nhất < `min` → rách vật liệu khi khoan/chấn → FAIL.
+  Chấm trên `holes[].positions`. Cần ≥2 tọa độ, nếu không → SKIP.
+- **`hole_depth_ratio`** — `depth/dia > max_ratio` (điển hình 6×) → dao dễ gãy → FAIL. **Opt-in**: cần
+  `holes[].depth_mm` (chỉ có khi trích xuất 3D/STEP). Thiếu depth → SKIP (hoặc FAIL nếu `required:true`).
+  Cái tinh vi hơn (fillet/bề mặt phức tạp) → nhường KAN DFM ở [[helix-design-review]] (Inferential, propose-only).
+
+## Provenance / Receipt (output — Bước 5 audit HITL)
+Mỗi lần chấm, `cad_validate_report.json` mang khối `provenance` = biên bản kiểm tra kỹ thuật số truy
+nguyên được (helix-receipt):
+```jsonc
+"provenance": {
+  "tool": "helix-cad-validate", "tool_version": "2.0",
+  "linter_sha256": "<sha256 của chính validate.py>",  // luật-code nào đã chấm
+  "contract_sha256": "<sha256 design_rules.json>",     // luật nào đã chấm
+  "contract_approved_hash_ok": true,
+  "python_version": "3.x", "validated_at": "<UTC ISO>",
+  "extract_source": "<file>", "mass_props_source": "<file|null>"
+}
+```
+Cổng HITL (kỹ sư định danh) dùng khối này để truy ngược đúng phiên bản công cụ + contract đã tạo verdict.
