@@ -38,3 +38,5 @@ Usage: /gate2 [project_name] OR provide details interactively.
 CRITICAL: This is a NEVER-AUTOMATE decision. Present scores and WAIT. Do NOT auto-proceed to Phase 3.
 BLOCKER: Any criterion scoring 0 -> REVISE regardless of total.
 BLOCKER: Unresolved safety/reliability weak spot -> cannot APPROVE.
+
+After the gate decision is recorded, render a one-page publication gate pack via `/wx-diagram gate-pack {{project}}` (draw.io engine; degrades to .drawio XML if CLI missing) and attach it next to the gate review file.

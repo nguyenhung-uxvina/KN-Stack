@@ -451,6 +451,8 @@ If no handoff path given → scan `1_Projects/<product>/Phase3-Embody/` for late
 
 This closes the R&D → production gap that previously required manual bridging.
 
+**Publication diagram (wx-diagram — AUTO):** khi F0 chấp nhận handoff, xuất quy trình công nghệ dạng swimlane: `/wx-diagram swimlane {{product}} --source Handoff_to_Fabrication.md` — 6 lane F0-F5, đính vào bộ quy trình công nghệ (dùng được thẳng trong hồ sơ TCVN/BQP). Degrade gracefully nếu thiếu draw.io CLI.
+
 ## Compound Learning Hooks (NAVAL LEVERAGE)
 
 Each completed run automatically:

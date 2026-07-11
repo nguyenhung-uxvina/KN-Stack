@@ -461,6 +461,15 @@ Sản phẩm đề tài được [trang bị / chuyển giao / triển khai] cho
 
 ---
 
+## Sơ đồ trong hồ sơ (wx-diagram — AUTO)
+
+Hồ sơ KHCN cần sơ đồ trình được. Khi soạn phiếu đề xuất/thuyết minh, xuất qua `/wx-diagram`:
+- `/wx-diagram function-structure {{project}}` — sơ đồ chức năng tổng thể.
+- `/wx-diagram swimlane {{project}}` — quy trình thực hiện nhiệm vụ (theo giai đoạn).
+Format PDF khi mẫu biểu yêu cầu. CẤM aiicons.py (CDN) với nội dung MẬT/HẠN-CHẾ — xem rule bảo mật trong wx-diagram.
+
+---
+
 ## Quy trình sau khi nộp phiếu đề xuất
 
 ```
