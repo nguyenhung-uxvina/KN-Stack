@@ -447,6 +447,15 @@ Sản phẩm đề tài được [trang bị / chuyển giao / triển khai] cho
 
 ---
 
+## Sơ đồ trong hồ sơ (wx-diagram — AUTO)
+
+Hồ sơ KHCN cần sơ đồ trình được. Khi soạn phiếu đề xuất/thuyết minh, xuất qua `/wx-diagram`:
+- `/wx-diagram function-structure {{project}}` — sơ đồ chức năng tổng thể.
+- `/wx-diagram swimlane {{project}}` — quy trình thực hiện nhiệm vụ (theo giai đoạn).
+Format PDF khi mẫu biểu yêu cầu. CẤM aiicons.py (CDN) với nội dung MẬT/HẠN-CHẾ — xem rule bảo mật trong wx-diagram.
+
+---
+
 ## Gotchas
 
 | Lỗi phổ biến | Cách tránh |
@@ -458,15 +467,6 @@ Sản phẩm đề tài được [trang bị / chuyển giao / triển khai] cho
 | Thời gian quá ngắn cho phạm vi | Đề tài có chế tạo mẫu: tối thiểu 12 tháng |
 | Thiếu đơn vị ứng dụng cam kết | BQP bắt buộc có cam kết từ đơn vị nhận kết quả |
 | Kinh phí không có phân kỳ | Đề tài > 12 tháng: phải phân kỳ theo năm |
-
----
-
-## Sơ đồ trong hồ sơ (wx-diagram — AUTO)
-
-Hồ sơ KHCN cần sơ đồ trình được. Khi soạn phiếu đề xuất/thuyết minh, xuất qua `/wx-diagram`:
-- `/wx-diagram function-structure {{project}}` — sơ đồ chức năng tổng thể.
-- `/wx-diagram swimlane {{project}}` — quy trình thực hiện nhiệm vụ (theo giai đoạn).
-Format PDF khi mẫu biểu yêu cầu. CẤM aiicons.py (CDN) với nội dung MẬT/HẠN-CHẾ — xem rule bảo mật trong wx-diagram.
 
 ---
 
