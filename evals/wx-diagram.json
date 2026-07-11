@@ -1,0 +1,82 @@
+{
+  "skill": "wx-diagram",
+  "version": "1.0",
+  "description": "Binary assertions for /wx-diagram publication-diagram wrapper (draw.io engine router)",
+  "mode": "static",
+  "test_input": "wx-diagram swimlane BB-01 --source Handoff_to_Fabrication.md",
+  "assertions": [
+    {
+      "id": "WXD-ENGINE",
+      "name": "engine_decision_table",
+      "check": "skill defines when to use Excalidraw (helix-draw) vs draw.io",
+      "regex": "helix-draw|Excalidraw.*draw\\.io|bảng quyết định|engine",
+      "required": true
+    },
+    {
+      "id": "WXD-PREREQ",
+      "name": "prerequisite_check_and_fallback",
+      "check": "skill checks drawio CLI >= 30 and degrades gracefully (XML-only) when missing",
+      "regex": "--version|≥ ?30|>= ?30|fallback|chỉ sinh .?\\.drawio",
+      "required": true
+    },
+    {
+      "id": "WXD-JUNCTION",
+      "name": "engine_junction_recovery",
+      "check": "skill documents engine junction path and recreation command",
+      "regex": "\\.claude[\\\\/]skills[\\\\/]drawio-skill|New-Item -ItemType Junction",
+      "required": true
+    },
+    {
+      "id": "WXD-MAP",
+      "name": "pb_diagram_map",
+      "check": "P&B -> drawio type map covers function structure, block diagram, swimlane F0-F5, C4",
+      "regex": "function structure|swimlane|C4|block diagram",
+      "required": true
+    },
+    {
+      "id": "WXD-STYLE",
+      "name": "wx_style_preset",
+      "check": "Workshop X style preset defined via drawio-skill style-presets mechanism",
+      "regex": "style.?preset|Workshop X|palette",
+      "required": true
+    },
+    {
+      "id": "WXD-OUTPUT",
+      "name": "output_conventions",
+      "check": "output pair .drawio + .drawio.png with repair_png and vault project folder",
+      "regex": "\\.drawio\\.png|repair_png|1_Projects",
+      "required": true
+    },
+    {
+      "id": "WXD-SECURITY",
+      "name": "security_rules",
+      "check": "local-only render + aiicons CDN ban for classified content",
+      "regex": "MẬT|HẠN.?CHẾ|aiicons.*CDN|CDN.*aiicons|local",
+      "required": true
+    },
+    {
+      "id": "WXD-SELFDOC",
+      "name": "kn_stack_self_doc",
+      "check": "self-doc mode draws KN-Stack 15-domain architecture",
+      "regex": "SYSTEM_OVERVIEW|kiến trúc KN-Stack|self.?doc",
+      "required": true
+    },
+    {
+      "id": "WXD-HYBRID",
+      "name": "hybrid_activation",
+      "check": "documents which skills auto-call vs suggest-only",
+      "regex": "auto|suggest.?only|gate|handoff",
+      "required": true
+    },
+    {
+      "id": "WXD-COD",
+      "name": "cod_classification",
+      "check": "COD classification present",
+      "regex": "COD|Core|Offload|Default",
+      "required": true
+    }
+  ],
+  "passing_score": 10,
+  "total_required": 10,
+  "total_optional": 0
+}
