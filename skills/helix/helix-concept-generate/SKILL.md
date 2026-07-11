@@ -229,6 +229,11 @@ Ví dụ:
 
 If CEO provides context → append to pipeline state as `## CEO Context Input`.
 
+**Topic notebooks:** List the project's pinned topic-notebook aliases (charter
+`Pinned topic notebooks` field; registry: `/topic-notebook --list`). Remind blocks:
+external-knowledge needs go through `/helix-research` Research Briefs — no block
+searches on its own.
+
 ### Step 2: Initialize Pipeline State
 
 Determine output path based on variant:

@@ -127,6 +127,8 @@ SIMILAR PRODUCTS (from FORGE library):
 
 ACH APPLICABILITY: [YES — run forge-shift / NO / TBD]
 
+Pinned topic notebooks: [—]
+
 SUCCESS CRITERIA (must be specific + measurable):
 1. [criterion 1]
 2. [criterion 2]
@@ -169,6 +171,17 @@ Mapping rule:
   Flag: "No business case evidence — may be passion project, not product"
   CEO decides: PROCEED (strategic bet) / RESEARCH-FIRST / DEFER
 ```
+
+### Step 3b: Pin Topic Notebooks (optional)
+
+Show CEO the topic-notebook registry (`/topic-notebook --list`). CEO picks 0-3 aliases
+relevant to this project (e.g. `std`, `vdi-2221`, a per-project notebook). Optionally create
+a per-project notebook now (`/topic-notebook --add <project-id>`; seed-source approval is
+Core and may be deferred). Write into the charter:
+
+    Pinned topic notebooks: [<alias1>, <alias2>] | [—]
+
+These aliases become `known_sources` defaults for every Research Brief in this project.
 
 ### Step 4: Generate ICD v0 Skeleton
 
