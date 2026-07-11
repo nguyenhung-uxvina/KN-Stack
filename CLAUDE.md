@@ -20,7 +20,7 @@ KN-Stack/
 │   ├── extract/      (7)  — Content extraction (social, chat, yt-extract/yt-learn/yt-search)
 │   ├── learn/        (3)  — Learning methodology
 │   ├── guard/        (7)  — Guard rails (analyst-trap, ratio-check)
-│   ├── design/       (8)  — Specialized tools only (odi, opt, wp, verify, reverse-engineering, reverse-mc, sdmodel, helm-aluminum-boat) — 11 overlapping skills merged into helix/forge on 2026-05-11
+│   ├── design/       (9)  — Specialized tools only (odi, opt, wp, verify, reverse-engineering, reverse-mc, sdmodel, helm-aluminum-boat + wx-diagram: tầng xuất bản sơ đồ draw.io — engine junction, không vendor) — 11 overlapping skills merged into helix/forge on 2026-05-11
 │   ├── ops/          (15) — CEO operations (portfolio, sprint, weekly-3)
 │   ├── session/      (5)  — Session management (catchup, checkpoint)
 │   ├── system/       (16) — System design tools (gate0-3, decide, cld)
