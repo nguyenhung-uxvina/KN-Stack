@@ -92,6 +92,8 @@ Higher is better. Track trend over time.
 - Feeds into: bridge-dashboard (R1-WX Speed metric #6)
 - Receives from: all BRIDGE, FORGE, and HELIX skills
 
+> 💡 Cần bản xuất bản (PNG/PDF cho báo cáo/trình duyệt)? Gợi ý: `/wx-diagram <type> R1-WX Flywheel` — KHÔNG tự chạy, chỉ gợi ý.
+
 ## Metrics
 
 - R1-WX Speed: composite metric (higher = faster cycle)
