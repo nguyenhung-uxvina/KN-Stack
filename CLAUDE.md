@@ -7,7 +7,7 @@
 
 ```
 KN-Stack/
-├── skills/           ← 249 skills organized by domain (15 domains)
+├── skills/           ← 255 skills organized by domain (15 domains)
 │   ├── bridge/       (10) — Operations skills
 │   ├── forge/        (15) — Product strategy skills (+ forge-fabrication mega-skill: 6-block manufacturing pipeline F0-F5
 │   │                       — closes R&D → production loop via Handoff_to_Fabrication.md from helix-detail-finalize;
