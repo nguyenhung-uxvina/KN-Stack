@@ -1,0 +1,20 @@
+{
+  "schema": "qtcn-seed/v1",
+  "product": { "total_mass_kg": 4.427 },
+  "bom": [
+    {
+      "vt": "VT1",
+      "name": "HopThanhMong",
+      "qty": 1,
+      "material": "Thép EH32",
+      "specs": {
+        "est_mass_kg": 4.427,
+        "total_mass_kg": 4.427,
+        "volume_cm3": 564.0,
+        "area_cm2": 3771.28,
+        "bbox_mm": { "x": 60.0, "y": 40.0, "z": 1000.0 },
+        "density_g_cm3": 7.85
+      }
+    }
+  ]
+}

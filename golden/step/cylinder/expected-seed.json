@@ -1,0 +1,20 @@
+{
+  "schema": "qtcn-seed/v1",
+  "product": { "total_mass_kg": 12.331 },
+  "bom": [
+    {
+      "vt": "VT1",
+      "name": "TruDac",
+      "qty": 1,
+      "material": "Thép EH32",
+      "specs": {
+        "est_mass_kg": 12.331,
+        "total_mass_kg": 12.331,
+        "volume_cm3": 1570.8,
+        "area_cm2": 785.4,
+        "bbox_mm": { "x": 100.0, "y": 100.0, "z": 200.0 },
+        "density_g_cm3": 7.85
+      }
+    }
+  ]
+}

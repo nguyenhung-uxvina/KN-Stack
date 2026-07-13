@@ -1,0 +1,102 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "kn-stack/schemas/qtcn-seed.schema.json",
+  "title": "qtcn-seed/v1 — dữ liệu trích xuất CAD chuẩn hóa (WX-QT-EXTRACT-SENSOR-01 mục 2.1)",
+  "description": "Giao diện chung giữa mọi adapter CAD và pipeline 5 đầu ra. Cấp gốc khóa cứng (additionalProperties: false) — muốn thêm trường phải nâng phiên bản schema. Cấp lồng cho phép trường mở rộng theo adapter.",
+  "type": "object",
+  "required": ["schema", "product", "bom"],
+  "additionalProperties": false,
+  "properties": {
+    "schema": { "const": "qtcn-seed/v1" },
+    "engine": { "type": "string" },
+    "freecad_version": { "type": "string" },
+    "product": {
+      "type": "object",
+      "properties": {
+        "code": { "type": ["string", "null"] },
+        "name": { "type": ["string", "null"] },
+        "name_en": { "type": ["string", "null"] },
+        "type": { "type": ["string", "null"] },
+        "units": { "enum": ["mm", null] },
+        "principal_particulars": { "type": "object" },
+        "total_mass_kg": { "$ref": "#/$defs/posNumberOrNull" }
+      }
+    },
+    "source": {
+      "type": "object",
+      "properties": {
+        "kind": { "type": "string" },
+        "file": { "type": ["string", "null"] },
+        "bom_file": { "type": "string" },
+        "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+        "extractor_version": { "type": "string" },
+        "extracted_at": { "type": "string" },
+        "operator": { "type": "string" },
+        "solid_parts": { "type": "number" },
+        "objects": { "type": "number" }
+      }
+    },
+    "bom": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["vt", "name", "qty", "material", "specs"],
+        "properties": {
+          "vt": { "type": "string", "pattern": "^VT\\d+$" },
+          "pos": {},
+          "drawing_no": { "type": ["string", "null"] },
+          "name": { "type": ["string", "null"] },
+          "name_en": { "type": ["string", "null"] },
+          "qty": { "$ref": "#/$defs/posNumberOrNull" },
+          "material": { "type": ["string", "null"] },
+          "specs": {
+            "type": "object",
+            "properties": {
+              "sections": { "type": "array" },
+              "plate_mm": { "type": ["string", "number", "null"] },
+              "stock_number": { "type": ["string", "null"] },
+              "tolerances": { "type": "array" },
+              "key_dims": { "type": "array" },
+              "sheets": { "type": "array" },
+              "est_mass_kg": { "$ref": "#/$defs/posNumberOrNull" },
+              "total_mass_kg": { "$ref": "#/$defs/posNumberOrNull" },
+              "mass_varies": { "type": ["boolean", "null"] },
+              "unit_mass_range_kg": {
+                "type": "array", "items": { "type": "number", "exclusiveMinimum": 0 },
+                "minItems": 2, "maxItems": 2
+              },
+              "volume_cm3": { "$ref": "#/$defs/posNumberOrNull" },
+              "area_cm2": { "$ref": "#/$defs/posNumberOrNull" },
+              "density_g_cm3": { "$ref": "#/$defs/posNumberOrNull" },
+              "density_assumed": { "type": ["boolean", "null"] },
+              "material_source": { "enum": ["label", "name_rule", "default", null] },
+              "bbox_mm": {
+                "type": "object",
+                "required": ["x", "y", "z"],
+                "properties": {
+                  "x": { "type": "number", "exclusiveMinimum": 0 },
+                  "y": { "type": "number", "exclusiveMinimum": 0 },
+                  "z": { "type": "number", "exclusiveMinimum": 0 }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "consumables": { "type": "array" },
+    "relationships": { "type": "array" },
+    "flags": { "type": "object" },
+    "validation": { "type": "object" },
+    "_note": { "type": "string" }
+  },
+  "$defs": {
+    "posNumberOrNull": {
+      "anyOf": [
+        { "type": "null" },
+        { "type": "number", "exclusiveMinimum": 0 }
+      ]
+    }
+  }
+}

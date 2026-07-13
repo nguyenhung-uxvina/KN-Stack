@@ -1,0 +1,17 @@
+#!/bin/sh
+# Gate G3 theo commit (WX-QT-EXTRACT-SENSOR-01 §4.3): thay đổi chạm harness trích xuất
+# thì battery + golden set phải ĐẠT TOÀN BỘ, không thì chặn commit.
+# Cài đặt:  cp scripts/hooks/pre-commit .git/hooks/pre-commit
+changed=$(git diff --cached --name-only | grep -E '^(scripts/extract/|schemas/|golden/)' || true)
+if [ -z "$changed" ]; then
+    exit 0
+fi
+echo "[pre-commit] Thay doi cham harness ($(echo "$changed" | wc -l) file) -> chay battery G3..."
+python scripts/extract/run_battery.py --regen
+if [ $? -ne 0 ]; then
+    echo "[pre-commit] BATTERY HONG - commit bi chan (G3: chung minh script dung truoc khi phat hanh)."
+    echo "              Xem loi o tren; bo qua CO CHU DICH: git commit --no-verify"
+    exit 1
+fi
+echo "[pre-commit] Battery DAT - cho commit."
+exit 0
