@@ -12,14 +12,14 @@
 3. **§1 Phạm vi áp dụng** — quy định gì, cho sản phẩm/cụm nào, ràng buộc "mọi sai khác phải được Viện + cơ quan công nghệ duyệt bằng văn bản".
 4. **§2 Tài liệu viện dẫn** — bảng tiêu chuẩn (xem danh mục mặc định bên dưới); để trống số TQS cho Viện điền.
 5. **§3 Yêu cầu kỹ thuật chung** — laser+chấn; dung sai không ghi = IT14/2 (TCVN 2244/2245); dung sai HD-VT (TCVN 5906); làm cùn cạnh; Rz20; mối hàn ngấu đều/không nứt/không rỗ (ký hiệu TCVN 1691, quá trình TCVN 8524, chuẩn bị mối nối TCVN 12425); **vật liệu phải có CO/CQ**, thay thế phải được duyệt; mác tương đương.
-6. **§4 Cấu trúc sản phẩm (BOM tổng)** — bảng cụm: mã | tên | khối lượng | ghi chú.
+6. **§4 Cấu trúc sản phẩm (BOM tổng)** — bảng cụm: mã | tên | khối lượng | ghi chú. NGUỒN SỐ LIỆU: sheet `BOM` của `{PROJECT}_FAB-DB.xlsx` (schema ERPNext, feeder erp-bom import-cad).
 7. **§5 Quy trình công nghệ chế tạo chi tiết**
    - 5.1 **Trạm Laser+Chấn** — nhóm theo *vật liệu × bề dày* (sắp hình/nesting), bảng SL|chi tiết|mã|kích thước.
    - 5.2 **Trạm Tiện/Phay** — bảng SL|chi tiết|mã|vật liệu|kích thước chính.
    - 5.3 **Mua ngoài / cắt phôi**.
    - 5.4 **Phiếu công nghệ nguyên công (điển hình)** — xem mẫu phiếu bên dưới; lập ≥1 phiếu/nhóm công nghệ (tấm, trục đặc, chi tiết rỗng, cụm hàn), còn lại "lập tương tự theo PARTS_MASTER".
 8. **§6 Trình tự lắp ráp & hàn** — Bước 1 cụm con → Bước 2 cụm trung → Bước 3 tổng lắp.
-9. **§7 Định mức vật tư** — bảng theo nhóm vật liệu + **% hao hụt công nghệ** (đề xuất: tấm laser +8%, phôi tiện +15%, định hình/cắt +5%, Teflon/cao su +10%, vật tư hàn theo định mức). Ghi rõ "Viện/bộ phận định mức xác nhận trước khi cấp phôi".
+9. **§7 Định mức vật tư** — bảng theo nhóm vật liệu + **% hao hụt công nghệ**. NGUỒN SỐ LIỆU: sheet `DINH_MUC` của `{PROJECT}_FAB-DB.xlsx` (helix-cad-workbook; waste % từ WASTE_FACTORS master data — KHÔNG hardcode; fallback khi chưa có workbook: tấm laser +8%, phôi tiện +15%, định hình/cắt +5%, Teflon/cao su +10%). Ghi rõ nguồn: "Số liệu từ {PROJECT}_FAB-DB.xlsx, master data v{n}". "Viện/bộ phận định mức xác nhận trước khi cấp phôi".
 10. **§8 QC & nghiệm thu** — bảng cổng (Gate-Cắt/Tiện/Hàn/Lắp) + nội dung kiểm; kích thước critical; VT 100% mối hàn, PT/UT mối chịu lực; sai vượt dung sai → **NCR** do Viện quyết.
 11. **§9 ATLĐ** · **§10 Bao gói–ghi nhãn–bảo quản–bàn giao** · **§11 Cảnh báo chất lượng dữ liệu** (các blocker/xung đột phát hiện khi đọc CAD — đánh 🔴🟠🟡, nêu để Viện xử lý, KHÔNG tự sửa bản vẽ gốc).
 
