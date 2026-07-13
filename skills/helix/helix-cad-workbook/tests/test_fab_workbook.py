@@ -117,3 +117,41 @@ def test_du_toan_formulas_and_missing(tmp_path, master_path):
                         fw.load_master_bom(FIX).get("p-003"), fw.load_master(master_path))
     assert "material" in gaps["missing"]
     assert "mass_kg" in gaps["missing"]
+
+
+def test_qc_dims(tmp_path, master_path):
+    wb = _build(tmp_path, master_path)
+    ws = wb["QC_DIMS"]
+    assert [c.value for c in ws[1]] == ["part_id", "feature", "value", "tolerance",
+                                        "confidence", "source", "gauge"]
+    rows = [[c.value for c in r] for r in ws.iter_rows(min_row=2)]
+    r1 = [r for r in rows if r[0] == "P-001"][0]
+    assert r1[3] == 0.1 and r1[6] == "panme"
+
+
+def test_checklist_flags_missing(tmp_path, master_path):
+    wb = _build(tmp_path, master_path)
+    ws = wb["CHECKLIST"]
+    assert [c.value for c in ws[1]] == ["part_id", "QTCN", "DINH_MUC", "SO_TAY_QC", "BOM", "DU_TOAN"]
+    rows = {r[0].value: r for r in ws.iter_rows(min_row=2)}
+    assert rows["P-001"][4].value == "ĐỦ"                       # BOM đủ
+    assert "THIẾU" in rows["P-003"][4].value and "material" in rows["P-003"][4].value
+    assert rows["P-003"][4].fill.fgColor.rgb.endswith("FFC7CE")  # đỏ
+    assert str(rows["P-002"][1].value).startswith("ĐỦ")   # holes/surface chỉ là warning phụ
+
+
+def test_check_part_api(master_path):
+    master = fw.load_master(master_path)
+    reqs = json.load(open(os.path.join(SKILL, "references", "param_requirements.json"), encoding="utf-8"))
+    e3 = dict((e["meta"]["part_id"], e) for _, e in fw.load_extracts(FIX))["P-003"]
+    res = fw.check_part(e3, fw.load_master_bom(FIX).get("p-003"), master, reqs)
+    assert "material" in res["BOM"]["missing_critical"]
+    assert "mass_kg" in res["DU_TOAN"]["missing_critical"]
+    assert res["SO_TAY_QC"]["missing_warning"]  # tolerances/holes trống
+
+
+def test_refresh_creates_bak(tmp_path, master_path):
+    out = str(tmp_path / "FIXTURE_FAB-DB.xlsx")
+    fw.main([FIX, "--master", master_path, "--project", "FIXTURE", "--out", out])
+    fw.main([FIX, "--master", master_path, "--project", "FIXTURE", "--out", out])
+    assert os.path.exists(out + ".bak")

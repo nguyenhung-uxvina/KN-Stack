@@ -256,6 +256,42 @@ def norm_gaps(extract, bomrow, master):
     return {"missing": missing, "no_rate": no_rate}
 
 
+def _gauge(tol):
+    try:
+        t = abs(float(tol))
+    except (TypeError, ValueError):
+        return "theo bản vẽ"
+    if t <= 0.05:
+        return "CMM / panme điện tử"
+    if t <= 0.2:
+        return "panme"
+    return "thước cặp / dưỡng"
+
+
+def check_part(extract, bomrow, master, requirements):
+    """Chấm ma trận đủ-thiếu 1 part × 5 đầu ra theo param_requirements.json.
+    → {output: {'missing_critical': [...], 'missing_warning': [...], 'low_conf': [...], 'no_rate': [...]}}"""
+    outputs = requirements["meta"]["outputs"]
+    res = {o: {"missing_critical": [], "missing_warning": [], "low_conf": [], "no_rate": []}
+           for o in outputs}
+    for pname, pcfg in requirements["params"].items():
+        val, conf = resolve_param(extract, bomrow, pname)
+        sev = pcfg.get("severity", "critical")
+        for o in pcfg.get("required_for", []):
+            if val in (None, "", []):
+                res[o]["missing_critical" if sev == "critical" else "missing_warning"].append(pname)
+            elif pcfg.get("min_confidence") and \
+                    CONF_RANK.get(str(conf).upper(), 0) < CONF_RANK.get(pcfg["min_confidence"], 2):
+                res[o]["low_conf"].append(pname)
+            elif pname == "material" and pcfg.get("must_match_master") and \
+                    not material_code(val, master):
+                res[o]["no_rate"].append(f"material '{val}' không khớp MATERIALS")
+    gaps = norm_gaps(extract, bomrow, master)
+    for o in ("DINH_MUC", "DU_TOAN"):
+        res[o]["no_rate"].extend(x for x in gaps["no_rate"] if x not in res[o]["no_rate"])
+    return res
+
+
 def _part_name(extract, master):
     """Tên sạch: tra PART_DICTIONARY trước, garble → cờ NEEDS-DECODE."""
     meta = extract.get("meta", {}) or {}
@@ -378,6 +414,51 @@ def build_workbook(extracts, master, bom_csv, out_path, project, requirements):
                   f"=SUM(M2:M{last})"])
     for c in dt_ws[last + 1]:
         c.font = BOLD
+
+    # QC_DIMS — kích thước kiểm + dụng cụ đo (nguồn sổ tay QC)
+    qc_ws = wb.create_sheet("QC_DIMS")
+    qc_ws.append(["part_id", "feature", "value", "tolerance", "confidence", "source", "gauge"])
+    for c in qc_ws[1]:
+        c.font = BOLD
+    for fname, e in extracts:
+        pid = (e.get("meta", {}) or {}).get("part_id") or ""
+        for t in (e.get("tolerances") or []):
+            qc_ws.append([pid, t.get("rule") or t.get("param") or "", t.get("nominal"),
+                          t.get("value"), t.get("confidence", "LOW"),
+                          t.get("source", ""), _gauge(t.get("value"))])
+        for g in (e.get("gdt") or []):
+            qc_ws.append([pid, g.get("type") or "GD&T", g.get("datum"), g.get("value"),
+                          g.get("confidence", "LOW"), g.get("source", ""), _gauge(g.get("value"))])
+
+    # CHECKLIST — part × 5 đầu ra, đỏ THIẾU / vàng LOW-CONF hoặc thiếu-giá
+    ck_ws = wb.create_sheet("CHECKLIST")
+    outputs = requirements["meta"]["outputs"]
+    ck_ws.append(["part_id"] + outputs)
+    for c in ck_ws[1]:
+        c.font = BOLD
+    for fname, e in extracts:
+        pid = (e.get("meta", {}) or {}).get("part_id") or ""
+        res = check_part(e, bom_csv.get(_norm(pid)), master, requirements)
+        row = [pid]
+        fills = [None]
+        for o in outputs:
+            r = res[o]
+            if r["missing_critical"]:
+                row.append("THIẾU: " + ", ".join(r["missing_critical"]))
+                fills.append(RED)
+            elif r["low_conf"] or r["no_rate"]:
+                row.append("LOW-CONF/THIẾU-GIÁ: " + ", ".join(r["low_conf"] + r["no_rate"]))
+                fills.append(YELLOW)
+            elif r["missing_warning"]:
+                row.append("ĐỦ (thiếu phụ: " + ", ".join(r["missing_warning"]) + ")")
+                fills.append(YELLOW)
+            else:
+                row.append("ĐỦ")
+                fills.append(None)
+        ck_ws.append(row)
+        for cell, fill in zip(ck_ws[ck_ws.max_row], fills):
+            if fill:
+                cell.fill = fill
 
     wb.save(out_path)
     return out_path
