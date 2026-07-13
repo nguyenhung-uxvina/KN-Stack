@@ -1,0 +1,2 @@
+# runtime ledger data — never commit exchange history
+mcp/leo-bridge/ledger/*.jsonl

@@ -1,0 +1,12 @@
+{
+  "name": "workshop-x-leo",
+  "description": "Workshop X local marketplace — LEO AI (getleo.ai) toolkit plugin.",
+  "owner": { "name": "Workshop X" },
+  "plugins": [
+    {
+      "name": "leo-ai",
+      "source": ".",
+      "description": "Workshop X x getleo.ai (Leo AI) toolkit — Phase x Mode prompt suite, text-to-CAD prompt builder, classification-gated MCP bridge (6 tools), and Leo advisor mentor."
+    }
+  ]
+}
