@@ -259,6 +259,20 @@ thật giữa hai đường độc lập (BOM Inventor × STEP FreeCAD). Thiếu
 **Self-check 1-click cho người trích**: kéo-thả seed JSON vào
 `scripts/extract/self_check.bat`.
 
+**Pipeline MỘT LỆNH**: `python scripts/extract/run_pipeline.py --dir <_QTCN_export/<asm>>
+[--release]` — tự chạy BOM→seed, STEP→seed, Gate G1 từng seed, kiểm chéo S2, merge,
+validate seed cuối; dừng ngay tại gate đầu tiên chặn và báo cách sửa.
+
+**Harness tầng 3 (đầu ra AI — §7)**: `python scripts/extract/trace_numbers.py --doc
+<tài-liệu.md> --seed <seed.json>` — mọi số CÓ ĐƠN VỊ trong tài liệu AI sinh phải truy
+được về seed (khớp đúng thứ nguyên: kg chỉ khớp trường mass, mm chỉ khớp trường _mm…),
+số mồ côi → exit 2 chặn phát hành. Đã nối vào check TRACEABILITY của skill /aigate.
+
+**Chiều dài hàn v0.2**: `FC_FILE=<asm.step> freecadcmd scripts/extract/weld_length.py`
+— phân loại từng cặp solid chạm nhau: weld (giao tuyến = ứng viên chân mối hàn, cận
+trên) / interference (thể tích giao >1 mm³ = D2-04) / trùng hình học (STEP xuất đúp —
+nghi đếm trùng khối lượng). Chưa qua G3 — số hàn chưa dùng cho hồ sơ chính thức.
+
 ### A.4. Golden set v0 (đã vận hành)
 
 `golden/step/` có 3 case **giải tích** (đáp án tính tay chính xác tuyệt đối):

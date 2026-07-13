@@ -277,7 +277,9 @@ trở thành mẫu PASS chuẩn của lớp BM.
 |---|---|---|
 | D1-01…D1-11 | Mở rộng `inventor_apprentice_extract.py` (đã đọc iProperties sống trên Tong lap.iam) | làm được NGAY, không cần mở Inventor |
 | D2-01/03 | FreeCAD headless (`freecad_extract.py` đã có solid check + bbox) | làm được NGAY qua STEP |
-| D2-04/05, D3-03/07, D1-11 enable | Inventor API sống (iLogic rule external — hạ tầng đã chạy) | cần viết rule, ~P1 |
+| D2-04, D3-03, D1-11 | `scripts/inventor/Drawing_Check_Live.iLogic.vb` (External Rule, xuất drawing_live_report.json) | rule đã viết — chưa chạy thật trên Inventor |
+| D2-04 đường thay thế (không cần Inventor) | `scripts/extract/weld_length.py` phân loại cặp interference/trùng-hình-học từ STEP qua FreeCAD | field-tested Tong lap: 1274 cặp cài nhau + 209 cặp trùng chỗ |
+| D2-05, D3-07 | Inventor API sống | cần viết, ~P2 |
 | D3-01/02/04/06, SM-05 | `parse_mech_drawing.py` (ezdxf, TCVN3 decode đã có) | mở rộng từ script hiện có |
 | HU-01…HU-06 | rhino3dm (đọc .3dm không cần Rhino) | adapter mới, viết khi có hull Rhino thật |
 | SEC-01…04 | Script quét thư mục + iProperty | làm được NGAY |
