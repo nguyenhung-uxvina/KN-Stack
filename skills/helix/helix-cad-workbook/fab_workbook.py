@@ -11,7 +11,9 @@ Guardrail: workbook là FEEDER (BOM Master qua erp-bom import-cad mới là sour
 of truth); KHÔNG bịa đơn giá — thiếu master → dừng có hướng dẫn; thiếu giá
 1 vật liệu → ô "#THIẾU-GIÁ" + CHECKLIST đỏ. Master data được COPY vào workbook
 tại thời điểm sinh (snapshot audit + công thức nội bộ, không external link);
-chạy lại = refresh (backup .bak, sheet NOTES nhập tay không bị đụng).
+chạy lại = SINH LẠI TOÀN BỘ workbook từ đầu (backup 1 mức .bak trước khi ghi
+đè — sheet/cột người dùng tự thêm KHÔNG được giữ; chỉnh sửa bền vững đặt ở
+WX-MASTER-DATA.xlsx).
 
 Usage:
   python fab_workbook.py <ingested_dir> --master WX-MASTER-DATA.xlsx \
@@ -376,13 +378,19 @@ def build_workbook(extracts, master, bom_csv, out_path, project, requirements):
     for row in parts_rows:
         for op in (ops_from_process(row[8]) or [""]):
             op_index.append((row, op))
+    # VT hao hụt tính theo nguyên công đầu (cắt phôi); các nguyên công sau chỉ tính công.
     for i, (row, op) in enumerate(op_index):
         n = i + 2
+        is_first_op = (i == 0) or (op_index[i - 1][0] is not row)
+        waste_formula = (f'=IFERROR(VLOOKUP(G{n},WASTE_FACTORS!$A:$D,4,FALSE),"{MISSING}")'
+                          if is_first_op else "")
+        vt_formula = (f'=IF(OR(H{n}="{MISSING}",E{n}="",D{n}=""),"{MISSING}",E{n}*(1+H{n}/100)*D{n})'
+                      if is_first_op else "")
         dm_ws.append([
             row[0], row[4], row[2], row[7], row[6], op,
             f'=F{n}&"|"&B{n}',
-            f'=IFERROR(VLOOKUP(G{n},WASTE_FACTORS!$A:$D,4,FALSE),"{MISSING}")',
-            f'=IF(OR(H{n}="{MISSING}",E{n}="",D{n}=""),"{MISSING}",E{n}*(1+H{n}/100)*D{n})',
+            waste_formula,
+            vt_formula,
             f'=IFERROR(VLOOKUP(G{n},LABOR_NORMS!$A:$E,4,FALSE),"{MISSING}")',
             f'=IFERROR(VLOOKUP(G{n},LABOR_NORMS!$A:$E,5,FALSE),"{MISSING}")',
             f'=IF(OR(J{n}="{MISSING}",D{n}=""),"{MISSING}",J{n}*D{n}/60)',
@@ -399,9 +407,9 @@ def build_workbook(extracts, master, bom_csv, out_path, project, requirements):
         n = i + 2
         dt_ws.append([
             row[0], row[2],
-            f"=DINH_MUC!I{n}",
-            f'=IFERROR(VLOOKUP(B{n},MATERIALS!$A:$E,5,FALSE),"{MISSING}")',
-            f'=IFERROR(C{n}*D{n},"{MISSING}")',
+            f'=IF(DINH_MUC!I{n}="","",DINH_MUC!I{n})',
+            f'=IF(C{n}="","",IFERROR(VLOOKUP(B{n},MATERIALS!$A:$E,5,FALSE),"{MISSING}"))',
+            f'=IF(C{n}="","",IFERROR(C{n}*D{n},"{MISSING}"))',
             f"=DINH_MUC!L{n}",
             f"=DINH_MUC!K{n}",
             f'=IFERROR(VLOOKUP(G{n},LABOR_RATES!$A:$B,2,FALSE),"{MISSING}")',
@@ -409,7 +417,7 @@ def build_workbook(extracts, master, bom_csv, out_path, project, requirements):
             f"=DINH_MUC!F{n}",
             f'=IFERROR(VLOOKUP(J{n},WORKSTATIONS!$A:$B,2,FALSE),"{MISSING}")',
             f'=IFERROR(F{n}*K{n},"{MISSING}")',
-            f'=IFERROR(E{n}+I{n}+L{n},"{MISSING}")',
+            f'=IF(COUNTIF(E{n}:L{n},"{MISSING}")>0,"{MISSING}",SUM(E{n},I{n},L{n}))',
         ])
     last = len(op_index) + 1
     dt_ws.append(["TỔNG", "", "", "", "", "", "", "", "", "", "", "",

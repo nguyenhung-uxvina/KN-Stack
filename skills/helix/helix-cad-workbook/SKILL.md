@@ -13,9 +13,10 @@ BOM là chuỗi CSV duy nhất có cấu trúc trong pipeline cũ — định m�
 
 ## Commands
 ```
-python fab_workbook.py <ingested_dir> --master WX-MASTER-DATA.xlsx --project <CODE> [--out x.xlsx]
+python fab_workbook.py <ingested_dir> --master WX-MASTER-DATA.xlsx --project <CODE> [--out x.xlsx] [--requirements param_requirements.json]
 python fab_workbook.py --init-master <path>     # tạo master seed (GIÁ MẪU — kỹ sư duyệt trước khi dùng)
 ```
+`--requirements` mặc định `references/param_requirements.json` (ma trận đủ thông số versioned).
 Tự động chạy trong `/helix-cad-to-fab` stage [5/5] (tắt: `--no-workbook`).
 
 ## Hai workbook
@@ -38,6 +39,6 @@ AI điền `references/so-tay-qc-template.md` từ sheet QC_DIMS + PARTS (KHÔNG
 - **FEEDER, không phải source of truth** — BOM Master (WX-OPS.xlsx/ERPNext) vẫn authoritative sau khi CEO duyệt diff `/erp-bom import-cad`. NEVER ghi thẳng ERPNext.
 - **NEVER bịa đơn giá/định mức/giờ công** — thiếu master → dừng + hướng dẫn `--init-master`; seed là GIÁ MẪU phải được kỹ sư duyệt (`_META.approved_by`) trước khi dự toán rời xưởng.
 - Thiếu giá 1 vật liệu → ô `#THIẾU-GIÁ` + CHECKLIST vàng — không đoán.
-- Refresh không đụng sheet người dùng tự thêm ngoài danh sách sinh máy; luôn backup `.bak`.
+- Refresh SINH LẠI toàn bộ workbook (backup 1 mức `.bak`) — sheet/cột tự thêm sẽ mất; mọi chỉnh sửa bền vững (giá, định mức, từ điển tên) đặt ở WX-MASTER-DATA.xlsx, không đặt trong FAB-DB.
 - Tên garbled → `[NEEDS-DECODE]`, decode là judgment CEO/AI; kết quả persist vào PART_DICTIONARY (sửa 1 lần).
 - Dự toán từ workbook là **nội bộ/feeder** — dự toán nộp chính thức theo quy trình dự toán của dự án.

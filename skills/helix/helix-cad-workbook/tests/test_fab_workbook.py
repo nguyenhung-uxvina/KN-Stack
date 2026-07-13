@@ -109,7 +109,7 @@ def test_du_toan_formulas_and_missing(tmp_path, master_path):
     assert "MATERIALS" in r1[3].value and "VLOOKUP" in r1[3].value
     assert "LABOR_RATES" in r1[7].value
     assert "WORKSTATIONS" in r1[10].value
-    assert r1[12].value.startswith("=IFERROR(")
+    assert r1[12].value.startswith("=IF(COUNTIF(")
     assert total[0].value == "TỔNG" and total[12].value.startswith("=SUM(")
     # P-003 thiếu material → item_code_vt rỗng → rate VLOOKUP bọc IFERROR ra MISSING khi mở Excel;
     # python-side: norm_gaps báo thiếu
@@ -117,6 +117,21 @@ def test_du_toan_formulas_and_missing(tmp_path, master_path):
                         fw.load_master_bom(FIX).get("p-003"), fw.load_master(master_path))
     assert "material" in gaps["missing"]
     assert "mass_kg" in gaps["missing"]
+
+
+def test_material_charged_once_per_part(tmp_path, master_path):
+    wb = _build(tmp_path, master_path)
+    dm = wb["DINH_MUC"]
+    rows = list(dm.iter_rows(min_row=2))
+    p001 = [r for r in rows if r[0].value == "P-001"]
+    assert len(p001) == 2                                  # laser + chan
+    assert "VLOOKUP" in p001[0][7].value                   # first op carries waste
+    assert p001[0][8].value.startswith("=IF(")             # vt formula on first op
+    # openpyxl round-trips a written "" as a blank cell (value None) — assert blank, not literal ""
+    assert not p001[1][7].value and not p001[1][8].value      # second op: no material
+    dt = wb["DU_TOAN"]
+    r2 = list(dt.iter_rows(min_row=2))[1]                  # P-001 chan row
+    assert r2[2].value.startswith("=IF(DINH_MUC!I3")       # gated vt_kg link
 
 
 def test_qc_dims(tmp_path, master_path):
