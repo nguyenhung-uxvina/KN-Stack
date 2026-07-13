@@ -155,3 +155,11 @@ def test_refresh_creates_bak(tmp_path, master_path):
     fw.main([FIX, "--master", master_path, "--project", "FIXTURE", "--out", out])
     fw.main([FIX, "--master", master_path, "--project", "FIXTURE", "--out", out])
     assert os.path.exists(out + ".bak")
+
+
+def test_resolve_param_thickness_multirow_bom():
+    # parity với validate.py _thickness_rows: bom[0] thiếu thickness nhưng bom[1] có
+    e = {"meta": {"part_id": "X"}, "bom": [{"code": "X"}, {"code": "X2", "thickness_mm": 5.0}],
+         "dimensions": [], "tolerances": [], "holes": [], "conflicts": [], "process_notes": []}
+    v, conf = fw.resolve_param(e, None, "thickness_mm")
+    assert v == 5.0 and conf == "MED"

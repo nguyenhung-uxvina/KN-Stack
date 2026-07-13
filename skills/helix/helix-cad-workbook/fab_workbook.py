@@ -197,10 +197,12 @@ def resolve_param(extract, bomrow, name):
     if name == "material":
         return meta.get("material") or ebom.get("material"), "MED"
     if name == "thickness_mm":
-        if ebom.get("thickness_mm") is not None:
-            return ebom["thickness_mm"], "MED"
+        for b in extract.get("bom", []) or []:
+            if b.get("thickness_mm") is not None:
+                return b["thickness_mm"], "MED"
         for d in extract.get("dimensions", []) or []:
-            if "thick" in _norm(d.get("param")) or "dày" in _norm(d.get("param")):
+            p = _norm(d.get("param"))
+            if any(k in p for k in ("thickness", "độ dày", "do day", "dày", "tôn", "plate")):
                 return d.get("value"), d.get("confidence", "LOW")
         return None, "LOW"
     if name == "mass_kg":
