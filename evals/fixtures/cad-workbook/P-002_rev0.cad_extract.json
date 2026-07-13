@@ -1,0 +1,9 @@
+{
+  "meta": {"part_id": "P-002", "product": "FIXTURE", "name": "vách ngăn", "material": "5083", "mass_kg": 1.8, "classification": "THƯỜNG"},
+  "dimensions": [{"param": "thickness", "value": 4.0, "confidence": "HIGH", "source": "dxf"}],
+  "tolerances": [{"value": 0.2, "rule": "±0.2 biên dạng", "confidence": "MED", "source": "pdf"}],
+  "holes": [],
+  "bom": [{"code": "P-002", "item": "2", "name": "vách ngăn", "material": "5083", "thickness_mm": 4.0}],
+  "conflicts": [],
+  "process_notes": []
+}

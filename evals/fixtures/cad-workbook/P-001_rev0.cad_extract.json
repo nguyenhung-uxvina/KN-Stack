@@ -1,0 +1,9 @@
+{
+  "meta": {"part_id": "P-001", "product": "FIXTURE", "name": "tấm đế", "material": "SS400", "mass_kg": 4.2, "classification": "THƯỜNG"},
+  "dimensions": [{"param": "thickness", "value": 6.0, "confidence": "HIGH", "source": "dxf"}],
+  "tolerances": [{"value": 0.1, "rule": "±0.1 lỗ định vị", "confidence": "HIGH", "source": "dxf"}],
+  "holes": [{"dia": 8.0, "count": 2, "positions": [[0, 0], [0, 30]], "source": "dxf", "confidence": "HIGH"}],
+  "bom": [{"code": "P-001", "item": "1", "name": "tấm đế", "material": "SS400", "thickness_mm": 6.0}],
+  "conflicts": [],
+  "process_notes": ["Ra 6.3 mặt trên"]
+}

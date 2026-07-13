@@ -1,0 +1,9 @@
+{
+  "meta": {"part_id": "P-003", "product": "FIXTURE", "name": "gân tăng cứng", "classification": "THƯỜNG"},
+  "dimensions": [],
+  "tolerances": [],
+  "holes": [],
+  "bom": [{"code": "P-003", "item": "3", "name": "gân tăng cứng", "thickness_mm": 6.0}],
+  "conflicts": [],
+  "process_notes": []
+}
