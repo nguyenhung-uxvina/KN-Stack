@@ -225,6 +225,37 @@ def resolve_param(extract, bomrow, name):
     return None, "LOW"
 
 
+def norm_gaps(extract, bomrow, master):
+    """Python-side: các thông số ĐỊNH MỨC/DỰ TOÁN bị thiếu cho 1 part (mirror công thức Excel).
+    Trả {'missing': [...], 'no_rate': [...]} — dùng cho CHECKLIST + báo cáo CLI."""
+    missing, no_rate = [], []
+    mat, _ = resolve_param(extract, bomrow, "material")
+    mass, _ = resolve_param(extract, bomrow, "mass_kg")
+    qty, _ = resolve_param(extract, bomrow, "qty")
+    proc, _ = resolve_param(extract, bomrow, "process")
+    if not mat:
+        missing.append("material")
+    elif not material_code(mat, master):
+        no_rate.append(f"material '{mat}' không khớp MATERIALS master")
+    if mass is None:
+        missing.append("mass_kg")
+    if qty in (None, ""):
+        missing.append("qty")
+    if not proc:
+        missing.append("process")
+    else:
+        mclass = material_class(mat, master)
+        waste_keys = {f"{r[0]}|{r[1]}" for r in master["WASTE_FACTORS"]["rows"]}
+        norm_keys = {f"{r[0]}|{r[1]}" for r in master["LABOR_NORMS"]["rows"]}
+        for op in ops_from_process(proc):
+            k = f"{op}|{mclass}"
+            if k not in waste_keys:
+                no_rate.append(f"waste {k}")
+            if k not in norm_keys:
+                no_rate.append(f"norm {k}")
+    return {"missing": missing, "no_rate": no_rate}
+
+
 def _part_name(extract, master):
     """Tên sạch: tra PART_DICTIONARY trước, garble → cờ NEEDS-DECODE."""
     meta = extract.get("meta", {}) or {}
@@ -296,6 +327,57 @@ def build_workbook(extracts, master, bom_csv, out_path, project, requirements):
     ws = wb.create_sheet("BOM")
     _ws_write(ws, ["item_code", "item_name", "description", "qty_per_unit",
                    "uom", "material", "spec", "process"], bom_rows)
+
+    # DINH_MUC — 1 dòng per part×operation, công thức sống VLOOKUP vào master copy
+    dm_ws = wb.create_sheet("DINH_MUC")
+    dm_ws.append(["part_id", "material_class", "item_code_vt", "qty", "mass_kg",
+                  "operation", "key", "waste_pct", "vt_kg", "time_in_mins", "grade", "nc_gio"])
+    for c in dm_ws[1]:
+        c.font = BOLD
+    op_index = []  # (part_row, op) theo thứ tự dòng — DU_TOAN dùng lại 1:1
+    for row in parts_rows:
+        for op in (ops_from_process(row[8]) or [""]):
+            op_index.append((row, op))
+    for i, (row, op) in enumerate(op_index):
+        n = i + 2
+        dm_ws.append([
+            row[0], row[4], row[2], row[7], row[6], op,
+            f'=F{n}&"|"&B{n}',
+            f'=IFERROR(VLOOKUP(G{n},WASTE_FACTORS!$A:$D,4,FALSE),"{MISSING}")',
+            f'=IF(OR(H{n}="{MISSING}",E{n}="",D{n}=""),"{MISSING}",E{n}*(1+H{n}/100)*D{n})',
+            f'=IFERROR(VLOOKUP(G{n},LABOR_NORMS!$A:$E,4,FALSE),"{MISSING}")',
+            f'=IFERROR(VLOOKUP(G{n},LABOR_NORMS!$A:$E,5,FALSE),"{MISSING}")',
+            f'=IF(OR(J{n}="{MISSING}",D{n}=""),"{MISSING}",J{n}*D{n}/60)',
+        ])
+
+    # DU_TOAN — 1:1 với DINH_MUC + dòng TỔNG. rate lookup master copy; lỗi → #THIẾU-GIÁ
+    dt_ws = wb.create_sheet("DU_TOAN")
+    dt_ws.append(["part_id", "item_code_vt", "vt_kg", "rate_vt", "tt_vat_tu",
+                  "nc_gio", "grade", "rate_nc", "tt_nhan_cong",
+                  "workstation", "hour_rate", "tt_may", "tong_vnd"])
+    for c in dt_ws[1]:
+        c.font = BOLD
+    for i, (row, op) in enumerate(op_index):
+        n = i + 2
+        dt_ws.append([
+            row[0], row[2],
+            f"=DINH_MUC!I{n}",
+            f'=IFERROR(VLOOKUP(B{n},MATERIALS!$A:$E,5,FALSE),"{MISSING}")',
+            f'=IFERROR(C{n}*D{n},"{MISSING}")',
+            f"=DINH_MUC!L{n}",
+            f"=DINH_MUC!K{n}",
+            f'=IFERROR(VLOOKUP(G{n},LABOR_RATES!$A:$B,2,FALSE),"{MISSING}")',
+            f'=IFERROR(F{n}*H{n},"{MISSING}")',
+            f"=DINH_MUC!F{n}",
+            f'=IFERROR(VLOOKUP(J{n},WORKSTATIONS!$A:$B,2,FALSE),"{MISSING}")',
+            f'=IFERROR(F{n}*K{n},"{MISSING}")',
+            f'=IFERROR(E{n}+I{n}+L{n},"{MISSING}")',
+        ])
+    last = len(op_index) + 1
+    dt_ws.append(["TỔNG", "", "", "", "", "", "", "", "", "", "", "",
+                  f"=SUM(M2:M{last})"])
+    for c in dt_ws[last + 1]:
+        c.font = BOLD
 
     wb.save(out_path)
     return out_path

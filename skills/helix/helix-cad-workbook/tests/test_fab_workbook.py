@@ -72,3 +72,48 @@ def test_build_parts_bom(tmp_path, master_path):
     bom_header = [c.value for c in wb["BOM"][1]]
     assert bom_header == ["item_code", "item_name", "description", "qty_per_unit",
                           "uom", "material", "spec", "process"]
+
+
+def _build(tmp_path, master_path):
+    out = str(tmp_path / "FIXTURE_FAB-DB.xlsx")
+    fw.main([FIX, "--master", master_path, "--project", "FIXTURE", "--out", out])
+    return openpyxl.load_workbook(out)
+
+
+def test_dinh_muc_formulas(tmp_path, master_path):
+    wb = _build(tmp_path, master_path)
+    ws = wb["DINH_MUC"]
+    header = [c.value for c in ws[1]]
+    assert header == ["part_id", "material_class", "item_code_vt", "qty", "mass_kg",
+                      "operation", "key", "waste_pct", "vt_kg", "time_in_mins", "grade", "nc_gio"]
+    rows = {(r[0].value, r[5].value): r for r in ws.iter_rows(min_row=2)}
+    # P-001 process 'laser+chấn' → 2 dòng
+    assert ("P-001", "laser") in rows and ("P-001", "chan") in rows
+    r = rows[("P-001", "laser")]
+    assert r[6].value == '=F2&"|"&B2'
+    assert "VLOOKUP" in r[7].value and "WASTE_FACTORS" in r[7].value
+    assert "1+H2/100" in r[8].value            # vt = mass*(1+waste%)*qty
+    assert "LABOR_NORMS" in r[9].value
+
+
+def test_du_toan_formulas_and_missing(tmp_path, master_path):
+    wb = _build(tmp_path, master_path)
+    ws = wb["DU_TOAN"]
+    header = [c.value for c in ws[1]]
+    assert header == ["part_id", "item_code_vt", "vt_kg", "rate_vt", "tt_vat_tu",
+                      "nc_gio", "grade", "rate_nc", "tt_nhan_cong",
+                      "workstation", "hour_rate", "tt_may", "tong_vnd"]
+    body = list(ws.iter_rows(min_row=2))
+    data, total = body[:-1], body[-1]
+    r1 = data[0]
+    assert "MATERIALS" in r1[3].value and "VLOOKUP" in r1[3].value
+    assert "LABOR_RATES" in r1[7].value
+    assert "WORKSTATIONS" in r1[10].value
+    assert r1[12].value.startswith("=IFERROR(")
+    assert total[0].value == "TỔNG" and total[12].value.startswith("=SUM(")
+    # P-003 thiếu material → item_code_vt rỗng → rate VLOOKUP bọc IFERROR ra MISSING khi mở Excel;
+    # python-side: norm_gaps báo thiếu
+    gaps = fw.norm_gaps(dict((e["meta"]["part_id"], e) for _, e in fw.load_extracts(FIX))["P-003"],
+                        fw.load_master_bom(FIX).get("p-003"), fw.load_master(master_path))
+    assert "material" in gaps["missing"]
+    assert "mass_kg" in gaps["missing"]
