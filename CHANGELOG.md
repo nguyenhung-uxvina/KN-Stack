@@ -4,6 +4,25 @@
 ### Added
 - `plugins/leo-ai/` — portable Claude Code plugin bundling the LEO AI toolkit (leo-assist, leo-prompt, leo-bridge skills + mentor-getleo-ai + leo-bridge MCP server). Copy-anywhere; `build.sh` regenerates from canonical sources. `server.py` gains `LEO_BRIDGE_LEDGER_DIR` env override.
 
+## [1.8.0] - 2026-07-13
+### Added
+- NEW skill `helix/helix-cad-workbook` — tầng dữ liệu Excel giữa ingest và fab: {PROJECT}_FAB-DB.xlsx
+  (PARTS/BOM schema ERPNext/DINH_MUC/DU_TOAN công thức sống/QC_DIMS/CHECKLIST) + WX-MASTER-DATA.xlsx
+  seed + param_requirements.json (ma trận đủ thông số 5 đầu ra).
+- helix-cad-validate v2.1: rule `param_sufficiency` (+ status WARN không gate).
+- helix-cad-to-fab: stage [5/5] workbook (--master/--project/--no-workbook).
+- forge-fabrication QTCN template: §4/§7 đổi nguồn số liệu sang FAB-DB.xlsx.
+- Eval: evals/helix-cad-workbook.json (static 9/9 assertions) + fixtures/cad-workbook.
+
+## [1.7.0] - 2026-07-11
+### Added
+- `design/wx-diagram` — tầng xuất bản sơ đồ draw.io (wrapper cho drawio-skill engine qua junction; PNG/SVG/PDF cho gate review, BQP docs, fab handoff, KHCN). Eval static `evals/wx-diagram.json` 10/10. Skill count 254 → 255. VERSION 1.6.0 → 1.7.0.
+- Auto-hook wx-diagram tại 7 điểm gate/handoff: helix-p4-handoff, helix-quality-gate, forge-fabrication, forge-proposal-khcn, gate1-3.
+- Suggest-only hook tại 6 block: helix-p1-compile, p2-select, p3-integrate, bridge-dashboard, bridge-knowledge-base, bridge-flywheel.
+### Notes
+- Engine KHÔNG vendor — junction `~/.claude/skills/drawio-skill` → `D:\GitHub\drawio-skill\skills\drawio-skill`; cập nhật bằng git pull ở repo ngoài.
+- Prerequisite: draw.io desktop CLI ≥ 30 (`winget install --id JGraph.Draw -e`); đã cài 30.2.6 per-user.
+
 ## [1.6.0] - 2026-07-09
 ### Changed
 - **`helix-cad-validate` → v2.0 (Assay Computational spine)** — nâng cấp theo spec 5-bước CEO, giữ nguyên kiến trúc twin-pair (validate = Computational hard-gate / `helix-design-review` = Inferential propose-only), KHÔNG gộp ML vào gate. `validate.py` bump 1.0 → 2.0, vẫn **thuần stdlib, air-gapped**:
