@@ -3,6 +3,7 @@
 ## [Unreleased]
 ### Added
 - NEW skill `design/wx-krpano` — offline-first 360° virtual-tour production layer driving the krpano engine (krpanotools CLI + MAKE VTOUR droplets + XML actions / JavaScript interface). Turns a folder of panoramas into a self-hosted or standalone-`.exe` interactive tour. Security/Classification Gate first (MẬT → air-gapped `.exe` only, never cloud tour hosts); 4 WX use-case templates (product-showcase ⭐ / offline BQP kiosk / facility as-built / WebVR training); deployment modes offline-first (NW.js exe / self-hosted static / localhost / inline). references/LEARNING_PATH.md = DMIR × meta-learning study system. Built via `/research-to-skill --deep krpano`; NLM notebook `krpano` (24 sources) + 48.9K cited engineering-manual synthesis. Complements `wx-diagram` (static diagrams). Adds 1 skill.
+- `evals/wx-krpano.json` (static, 11/11 assertions: security-gate-first, offline-first-no-cloud, krpanotools/droplet pipeline, multires tiling, dual-runtime actions/JS, scene+hotspot nav, offline deploy modes, file:// gotcha, license/watermark, 4 use-case templates, complements wx-diagram).
 
 ## [1.5.0] - 2026-07-05
 ### Added

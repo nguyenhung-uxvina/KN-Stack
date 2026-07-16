@@ -1,0 +1,88 @@
+{
+  "skill": "wx-krpano",
+  "version": "1.0",
+  "description": "Binary assertions for wx-krpano — offline-first 360° virtual-tour production layer (krpano engine) for air-gapped defense use",
+  "mode": "static",
+  "test_input": "dựng tour ảo 360 trưng bày sản phẩm BB-01 giao BQP, đóng gói chạy offline",
+  "total_required": 11,
+  "passing_score": 10,
+  "assertions": [
+    {
+      "id": "WK-SECURITY-GATE",
+      "name": "security_classification_gate_first",
+      "check": "a Security/Classification Gate runs FIRST (before capture); MẬT content → air-gapped .exe only, never a 3rd-party/cloud host",
+      "regex": "Security.*Gate|Classification Gate|Step 0|MẬT",
+      "required": true
+    },
+    {
+      "id": "WK-OFFLINE-FIRST",
+      "name": "offline_first_no_cloud_hosts",
+      "check": "offline-first principle — defense content never uploaded to cloud tour hosts (Matterport/Panoee)",
+      "regex": "OFFLINE-FIRST|offline-first|Matterport|Panoee|đám mây|CẤM",
+      "required": true
+    },
+    {
+      "id": "WK-PIPELINE",
+      "name": "krpanotools_droplet_pipeline",
+      "check": "wraps the krpanotools CLI + MAKE VTOUR (MULTIRES) droplet / makepano pipeline (not hand-built)",
+      "regex": "krpanotools|MAKE VTOUR|makepano|droplet",
+      "required": true
+    },
+    {
+      "id": "WK-MULTIRES",
+      "name": "multiresolution_tiling",
+      "check": "multiresolution tiling — only necessary tiles loaded, no size limit; tile/VR defaults",
+      "regex": "multires|multiresolution|tile|tilesize|1536",
+      "required": true
+    },
+    {
+      "id": "WK-DUAL-RUNTIME",
+      "name": "dual_runtime_actions_vs_js",
+      "check": "dual runtime — XML actions scripting vs JavaScript interface (embedpano / krpano.get('global'))",
+      "regex": "actions|JavaScript|embedpano|krpano\\.get",
+      "required": true
+    },
+    {
+      "id": "WK-SCENE-HOTSPOT",
+      "name": "scene_hotspot_navigation",
+      "check": "tour.xml scene structure + navigation hotspot via loadscene",
+      "regex": "scene|hotspot|loadscene",
+      "required": true
+    },
+    {
+      "id": "WK-DEPLOY-MODES",
+      "name": "offline_deployment_modes",
+      "check": "offline-first deployment modes — NW.js standalone .exe / self-hosted static / localhost / inline",
+      "regex": "NW\\.js|standalone|\\.exe|localhost|inline",
+      "required": true
+    },
+    {
+      "id": "WK-FILEPROTO-GOTCHA",
+      "name": "file_protocol_blocked_gotcha",
+      "check": "gotcha — opening file:// is blocked; use testserver / .exe / inline",
+      "regex": "file://|testserver|localhost server",
+      "required": true
+    },
+    {
+      "id": "WK-LICENSE",
+      "name": "license_register_no_watermark",
+      "check": "license handling — register to remove watermark before delivery",
+      "regex": "register|watermark|license",
+      "required": true
+    },
+    {
+      "id": "WK-USE-CASES",
+      "name": "four_wx_use_case_templates",
+      "check": "4 WX use-case templates — product showcase / offline BQP kiosk / facility as-built / WebVR training",
+      "regex": "[Ss]howcase|kiosk|[Ff]acility|WebVR|VR [Tt]raining",
+      "required": true
+    },
+    {
+      "id": "WK-COMPLEMENT",
+      "name": "complements_wx_diagram_not_helix_draw",
+      "check": "positioned as complement — wx-krpano (immersive) vs wx-diagram (static) vs helix-draw (internal sketch)",
+      "regex": "wx-diagram|helix-draw|[Bb]ổ trợ|[Cc]omplement",
+      "required": true
+    }
+  ]
+}
