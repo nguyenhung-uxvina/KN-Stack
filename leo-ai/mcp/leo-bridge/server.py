@@ -163,6 +163,11 @@ def _selftest() -> None:
     assert set(t) == {"A", "B", "C", "D", "E1", "E2", "E3", "F"}, f"templates: {sorted(t)}"
     assert gate.classify("bạc đạn SKF 6205 chịu 2 kN").verdict == "THUONG"
     assert gate.classify("bạc lót cho UUV").verdict == "MAT"
+    # "_" là separator, không phải word char — slug snake_case không được lọt gate
+    assert gate.classify("goi Xuong_UUV_CoKhi").verdict == "MAT"
+    assert gate.classify("he fire_control_v2").verdict == "MAT"
+    # ...nhưng term dính liền trong từ khác vẫn không match oan
+    assert gate.classify("UUVN co so").verdict == "THUONG"
     p = builder.build_prompt("B", {"QUESTION": "dung sai H7/g6 cho trục Ø25?",
                                    "CONTEXT": "thép C45, lắp trượt"})
     assert "[QUESTION] dung sai H7/g6" in p

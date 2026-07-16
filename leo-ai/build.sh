@@ -10,6 +10,18 @@ echo "== leo-ai plugin build =="
 echo "Plugin: $PLUGIN_DIR"
 echo "Source: $KN_ROOT"
 
+# 0. Guard: refuse to wipe when canonical sources are absent (this plugin folder
+#    may BE the only copy — e.g. repo layouts where KN-Stack canonical trees moved).
+for src in "$KN_ROOT/skills/helix/leo-assist" "$KN_ROOT/skills/helix/leo-prompt" \
+           "$KN_ROOT/skills/helix/leo-bridge" "$KN_ROOT/skills/mentors/mentor-getleo-ai" \
+           "$KN_ROOT/mcp/leo-bridge"; do
+  if [ ! -d "$src" ]; then
+    echo "ABORT: canonical source missing: $src"
+    echo "       (plugin trees NOT touched — this folder may be the canonical copy)"
+    exit 1
+  fi
+done
+
 # 1. Clean generated trees (plugin-native files untouched)
 rm -rf "$PLUGIN_DIR/skills" "$PLUGIN_DIR/mcp"
 mkdir -p "$PLUGIN_DIR/skills" "$PLUGIN_DIR/mcp"

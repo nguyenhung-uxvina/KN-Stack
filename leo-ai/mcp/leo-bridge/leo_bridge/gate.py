@@ -36,6 +36,11 @@ def load_denylist(path=DENYLIST_PATH) -> dict:
 _ASCII_TERM_RE = re.compile(r"^[A-Za-z\s-]+$")
 
 
+# Word boundary that treats "_" as a separator: `\w` would let snake_case
+# slugs smuggle terms past the gate ("Xuong_UUV_CoKhi" must hit like "X-UUV").
+_B = r"[^\W_]"
+
+
 def _term_regex(term: str, case_sensitive: bool) -> re.Pattern:
     flags = 0 if case_sensitive else re.IGNORECASE
     if _ASCII_TERM_RE.match(term):
@@ -45,10 +50,10 @@ def _term_regex(term: str, case_sensitive: bool) -> re.Pattern:
         # catches "torpedoes". Non-ASCII (Vietnamese) terms skip this —
         # Vietnamese doesn't pluralize, so exact matching stays as-is.
         parts = term.split()
-        body = r"[\s-]+".join(re.escape(p) for p in parts)
-        pattern = rf"(?<!\w){body}(?:e?s)?(?!\w)"
+        body = r"[\s_-]+".join(re.escape(p) for p in parts)
+        pattern = rf"(?<!{_B}){body}(?:e?s)?(?!{_B})"
     else:
-        pattern = rf"(?<!\w){re.escape(term)}(?!\w)"
+        pattern = rf"(?<!{_B}){re.escape(term)}(?!{_B})"
     return re.compile(pattern, flags)
 
 
