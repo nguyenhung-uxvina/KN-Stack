@@ -14,7 +14,7 @@ __pycache__/
 
 # CAD pipeline — file SINH RA khi chạy (không phải nguồn)
 *.validation.json
-golden/**/*.freecad.json
+*.freecad.json
 *.rhino-check.json
 *.material-map.json
 hull-material-map.json
