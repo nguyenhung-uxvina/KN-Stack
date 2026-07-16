@@ -77,6 +77,38 @@ Sub Main()
                     "AnalyzeInterference lỗi: " & ex.Message)
         End Try
 
+        ' ---------- D2-05: occurrence "trôi" (không ground, không dính constraint nào) ----------
+        Try
+            Dim constrained As New HashSet(Of String)(StringComparer.OrdinalIgnoreCase)
+            For Each c As AssemblyConstraint In oAsm.ComponentDefinition.Constraints
+                Try : constrained.Add(c.OccurrenceOne.Name) : Catch : End Try
+                Try : constrained.Add(c.OccurrenceTwo.Name) : Catch : End Try
+            Next
+            Dim nFloat As Integer = 0
+            For Each occ As ComponentOccurrence In oAsm.ComponentDefinition.Occurrences
+                Dim grounded As Boolean = True
+                Try : grounded = occ.Grounded : Catch : End Try
+                If (Not grounded) AndAlso (Not constrained.Contains(occ.Name)) Then
+                    nFloat += 1
+                    If nFloat <= 15 Then
+                        AddRule(entries, human, nFail, nWarn, "D2-05", "WARNING", occ.Name,
+                                "occurrence chưa ground và không có constraint — vị trí có thể trôi khi sửa")
+                    End If
+                End If
+            Next
+            If nFloat > 15 Then
+                AddRule(entries, human, nFail, nWarn, "D2-05", "WARNING", oAsm.DisplayName,
+                        "… và " & (nFloat - 15) & " occurrence trôi nữa")
+            End If
+            If nFloat = 0 Then
+                AddRule(entries, human, nFail, nWarn, "D2-05", "PASS", oAsm.DisplayName,
+                        "mọi occurrence đều ground hoặc có constraint")
+            End If
+        Catch ex As Exception
+            AddRule(entries, human, nFail, nWarn, "D2-05", "WARNING", oAsm.DisplayName,
+                    "kiểm ràng buộc lỗi: " & ex.Message)
+        End Try
+
     ElseIf doc.DocumentType = DocumentTypeEnum.kDrawingDocumentObject Then
         Dim oDrw As DrawingDocument = doc
 
@@ -111,6 +143,28 @@ Sub Main()
         Catch ex As Exception
             AddRule(entries, human, nFail, nWarn, "D3-03", "WARNING", oDrw.DisplayName,
                     "duyệt dimension lỗi: " & ex.Message)
+        End Try
+
+        ' ---------- D3-07: ký hiệu hàn hiện diện (với bản vẽ kết cấu hàn) ----------
+        Try
+            Dim nWeld As Integer = 0
+            For Each oSheet As Sheet In oDrw.Sheets
+                Try
+                    nWeld += oSheet.WeldSymbols.Count           ' [VER] tên collection theo version
+                Catch
+                    Try : nWeld += oSheet.WeldingSymbols.Count : Catch : End Try
+                End Try
+            Next
+            If nWeld = 0 Then
+                AddRule(entries, human, nFail, nWarn, "D3-07", "WARNING", oDrw.DisplayName,
+                        "0 ký hiệu hàn trên bản vẽ — nếu đây là kết cấu hàn (WA/WS) thì theo D3-07 là FAIL")
+            Else
+                AddRule(entries, human, nFail, nWarn, "D3-07", "PASS", oDrw.DisplayName,
+                        nWeld & " ký hiệu hàn")
+            End If
+        Catch ex As Exception
+            AddRule(entries, human, nFail, nWarn, "D3-07", "WARNING", oDrw.DisplayName,
+                    "đếm weld symbol lỗi: " & ex.Message)
         End Try
     Else
         MessageBox.Show("Rule này chạy trên .iam hoặc .idw/.dwg.", "Drawing_Check_Live")

@@ -273,6 +273,20 @@ số mồ côi → exit 2 chặn phát hành. Đã nối vào check TRACEABILITY
 trên) / interference (thể tích giao >1 mm³ = D2-04) / trùng hình học (STEP xuất đúp —
 nghi đếm trùng khối lượng). Chưa qua G3 — số hàn chưa dùng cho hồ sơ chính thức.
 
+**Vòng phản hồi thực địa (giai đoạn 4)**: schema `schemas/qtcn-actuals.schema.json` +
+`scripts/extract/record_actuals.py` — ghi giờ công/vật tư/NDT THẬT (append-only, kiểm
+schema trước khi ghi), `--report` ra `calibration.json`: hệ số giờ công, suất hàn
+m/giờ theo tư thế, hệ số hao hụt, tỷ lệ khuyết tật — đầu vào cho lần lập định mức kế
+tiếp. Sau 3–5 sản phẩm, định mức chuyển từ ước tính sang dữ liệu thật.
+
+**Dashboard 1 trang**: `python scripts/extract/pipeline_dashboard.py --root
+<_QTCN_export>` — gộp mọi report (bản vẽ/trích xuất/kiểm chéo/AI/hàn/giao việc)
+thành 1 bảng + danh sách việc đang chặn.
+
+**AP242/PMI (việc mở)**: export STEP từ iLogic đã đặt AP242 (protocol 4, fallback im
+lặng nếu Inventor cũ). Khai thác PMI ngữ nghĩa (đọc GD&T thẳng từ 3D thay vì parse
+DXF 2D) cần file thật có MBD annotations để thử — chưa có trong bộ hiện tại.
+
 ### A.4. Golden set v0 (đã vận hành)
 
 `golden/step/` có 3 case **giải tích** (đáp án tính tay chính xác tuyệt đối):

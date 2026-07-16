@@ -279,7 +279,9 @@ trở thành mẫu PASS chuẩn của lớp BM.
 | D2-01/03 | FreeCAD headless (`freecad_extract.py` đã có solid check + bbox) | làm được NGAY qua STEP |
 | D2-04, D3-03, D1-11 | `scripts/inventor/Drawing_Check_Live.iLogic.vb` (External Rule, xuất drawing_live_report.json) | rule đã viết — chưa chạy thật trên Inventor |
 | D2-04 đường thay thế (không cần Inventor) | `scripts/extract/weld_length.py` phân loại cặp interference/trùng-hình-học từ STEP qua FreeCAD | field-tested Tong lap: 1274 cặp cài nhau + 209 cặp trùng chỗ |
-| D2-05, D3-07 | Inventor API sống | cần viết, ~P2 |
+| D2-05, D3-07 | đã thêm vào `Drawing_Check_Live.iLogic.vb` (occurrence trôi; đếm weld symbol) | rule đã viết — chưa chạy thật |
+| HU-01…HU-04 | `scripts/extract/rhino_check.py` (rhino3dm, không cần cài Rhino) + xuất `*.material-map.json` gắn vật liệu vào seed STEP | field-tested trên fixture cài lỗi (golden/rhino/, trong battery) |
+| HU-05/06 + diện tích/thể tích hull | rhino3dm KHÔNG tính được mass properties — hình học đi đường STEP AP214 → freecad_extract (WX-QT-CAD-IO-01) | quy trình, không cần code |
 | D3-01/02/04/06, SM-05 | `parse_mech_drawing.py` (ezdxf, TCVN3 decode đã có) | mở rộng từ script hiện có |
 | HU-01…HU-06 | rhino3dm (đọc .3dm không cần Rhino) | adapter mới, viết khi có hull Rhino thật |
 | SEC-01…04 | Script quét thư mục + iProperty | làm được NGAY |

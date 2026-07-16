@@ -69,6 +69,26 @@ def main():
     expect("cross-mismatch", ["--cross", f("seed_inventor.json"), f("seed_good.json")], 2)
     expect("determinism", ["--determinism", f("seed_good.json"), f("seed_good.json")], 0)
 
+    # --- Rhino HU-rules (nếu có rhino3dm + fixture) ---
+    rh_good = os.path.join(REPO, "golden", "rhino", "fixture-good.3dm")
+    rh_bad = os.path.join(REPO, "golden", "rhino", "fixture-bad.3dm")
+    try:
+        import rhino3dm  # noqa: F401
+        have_rhino = True
+    except ImportError:
+        have_rhino = False
+        print("— Rhino: thiếu rhino3dm, bỏ qua (pip install rhino3dm) —")
+    if have_rhino and os.path.exists(rh_good):
+        print("— Rhino HU-rules (rhino_check) —")
+        for tag, path, want in (("rhino-good", rh_good, 0), ("rhino-bad", rh_bad, 2)):
+            p = subprocess.run([sys.executable, os.path.join(HERE, "rhino_check.py"),
+                                "--file", path, "--out", tmp],
+                               capture_output=True, text=True, encoding="utf-8", errors="replace")
+            ok = p.returncode == want
+            print("  [%s] %-22s exit=%d (kỳ vọng %d)" % ("OK " if ok else "HỎNG", tag, p.returncode, want))
+            if not ok:
+                fails.append(tag)
+
     print("— Golden set giải tích (G3) —")
     if a.regen:
         if not os.path.exists(FREECADCMD):
