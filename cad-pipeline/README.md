@@ -6,6 +6,7 @@
 > đã qua tầng trước (defense in depth).
 >
 > Phiên bản hiện hành: xem [CHANGELOG.md](CHANGELOG.md) · Việc mở: [ROADMAP.md](ROADMAP.md)
+> · **Hướng dẫn thực hiện theo vai trò: [docs/huong-dan/](docs/huong-dan/00-tong-quan.md)**
 
 ## 1. Kiến trúc 3 tầng
 
@@ -37,6 +38,8 @@ cad-pipeline/
 ├── README.md / CHANGELOG.md / ROADMAP.md   ← bạn đang ở đây
 ├── docs/        3 đặc tả: EXTRACT-SENSOR (S-rules, bản gốc CEO) ·
 │                DRAWING-SENSOR (D-rules + loại chi tiết + lớp SP BM) · CAD-IO (STEP/read-only)
+│   └── huong-dan/   HD-00…07 — SOP theo vai trò (thiết kế · KS · QC · xưởng · CEO):
+│                    lệnh gõ gì, kết quả đọc thế nào, bảng tra sự cố
 ├── schemas/     qtcn-seed.schema.json (giao diện chung) · materials.json (MỘT nguồn
 │                danh mục vật liệu — sửa Ở ĐÂY, không sửa trong code) · qtcn-actuals.schema.json
 ├── scripts/
@@ -73,6 +76,8 @@ sản xuất), `scripts/_codify_ledger.md` (sổ codify chung toàn repo — m�
 | self_check.bat | Kéo-thả seed tự kiểm (G1 sơ bộ) | tested |
 
 ## 4. Quy trình vận hành chuẩn (mỗi sản phẩm)
+
+> Bản chi tiết từng bước theo vai trò: [docs/huong-dan/00-tong-quan.md](docs/huong-dan/00-tong-quan.md)
 
 1. **Inventor**: mở .iam → chạy External Rule `Export_QTCN_Package` → `_QTCN_export/<asm>/`
 2. `python cad-pipeline/scripts/extract/run_pipeline.py --dir <thư mục đó>` — sửa theo gate báo

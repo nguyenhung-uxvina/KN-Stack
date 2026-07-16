@@ -3,6 +3,14 @@
 > Quy ước: mỗi phát hành = tag `cad-pipeline-vX.Y`; chi tiết kiểm chứng từng script
 > nằm trong `scripts/_codify_ledger.md` (append-only). File này là bản đọc nhanh.
 
+## v0.4.1 — 2026-07-16 · Bộ hướng dẫn thực hiện (docs-only)
+
+- Thêm `docs/huong-dan/` HD-00…07 — SOP theo vai trò: tổng quan/vai trò-đọc-gì (00),
+  bên thiết kế chuẩn bị CAD + export (01), KS chạy trích xuất một lệnh (02), kiểm bản
+  vẽ 3 đường Apprentice/live/Rhino (03), gate G1/G2/G3 + golden + chính sách phát hành
+  (04), sinh 5 đầu ra + trace số AI (05), ghi actuals → calibration (06), bảng tra sự
+  cố từ lỗi đã xảy ra thật (07). Lệnh trong hướng dẫn lấy từ CLI thật của từng script.
+
 ## v0.4 — 2026-07-13 · Gom về `cad-pipeline/` + tài liệu hub
 
 - Toàn bộ pipeline (docs/schemas/scripts/golden/hooks) chuyển về **một thư mục
