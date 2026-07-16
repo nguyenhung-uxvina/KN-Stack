@@ -3,6 +3,17 @@
 > Quy ước: mỗi phát hành = tag `cad-pipeline-vX.Y`; chi tiết kiểm chứng từng script
 > nằm trong `scripts/_codify_ledger.md` (append-only). File này là bản đọc nhanh.
 
+## v0.5.1 — 2026-07-16 · Nâng cấp GUI (vận hành + kỷ luật gate)
+
+- **Kết quả kiểm…**: đọc `*.validation.json` (form F01) → bảng verdict + chi tiết
+  rule FAIL/WARNING kèm giá trị đo; WARNING list = phiếu lấy mẫu G2.
+- **Kỷ luật `--force`**: bắt buộc nhập lý do, ghi `runs.jsonl` (nhật ký mọi lần chạy:
+  ts/lệnh/exit/ghi chú); `--force` không bao giờ được nhớ giữa phiên.
+- Nhớ cấu hình + 10 thư mục gần đây (combobox, `%APPDATA%\WXPipeline\`); nút ■ Dừng;
+  Lưu log… ra .txt; high-DPI; con chạy không nháy cửa sổ.
+- Verify: smoke-test offline 3 nhóm (viewer parse F01 + sắp FAIL trước, journal
+  ghi/reset note, config nạp lại đúng và k_force luôn tắt) — PASS toàn bộ.
+
 ## v0.5 — 2026-07-16 · Phần mềm điều khiển tổng thể (GUI)
 
 - Thêm `app/wx_pipeline_gui.py` — desktop GUI Tkinter (0 phụ thuộc ngoài) gom mọi bước

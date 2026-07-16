@@ -16,12 +16,14 @@ File MẬT xử lý trên máy nội bộ như mọi khi — GUI không đổi v
 """
 import os
 import sys
+import json
 import queue
+import datetime
 import threading
 import subprocess
 
 import tkinter as tk
-from tkinter import ttk, filedialog, messagebox, scrolledtext
+from tkinter import ttk, filedialog, messagebox, scrolledtext, simpledialog
 
 # ── Đường dẫn (tính từ vị trí file này: cad-pipeline/app/…) ───────────────────
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -34,6 +36,15 @@ FREECADCMD = os.environ.get(
     "FREECADCMD", r"C:\Program Files\FreeCAD 1.1\bin\freecadcmd.exe")
 
 EXT_RULE = os.path.join(INVENTOR, "Export_QTCN_Package.iLogic.vb")
+
+# Cấu hình + nhật ký chạy của NGƯỜI DÙNG (ngoài repo — không làm bẩn git)
+CONFIG_DIR = os.path.join(os.environ.get("APPDATA") or HERE, "WXPipeline")
+CONFIG_PATH = os.path.join(CONFIG_DIR, "config.json")
+JOURNAL_PATH = os.path.join(CONFIG_DIR, "runs.jsonl")
+# Không khôi phục các key này từ config: ext_rule (đường dẫn theo repo hiện tại),
+# k_force (nguy hiểm — mỗi phiên phải tick lại + nhập lý do)
+NO_RESTORE = {"ext_rule", "k_force"}
+CREATE_NO_WINDOW = 0x08000000 if os.name == "nt" else 0
 
 
 def sx(name):
@@ -57,17 +68,29 @@ class Runner:
     def __init__(self, q):
         self.q = q
         self.proc = None
+        self.current = ""          # lệnh đang/vừa chạy (cho nhật ký)
 
     def busy(self):
         return self.proc is not None and self.proc.poll() is None
 
+    def stop(self):
+        if not self.busy():
+            return
+        try:
+            self.proc.terminate()
+            self.q.put(("log", "\n[■] Đã gửi lệnh DỪNG — tác vụ bị ngắt giữa chừng, "
+                               "kết quả (nếu có) không dùng được.\n"))
+        except Exception as e:  # noqa: BLE001
+            self.q.put(("log", "\n[!] Không dừng được: %s\n" % e))
+
     def run(self, cmd, env_extra=None, cwd=None, on_done=None):
         if self.busy():
             messagebox.showwarning("Đang chạy",
-                                   "Một tác vụ đang chạy — chờ xong rồi thử lại.")
+                                   "Một tác vụ đang chạy — chờ xong hoặc bấm ■ Dừng.")
             return
         self.q.put(("clear", None))
         shown = " ".join(('"%s"' % c if " " in c else c) for c in cmd)
+        self.current = shown
         self.q.put(("log", "$ " + shown + "\n"))
         t = threading.Thread(target=self._worker,
                              args=(cmd, env_extra, cwd, on_done), daemon=True)
@@ -81,7 +104,8 @@ class Runner:
             self.proc = subprocess.Popen(
                 cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
                 text=True, encoding="utf-8", errors="replace",
-                env=env, cwd=cwd, bufsize=1)
+                env=env, cwd=cwd, bufsize=1,
+                creationflags=CREATE_NO_WINDOW)
             for line in self.proc.stdout:
                 self.q.put(("log", line))
             rc = self.proc.wait()
@@ -107,7 +131,11 @@ class App(tk.Tk):
         self.q = queue.Queue()
         self.runner = Runner(self.q)
         self.vars = {}                         # StringVar/BooleanVar theo key
+        self.recent_dirs = []                  # thư mục sản phẩm gần đây
+        self._pending_note = None              # ghi chú kèm nhật ký (vd lý do --force)
         self._build()
+        self._load_config()
+        self.protocol("WM_DELETE_WINDOW", self._on_close)
         self.after(80, self._pump)
 
     # ── tiện ích dựng UI ─────────────────────────────────────────────────────
@@ -117,12 +145,17 @@ class App(tk.Tk):
                 else tk.StringVar(value=default)
         return self.vars[key]
 
-    def path_row(self, parent, label, key, kind="file", filetypes=None):
+    def path_row(self, parent, label, key, kind="file", filetypes=None, combo=False):
         row = ttk.Frame(parent)
         row.pack(fill="x", pady=3)
         ttk.Label(row, text=label, width=18).pack(side="left")
-        ttk.Entry(row, textvariable=self.var(key)).pack(
-            side="left", fill="x", expand=True)
+        if combo:   # combobox sổ ra danh sách thư mục gần đây
+            w = ttk.Combobox(row, textvariable=self.var(key))
+            w.configure(postcommand=lambda w=w: w.configure(values=self.recent_dirs))
+            w.pack(side="left", fill="x", expand=True)
+        else:
+            ttk.Entry(row, textvariable=self.var(key)).pack(
+                side="left", fill="x", expand=True)
 
         def browse():
             if kind == "dir":
@@ -189,6 +222,10 @@ class App(tk.Tk):
         self.status.pack(side="left", fill="x", expand=True)
         ttk.Button(bar, text="Xóa màn hình",
                    command=lambda: self._set_console("")).pack(side="right")
+        ttk.Button(bar, text="Lưu log…", command=self._save_log).pack(
+            side="right", padx=3)
+        ttk.Button(bar, text="■ Dừng", command=self.runner.stop).pack(
+            side="right", padx=3)
         self.console = scrolledtext.ScrolledText(
             bottom, height=15, font=("Consolas", 9), wrap="word",
             bg="#0f1115", fg="#d6d6d6", insertbackground="#d6d6d6")
@@ -223,7 +260,7 @@ class App(tk.Tk):
 
     def _tab_ks(self, f):
         s = self.section(f, "Trích xuất MỘT LỆNH (HD-02)")
-        self.path_row(s, "Thư mục _QTCN_export", "k_dir", kind="dir")
+        self.path_row(s, "Thư mục _QTCN_export", "k_dir", kind="dir", combo=True)
         opt = ttk.Frame(s)
         opt.pack(fill="x", pady=2)
         ttk.Checkbutton(opt, text="--release (phát hành: bắt buộc kiểm chéo 2 nguồn)",
@@ -231,6 +268,8 @@ class App(tk.Tk):
         ttk.Checkbutton(opt, text="--force (đi tiếp qua FAIL — chỉ để chẩn đoán)",
                         variable=self.var("k_force", boolean=True)).pack(anchor="w")
         self.action(s, "▶ Chạy trích xuất (run_pipeline)", self._run_pipeline)
+        self.action(s, "Kết quả kiểm… (bảng verdict + chi tiết rule, hỗ trợ G2)",
+                    self._show_results)
 
         s2 = self.section(f, "Kiểm lẻ khi cần chẩn đoán")
         self.path_row(s2, "Seed cần kiểm", "v_seed",
@@ -288,7 +327,7 @@ class App(tk.Tk):
 
     def _tab_ceo(self, f):
         s = self.section(f, "Dashboard toàn cục (HD-02 §5)")
-        self.path_row(s, "Thư mục gốc _QTCN_export", "ceo_root", kind="dir")
+        self.path_row(s, "Thư mục gốc _QTCN_export", "ceo_root", kind="dir", combo=True)
         self.action(s, "▶ Sinh dashboard", self._run_dashboard)
         ttk.Button(s, text="Mở dashboard.md", command=self._open_dashboard).pack(
             fill="x", pady=4, ipady=3)
@@ -319,8 +358,100 @@ class App(tk.Tk):
         if self.var("k_release", boolean=True).get():
             cmd.append("--release")
         if self.var("k_force", boolean=True).get():
+            # --force bỏ qua gate FAIL → bắt buộc có lý do, ghi vào nhật ký chạy
+            reason = simpledialog.askstring(
+                "Lý do --force",
+                "--force đi tiếp QUA gate FAIL — số sinh ra KHÔNG dùng cho phát hành.\n"
+                "Nhập lý do (bắt buộc — sẽ ghi vào nhật ký chạy):", parent=self)
+            if not (reason or "").strip():
+                messagebox.showwarning("Thiếu lý do",
+                                       "Không có lý do thì không chạy --force.")
+                return
+            self._pending_note = "FORCE: " + reason.strip()
             cmd.append("--force")
+        self._remember_dir(self.var("k_dir").get())
         self.go(cmd)
+
+    def _show_results(self):
+        """Đọc mọi *.validation.json trong thư mục sản phẩm → bảng verdict +
+        chi tiết rule FAIL/WARNING (form F01) — phục vụ đọc gate + lấy mẫu G2."""
+        root = self.var("k_dir").get().strip()
+        if not root or not os.path.isdir(root):
+            messagebox.showwarning("Thiếu", "Chọn thư mục _QTCN_export trước.")
+            return
+        reports = []
+        for dp, _dn, fns in os.walk(root):
+            for fn in sorted(fns):
+                if not fn.endswith(".validation.json"):
+                    continue
+                p = os.path.join(dp, fn)
+                try:
+                    with open(p, encoding="utf-8-sig") as f:
+                        reports.append((p, json.load(f)))
+                except Exception as e:  # noqa: BLE001
+                    reports.append((p, {"verdict": "?", "_err": str(e)}))
+        if not reports:
+            messagebox.showinfo("Chưa có kết quả",
+                                "Không thấy *.validation.json — chạy trích xuất trước.")
+            return
+        order = {"FAIL": 0, "?": 1, "WARNING": 2, "PASS": 3}
+        reports.sort(key=lambda r: order.get(r[1].get("verdict"), 1))
+
+        win = tk.Toplevel(self)
+        win.title("Kết quả kiểm — %s" % root)
+        win.geometry("900x560")
+        cols = ("verdict", "fail", "warn", "file")
+        tree = ttk.Treeview(win, columns=cols, show="headings", height=8)
+        for c, w, t in [("verdict", 90, "Verdict"), ("fail", 60, "FAIL"),
+                        ("warn", 70, "WARNING"), ("file", 640, "File")]:
+            tree.heading(c, text=t)
+            tree.column(c, width=w, anchor="w")
+        tree.pack(fill="x", padx=8, pady=(8, 4))
+        detail = scrolledtext.ScrolledText(win, font=("Consolas", 9), wrap="word")
+        detail.pack(fill="both", expand=True, padx=8, pady=(0, 8))
+
+        by_iid = {}
+        for p, data in reports:
+            counts = data.get("counts", {})
+            iid = tree.insert("", "end", values=(
+                data.get("verdict", "?"), counts.get("FAIL", "—"),
+                counts.get("WARNING", "—"), os.path.relpath(p, root)))
+            by_iid[iid] = (p, data)
+
+        def show(_ev=None):
+            sel = tree.selection()
+            if not sel:
+                return
+            p, data = by_iid[sel[0]]
+            detail.delete("1.0", "end")
+            if "_err" in data:
+                detail.insert("end", "Không đọc được report: %s\n" % data["_err"])
+                return
+            v = data.get("verdict", "?")
+            detail.insert("end", "%s — verdict %s\n\n" % (os.path.basename(p), v))
+            shown = 0
+            for e in data.get("rules", []):
+                if e.get("level") not in ("FAIL", "WARNING"):
+                    continue
+                shown += 1
+                line = "[%s] %s @ %s — %s" % (e.get("level"), e.get("rule"),
+                                              e.get("where"), e.get("msg"))
+                if e.get("measured") is not None:
+                    line += "   (đo: %s)" % e["measured"]
+                detail.insert("end", line + "\n")
+            if not shown:
+                detail.insert("end", "Không có FAIL/WARNING — toàn bộ rule PASS.\n")
+            if v == "WARNING":
+                detail.insert("end", "\n→ Gate G2: đo tay 3–5 giá trị, ưu tiên các dòng "
+                                     "WARNING ở trên (HD-04 §2).\n")
+            if v == "FAIL":
+                detail.insert("end", "\n→ Gate G1 CHẶN: sửa nguồn rồi chạy lại — "
+                                     "không nới ngưỡng, không sửa số.\n")
+        tree.bind("<<TreeviewSelect>>", show)
+        if by_iid:
+            first = next(iter(by_iid))
+            tree.selection_set(first)
+            show()
 
     def _run_validate(self):
         if not self.need("v_seed"):
@@ -388,6 +519,7 @@ class App(tk.Tk):
     def _run_dashboard(self):
         if not self.need("ceo_root"):
             return
+        self._remember_dir(self.var("ceo_root").get())
         self.go([PY, sx("pipeline_dashboard.py"), "--root",
                  self.var("ceo_root").get()])
 
@@ -404,6 +536,76 @@ class App(tk.Tk):
             os.startfile(p)  # noqa: S606 — mở bằng app mặc định Windows
         except Exception as e:  # noqa: BLE001
             messagebox.showerror("Lỗi mở file", str(e))
+
+    # ── config + nhật ký + log ───────────────────────────────────────────────
+    def _remember_dir(self, p):
+        p = os.path.normpath(p.strip())
+        if not p:
+            return
+        if p in self.recent_dirs:
+            self.recent_dirs.remove(p)
+        self.recent_dirs.insert(0, p)
+        del self.recent_dirs[10:]
+
+    def _load_config(self):
+        try:
+            with open(CONFIG_PATH, encoding="utf-8") as f:
+                cfg = json.load(f)
+        except Exception:  # noqa: BLE001 — chưa có config là bình thường
+            return
+        self.recent_dirs = [p for p in cfg.get("recent_dirs", []) if isinstance(p, str)]
+        for k, v in cfg.get("vars", {}).items():
+            if k in self.vars and k not in NO_RESTORE:
+                try:
+                    self.vars[k].set(v)
+                except Exception:  # noqa: BLE001
+                    pass
+
+    def _save_config(self):
+        try:
+            os.makedirs(CONFIG_DIR, exist_ok=True)
+            cfg = {"vars": {k: v.get() for k, v in self.vars.items()},
+                   "recent_dirs": self.recent_dirs[:10]}
+            with open(CONFIG_PATH, "w", encoding="utf-8") as f:
+                json.dump(cfg, f, ensure_ascii=False, indent=1)
+        except Exception:  # noqa: BLE001 — lưu config lỗi không được chặn việc đóng app
+            pass
+
+    def _on_close(self):
+        self._save_config()
+        self.destroy()
+
+    def _journal(self, rc):
+        """Mỗi lần chạy 1 dòng runs.jsonl: lúc nào, lệnh gì, exit mấy, ghi chú gì."""
+        try:
+            os.makedirs(CONFIG_DIR, exist_ok=True)
+            e = {"ts": datetime.datetime.now().isoformat(timespec="seconds"),
+                 "cmd": self.runner.current, "exit": rc}
+            if self._pending_note:
+                e["note"] = self._pending_note
+            with open(JOURNAL_PATH, "a", encoding="utf-8") as f:
+                f.write(json.dumps(e, ensure_ascii=False) + "\n")
+        except Exception:  # noqa: BLE001
+            pass
+        self._pending_note = None
+
+    def _save_log(self):
+        text = self.console.get("1.0", "end").strip()
+        if not text:
+            messagebox.showinfo("Trống", "Chưa có gì trên console để lưu.")
+            return
+        now = datetime.datetime.now()
+        p = filedialog.asksaveasfilename(
+            defaultextension=".txt",
+            initialfile="wx-log-%s.txt" % now.strftime("%Y%m%d-%H%M"),
+            filetypes=[("Text", "*.txt")])
+        if not p:
+            return
+        with open(p, "w", encoding="utf-8") as f:
+            f.write("WX CAD PIPELINE — log %s\n%s\n\n%s\n"
+                    % (now.isoformat(timespec="seconds"),
+                       self.status.cget("text"), text))
+        messagebox.showinfo("Đã lưu", "Đã lưu log:\n%s" % p)
 
     # ── console pump (thread-safe qua queue) ─────────────────────────────────
     def _set_console(self, text):
@@ -433,6 +635,7 @@ class App(tk.Tk):
                         payload, ("Kết thúc (exit %s)" % payload, "#b3261e"))
                     self.status.config(text="exit %d · %s" % (payload, label),
                                        fg=color)
+                    self._journal(payload)
                 elif kind == "done":
                     rc, cb = payload
                     try:
@@ -445,6 +648,12 @@ class App(tk.Tk):
 
 
 def main():
+    if os.name == "nt":     # chữ nét trên màn hình scale >100%
+        try:
+            import ctypes
+            ctypes.windll.shcore.SetProcessDpiAwareness(1)
+        except Exception:  # noqa: BLE001
+            pass
     try:
         app = App()
     except tk.TclError as e:

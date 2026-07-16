@@ -29,4 +29,18 @@ Các tab theo vai trò (ánh xạ `docs/huong-dan/`):
 | Xưởng | Ghi actuals; báo cáo hiệu chỉnh | record_actuals | 06 |
 | CEO | Dashboard + mở dashboard.md | pipeline_dashboard | 02 §5 |
 
+## Tính năng vận hành (v0.5.1)
+
+- **Nhớ cấu hình**: đường dẫn/tùy chọn tự lưu khi đóng app, nạp lại khi mở
+  (`%APPDATA%\WXPipeline\config.json`); ô thư mục sản phẩm là combobox sổ ra
+  10 thư mục gần đây. Riêng `--force` KHÔNG bao giờ được nhớ — mỗi phiên phải
+  tick lại và **nhập lý do** (ghi nhật ký).
+- **Nhật ký chạy**: mỗi lần bấm nút → 1 dòng `%APPDATA%\WXPipeline\runs.jsonl`
+  (lúc nào, lệnh gì, exit mấy, lý do force nếu có) — truy vết được ai chạy gì.
+- **Kết quả kiểm…** (tab KS): đọc mọi `*.validation.json` trong thư mục sản phẩm
+  → bảng verdict (FAIL xếp trước) + chi tiết rule FAIL/WARNING kèm giá trị đo —
+  danh sách WARNING chính là phiếu lấy mẫu Gate G2.
+- **■ Dừng** tác vụ đang chạy (kết quả dở dang không dùng được) · **Lưu log…**
+  chép console ra .txt đính biên bản · high-DPI + không nháy cửa sổ con.
+
 Gặp lỗi: xem `../docs/huong-dan/07-xu-ly-su-co.md`.
