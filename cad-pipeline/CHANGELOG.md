@@ -3,6 +3,15 @@
 > Quy ước: mỗi phát hành = tag `cad-pipeline-vX.Y`; chi tiết kiểm chứng từng script
 > nằm trong `scripts/_codify_ledger.md` (append-only). File này là bản đọc nhanh.
 
+## v0.5.2 — 2026-07-16 · GUI: viewer lỗi bấm-được (yêu cầu field từ ca Cot bia.ipt)
+
+- "Kết quả kiểm…" thành cây 2 cấp report → rule: bấm rule → NGHĨA + CÁCH SỬA
+  (catalog RULE_HELP theo đặc tả: D1-*/SEC/D2/D3/HU đầy đủ; S1/S4/BM theo nhóm)
+  + danh sách từng part vi phạm; FAIL tô đỏ xếp trước; quét đủ 4 loại report
+  (validation / drawing_report / drawing_live_report / rhino-check).
+- Nút viewer thêm ở tab Thiết kế (tìm report cạnh file vừa kiểm); sau lần chạy
+  exit 1/2 console tự gợi ý mở viewer. Smoke-test ca Cot bia (6 rule, bấm D1-02) PASS.
+
 ## v0.5.1 — 2026-07-16 · Nâng cấp GUI (vận hành + kỷ luật gate)
 
 - **Kết quả kiểm…**: đọc `*.validation.json` (form F01) → bảng verdict + chi tiết

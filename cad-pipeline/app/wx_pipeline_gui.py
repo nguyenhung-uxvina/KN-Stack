@@ -15,6 +15,7 @@ An ninh: chạy hoàn toàn local, không mở cổng mạng, read-only với fi
 File MẬT xử lý trên máy nội bộ như mọi khi — GUI không đổi vùng lưu trữ.
 """
 import os
+import re
 import sys
 import json
 import queue
@@ -49,6 +50,93 @@ CREATE_NO_WINDOW = 0x08000000 if os.name == "nt" else 0
 
 def sx(name):
     return os.path.join(EXTRACT, name)
+
+
+# Trợ giúp theo rule: (nghĩa, cách sửa) — hiện khi bấm vào rule trong "Kết quả kiểm"
+# Nguồn: docs/WX-QT-DRAWING-SENSOR-01 + EXTRACT-SENSOR-01; khớp thông báo trong script.
+RULE_HELP = {
+    "D1-01": ("Part Number thiếu / sai quy ước / lệch tên file",
+              "Inventor: iProperties → Project → Part Number. Đặt theo quy ước mã sản phẩm, "
+              "trùng với tên file."),
+    "D1-02": ("Vật liệu chưa gán (Generic/rỗng) hoặc ngoài danh mục duyệt",
+              "Gán Material từ THƯ VIỆN Inventor (không gõ tay). Danh mục duyệt = "
+              "schemas/materials.json — cần thêm vật liệu mới thì báo KS sửa file đó."),
+    "D1-03": ("Thiếu Revision",
+              "iProperties → Project → Revision Number (bản đầu ghi A hoặc 01)."),
+    "D1-04": ("Thiếu Designer/Engineer (cảnh báo)",
+              "iProperties → Project → Designer — cần cho truy vết trách nhiệm bản vẽ."),
+    "D1-05": ("Thiếu Description — tên gọi chi tiết (cảnh báo)",
+              "iProperties → Project → Description: tên tiếng Việt của chi tiết (dùng cho "
+              "BOM + phiếu công nghệ)."),
+    "D1-06": ("Mass cache chưa có, hoặc lệch V×ρ quá ±2%",
+              "Inventor: mở part → Update mass (iProperties → Physical → Update) rồi SAVE. "
+              "Nếu vẫn lệch: vật liệu gán sai ρ — kiểm D1-02 trước."),
+    "D1-08": ("Thép hình/tấm thiếu Stock Number — quy cách phôi (cảnh báo)",
+              "iProperties → Project → Stock Number: ghi quy cách (vd 'L50x50x5', 'Tấm 5mm')."),
+    "D1-09": ("Part phi-chế-tạo (skeleton/KT/mẫu) đang đếm vào BOM",
+              "iProperties → Occurrence/BOM → BOM Structure = Reference (hoặc Phantom) — "
+              "nếu không sẽ đếm trùng khối lượng."),
+    "D1-10": ("Thiếu/sai iProperty WX_PartType",
+              "iProperties → Custom → thêm WX_PartType = một trong WA/WS/MC/SM/CP/HU/AS/STD "
+              "(WA=hàn nhôm, WS=hàn thép, MC=gia công, SM=tôn gò, CP=composite, HU=vỏ, "
+              "AS=cụm lắp, STD=mua sẵn)."),
+    "D1-11": ("Các kiểm cần Inventor SỐNG (BOM view, interference, bản vẽ)",
+              "Chạy External Rule Drawing_Check_Live trong Inventor (tab Thiết kế có nút "
+              "chép đường dẫn; xem HD-03 §3)."),
+    "SEC-01": ("Thiếu/sai iProperty WX_Classification (phân loại mật)",
+               "iProperties → Custom → WX_Classification = THUONG / NOIBO / MAT. "
+               "File MAT: chỉ xử lý trong vùng air-gap, model local."),
+    "D2-04": ("Chi tiết giao nhau (interference) trong assembly",
+              "Mở assembly sửa vị trí/kích thước các cặp giao nhau; cặp chủ đích (ren, ép) "
+              "thì ghi xác nhận vào biên bản."),
+    "D2-05": ("Occurrence trôi — chưa ràng buộc/grounded",
+              "Thêm constraint hoặc Ground các occurrence còn tự do."),
+    "D3-03": ("Dimension mất tham chiếu (dangling) trên bản vẽ",
+              "Mở .idw: dimension tô đỏ/olive → gắn lại vào cạnh thật hoặc xóa vẽ lại."),
+    "D3-07": ("Thiếu ký hiệu mối hàn trên bản vẽ cụm hàn",
+              "Bổ sung weld symbol (loại mối, kích thước, chiều dài) cho mọi mối hàn chịu lực."),
+    "HU-01": ("Object Rhino không phải solid kín",
+              "Rhino: kiểm ShowEdges/Cap lỗ hở — mọi object phải closed solid mới tính được thể tích."),
+    "HU-02": ("Đơn vị/tolerance document Rhino sai chuẩn",
+              "File → Settings → Units: mm, tolerance đúng quy ước xưởng."),
+    "HU-03": ("Layer không theo tiền tố quy ước",
+              "Đặt layer theo tiền tố (HULL_/FRAME_/PLATE_…) để pipeline nhóm chi tiết đúng."),
+    "HU-04": ("Thiếu UserText material/plate_mm",
+              "Rhino: gắn UserText từng object: material (khớp materials.json) + plate_mm."),
+    "S2": ("Hai nguồn độc lập (BOM vs STEP) lệch nhau quá ngưỡng",
+           "Tìm nguồn sai: thường mass Inventor tính trên vật liệu Generic (sửa D1-02, Update "
+           "mass) hoặc QTY lệch do part Reference. KHÔNG lấy trung bình 2 nguồn."),
+    "S3": ("Giá trị lệch bất thường so lịch sử các lô trước",
+           "So với median lịch sử ±30%%: xem có đổi thiết kế thật không; nếu không → nghi "
+           "trích xuất sai, kiểm S1/S2 của lô này."),
+    "TRACE": ("Truy vết nguồn seed",
+              "Thông tin nguồn gốc số liệu — chỉ cần đọc, không phải lỗi."),
+}
+# help theo NHÓM khi không có mục riêng (S1-01…S1-08, S4-*, BM-*)
+RULE_HELP_PREFIX = {
+    "S1": ("Bất biến vật lý trong 1 seed bị vi phạm (mass=V×ρ, bbox, đơn vị…)",
+           "Số trong seed tự mâu thuẫn → thường là bug extractor hoặc vật liệu sai. "
+           "Đối chiếu chi tiết bị nêu với model gốc; xem docs/WX-QT-EXTRACT-SENSOR-01 §S1."),
+    "S4": ("Determinism/diff giữa 2 lần chạy hoặc 2 revision",
+           "2 lần chạy cùng nguồn phải ra cùng số; khác revision phải có ECN đối chiếu."),
+    "BM": ("Rule lớp sản phẩm BM (bia mục tiêu nổi) — tính nổi, phân rã…",
+           "Xem hồ sơ lớp sản phẩm: docs/WX-QT-DRAWING-SENSOR-01 Phụ lục B."),
+    "D1": ("Metadata part chưa đạt chuẩn đầu vào",
+           "Xem checklist chuẩn bị model: docs/huong-dan/01-thiet-ke-chuan-bi-cad.md §1."),
+}
+
+def rule_help(rule):
+    """(nghĩa, cách sửa) cho 1 mã rule — tra mục riêng rồi tới nhóm tiền tố."""
+    if rule in RULE_HELP:
+        return RULE_HELP[rule]
+    head = re.split(r"[-_]", rule)[0] if rule else ""
+    return RULE_HELP_PREFIX.get(head, (None, None))
+
+
+# Các file report mà "Kết quả kiểm" hiểu được (cùng dạng rules[{rule,level,where,msg}])
+def is_report_file(fn):
+    return (fn.endswith(".validation.json") or fn.endswith(".rhino-check.json")
+            or fn in ("drawing_report.json", "drawing_live_report.json"))
 
 
 # Ý nghĩa exit code (đồng bộ HD-00 §3) → (nhãn, màu)
@@ -240,6 +328,8 @@ class App(tk.Tk):
                         variable=self.var("d_ticket", boolean=True)).pack(
             anchor="w", pady=2)
         self.action(s, "▶ Kiểm bản vẽ (drawing_check)", self._run_drawing)
+        self.action(s, "Kết quả kiểm… (bấm vào rule xem chi tiết + cách sửa)",
+                    self._show_results_design)
 
         s2 = self.section(f, "Model Rhino vỏ nhôm (HU)")
         self.path_row(s2, "File .3dm", "rh_file",
@@ -268,8 +358,8 @@ class App(tk.Tk):
         ttk.Checkbutton(opt, text="--force (đi tiếp qua FAIL — chỉ để chẩn đoán)",
                         variable=self.var("k_force", boolean=True)).pack(anchor="w")
         self.action(s, "▶ Chạy trích xuất (run_pipeline)", self._run_pipeline)
-        self.action(s, "Kết quả kiểm… (bảng verdict + chi tiết rule, hỗ trợ G2)",
-                    self._show_results)
+        self.action(s, "Kết quả kiểm… (bấm vào rule xem chi tiết + cách sửa)",
+                    lambda: self._show_results(self.var("k_dir").get()))
 
         s2 = self.section(f, "Kiểm lẻ khi cần chẩn đoán")
         self.path_row(s2, "Seed cần kiểm", "v_seed",
@@ -333,18 +423,34 @@ class App(tk.Tk):
             fill="x", pady=4, ipady=3)
 
     # ── handlers: mỗi cái dựng cmd rồi self.go(...) ─────────────────────────
+    def _hint_results(self, rc):
+        """Gợi ý sau khi 1 lần kiểm kết thúc có lỗi — không bung cửa sổ tự động."""
+        if rc in (1, 2):
+            self._append("\n→ Bấm nút \"Kết quả kiểm…\" để xem từng rule: part nào lỗi, "
+                         "cách sửa ra sao.\n")
+
+    def _show_results_design(self):
+        # thư mục report = cạnh file vừa kiểm (drawing_check/rhino_check ghi cạnh nguồn)
+        for key in ("d_file", "rh_file"):
+            p = self.var(key).get().strip()
+            if p:
+                self._show_results(os.path.dirname(p))
+                return
+        messagebox.showwarning("Thiếu", "Chọn file .ipt/.iam hoặc .3dm trước.")
+
     def _run_drawing(self):
         if not self.need("d_file"):
             return
         cmd = [PY, sx("drawing_check.py"), "--file", self.var("d_file").get()]
         if self.var("d_ticket", boolean=True).get():
             cmd.append("--ticket")
-        self.go(cmd)
+        self.go(cmd, on_done=self._hint_results)
 
     def _run_rhino(self):
         if not self.need("rh_file"):
             return
-        self.go([PY, sx("rhino_check.py"), "--file", self.var("rh_file").get()])
+        self.go([PY, sx("rhino_check.py"), "--file", self.var("rh_file").get()],
+                on_done=self._hint_results)
 
     def _copy_rule(self):
         self.clipboard_clear()
@@ -370,19 +476,20 @@ class App(tk.Tk):
             self._pending_note = "FORCE: " + reason.strip()
             cmd.append("--force")
         self._remember_dir(self.var("k_dir").get())
-        self.go(cmd)
+        self.go(cmd, on_done=self._hint_results)
 
-    def _show_results(self):
-        """Đọc mọi *.validation.json trong thư mục sản phẩm → bảng verdict +
-        chi tiết rule FAIL/WARNING (form F01) — phục vụ đọc gate + lấy mẫu G2."""
-        root = self.var("k_dir").get().strip()
+    def _show_results(self, root):
+        """Trình xem kết quả kiểm: quét mọi report (validation / drawing / live /
+        rhino-check) trong thư mục → cây 2 cấp report → rule; bấm rule xem chi tiết
+        từng part + CÁCH SỬA (catalog RULE_HELP). Phục vụ đọc gate + lấy mẫu G2."""
+        root = (root or "").strip()
         if not root or not os.path.isdir(root):
-            messagebox.showwarning("Thiếu", "Chọn thư mục _QTCN_export trước.")
+            messagebox.showwarning("Thiếu", "Chọn file/thư mục trước để biết tìm report ở đâu.")
             return
         reports = []
         for dp, _dn, fns in os.walk(root):
             for fn in sorted(fns):
-                if not fn.endswith(".validation.json"):
+                if not is_report_file(fn):
                     continue
                 p = os.path.join(dp, fn)
                 try:
@@ -392,77 +499,109 @@ class App(tk.Tk):
                     reports.append((p, {"verdict": "?", "_err": str(e)}))
         if not reports:
             messagebox.showinfo("Chưa có kết quả",
-                                "Không thấy *.validation.json — chạy trích xuất trước.")
+                                "Không thấy report nào trong:\n%s\nChạy kiểm trước." % root)
             return
         order = {"FAIL": 0, "?": 1, "WARNING": 2, "PASS": 3}
         reports.sort(key=lambda r: order.get(r[1].get("verdict"), 1))
 
         win = tk.Toplevel(self)
         win.title("Kết quả kiểm — %s" % root)
-        win.geometry("900x560")
-        cols = ("verdict", "fail", "warn", "file")
-        tree = ttk.Treeview(win, columns=cols, show="headings", height=8)
-        for c, w, t in [("verdict", 90, "Verdict"), ("fail", 60, "FAIL"),
-                        ("warn", 70, "WARNING"), ("file", 640, "File")]:
-            tree.heading(c, text=t)
-            tree.column(c, width=w, anchor="w")
-        tree.pack(fill="x", padx=8, pady=(8, 4))
-        detail = scrolledtext.ScrolledText(win, font=("Consolas", 9), wrap="word")
-        detail.pack(fill="both", expand=True, padx=8, pady=(0, 8))
+        win.geometry("980x620")
+        pane = ttk.PanedWindow(win, orient="vertical")
+        pane.pack(fill="both", expand=True, padx=8, pady=8)
+
+        tree = ttk.Treeview(pane, columns=("lv", "n"), show="tree headings")
+        tree.heading("#0", text="Report → Rule (bấm vào rule để xem chi tiết + cách sửa)")
+        tree.column("#0", width=560)
+        tree.heading("lv", text="Mức")
+        tree.column("lv", width=100, anchor="w")
+        tree.heading("n", text="Số lỗi")
+        tree.column("n", width=70, anchor="e")
+        for tag, color in [("FAIL", "#b3261e"), ("WARNING", "#b26a00"),
+                           ("PASS", "#1a7f37"), ("?", "#666666")]:
+            tree.tag_configure(tag, foreground=color)
+        pane.add(tree, weight=3)
+        detail = scrolledtext.ScrolledText(pane, font=("Consolas", 9), wrap="word",
+                                           height=12)
+        pane.add(detail, weight=2)
 
         by_iid = {}
         for p, data in reports:
+            v = data.get("verdict", "?")
             counts = data.get("counts", {})
-            iid = tree.insert("", "end", values=(
-                data.get("verdict", "?"), counts.get("FAIL", "—"),
-                counts.get("WARNING", "—"), os.path.relpath(p, root)))
-            by_iid[iid] = (p, data)
+            n = "%s/%s" % (counts.get("FAIL", 0), counts.get("WARNING", 0))
+            rid = tree.insert("", "end", text=os.path.relpath(p, root),
+                              values=(v, n), open=(v != "PASS"), tags=(v,))
+            by_iid[rid] = ("report", p, data)
+            # gom rule con: (rule, level) → list entry
+            agg = {}
+            for e in data.get("rules", []):
+                if e.get("level") in ("FAIL", "WARNING"):
+                    agg.setdefault((e.get("rule", "?"), e["level"]), []).append(e)
+            for (rule, lv), ents in sorted(
+                    agg.items(), key=lambda kv: (kv[0][1] != "FAIL", kv[0][0])):
+                cid = tree.insert(rid, "end", text="   %s" % rule,
+                                  values=(lv, len(ents)), tags=(lv,))
+                by_iid[cid] = ("rule", rule, ents)
 
         def show(_ev=None):
             sel = tree.selection()
             if not sel:
                 return
-            p, data = by_iid[sel[0]]
+            item = by_iid[sel[0]]
             detail.delete("1.0", "end")
-            if "_err" in data:
-                detail.insert("end", "Không đọc được report: %s\n" % data["_err"])
+            if item[0] == "report":
+                _kind, p, data = item
+                if "_err" in data:
+                    detail.insert("end", "Không đọc được report: %s\n" % data["_err"])
+                    return
+                v = data.get("verdict", "?")
+                counts = data.get("counts", {})
+                detail.insert("end", "%s\nVerdict: %s   (FAIL=%s WARNING=%s)\n"
+                              % (p, v, counts.get("FAIL", 0), counts.get("WARNING", 0)))
+                src = (data.get("source") or {}).get("file")
+                if src:
+                    detail.insert("end", "Nguồn: %s\n" % src)
+                if v == "FAIL":
+                    detail.insert("end", "\n→ Gate CHẶN — bấm vào từng rule bên trên để xem "
+                                         "part nào lỗi và cách sửa; sửa NGUỒN rồi chạy lại.\n")
+                elif v == "WARNING":
+                    detail.insert("end", "\n→ Gate G2: đo tay 3–5 giá trị, ưu tiên các rule "
+                                         "WARNING (HD-04 §2).\n")
+                else:
+                    detail.insert("end", "\nToàn bộ rule PASS.\n")
                 return
-            v = data.get("verdict", "?")
-            detail.insert("end", "%s — verdict %s\n\n" % (os.path.basename(p), v))
-            shown = 0
-            for e in data.get("rules", []):
-                if e.get("level") not in ("FAIL", "WARNING"):
-                    continue
-                shown += 1
-                line = "[%s] %s @ %s — %s" % (e.get("level"), e.get("rule"),
-                                              e.get("where"), e.get("msg"))
+            _kind, rule, ents = item
+            meaning, fix = rule_help(rule)
+            detail.insert("end", "%s — %s vi phạm\n" % (rule, len(ents)))
+            if meaning:
+                detail.insert("end", "NGHĨA   : %s\n" % meaning)
+            if fix:
+                detail.insert("end", "CÁCH SỬA: %s\n" % fix)
+            detail.insert("end", "─" * 72 + "\n")
+            for i, e in enumerate(ents, 1):
+                line = "%2d. %s — %s" % (i, e.get("where"), e.get("msg"))
                 if e.get("measured") is not None:
                     line += "   (đo: %s)" % e["measured"]
                 detail.insert("end", line + "\n")
-            if not shown:
-                detail.insert("end", "Không có FAIL/WARNING — toàn bộ rule PASS.\n")
-            if v == "WARNING":
-                detail.insert("end", "\n→ Gate G2: đo tay 3–5 giá trị, ưu tiên các dòng "
-                                     "WARNING ở trên (HD-04 §2).\n")
-            if v == "FAIL":
-                detail.insert("end", "\n→ Gate G1 CHẶN: sửa nguồn rồi chạy lại — "
-                                     "không nới ngưỡng, không sửa số.\n")
         tree.bind("<<TreeviewSelect>>", show)
-        if by_iid:
-            first = next(iter(by_iid))
-            tree.selection_set(first)
+        first = tree.get_children()
+        if first:
+            tree.selection_set(first[0])
             show()
 
     def _run_validate(self):
         if not self.need("v_seed"):
             return
-        self.go([PY, sx("validate_qtcn_seed.py"), "--seed", self.var("v_seed").get()])
+        self.go([PY, sx("validate_qtcn_seed.py"), "--seed", self.var("v_seed").get()],
+                on_done=self._hint_results)
 
     def _run_cross(self):
         if not self.need("c_a", "c_b"):
             return
         self.go([PY, sx("validate_qtcn_seed.py"), "--cross",
-                 self.var("c_a").get(), self.var("c_b").get()])
+                 self.var("c_a").get(), self.var("c_b").get()],
+                on_done=self._hint_results)
 
     def _run_weld(self):
         if not self.need("w_step"):

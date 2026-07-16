@@ -37,9 +37,12 @@ Các tab theo vai trò (ánh xạ `docs/huong-dan/`):
   tick lại và **nhập lý do** (ghi nhật ký).
 - **Nhật ký chạy**: mỗi lần bấm nút → 1 dòng `%APPDATA%\WXPipeline\runs.jsonl`
   (lúc nào, lệnh gì, exit mấy, lý do force nếu có) — truy vết được ai chạy gì.
-- **Kết quả kiểm…** (tab KS): đọc mọi `*.validation.json` trong thư mục sản phẩm
-  → bảng verdict (FAIL xếp trước) + chi tiết rule FAIL/WARNING kèm giá trị đo —
-  danh sách WARNING chính là phiếu lấy mẫu Gate G2.
+- **Kết quả kiểm…** (tab Thiết kế + tab KS, v0.5.2): quét đủ 4 loại report
+  (`*.validation.json` · `drawing_report.json` · `drawing_live_report.json` ·
+  `*.rhino-check.json`) → cây 2 cấp **report → rule** (FAIL tô đỏ xếp trước);
+  **bấm vào rule** thấy NGHĨA + CÁCH SỬA (catalog theo đặc tả WX-QT) + danh sách
+  từng part vi phạm kèm giá trị đo. Danh sách WARNING = phiếu lấy mẫu Gate G2.
+  Sau lần chạy ra lỗi, console tự gợi ý mở viewer.
 - **■ Dừng** tác vụ đang chạy (kết quả dở dang không dùng được) · **Lưu log…**
   chép console ra .txt đính biên bản · high-DPI + không nháy cửa sổ con.
 
