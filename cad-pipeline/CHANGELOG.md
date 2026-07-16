@@ -3,6 +3,15 @@
 > Quy ước: mỗi phát hành = tag `cad-pipeline-vX.Y`; chi tiết kiểm chứng từng script
 > nằm trong `scripts/_codify_ledger.md` (append-only). File này là bản đọc nhanh.
 
+## v0.5 — 2026-07-16 · Phần mềm điều khiển tổng thể (GUI)
+
+- Thêm `app/wx_pipeline_gui.py` — desktop GUI Tkinter (0 phụ thuộc ngoài) gom mọi bước
+  thành nút bấm, chia 6 tab theo vai trò (Thiết kế/KS/QC/Đầu ra AI/Xưởng/CEO). **Lớp vỏ**:
+  mỗi nút gọi lại đúng script trong `scripts/extract/` qua subprocess, chạy nền (không
+  treo cửa sổ), in ra console + tô màu theo exit code (xanh/cam/đỏ). Lõi harness không đổi.
+- `WX_Pipeline.bat` bấm-đúp + `app/README.md`. Verify: py_compile OK, smoke-test dựng
+  6 tab OK, battery vẫn 8/8 (GUI nằm ngoài scripts/schemas/golden nên không đụng hồi quy).
+
 ## v0.4.1 — 2026-07-16 · Bộ hướng dẫn thực hiện (docs-only)
 
 - Thêm `docs/huong-dan/` HD-00…07 — SOP theo vai trò: tổng quan/vai trò-đọc-gì (00),

@@ -36,6 +36,9 @@ Chạy cả tầng 2 bằng MỘT lệnh: `python cad-pipeline/scripts/extract/r
 ```
 cad-pipeline/
 ├── README.md / CHANGELOG.md / ROADMAP.md   ← bạn đang ở đây
+├── WX_Pipeline.bat   ← bấm đúp để mở phần mềm điều khiển (GUI)
+├── app/         wx_pipeline_gui.py — GUI Tkinter gom mọi bước thành nút bấm (lớp vỏ,
+│                gọi lại script scripts/extract/; xem app/README.md)
 ├── docs/        3 đặc tả: EXTRACT-SENSOR (S-rules, bản gốc CEO) ·
 │                DRAWING-SENSOR (D-rules + loại chi tiết + lớp SP BM) · CAD-IO (STEP/read-only)
 │   └── huong-dan/   HD-00…07 — SOP theo vai trò (thiết kế · KS · QC · xưởng · CEO):
