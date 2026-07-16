@@ -7,20 +7,31 @@
 
 ```
 KN-Stack/
-├── skills/           ← 153 skills organized by domain (13 domains)
+├── skills/           ← 182 skills organized by domain (14 domains)
 │   ├── bridge/       (10) — Operations skills
-│   ├── forge/        (13) — Product strategy skills
-│   ├── helix/        (34) — Design execution pipeline (Pahl-Beitz phases)
-│   ├── galaxy/       (9)  — Knowledge management
+│   ├── forge/        (14) — Product strategy skills (+ forge-fabrication mega-skill: 6-block manufacturing pipeline F0-F5)
+│   │                       — closes R&D → production loop via Handoff_to_Fabrication.md from helix-detail-finalize
+│   ├── helix/        (42) — Design execution pipeline (Pahl-Beitz phases — P1/P2/P3/P4 all now 6-block mega-skill pipelines)
+│   │                       + product-dossier: orchestrator từ thư mục PDF/DXF/DWG → CEO chọn xuất QTCN / ĐMKTKT / Sổ tay QLCL… (data-spine pipeline; qtcn.json là xương sống)
+│   ├── galaxy/       (11) — Knowledge management (+ skill-to-public, codify, mentor-board — Naval outbound + code + mentor leverage)
+│   ├── mentors/      (13) — Per-mentor advisor skills (13 mentors live; add more via /mentor-board --add <leader>); orchestrator at galaxy/mentor-board/
 │   ├── erp/          (6)  — ERPNext integration
-│   ├── extract/      (6)  — Content extraction (social, chat)
+│   ├── extract/      (9)  — Content extraction (social, chat, CAD: mech-drawing-extract "cad-to-json", doc-to-json, yt-learn)
 │   ├── learn/        (3)  — Learning methodology
 │   ├── guard/        (7)  — Guard rails (analyst-trap, ratio-check)
-│   ├── design/       (19) — Generic design tools (bom, validate, odi)
+│   ├── design/       (9)  — Specialized tools only (opt, wp, verify, reverse-engineering, reverse-mc, sdmodel, helm-aluminum-boat) — 12 overlapping skills merged into helix/forge on 2026-05-11
 │   ├── ops/          (15) — CEO operations (portfolio, sprint, weekly-3)
 │   ├── session/      (5)  — Session management (catchup, checkpoint)
 │   ├── system/       (16) — System design tools (gate0-3, decide, cld)
-│   └── book/         (10) — Codebase-to-book pipeline (9-phase mega-skill)
+│   └── book/         (22) — Codebase-to-book + book-to-codebase pipelines (btc-* blocks)
+├── scripts/          ← Python scripts codified from skills (Naval code leverage)
+│   └── _codify_ledger.md  (append-only registry of markdown→Python conversions)
+├── leo-ai/           ← Claude Code plugin: getleo.ai toolkit (4 skills + MCP leo-bridge 6 tools, gate MẬT denylist)
+│                       CANONICAL copy (build.sh is legacy); installed via junction ~/.claude/skills/leo-ai → repo
+├── cad-pipeline/     ← CAD → 5 đầu ra (QTCN/định mức/dự toán/QCP/nghiệm thu), harness 3 tầng
+│                       TOÀN BỘ trong 1 thư mục: docs/ (3 đặc tả WX-QT) · schemas/ (qtcn-seed,
+│                       materials, actuals) · scripts/ (extract/inventor/hooks) · golden/ (G3)
+│                       Đọc cad-pipeline/README.md trước khi sửa; versioning: tag cad-pipeline-vX.Y
 ├── hooks/            ← 3 hook scripts (SessionStart, UserPromptSubmit, Stop)
 ├── rules/            ← 4 vault rules (projects, galaxy, areas-helix, resources)
 ├── evals/            ← Eval framework (6 specs + runner)

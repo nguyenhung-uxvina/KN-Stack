@@ -1,0 +1,22 @@
+{
+  "parts": [
+    {
+      "label": "HopThanhMong",
+      "base": "HopThanhMong",
+      "solids_n": 1,
+      "volume_cm3": 564.0,
+      "area_cm2": 3771.28,
+      "bbox_mm": {
+        "x": 60.0,
+        "y": 40.0,
+        "z": 1000.0
+      },
+      "material": "Thép EH32",
+      "material_source": "default",
+      "density_g_cm3": 7.85,
+      "density_assumed": true,
+      "mass_kg": 4.427
+    }
+  ],
+  "groups": 1
+}

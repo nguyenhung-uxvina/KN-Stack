@@ -1,0 +1,39 @@
+{
+  "parts": [
+    {
+      "label": "ThanhGoc",
+      "base": "ThanhGoc",
+      "solids_n": 1,
+      "volume_cm3": 800.0,
+      "area_cm2": 832.0,
+      "bbox_mm": {
+        "x": 40.0,
+        "y": 40.0,
+        "z": 500.0
+      },
+      "material": "Thép EH32",
+      "material_source": "default",
+      "density_g_cm3": 7.85,
+      "density_assumed": true,
+      "mass_kg": 6.28
+    },
+    {
+      "label": "ThanhGoc001",
+      "base": "ThanhGoc",
+      "solids_n": 1,
+      "volume_cm3": 1600.0,
+      "area_cm2": 1632.0,
+      "bbox_mm": {
+        "x": 40.0,
+        "y": 40.0,
+        "z": 1000.0
+      },
+      "material": "Thép EH32",
+      "material_source": "default",
+      "density_g_cm3": 7.85,
+      "density_assumed": true,
+      "mass_kg": 12.56
+    }
+  ],
+  "groups": 1
+}

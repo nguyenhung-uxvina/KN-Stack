@@ -1,5 +1,10 @@
 # Codify Ledger — append-only registry of markdown→Python codifications
 
+> LƯU Ý ĐƯỜNG DẪN: từ 2026-07-13 (tag cad-pipeline-v0.4) toàn bộ CAD pipeline chuyển về
+> `cad-pipeline/` — các dòng cũ ghi `scripts/extract/...`, `schemas/...`, `golden/...`,
+> `docs/WX-QT-...` nay đọc là `cad-pipeline/<đường dẫn cũ>`. Bản đồ + changelog:
+> `cad-pipeline/README.md`, `cad-pipeline/CHANGELOG.md`.
+
 | Date | Target Skill | Script | LOC | Tests | Annual LLM saving (est.) | CEO sign-off |
 |------|-------------|--------|-----|-------|--------------------------|--------------|
 | 2026-06-22 | mech-drawing-extract | scripts/extract/parse_mech_drawing.py | ~520 | manual (real DXF + regex unit checks) | DXF/PDF parse done in code, not re-derived per run; field-hardened on VTI GT.00.01.01 | pending |
