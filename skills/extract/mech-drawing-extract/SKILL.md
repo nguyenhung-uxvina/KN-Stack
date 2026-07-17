@@ -9,7 +9,7 @@ Turn a mechanical part drawing (PDF and/or DXF) into two artifacts:
 1. **`<name>.json`** — complete machine-recoverable dataset (source of truth, feeds tools/BOM/RE).
 2. **`<name>.md`** — curated human datasheet (title block, dimension table, GD&T, confidence flags).
 
-The deterministic parsing (DXF entity walk, PDF word/table extraction, regex spec mining) is **codified in Python** at [parse_mech_drawing.py](../../../cad-pipeline/scripts/extract/parse_mech_drawing.py). This skill orchestrates that script, then interprets its JSON into a clean datasheet. **Never hand-transcribe geometry the script already recovered** — read the JSON.
+The deterministic parsing (DXF entity walk, PDF word/table extraction, regex spec mining) is **codified in Python** at [parse_mech_drawing.py](../../../D:/WX-Pipeline/scripts/extract/parse_mech_drawing.py). This skill orchestrates that script, then interprets its JSON into a clean datasheet. **Never hand-transcribe geometry the script already recovered** — read the JSON.
 
 ## When to Use
 
@@ -35,12 +35,12 @@ Confirm the file paths and the intended part/drawing name. If the name is unclea
 ### Step 2 — Run the parser (codified, COD: Offload)
 
 ```bash
-python cad-pipeline/scripts/extract/parse_mech_drawing.py \
+python D:/WX-Pipeline/scripts/extract/parse_mech_drawing.py \
   --dxf <part.dxf> --pdf <part.pdf> \
   --out <output_dir> --name <part-name>
 
 # DWG source (auto-converted to DXF via ODA File Converter):
-python cad-pipeline/scripts/extract/parse_mech_drawing.py \
+python D:/WX-Pipeline/scripts/extract/parse_mech_drawing.py \
   --dwg <part.dwg> --out <output_dir> --name <part-name>
 ```
 
@@ -136,7 +136,7 @@ Write `<name>.md` next to the JSON, in this shape:
 
 Summarize to the user: # dimensions, # tolerances, tightest tolerance, material, and any conflicts/open items. Offer downstream routing:
 - `/bom` — if the part is one of several in an assembly.
-- **`qtcn` (quy trình công nghệ)** — for a multi-part package, run the bridge [cad-pipeline/scripts/extract/extract_to_qtcn_seed.py](../../../cad-pipeline/scripts/extract/extract_to_qtcn_seed.py) `--extracted <dir>` to turn **BOM.json + per-sheet JSON** into `qtcn-seed.json` (product + VT-assigned BOM + section/plate/tolerances per part + purchased items). That seed is the **foundation** for `qtcn` (`--seed qtcn-seed.json`) and for the `product-dossier` pipeline — so the QTCN is built from the extracted JSON, not re-typed.
+- **`qtcn` (quy trình công nghệ)** — for a multi-part package, run the bridge [D:/WX-Pipeline/scripts/extract/extract_to_qtcn_seed.py](../../../D:/WX-Pipeline/scripts/extract/extract_to_qtcn_seed.py) `--extracted <dir>` to turn **BOM.json + per-sheet JSON** into `qtcn-seed.json` (product + VT-assigned BOM + section/plate/tolerances per part + purchased items). That seed is the **foundation** for `qtcn` (`--seed qtcn-seed.json`) and for the `product-dossier` pipeline — so the QTCN is built from the extracted JSON, not re-typed.
 - `/verify` — generate the inspection/verification plan from the dimension table.
 - `/reverse-engineering` — if this is RE input.
 - `helix-detail-finalize` — if part of an active design's detail package.
@@ -188,7 +188,7 @@ Quantities and material-per-part come from the **BOM**, not the detail title blo
 - **GD&T** is detected by symbol presence, not parsed into structured frames — verify against the drawing.
 - **DXF geometry may be incomplete** vs the PDF (e.g. fewer holes) — use the `CIRCLE` count vs PDF as a completeness check.
 - **DWG** is read by converting to DXF via the external ODA File Converter — if it is not installed the script reports it (exit 3); convert manually (Save As DXF) as a fallback. Conversion is faithful but adds a step; prefer a native DXF export when one exists.
-- **3D models** (STEP/IGES/FCStd/3D-DWG): use the **FreeCAD 3D engine** [cad-pipeline/scripts/extract/freecad_extract.py](../../../cad-pipeline/scripts/extract/freecad_extract.py) (headless via `freecadcmd`) — computes **real mass** (V×ρ), bounding box, surface area, dedups the assembly container, groups instances → BOM qty, and emits the **same `qtcn-seed.json`** contract (so `qtcn --seed` / `product-dossier` are unchanged; `est_mass_kg` is real, not `[CẦN BÓC TÁCH]`). Verified on FreeCAD 1.1.1. Run with env vars (freecadcmd otherwise swallows `--file`): `FC_FILE=<part.step> FC_OUT=<dir> FC_NAME=<slug> freecadcmd freecad_extract.py`. Requires FreeCAD; DWG still needs ODA. **Engine split:** 2D (PDF/DXF text/dims/TCVN3) → `parse_mech_drawing.py`; 3D solids (mass/assembly) → `freecad_extract.py`.
+- **3D models** (STEP/IGES/FCStd/3D-DWG): use the **FreeCAD 3D engine** [D:/WX-Pipeline/scripts/extract/freecad_extract.py](../../../D:/WX-Pipeline/scripts/extract/freecad_extract.py) (headless via `freecadcmd`) — computes **real mass** (V×ρ), bounding box, surface area, dedups the assembly container, groups instances → BOM qty, and emits the **same `qtcn-seed.json`** contract (so `qtcn --seed` / `product-dossier` are unchanged; `est_mass_kg` is real, not `[CẦN BÓC TÁCH]`). Verified on FreeCAD 1.1.1. Run with env vars (freecadcmd otherwise swallows `--file`): `FC_FILE=<part.step> FC_OUT=<dir> FC_NAME=<slug> freecadcmd freecad_extract.py`. Requires FreeCAD; DWG still needs ODA. **Engine split:** 2D (PDF/DXF text/dims/TCVN3) → `parse_mech_drawing.py`; 3D solids (mass/assembly) → `freecad_extract.py`.
 - The script reports; it does not validate engineering correctness — that is the reviewer's job.
 
 ## Field-Tested Learnings (changelog)

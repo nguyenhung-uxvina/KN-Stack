@@ -7,7 +7,7 @@ description: Convert a document (PDF, Markdown, Word .docx, Excel .xlsx) into a 
 
 Turn any **PDF, Markdown, Word (.docx), or Excel (.xlsx)** file into a single **`<name>.json`** that preserves the document's information — reading order, structure, tables, formatting, and metadata — so nothing is lost in the conversion.
 
-The deterministic parsing (PDF text+tables, DOCX ordered body walk, XLSX cell grid, Markdown block parse) is **codified in Python** at [parse_document.py](../../../cad-pipeline/scripts/extract/parse_document.py). This skill orchestrates that script, sanity-checks fidelity, and (optionally) curates a human view. **Never hand-transcribe content the script already recovered — read the JSON.**
+The deterministic parsing (PDF text+tables, DOCX ordered body walk, XLSX cell grid, Markdown block parse) is **codified in Python** at [parse_document.py](../../../D:/WX-Pipeline/scripts/extract/parse_document.py). This skill orchestrates that script, sanity-checks fidelity, and (optionally) curates a human view. **Never hand-transcribe content the script already recovered — read the JSON.**
 
 This is the **general document** converter. For **engineering drawings** (title block, dimensions, GD&T from PDF/DXF/DWG) use [mech-drawing-extract](../mech-drawing-extract/SKILL.md) instead — that one knows CAD; this one preserves prose/tables/sheets.
 
@@ -21,7 +21,7 @@ This is the **general document** converter. For **engineering drawings** (title 
 ## Input
 
 ```bash
-python cad-pipeline/scripts/extract/parse_document.py --in <file> [--out <dir>] [--name <slug>] [--text]
+python D:/WX-Pipeline/scripts/extract/parse_document.py --in <file> [--out <dir>] [--name <slug>] [--text]
 ```
 
 - `--in` — the source file. Format is auto-detected by extension: `.pdf`, `.md`/`.markdown`, `.docx`, `.xlsx`.
@@ -49,7 +49,7 @@ Confirm the path and a sensible output slug (kebab-case). If converting a set, d
 ### Step 2 — Run the parser (codified, COD: Offload)
 
 ```bash
-python cad-pipeline/scripts/extract/parse_document.py --in report.pdf --out extracted/ --name q2-report
+python D:/WX-Pipeline/scripts/extract/parse_document.py --in report.pdf --out extracted/ --name q2-report
 ```
 
 The script writes `<name>.json` and prints a one-line summary (block counts, or sheet/cell/formula counts for Excel) plus a warning count.

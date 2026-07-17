@@ -32,7 +32,7 @@ Usage: /aigate [deliverable_type] OR provide details interactively.
 - [ ] Traces to correct phase deliverables?
 - [ ] No orphan claims (assertions without source)?
 - [ ] **MACHINE CHECK — bắt buộc khi deliverable sinh từ CAD pipeline (QTCN/định mức/dự toán/nghiệm thu):**
-      chạy `python cad-pipeline/scripts/extract/trace_numbers.py --doc <file.md> --seed <qtcn-seed*.json>` —
+      chạy `python D:/WX-Pipeline/scripts/extract/trace_numbers.py --doc <file.md> --seed <qtcn-seed*.json>` —
       mọi số có đơn vị phải truy về seed; exit 2 (số mồ côi = nghi AI bịa) → check này FAIL,
       đính kèm `*.trace.json` làm Evidence. (WX-QT-EXTRACT-SENSOR-01 §7: sensor áp nguyên vẹn cho đầu ra AI.)
 - **Status:** PASS / FLAG / FAIL

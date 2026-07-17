@@ -1,9 +1,10 @@
 # Codify Ledger — append-only registry of markdown→Python codifications
 
 > LƯU Ý ĐƯỜNG DẪN: từ 2026-07-13 (tag cad-pipeline-v0.4) toàn bộ CAD pipeline chuyển về
-> `cad-pipeline/` — các dòng cũ ghi `scripts/extract/...`, `schemas/...`, `golden/...`,
-> `docs/WX-QT-...` nay đọc là `cad-pipeline/<đường dẫn cũ>`. Bản đồ + changelog:
-> `cad-pipeline/README.md`, `cad-pipeline/CHANGELOG.md`.
+> `cad-pipeline/`; từ 2026-07-17 (v0.6.0) TÁCH HẲN ra repo độc lập **`D:\WX-Pipeline`**
+> (subtree split, giữ lịch sử). Các dòng CAD-pipeline cũ trong bảng dưới nay đọc là
+> `D:\WX-Pipeline\<đường dẫn bỏ tiền tố cad-pipeline/>`; thay đổi mới của pipeline ghi
+> tại `D:\WX-Pipeline\CHANGELOG.md`, KHÔNG ghi thêm vào sổ này.
 
 | Date | Target Skill | Script | LOC | Tests | Annual LLM saving (est.) | CEO sign-off |
 |------|-------------|--------|-----|-------|--------------------------|--------------|

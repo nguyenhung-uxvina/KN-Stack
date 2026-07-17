@@ -49,12 +49,12 @@ Nguồn sự thật duy nhất. Hợp nhất từ per-sheet JSON (mech-drawing-e
 
 ## §P1 — Extract (chọn engine theo loại file)
 - **2D (PDF/DXF/DWG-2D):** `parse_mech_drawing.py` — chữ/dims/dung sai/TCVN3. Ưu tiên DXF cho hình học; PDF cho title block (nếu không scan/mojibake).
-- **3D (STEP/IGES/FCStd/DWG-3D):** [cad-pipeline/scripts/extract/freecad_extract.py](../../../../cad-pipeline/scripts/extract/freecad_extract.py) qua `freecadcmd` — **khối lượng thật** (V×ρ) + bao hình + BOM lắp ráp, xuất thẳng `qtcn-seed.json` (`est_mass_kg` thật, hết `[CẦN BÓC TÁCH]`). Có thể **gộp** seed 3D (khối lượng) với seed 2D (VT/mã bản vẽ/dung sai/vật tư mua) khi có cả hai.
+- **3D (STEP/IGES/FCStd/DWG-3D):** [D:/WX-Pipeline/scripts/extract/freecad_extract.py](../../../../D:/WX-Pipeline/scripts/extract/freecad_extract.py) qua `freecadcmd` — **khối lượng thật** (V×ρ) + bao hình + BOM lắp ráp, xuất thẳng `qtcn-seed.json` (`est_mass_kg` thật, hết `[CẦN BÓC TÁCH]`). Có thể **gộp** seed 3D (khối lượng) với seed 2D (VT/mã bản vẽ/dung sai/vật tư mua) khi có cả hai.
 - Đọc **trang bản lắp / bảng kê** đầu tiên → dựng `bom[]` (Kí hiệu/Tên gọi/Số lượng/Vật liệu). Đây là index của cả sản phẩm.
 - Ghi cờ chất lượng (`pdf_scanned`, `tcvn3`, `mojibake_pdf`) vào spine.
 
 ## §P2 — Spine
-- **Codified:** chạy cầu nối [cad-pipeline/scripts/extract/extract_to_qtcn_seed.py](../../../../cad-pipeline/scripts/extract/extract_to_qtcn_seed.py) `--extracted <extracted/>` → **`qtcn-seed.json`** (product + BOM có VT gán sẵn + section/plate/tolerances/key-dims mỗi chi tiết + vật tư mua + flags). Đây là **lõi của spine** — biến đổi tất định, không nhập tay.
+- **Codified:** chạy cầu nối [D:/WX-Pipeline/scripts/extract/extract_to_qtcn_seed.py](../../../../D:/WX-Pipeline/scripts/extract/extract_to_qtcn_seed.py) `--extracted <extracted/>` → **`qtcn-seed.json`** (product + BOM có VT gán sẵn + section/plate/tolerances/key-dims mỗi chi tiết + vật tư mua + flags). Đây là **lõi của spine** — biến đổi tất định, không nhập tay.
 - Map mỗi DXF ↔ dòng BOM theo **mã bản vẽ** (cầu nối đã tin mã trong MTEXT hơn tên file).
 - (nếu cần) bổ sung `relationships` (mối ghép) và `est_mass` vào spine — phần này skill suy luận, không có trong seed.
 - Kết xuất `product-spine.json` (= `qtcn-seed.json` + relationships + est_mass). Rà nhanh: tổng SL, vật liệu, mục thiếu. **`qtcn-seed.json` chính là đầu vào `--seed` cho khối 1 (QTCN).**

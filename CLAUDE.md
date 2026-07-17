@@ -28,10 +28,10 @@ KN-Stack/
 │   └── _codify_ledger.md  (append-only registry of markdown→Python conversions)
 ├── leo-ai/           ← Claude Code plugin: getleo.ai toolkit (4 skills + MCP leo-bridge 6 tools, gate MẬT denylist)
 │                       CANONICAL copy (build.sh is legacy); installed via junction ~/.claude/skills/leo-ai → repo
-├── cad-pipeline/     ← CAD → 5 đầu ra (QTCN/định mức/dự toán/QCP/nghiệm thu), harness 3 tầng
-│                       TOÀN BỘ trong 1 thư mục: docs/ (3 đặc tả WX-QT) · schemas/ (qtcn-seed,
-│                       materials, actuals) · scripts/ (extract/inventor/hooks) · golden/ (G3)
-│                       Đọc cad-pipeline/README.md trước khi sửa; versioning: tag cad-pipeline-vX.Y
+│  (CAD pipeline:     TÁCH RA REPO ĐỘC LẬP D:\WX-Pipeline từ 2026-07-17 — CAD → 5 đầu ra,
+│                      harness 3 tầng, kiến trúc core/contract/shell. Đọc D:\WX-Pipeline\README.md
+│                      + docs\ARCHITECTURE.md trước khi sửa; tag vX.Y.Z; các skill qtcn/
+│                      product-dossier/aigate/doc-to-json/mech-drawing-extract trỏ sang đó)
 ├── hooks/            ← 3 hook scripts (SessionStart, UserPromptSubmit, Stop)
 ├── rules/            ← 4 vault rules (projects, galaxy, areas-helix, resources)
 ├── evals/            ← Eval framework (6 specs + runner)
