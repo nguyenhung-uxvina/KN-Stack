@@ -176,9 +176,9 @@ class Runner:
             messagebox.showwarning("Đang chạy",
                                    "Một tác vụ đang chạy — chờ xong hoặc bấm ■ Dừng.")
             return
-        self.q.put(("clear", None))
         shown = " ".join(('"%s"' % c if " " in c else c) for c in cmd)
         self.current = shown
+        self.q.put(("sep", None))          # vạch ngăn lần chạy — giữ lịch sử cũ để xem lại
         self.q.put(("log", "$ " + shown + "\n"))
         t = threading.Thread(target=self._worker,
                              args=(cmd, env_extra, cwd, on_done), daemon=True)
@@ -286,8 +286,12 @@ class App(tk.Tk):
                   "chạy local, read-only",
                   font=("Segoe UI", 9, "italic")).pack(side="left")
 
-        nb = ttk.Notebook(self)
-        nb.pack(fill="both", expand=True, padx=8, pady=8)
+        # ── PanedWindow dọc: tab (trên) / console (dưới) — kéo vạch giữa để giãn/thu ──
+        pane = ttk.PanedWindow(self, orient="vertical")
+        pane.pack(fill="both", expand=True, padx=8, pady=(8, 4))
+
+        nb = ttk.Notebook(pane)
+        pane.add(nb, weight=3)
         for name, builder in [
             ("Thiết kế", self._tab_design),
             ("KS công nghệ", self._tab_ks),
@@ -300,9 +304,9 @@ class App(tk.Tk):
             nb.add(f, text=name)
             builder(f)
 
-        # ── console + status (luôn hiện) ──
-        bottom = ttk.Frame(self, padding=(8, 0, 8, 8))
-        bottom.pack(fill="both", expand=False)
+        # ── console + status (luôn hiện; GIỮ lịch sử các lần chạy — cuộn lên xem lại) ──
+        bottom = ttk.Frame(pane, padding=(0, 0, 0, 4))
+        pane.add(bottom, weight=2)
         bar = ttk.Frame(bottom)
         bar.pack(fill="x")
         self.status = tk.Label(bar, text="Sẵn sàng", anchor="w",
@@ -312,12 +316,21 @@ class App(tk.Tk):
                    command=lambda: self._set_console("")).pack(side="right")
         ttk.Button(bar, text="Lưu log…", command=self._save_log).pack(
             side="right", padx=3)
+        ttk.Button(bar, text="Nhật ký…", command=self._show_journal).pack(
+            side="right", padx=3)
         ttk.Button(bar, text="■ Dừng", command=self.runner.stop).pack(
             side="right", padx=3)
+        # phong cách Windows PowerShell: nền xanh đậm, chữ trắng, lỗi đỏ/cảnh báo vàng
         self.console = scrolledtext.ScrolledText(
-            bottom, height=15, font=("Consolas", 9), wrap="word",
-            bg="#0f1115", fg="#d6d6d6", insertbackground="#d6d6d6")
+            bottom, height=14, font=("Consolas", 10), wrap="word",
+            bg="#012456", fg="#EEEDF0", insertbackground="#EEEDF0")
         self.console.pack(fill="both", expand=True, pady=(4, 0))
+        for tag, color, bold in [("fail", "#FF6B5E", True), ("warn", "#FFD866", False),
+                                 ("ok", "#7CE38B", False), ("cmd", "#6FD3EF", True),
+                                 ("sep", "#7E96BC", False)]:
+            self.console.tag_configure(
+                tag, foreground=color,
+                font=("Consolas", 10, "bold") if bold else ("Consolas", 10))
         self.console.configure(state="disabled")
 
     def _tab_design(self, f):
@@ -754,11 +767,62 @@ class App(tk.Tk):
             self.console.insert("end", text)
         self.console.configure(state="disabled")
 
-    def _append(self, text):
+    @staticmethod
+    def _tag_of(line):
+        """Chọn màu cho 1 dòng console (kiểm FAIL trước — dòng VERDICT chứa cả hai)."""
+        if line.startswith("$ "):
+            return "cmd"
+        if line.startswith("──"):
+            return "sep"
+        u = line.upper()
+        if "FAIL" in u or "[LỖI]" in u or "LỖI" in u or "CHẶN" in u:
+            return "fail"
+        if "WARNING" in u or "[!]" in line or "[■]" in line:
+            return "warn"
+        if "[OK" in u or "PASS" in u or "ĐẠT" in u or "WROTE" in u:
+            return "ok"
+        return None
+
+    def _append(self, text, tag=None):
         self.console.configure(state="normal")
-        self.console.insert("end", text)
+        for line in text.splitlines(keepends=True):
+            self.console.insert("end", line, tag or self._tag_of(line))
+        # scrollback có trần — quá 8000 dòng thì cắt bớt 2000 dòng đầu
+        if float(self.console.index("end-1c").split(".")[0]) > 8000:
+            self.console.delete("1.0", "2000.0")
         self.console.see("end")
         self.console.configure(state="disabled")
+
+    def _show_journal(self):
+        """Xem lại danh mục các lần chạy (runs.jsonl) — lần mới nhất trên cùng."""
+        try:
+            with open(JOURNAL_PATH, encoding="utf-8") as f:
+                lines = [json.loads(x) for x in f if x.strip()]
+        except FileNotFoundError:
+            messagebox.showinfo("Trống", "Chưa có lần chạy nào được ghi nhật ký.")
+            return
+        except Exception as e:  # noqa: BLE001
+            messagebox.showerror("Lỗi đọc nhật ký", str(e))
+            return
+        win = tk.Toplevel(self)
+        win.title("Nhật ký chạy — %s" % JOURNAL_PATH)
+        win.geometry("920x460")
+        txt = scrolledtext.ScrolledText(win, font=("Consolas", 10), wrap="word",
+                                        bg="#012456", fg="#EEEDF0")
+        txt.pack(fill="both", expand=True, padx=8, pady=8)
+        for tag, color in [("fail", "#FF6B5E"), ("warn", "#FFD866"),
+                           ("ok", "#7CE38B"), ("note", "#6FD3EF")]:
+            txt.tag_configure(tag, foreground=color)
+        for e in reversed(lines[-300:]):
+            rc = e.get("exit")
+            tag = "ok" if rc == 0 else ("warn" if rc == 1 else "fail")
+            label = EXIT_MEANING.get(rc, ("exit %s" % rc, ""))[0]
+            txt.insert("end", "%s  exit %s · %s\n" % (e.get("ts"), rc, label), tag)
+            txt.insert("end", "    %s\n" % e.get("cmd", ""))
+            if e.get("note"):
+                txt.insert("end", "    ⚑ %s\n" % e["note"], "note")
+            txt.insert("end", "\n")
+        txt.configure(state="disabled")
 
     def _pump(self):
         try:
@@ -766,6 +830,10 @@ class App(tk.Tk):
                 kind, payload = self.q.get_nowait()
                 if kind == "clear":
                     self._set_console("")
+                    self.status.config(text="Đang chạy…", fg="#b26a00")
+                elif kind == "sep":
+                    ts = datetime.datetime.now().strftime("%H:%M:%S")
+                    self._append("\n" + "─" * 26 + "  %s  " % ts + "─" * 26 + "\n", "sep")
                     self.status.config(text="Đang chạy…", fg="#b26a00")
                 elif kind == "log":
                     self._append(payload)

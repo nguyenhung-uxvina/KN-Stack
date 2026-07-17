@@ -3,6 +3,15 @@
 > Quy ước: mỗi phát hành = tag `cad-pipeline-vX.Y`; chi tiết kiểm chứng từng script
 > nằm trong `scripts/_codify_ledger.md` (append-only). File này là bản đọc nhanh.
 
+## v0.5.3 — 2026-07-17 · GUI: console kiểu PowerShell, kéo-giãn, giữ lịch sử
+
+- Console vào PanedWindow dọc — kéo vạch giữa tab/console để mở rộng/thu hẹp vùng lỗi.
+- Phong cách Windows PowerShell: nền xanh đậm, lệnh cyan, FAIL đỏ, WARNING vàng,
+  OK/PASS xanh (tô màu từng dòng tự động).
+- GIỮ lịch sử giữa các lần chạy (vạch ngăn + giờ chạy; trần 8000 dòng) — cuộn lên
+  xem lại lỗi cũ; nút "Nhật ký…" xem lại danh mục mọi lần chạy từ runs.jsonl
+  (mới nhất trên cùng, màu theo exit, hiện lý do --force).
+
 ## v0.5.2 — 2026-07-16 · GUI: viewer lỗi bấm-được (yêu cầu field từ ca Cot bia.ipt)
 
 - "Kết quả kiểm…" thành cây 2 cấp report → rule: bấm rule → NGHĨA + CÁCH SỬA

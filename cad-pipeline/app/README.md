@@ -45,5 +45,9 @@ Các tab theo vai trò (ánh xạ `docs/huong-dan/`):
   Sau lần chạy ra lỗi, console tự gợi ý mở viewer.
 - **■ Dừng** tác vụ đang chạy (kết quả dở dang không dùng được) · **Lưu log…**
   chép console ra .txt đính biên bản · high-DPI + không nháy cửa sổ con.
+- **Console kiểu PowerShell** (v0.5.3): kéo vạch giữa tab/console để giãn/thu;
+  màu theo mức (lệnh cyan · FAIL đỏ · WARNING vàng · OK xanh); GIỮ lịch sử các
+  lần chạy (vạch ngăn + giờ) để cuộn xem lại; nút **Nhật ký…** liệt kê mọi lần
+  chạy đã ghi (`runs.jsonl`, mới nhất trên cùng).
 
 Gặp lỗi: xem `../docs/huong-dan/07-xu-ly-su-co.md`.
