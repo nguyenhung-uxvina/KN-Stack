@@ -50,6 +50,72 @@ def holes_brief(holes):
     return " · ".join(f"Ø{h['dia']}×{h['count']}" for h in holes) or "-"
 
 
+def sheet_type(name, notes):
+    """Infer drawing-sheet type from part/file name + notes (Fairley map: 'loại tờ')."""
+    n = (name or "").lower()
+    j = (" ".join(notes) if notes else "").lower()
+    if any(k in n for k in ("tong lap", "tổng lắp", "tong-lap", "assembly", "lắp ráp")):
+        return "Tổng lắp"
+    if any(k in n or k in j for k in ("nesting", "sắp hình", "sap hinh", "cut-list", "cutlist")):
+        return "Nesting/cut-list"
+    if any(k in n for k in ("mặt bằng", "mat bang", "layout", "general arrangement")):
+        return "Mặt bằng/GA"
+    if any(k in n for k in ("mặt cắt", "mat cat", "section")):
+        return "Mặt cắt"
+    return "Chi tiết"
+
+
+def conf_counts(dims):
+    """Tally HIGH/MED/LOW confidence across dimension rows (reliability signal)."""
+    c = {"HIGH": 0, "MED": 0, "LOW": 0}
+    for d in dims or []:
+        k = str(d.get("confidence", "")).upper()
+        if k in c:
+            c[k] += 1
+    return c
+
+
+def emit_map(rows, product, out):
+    """Δ-A — drawings_map.md: cheap set-level navigation index (Fairley 'drawings.md').
+    'Tờ nào chứa gì' <1s, + reliability-driven pointers 'cần mở bản gốc'. Complements the
+    part-centric MASTER_BOM (procurement) with a sheet-centric map (navigation)."""
+    from collections import Counter
+    by_type = Counter(x["sheet_type"] for x in rows)
+    by_class = Counter(x["classification"] for x in rows)
+    M = [f"# BẢN ĐỒ BỘ HỒ SƠ (drawings map) — {product}", "",
+         "> Điều hướng <1s: tờ nào chứa gì. Chi tiết part → **MASTER_BOM.md**; "
+         "kích thước → **CRITICAL_DIMS.md**; bản gốc → source_drawings/.",
+         f"> Nguồn: {len(rows)} tờ (helix-cad-ingest). "
+         "Loại: " + (", ".join(f"{k}×{v}" for k, v in by_type.most_common()) or "—") + ".",
+         "> Phân loại cao nhất: " + (", ".join(f"{k}×{v}" for k, v in by_class.most_common()) or "—") + ".",
+         "",
+         "| Idx | Tên/Part | Loại tờ | Mã (LOW) | Vật liệu | KT·Lỗ | Conf H/M/L | Confl | Phân loại |",
+         "|---|---|---|---|---|---|---|---|---|"]
+    for x in rows:
+        c = x["confc"]
+        M.append(f"| {x['idx']} | {x['name']} | {x['sheet_type']} | {x['code_dxf']} | {x['material']} "
+                 f"| {x['dims']}·{x['holes']} | {c['HIGH']}/{c['MED']}/{c['LOW']} | {x['confl']} | {x['classification']} |")
+    # Reliability-driven "mở bản gốc" (Fairley: chỉ mở raster khi thiếu tin cậy).
+    need = [x for x in rows if x["confl"] > 0 or x["confc"]["LOW"] > 0 or x["code_dxf"] == "—"]
+    M += ["", "## 🔎 Cần mở bản gốc / rà trước (reliability thấp)", ""]
+    if need:
+        M.append("> Fairley: chỉ mở `source_drawings/` khi dữ liệu LOW / có conflict / thiếu mã.")
+        for x in need:
+            why = []
+            if x["confl"] > 0:
+                why.append(f"{x['confl']} conflict")
+            if x["confc"]["LOW"] > 0:
+                why.append(f"{x['confc']['LOW']} dim LOW")
+            if x["code_dxf"] == "—":
+                why.append("thiếu mã")
+            M.append(f"- `{x['idx']}` {x['name']} — {', '.join(why)}")
+    else:
+        M.append("Không tờ nào cần mở bản gốc (mọi dim HIGH/MED, không conflict, đủ mã).")
+    with io.open(os.path.join(out, "drawings_map.md"), "w", encoding="utf-8") as f:
+        f.write("\n".join(M))
+    return by_type, by_class
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("dir")
@@ -59,14 +125,17 @@ def main():
     files = sorted(glob.glob(os.path.join(a.dir, "*.cad_extract.json")))
 
     rows = []
+    product = None
     for fp in files:
         with io.open(fp, encoding="utf-8") as f:
             r = json.load(f)
         m = r["meta"]
         idx = m.get("file_index") or "?"
+        product = product or m.get("product")
+        nm = clean_name(idx, m["source_files"]["dxf"])
         rows.append({
             "idx": idx,
-            "name": clean_name(idx, m["source_files"]["dxf"]),
+            "name": nm,
             "code_dxf": m.get("code_in_dxf") or "—",
             "material": m.get("material") or "—",
             "qty": PDF_BOM.get(idx, ("", ""))[1] or "",
@@ -76,7 +145,11 @@ def main():
             "confl": len(r.get("conflicts", [])),
             "dimrows": r["dimensions"],
             "surface": (r.get("surface_finish") or {}).get("value") or "",
+            "classification": m.get("classification") or "—",
+            "sheet_type": sheet_type(nm, r.get("process_notes", [])),
+            "confc": conf_counts(r["dimensions"]),
         })
+    product = product or "bộ hồ sơ"
 
     def keyf(x):
         return [int(p) if p.isdigit() else 0 for p in str(x["idx"]).split(".")]
@@ -139,9 +212,13 @@ def main():
     with io.open(os.path.join(out, "MASTER_BOM.csv"), "w", encoding="utf-8") as f:
         f.write("\n".join(C))
 
+    # ---- DRAWINGS MAP (Δ-A) ----
+    by_type, by_class = emit_map(rows, product, out)
+
     print(f"parts={len(rows)}  materials={dict(mat)}  process={dict(proc)}")
     print(f"stale-code parts={len(bad)}  no-code parts={len(nocode)}")
-    print("wrote: MASTER_BOM.md, CRITICAL_DIMS.md, MASTER_BOM.csv ->", out)
+    print(f"map: sheet_types={dict(by_type)}  classes={dict(by_class)}")
+    print("wrote: MASTER_BOM.md, CRITICAL_DIMS.md, MASTER_BOM.csv, drawings_map.md ->", out)
 
 
 if __name__ == "__main__":
