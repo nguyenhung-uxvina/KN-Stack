@@ -1,0 +1,95 @@
+{
+  "skill": "fable-gpt",
+  "version": "1.0",
+  "description": "Binary assertions for fable-gpt — Claude-orchestrator × Codex-executor adaptive pipeline (Plan/Review/CEO-Gate/Execute/Verify)",
+  "mode": "static",
+  "test_input": "refactor module X chạm 6 file, đổi interface — giao codex theo chu trình fable-gpt",
+  "total_required": 12,
+  "passing_score": 11,
+  "assertions": [
+    {
+      "id": "FG-SECURITY-GATE",
+      "name": "security_gate_before_any_dispatch",
+      "check": "Security Gate MẬT/HẠN-CHẾ chạy TRƯỚC mọi dispatch Codex (cloud OpenAI); bị chặn → 2 lối ra abstract/local",
+      "regex": "Security Gate.*(TRƯỚC|trước|first)|MẬT.*(DỪNG|dừng|không dispatch)",
+      "required": true
+    },
+    {
+      "id": "FG-CLASSIFIER",
+      "name": "classifier_three_criteria_with_reason",
+      "check": "classifier 3 tiêu chí (phạm vi rõ / số file / rủi ro kiến trúc) + nêu 1 câu lý do phân loại",
+      "regex": "3 tiêu chí|phạm vi.*(file|kiến trúc)|rủi ro kiến trúc",
+      "required": true
+    },
+    {
+      "id": "FG-FAST-PATH",
+      "name": "fast_path_sol_medium_default",
+      "check": "FAST PATH giao thẳng gpt-5.6-sol effort mặc định (không set --effort), nhảy đến Verify",
+      "regex": "FAST PATH.*gpt-5\\.6-sol|gpt-5\\.6-sol.*(medium|mặc định)",
+      "required": true
+    },
+    {
+      "id": "FG-PLAN-XHIGH",
+      "name": "plan_step_sol_xhigh_readonly",
+      "check": "bước Plan dùng gpt-5.6-sol --effort xhigh và read-only (planning only, không sửa file)",
+      "regex": "xhigh.*(read-only|planning|không.*sửa)|--effort xhigh",
+      "required": true
+    },
+    {
+      "id": "FG-REVIEW-FABLE",
+      "name": "review_by_claude_reads_real_repo",
+      "check": "bước Review do Claude/Fable làm inline, PHẢI đọc file thật mà plan nhắc đến (không tin plan mù)",
+      "regex": "Review.*(Claude|Fable).*(đọc|inline)|đọc.*file.*plan",
+      "required": true
+    },
+    {
+      "id": "FG-CEO-GATE",
+      "name": "ceo_gate_default_auto_flag",
+      "check": "CEO Gate mặc định DỪNG trình plan; flag --auto bỏ gate",
+      "regex": "CEO Gate.*(mặc định|DỪNG|dừng).*|--auto.*(bỏ|skip)",
+      "required": true
+    },
+    {
+      "id": "FG-EXECUTOR-TERRA",
+      "name": "executor_terra_default_flag_switch",
+      "check": "Execute mặc định gpt-5.6-terra, flag --executor <terra|luna|sol> để đổi",
+      "regex": "gpt-5\\.6-terra.*(mặc định|default)|--executor",
+      "required": true
+    },
+    {
+      "id": "FG-VERIFY-LOOP",
+      "name": "verify_max_two_fix_rounds_resume",
+      "check": "Verify: FAIL → fix-hints qua --resume giữ thread, TỐI ĐA 2 vòng, sau đó dừng báo CEO với root-cause",
+      "regex": "(tối đa|TỐI ĐA) 2 vòng|fix.?hints.*--resume",
+      "required": true
+    },
+    {
+      "id": "FG-DIFF-SCOPE",
+      "name": "out_of_scope_diff_red_flag",
+      "check": "diff chạm file ngoài phạm vi plan đã duyệt → cờ đỏ, không chấp nhận im lặng",
+      "regex": "ngoài phạm vi.*(cờ đỏ|red flag)|cờ đỏ.*(diff|file)",
+      "required": true
+    },
+    {
+      "id": "FG-STATE-FILE",
+      "name": "state_file_resume_never_commit",
+      "check": "state file _fablegpt_state.md tại repo đích, --resume đọc lại, xóa khi xong, KHÔNG BAO GIỜ commit",
+      "regex": "_fablegpt_state",
+      "required": true
+    },
+    {
+      "id": "FG-DISPATCH-AGENT",
+      "name": "dispatch_via_codex_rescue_subagent",
+      "check": "mọi dispatch qua Agent tool subagent_type codex:codex-rescue — KHÔNG gọi codex-companion trực tiếp, KHÔNG vendor path plugin",
+      "regex": "codex:codex-rescue",
+      "required": true
+    },
+    {
+      "id": "FG-ERROR-NO-BLIND-RETRY",
+      "name": "codex_dead_no_blind_retry",
+      "check": "Codex CLI chết/timeout → báo ngay + /codex:status, KHÔNG retry mù",
+      "regex": "(KHÔNG|không).*retry mù|codex:status",
+      "required": true
+    }
+  ]
+}
