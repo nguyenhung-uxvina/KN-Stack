@@ -1,0 +1,7 @@
+{
+  "meta": {"part_id": "ASM-NOFLAGS", "product": "DFA-TEST", "classification": "THƯỜNG", "name": "assembly missing dfa_essential flags"},
+  "bom": [
+    {"code": "F1", "name": "panel", "qty": 1},
+    {"code": "F2", "name": "frame", "qty": 1}
+  ]
+}

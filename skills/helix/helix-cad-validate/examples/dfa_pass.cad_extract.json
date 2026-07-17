@@ -1,0 +1,10 @@
+{
+  "meta": {"part_id": "ASM-CLEAN", "product": "DFA-TEST", "classification": "THƯỜNG", "name": "clean assembly"},
+  "bom": [
+    {"code": "P1", "name": "housing", "qty": 1, "dfa_essential": true},
+    {"code": "P2", "name": "shaft", "qty": 1, "dfa_essential": true},
+    {"code": "P3", "name": "bearing", "qty": 2, "dfa_essential": true},
+    {"code": "P4", "name": "cover", "qty": 1, "dfa_essential": true},
+    {"code": "P5", "name": "bolt M6", "qty": 2, "dfa_essential": false}
+  ]
+}

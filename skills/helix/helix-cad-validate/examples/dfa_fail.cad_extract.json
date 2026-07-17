@@ -1,0 +1,11 @@
+{
+  "meta": {"part_id": "ASM-BLOATED", "product": "DFA-TEST", "classification": "THƯỜNG", "name": "over-fastened assembly"},
+  "bom": [
+    {"code": "B1", "name": "bracket", "qty": 1, "dfa_essential": true},
+    {"code": "B2", "name": "plate", "qty": 1, "dfa_essential": false},
+    {"code": "B3", "name": "spacer", "qty": 6, "dfa_essential": false},
+    {"code": "B4", "name": "washer", "qty": 12, "dfa_essential": false},
+    {"code": "B5", "name": "bolt", "qty": 12, "dfa_essential": false},
+    {"code": "B6", "name": "nut", "qty": 12, "dfa_essential": false}
+  ]
+}

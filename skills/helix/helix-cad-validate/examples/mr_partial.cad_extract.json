@@ -1,0 +1,7 @@
+{
+  "meta": {"part_id": "MR-PARTIAL", "product": "MR-TEST", "classification": "THƯỜNG", "name": "incomplete BOM (HP2 thiếu area_m2)"},
+  "bom": [
+    {"code": "HP1", "name": "hull plate", "qty": 25, "area_m2": 3.0, "thickness_mm": 5, "material": "5083"},
+    {"code": "HP2", "name": "deck plate", "qty": 10, "thickness_mm": 6, "material": "5083"}
+  ]
+}

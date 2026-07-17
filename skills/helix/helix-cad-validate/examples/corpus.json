@@ -1,0 +1,45 @@
+{
+  "meta": {
+    "tool": "helix-cad-validate",
+    "note": "Unified hermetic eval corpus. regression tier = must stay 100% + reproducible. Covers the two rules actually implemented in validate.py: mass_reconciliation (Δ-C Fairley) + dfa_part_count (DFA, benchmark-driven 2026-07-17). Hermetic — no external CSV/network. Fixtures mr_* reconstructed 2026-07-17 after a concurrent session deleted the untracked originals; numbers self-verify via the harness. The pre-existing EX-*/IE-* cases were dropped: they referenced DFM hole-rules never implemented in validate.py + fixtures that never existed. Add one PASS+one FAIL fixture per new rule; graduate every fixed bug into a regression case.",
+    "validator": "../validate.py"
+  },
+  "cases": [
+    { "id": "MR-PASS-massprops", "tier": "regression", "extract": "mr_pass.cad_extract.json",
+      "rules": "mr_rules.json", "mass_props": "mr_pass.mass_props.json", "expect": "PASS",
+      "origin": "Δ-C mass_reconciliation (Fairley Sanity-Check, CEO 2026-07-17)",
+      "note": "Bottom-up 1020 vs lightship 1000 = 2% <= ±5% assembly → PASS." },
+    { "id": "MR-FAIL-drift", "tier": "regression", "extract": "mr_pass.cad_extract.json",
+      "rules": "mr_rules.json", "mass_props": "mr_fail.mass_props.json", "expect": "FAIL",
+      "origin": "Δ-C mass_reconciliation",
+      "note": "Bottom-up 1150 vs 1000 = 15% > ±5% → FAIL. Bắt sai-trích-xuất/thiếu-part/vật-liệu-sai." },
+    { "id": "MR-PASS-bom-compute", "tier": "regression", "extract": "mr_bom.cad_extract.json",
+      "rules": "mr_rules.json", "expect": "PASS",
+      "origin": "Δ-C mass_reconciliation",
+      "note": "Tính từ BOM: 25 × 3.0m² × 5mm × ρ(5083=2660) = 997.5 kg vs 1000 → 0.25% PASS." },
+    { "id": "MR-FAIL-partial-bom", "tier": "regression", "extract": "mr_partial.cad_extract.json",
+      "rules": "mr_rules.json", "expect": "FAIL",
+      "origin": "Δ-C mass_reconciliation",
+      "note": "require_complete: HP2 thiếu area_m2 → tổng bottom-up thiếu → FAIL. Chống đối chiếu trên tổng khuyết." },
+    { "id": "MR-FAIL-failsafe", "tier": "regression", "extract": "mr_failsafe.cad_extract.json",
+      "rules": "mr_rules.json", "expect": "FAIL",
+      "origin": "Δ-C mass_reconciliation",
+      "note": "Fail-safe: không mass_props, BOM rỗng, required:true → FAIL (không SKIP)." },
+
+    { "id": "DFA-PASS-clean", "tier": "regression", "extract": "dfa_pass.cad_extract.json",
+      "rules": "dfa_rules_gating.json", "expect": "PASS", "origin": "DFA wire-in 2026-07-17",
+      "note": "7 parts <=40; fastener 2/7=29%<=30%; DFA index 5/7=0.71>=0.60 → tất cả PASS." },
+    { "id": "DFA-FAIL-gating", "tier": "regression", "extract": "dfa_fail.cad_extract.json",
+      "rules": "dfa_rules_gating.json", "expect": "FAIL", "origin": "DFA wire-in 2026-07-17",
+      "note": "44>40 parts; fastener 36/44=82%; index 1/44=0.02. advisory:false → 3 FAIL → gate FAIL." },
+    { "id": "DFA-WARN-advisory", "tier": "regression", "extract": "dfa_fail.cad_extract.json",
+      "rules": "dfa_rules_advisory.json", "expect": "PASS", "origin": "DFA wire-in 2026-07-17",
+      "note": "Cùng vi phạm nhưng advisory:true → WARN (không gating) → verdict PASS. Chứng minh tầng advisory." },
+    { "id": "DFA-FAILSAFE-gating", "tier": "regression", "extract": "dfa_failsafe.cad_extract.json",
+      "rules": "dfa_rules_gating.json", "expect": "FAIL", "origin": "DFA wire-in 2026-07-17",
+      "note": "min_dfa_index đặt nhưng rows thiếu dfa_essential + require_complete → fail-safe FAIL (gating)." },
+    { "id": "DFA-FAILSAFE-advisory", "tier": "regression", "extract": "dfa_failsafe.cad_extract.json",
+      "rules": "dfa_rules_advisory.json", "expect": "PASS", "origin": "DFA wire-in 2026-07-17",
+      "note": "Cùng thiếu cờ nhưng advisory:true → WARN → verdict PASS (fail-safe chỉ cảnh báo khi advisory)." }
+  ]
+}

@@ -1,0 +1,4 @@
+{
+  "meta": {"part_id": "MR-FAILSAFE", "product": "MR-TEST", "classification": "THƯỜNG", "name": "no mass_props + empty BOM (fail-safe)"},
+  "bom": []
+}

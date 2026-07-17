@@ -24,6 +24,16 @@
       "severity": "critical"
     },
     "mass_kg": { "max": 1800, "required": false, "severity": "major" },
+    "mass_reconciliation": {
+      "reference_kg": 1650,
+      "tolerance_pct": 5.0,
+      "part_tolerance_pct": 3.0,
+      "scope": "assembly",
+      "required": false,
+      "require_complete": true,
+      "severity": "critical",
+      "notes": "PLACEHOLDER lightship — kỹ sư định danh PHẢI thay bằng ước tính naval-architect thật; required:false tới khi có bottom-up (mass_props.bottom_up_kg hoặc BOM có area_m2)."
+    },
     "safety_factor": { "min": 1.5, "required": true, "severity": "critical" },
     "tolerance_mm": { "max": 2.0, "min_confidence": "MED", "severity": "major" },
     "mandatory_components": {
@@ -41,6 +51,20 @@
       "required": ["MLC70"],
       "forbidden": ["MLC85"],
       "severity": "critical"
+    },
+    "dfa_part_count": {
+      "scope": "assembly",
+      "max_parts": 40,
+      "max_fastener_ratio": 0.30,
+      "min_dfa_index": 0.60,
+      "fastener_keywords": ["bolt", "screw", "nut", "washer", "rivet", "stud",
+                            "bu lông", "bu long", "vít", "vit", "đai ốc", "dai oc",
+                            "long đen", "long den", "đinh tán", "dinh tan"],
+      "advisory": true,
+      "require_complete": true,
+      "required": false,
+      "severity": "major",
+      "notes": "PLACEHOLDER ngưỡng DFA — kỹ sư định danh calibrate theo họ sản phẩm. advisory:true (phát WARN, không đóng gate) tới khi BOM mang cờ dfa_essential (3 câu Boothroyd) ổn định; sau đó nâng advisory:false để DFA đóng gate G3."
     }
   }
 }

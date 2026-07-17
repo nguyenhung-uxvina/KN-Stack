@@ -1,0 +1,21 @@
+{
+  "meta": {
+    "product": "DFA-TEST", "rev": "A", "contract_version": "1.0.0",
+    "classification": "THƯỜNG", "engineer_of_record": "(hermetic test)",
+    "notes": "Hermetic DFA rules — advisory:false (vi phạm => FAIL, đóng gate). required:true (no-BOM => FAIL)."
+  },
+  "rules": {
+    "dfa_part_count": {
+      "scope": "assembly",
+      "max_parts": 40,
+      "max_fastener_ratio": 0.30,
+      "min_dfa_index": 0.60,
+      "fastener_keywords": ["bolt", "screw", "nut", "washer", "rivet", "stud",
+                            "bu lông", "vít", "đai ốc", "đinh tán"],
+      "advisory": false,
+      "require_complete": true,
+      "required": true,
+      "severity": "major"
+    }
+  }
+}
