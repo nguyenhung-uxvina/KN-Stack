@@ -139,6 +139,44 @@ def is_report_file(fn):
             or fn in ("drawing_report.json", "drawing_live_report.json"))
 
 
+# 5 bước luồng công việc (stepper trên thanh sản phẩm — ánh xạ bộ hướng dẫn HD)
+STEP_NAMES = ["Kiểm bản vẽ", "Trích xuất", "Phát hành", "5 đầu ra + trace", "Actuals"]
+STEP_MARKS = "①②③④⑤"
+
+
+class Tooltip:
+    """Tooltip Tkinter thuần: rê chuột 0,5s thì hiện, rời là ẩn."""
+
+    def __init__(self, widget, text):
+        self.widget, self.text, self.tip, self.job = widget, text, None, None
+        widget.bind("<Enter>", self._schedule, add="+")
+        widget.bind("<Leave>", self._hide, add="+")
+        widget.bind("<ButtonPress>", self._hide, add="+")
+
+    def _schedule(self, _ev=None):
+        self.job = self.widget.after(500, self._show)
+
+    def _show(self):
+        if self.tip:
+            return
+        x = self.widget.winfo_rootx() + 12
+        y = self.widget.winfo_rooty() + self.widget.winfo_height() + 4
+        self.tip = tw = tk.Toplevel(self.widget)
+        tw.wm_overrideredirect(True)
+        tw.wm_geometry("+%d+%d" % (x, y))
+        tk.Label(tw, text=self.text, justify="left", wraplength=420,
+                 bg="#FFFBE6", fg="#333", relief="solid", borderwidth=1,
+                 font=("Segoe UI", 9), padx=8, pady=5).pack()
+
+    def _hide(self, _ev=None):
+        if self.job:
+            self.widget.after_cancel(self.job)
+            self.job = None
+        if self.tip:
+            self.tip.destroy()
+            self.tip = None
+
+
 # Ý nghĩa exit code (đồng bộ HD-00 §3) → (nhãn, màu)
 EXIT_MEANING = {
     0: ("ĐẠT", "#1a7f37"),
@@ -172,10 +210,11 @@ class Runner:
             self.q.put(("log", "\n[!] Không dừng được: %s\n" % e))
 
     def run(self, cmd, env_extra=None, cwd=None, on_done=None):
+        """Khởi chạy nền. Trả về True nếu đã bắt đầu, False nếu đang bận."""
         if self.busy():
             messagebox.showwarning("Đang chạy",
                                    "Một tác vụ đang chạy — chờ xong hoặc bấm ■ Dừng.")
-            return
+            return False
         shown = " ".join(('"%s"' % c if " " in c else c) for c in cmd)
         self.current = shown
         self.q.put(("sep", None))          # vạch ngăn lần chạy — giữ lịch sử cũ để xem lại
@@ -183,6 +222,7 @@ class Runner:
         t = threading.Thread(target=self._worker,
                              args=(cmd, env_extra, cwd, on_done), daemon=True)
         t.start()
+        return True
 
     def _worker(self, cmd, env_extra, cwd, on_done):
         env = dict(os.environ)
@@ -221,6 +261,11 @@ class App(tk.Tk):
         self.vars = {}                         # StringVar/BooleanVar theo key
         self.recent_dirs = []                  # thư mục sản phẩm gần đây
         self._pending_note = None              # ghi chú kèm nhật ký (vd lý do --force)
+        self.run_buttons = []                  # nút ▶ bị khóa khi đang chạy
+        self._running = False
+        self._run_t0 = None
+        self._last_run = None                  # (cmd, kwargs) — cho F5 chạy lại
+        self.last_scan = None                  # kết quả _scan_status gần nhất
         self._build()
         self._load_config()
         self.protocol("WM_DELETE_WINDOW", self._on_close)
@@ -257,9 +302,16 @@ class App(tk.Tk):
             side="left", padx=3)
         return row
 
-    def action(self, parent, text, fn):
-        ttk.Button(parent, text=text, command=fn).pack(
-            fill="x", pady=4, ipady=3)
+    def action(self, parent, text, fn, tip=None, locks=True):
+        """Nút hành động. locks=True → bị khóa khi có tác vụ đang chạy
+        (các nút chỉ mở cửa sổ xem đặt locks=False)."""
+        btn = ttk.Button(parent, text=text, command=fn)
+        btn.pack(fill="x", pady=4, ipady=3)
+        if locks:
+            self.run_buttons.append(btn)
+        if tip:
+            Tooltip(btn, tip)
+        return btn
 
     def section(self, parent, title):
         lf = ttk.LabelFrame(parent, text=title, padding=10)
@@ -276,7 +328,152 @@ class App(tk.Tk):
         return True
 
     def go(self, cmd, **kw):
-        self.runner.run(cmd, **kw)
+        if self.runner.run(cmd, **kw):
+            self._last_run = (cmd, kw)
+            self._set_running(True)
+
+    def _set_running(self, flag):
+        """Khóa/mở các nút ▶ + chạy đồng hồ giây trên status khi đang chạy."""
+        self._running = flag
+        for b in self.run_buttons:
+            try:
+                b.configure(state="disabled" if flag else "normal")
+            except Exception:  # noqa: BLE001
+                pass
+        if flag:
+            self._run_t0 = datetime.datetime.now()
+            self._tick()
+
+    def _tick(self):
+        if not self._running:
+            return
+        el = int((datetime.datetime.now() - self._run_t0).total_seconds())
+        self.status.config(text="Đang chạy… %02d:%02d  (■ Dừng để ngắt)"
+                           % divmod(el, 60), fg="#b26a00")
+        self.after(500, self._tick)
+
+    def _rerun(self):
+        """F5 — chạy lại lệnh gần nhất. --force vẫn phải nhập lại lý do."""
+        if not self._last_run or self.runner.busy():
+            return
+        cmd, kw = self._last_run
+        if "--force" in cmd:
+            reason = simpledialog.askstring(
+                "Lý do --force", "Chạy lại với --force — nhập lại lý do (ghi nhật ký):",
+                parent=self)
+            if not (reason or "").strip():
+                return
+            self._pending_note = "FORCE: " + reason.strip()
+        self.go(cmd, **kw)
+
+    # ── thanh sản phẩm + stepper ─────────────────────────────────────────────
+    def _pick_product(self):
+        p = filedialog.askdirectory(title="Chọn thư mục _QTCN_export/<sản phẩm>")
+        if p:
+            self._set_product(p)
+
+    def _set_product(self, path):
+        """Chọn sản phẩm MỘT lần: đồng bộ ngữ cảnh cho các tab + quét trạng thái."""
+        path = (path or "").strip()
+        self.var("product_dir").set(path)
+        if path and os.path.isdir(path):
+            self.var("k_dir").set(path)
+            self.var("ceo_root").set(os.path.dirname(path) or path)
+            self._remember_dir(path)
+        self._rescan()
+
+    def _scan_status(self, root):
+        """Đọc report JSON có sẵn trong thư mục sản phẩm → trạng thái 5 bước +
+        số FAIL theo tab + verdict xấu nhất. Không chạy gì — chỉ đọc đĩa."""
+        res = {"steps": ["todo"] * 5, "design_fail": 0, "ks_fail": 0,
+               "verdict": None, "n_reports": 0}
+        if not root or not os.path.isdir(root):
+            return res
+        drw, val, fin, trc, actuals = [], [], [], [], False
+        n = 0
+        for dp, _dn, fns in os.walk(root):
+            for fn in fns:
+                n += 1
+                if n > 3000:        # trần an toàn cho thư mục quá lớn
+                    break
+                p = os.path.join(dp, fn)
+                if fn in ("drawing_report.json", "drawing_live_report.json") \
+                        or fn.endswith(".rhino-check.json"):
+                    drw.append(p)
+                elif fn.endswith(".validation.json"):
+                    (fin if "final" in fn.lower() else val).append(p)
+                elif fn.endswith(".trace.json"):
+                    trc.append(p)
+                elif fn == "actuals.jsonl":
+                    actuals = True
+
+        def load(paths):
+            out = []
+            for p in paths:
+                try:
+                    with open(p, encoding="utf-8-sig") as f:
+                        out.append(json.load(f))
+                except Exception:  # noqa: BLE001
+                    pass
+            return out
+
+        d_drw, d_val, d_fin = load(drw), load(val), load(fin)
+        res["n_reports"] = len(d_drw) + len(d_val) + len(d_fin)
+
+        def fails(datas):
+            return sum(1 for d in datas for e in d.get("rules", [])
+                       if e.get("level") == "FAIL")
+
+        res["design_fail"] = fails(d_drw)
+        res["ks_fail"] = fails(d_val) + fails(d_fin)
+        order = {"FAIL": 0, "WARNING": 1, "PASS": 2}
+        verdicts = [d.get("verdict") for d in d_drw + d_val + d_fin
+                    if d.get("verdict") in order]
+        res["verdict"] = min(verdicts, key=order.get) if verdicts else None
+
+        def state(datas):
+            if not datas:
+                return "todo"
+            return "fail" if any(d.get("verdict") == "FAIL" for d in datas) else "done"
+
+        res["steps"][0] = state(d_drw)
+        res["steps"][1] = state(d_val)
+        res["steps"][2] = state(d_fin)          # phát hành = seed FINAL đã validate
+        res["steps"][3] = "done" if trc else "todo"
+        res["steps"][4] = "done" if actuals else "todo"
+        return res
+
+    def _rescan(self):
+        self.last_scan = res = self._scan_status(self.var("product_dir").get())
+        # pill GATE — verdict xấu nhất trong mọi report của sản phẩm
+        pill = {"FAIL": (" GATE: FAIL ", "#b3261e"),
+                "WARNING": (" GATE: WARNING ", "#b26a00"),
+                "PASS": (" GATE: PASS ", "#1a7f37"),
+                None: (" CHƯA KIỂM ", "#777777")}[res["verdict"]]
+        self.gate_pill.config(text=pill[0], bg=pill[1])
+        # stepper: fail đỏ ✗ · done xanh ✓ · mũi tên ← chỉ bước kế tiếp, và CHỈ khi
+        # không còn bước FAIL đứng trước (việc hiện tại là sửa bước ✗ đầu tiên)
+        cur_idx = next((i for i, st in enumerate(res["steps"]) if st != "done"),
+                       None)
+        if cur_idx is not None and res["steps"][cur_idx] == "fail":
+            cur_idx = None
+        for i, st in enumerate(res["steps"]):
+            base = "%s %s" % (STEP_MARKS[i], STEP_NAMES[i])
+            lbl = self.step_labels[i]
+            if st == "fail":
+                lbl.config(text=base + " ✗", fg="#b3261e",
+                           font=("Segoe UI", 9, "bold"))
+            elif st == "done":
+                lbl.config(text=base + " ✓", fg="#1a7f37", font=("Segoe UI", 9))
+            elif i == cur_idx:
+                lbl.config(text=base + " ←", fg="#2E6DA4",
+                           font=("Segoe UI", 9, "bold"))
+            else:
+                lbl.config(text=base, fg="#8a8a8a", font=("Segoe UI", 9))
+        # badge số FAIL trên tab có việc: Thiết kế (D1/SEC) · KS (S1–S4)
+        for idx, cnt in ((0, res["design_fail"]), (1, res["ks_fail"])):
+            name = self.tab_names[idx]
+            self.nb.tab(idx, text=name + (" ●%d" % cnt if cnt else ""))
 
     # ── các tab ──────────────────────────────────────────────────────────────
     def _build(self):
@@ -286,12 +483,44 @@ class App(tk.Tk):
                   "chạy local, read-only",
                   font=("Segoe UI", 9, "italic")).pack(side="left")
 
+        # ── Thanh SẢN PHẨM: chọn một lần, mọi tab dùng chung ngữ cảnh ──
+        ctx = ttk.Frame(self, padding=(10, 6, 10, 0))
+        ctx.pack(fill="x")
+        ttk.Label(ctx, text="Sản phẩm:", font=("Segoe UI", 9, "bold")).pack(side="left")
+        cb = ttk.Combobox(ctx, textvariable=self.var("product_dir"), width=52)
+        cb.configure(postcommand=lambda cb=cb: cb.configure(values=self.recent_dirs))
+        cb.pack(side="left", padx=(6, 3), fill="x", expand=True)
+        cb.bind("<<ComboboxSelected>>",
+                lambda _e: self._set_product(self.var("product_dir").get()))
+        cb.bind("<Return>",
+                lambda _e: self._set_product(self.var("product_dir").get()))
+        ttk.Button(ctx, text="Chọn…", width=7, command=self._pick_product).pack(side="left")
+        ttk.Button(ctx, text="Quét lại", width=8, command=self._rescan).pack(
+            side="left", padx=3)
+        self.gate_pill = tk.Label(ctx, text=" CHƯA KIỂM ", fg="white", bg="#777777",
+                                  font=("Segoe UI", 9, "bold"), padx=6)
+        self.gate_pill.pack(side="left", padx=(3, 0))
+
+        # ── Stepper 5 bước (trạng thái đọc từ report có sẵn trên đĩa) ──
+        stepbar = ttk.Frame(self, padding=(10, 4, 10, 0))
+        stepbar.pack(fill="x")
+        self.step_labels = []
+        for i, name in enumerate(STEP_NAMES):
+            lbl = tk.Label(stepbar, text="%s %s" % (STEP_MARKS[i], name),
+                           font=("Segoe UI", 9), fg="#8a8a8a")
+            lbl.pack(side="left")
+            self.step_labels.append(lbl)
+            if i < len(STEP_NAMES) - 1:
+                tk.Label(stepbar, text=" › ", fg="#b5b5b5",
+                         font=("Segoe UI", 9)).pack(side="left")
+
         # ── PanedWindow dọc: tab (trên) / console (dưới) — kéo vạch giữa để giãn/thu ──
         pane = ttk.PanedWindow(self, orient="vertical")
         pane.pack(fill="both", expand=True, padx=8, pady=(8, 4))
 
-        nb = ttk.Notebook(pane)
+        nb = self.nb = ttk.Notebook(pane)
         pane.add(nb, weight=3)
+        self.tab_names = []
         for name, builder in [
             ("Thiết kế", self._tab_design),
             ("KS công nghệ", self._tab_ks),
@@ -302,6 +531,7 @@ class App(tk.Tk):
         ]:
             f = ttk.Frame(nb)
             nb.add(f, text=name)
+            self.tab_names.append(name)
             builder(f)
 
         # ── console + status (luôn hiện; GIỮ lịch sử các lần chạy — cuộn lên xem lại) ──
@@ -333,6 +563,14 @@ class App(tk.Tk):
                 font=("Consolas", 10, "bold") if bold else ("Consolas", 10))
         self.console.configure(state="disabled")
 
+        # ── Phím tắt: F5 chạy lại · Ctrl+L xóa · Ctrl+S lưu log · Ctrl+1..6 chuyển tab ──
+        self.bind("<F5>", lambda _e: self._rerun())
+        self.bind("<Control-l>", lambda _e: self._set_console(""))
+        self.bind("<Control-s>", lambda _e: self._save_log())
+        for i in range(len(self.tab_names)):
+            self.bind("<Control-Key-%d>" % (i + 1),
+                      lambda _e, i=i: self.nb.select(i))
+
     def _tab_design(self, f):
         s = self.section(f, "Kiểm model / bản vẽ (HD-01, HD-03)")
         self.path_row(s, "File .ipt/.iam", "d_file",
@@ -340,9 +578,13 @@ class App(tk.Tk):
         ttk.Checkbutton(s, text="Kèm xuất giao-viec.csv (gửi bên thiết kế)",
                         variable=self.var("d_ticket", boolean=True)).pack(
             anchor="w", pady=2)
-        self.action(s, "▶ Kiểm bản vẽ (drawing_check)", self._run_drawing)
+        self.action(s, "▶ Kiểm bản vẽ (drawing_check)", self._run_drawing,
+                    tip="Kiểm metadata D1 + phân loại SEC qua Apprentice (không mở "
+                        "Inventor). Xem HD-03. Phím F5 chạy lại lần gần nhất.")
         self.action(s, "Kết quả kiểm… (bấm vào rule xem chi tiết + cách sửa)",
-                    self._show_results_design)
+                    self._show_results_design, locks=False,
+                    tip="Mở cây lỗi từ report cạnh file vừa kiểm — bấm từng rule "
+                        "để xem part vi phạm và cách sửa.")
 
         s2 = self.section(f, "Model Rhino vỏ nhôm (HU)")
         self.path_row(s2, "File .3dm", "rh_file",
@@ -370,9 +612,13 @@ class App(tk.Tk):
                         variable=self.var("k_release", boolean=True)).pack(anchor="w")
         ttk.Checkbutton(opt, text="--force (đi tiếp qua FAIL — chỉ để chẩn đoán)",
                         variable=self.var("k_force", boolean=True)).pack(anchor="w")
-        self.action(s, "▶ Chạy trích xuất (run_pipeline)", self._run_pipeline)
+        self.action(s, "▶ Chạy trích xuất (run_pipeline)", self._run_pipeline,
+                    tip="Cả chuỗi một lệnh: BOM + STEP → seed → gate G1 → kiểm chéo "
+                        "→ merge (HD-02). Dừng đúng gate đầu tiên chặn. F5 chạy lại.")
         self.action(s, "Kết quả kiểm… (bấm vào rule xem chi tiết + cách sửa)",
-                    lambda: self._show_results(self.var("k_dir").get()))
+                    lambda: self._show_results(self.var("k_dir").get()), locks=False,
+                    tip="Cây lỗi mọi report trong thư mục sản phẩm — danh sách "
+                        "WARNING là phiếu lấy mẫu Gate G2 (HD-04 §2).")
 
         s2 = self.section(f, "Kiểm lẻ khi cần chẩn đoán")
         self.path_row(s2, "Seed cần kiểm", "v_seed",
@@ -396,7 +642,9 @@ class App(tk.Tk):
         s2 = self.section(f, "Tự kiểm toàn bộ harness (battery)")
         ttk.Checkbutton(s2, text="--regen (trích lại golden STEP — cần FreeCAD)",
                         variable=self.var("b_regen", boolean=True)).pack(anchor="w")
-        self.action(s2, "▶ Chạy battery (phải ĐẠT 8/8)", self._run_battery)
+        self.action(s2, "▶ Chạy battery (phải ĐẠT 8/8)", self._run_battery,
+                    tip="Fixture cài lỗi + golden G3 + rhino — bằng chứng harness "
+                        "còn nguyên. Chạy trước khi tin số máy này sinh ra (HD-00 §4).")
 
         s3 = self.section(f, "Kiểm môi trường")
         ttk.Label(s3, text="Kiểm Python, thư viện, FreeCAD, đường dẫn script."
@@ -712,6 +960,9 @@ class App(tk.Tk):
                     self.vars[k].set(v)
                 except Exception:  # noqa: BLE001
                     pass
+        # sản phẩm phiên trước: quét lại trạng thái ngay khi mở app
+        if self.var("product_dir").get().strip():
+            self._rescan()
 
     def _save_config(self):
         try:
@@ -838,11 +1089,14 @@ class App(tk.Tk):
                 elif kind == "log":
                     self._append(payload)
                 elif kind == "status":
+                    self._set_running(False)   # mở khóa nút + dừng đồng hồ TRƯỚC
                     label, color = EXIT_MEANING.get(
                         payload, ("Kết thúc (exit %s)" % payload, "#b3261e"))
                     self.status.config(text="exit %d · %s" % (payload, label),
                                        fg=color)
                     self._journal(payload)
+                    if self.var("product_dir").get().strip():
+                        self._rescan()         # cập nhật pill/stepper/badge sau mỗi lần chạy
                 elif kind == "done":
                     rc, cb = payload
                     try:

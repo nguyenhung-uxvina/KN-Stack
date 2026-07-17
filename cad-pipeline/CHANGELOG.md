@@ -3,6 +3,21 @@
 > Quy ước: mỗi phát hành = tag `cad-pipeline-vX.Y`; chi tiết kiểm chứng từng script
 > nằm trong `scripts/_codify_ledger.md` (append-only). File này là bản đọc nhanh.
 
+## v0.5.4 — 2026-07-17 · GUI đợt U2: dẫn luồng & trạng thái (theo UIUX-ROADMAP)
+
+- **Thanh sản phẩm**: chọn thư mục sản phẩm MỘT lần trên đầu cửa sổ — tự đồng bộ
+  ngữ cảnh cho các tab (k_dir, ceo_root) + pill **GATE: FAIL/WARNING/PASS**
+  (verdict xấu nhất trong mọi report của sản phẩm).
+- **Stepper 5 bước** (Kiểm bản vẽ → Trích xuất → Phát hành → 5 đầu ra + trace →
+  Actuals): trạng thái đọc từ report JSON có sẵn trên đĩa (`_scan_status`, chỉ đọc
+  không chạy) — mở app là thấy sản phẩm kẹt ở đâu. FAIL ✗ đỏ · xong ✓ xanh · mũi tên
+  ← chỉ bước kế tiếp CHỈ khi không còn bước FAIL đứng trước (field-check Tong lap
+  thật: 240 FAIL thiết kế / 3 FAIL KS hiện đúng).
+- **Badge tab**: ●N đỏ trên tab có việc (Thiết kế = FAIL D1/SEC · KS = FAIL S1–S4).
+- **Khóa nút khi đang chạy** + đồng hồ giây trên status ("Đang chạy… 01:24");
+  **F5** chạy lại lệnh gần nhất (--force phải nhập lại lý do), Ctrl+L/Ctrl+S/Ctrl+1..6;
+  tooltip các nút chính (nút làm gì, đọc HD nào).
+
 ## v0.5.3 — 2026-07-17 · GUI: console kiểu PowerShell, kéo-giãn, giữ lịch sử
 
 - Console vào PanedWindow dọc — kéo vạch giữa tab/console để mở rộng/thu hẹp vùng lỗi.

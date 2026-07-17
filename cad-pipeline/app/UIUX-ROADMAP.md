@@ -17,7 +17,12 @@ Viewer lỗi dạng cây (bấm rule → cách sửa) · kỷ luật --force + r
 + thư mục gần đây · nút Dừng/Lưu log · console kiểu PowerShell: kéo-giãn (PanedWindow),
 màu 4 mức, giữ lịch sử các lần chạy, nút Nhật ký…
 
-## U2 — KẾ TIẾP (~1 buổi code, làm theo thứ tự)
+## U2 — ĐÃ GIAO 2026-07-17 (v0.5.4)
+
+Cả 4 hạng mục bên dưới đã code + smoke-test + field-check trên Tong lap thật
+(240 FAIL thiết kế / 3 FAIL KS hiện đúng pill/badge/stepper). Điều chỉnh so kế hoạch:
+mũi tên "bước hiện tại" KHÔNG hiện khi còn bước FAIL đứng trước — tránh gợi ý đi tiếp
+qua gate đang chặn (phát hiện khi chạy dữ liệu thật).
 
 | # | Việc | Ước lượng | Nghiệm thu khi |
 |---|---|---|---|

@@ -45,6 +45,12 @@ Các tab theo vai trò (ánh xạ `docs/huong-dan/`):
   Sau lần chạy ra lỗi, console tự gợi ý mở viewer.
 - **■ Dừng** tác vụ đang chạy (kết quả dở dang không dùng được) · **Lưu log…**
   chép console ra .txt đính biên bản · high-DPI + không nháy cửa sổ con.
+- **Thanh sản phẩm + stepper** (v0.5.4 — đợt U2): chọn sản phẩm MỘT lần → mọi tab
+  dùng chung; pill GATE màu theo verdict xấu nhất; stepper 5 bước đọc trạng thái từ
+  report có sẵn (✗ đỏ / ✓ xanh / ← bước kế — chỉ hiện khi không còn FAIL trước đó);
+  badge ●N trên tab có việc. Nút ▶ khóa khi đang chạy + đồng hồ giây; phím tắt
+  **F5** chạy lại (F5 với --force phải nhập lại lý do), Ctrl+L xóa, Ctrl+S lưu log,
+  Ctrl+1..6 chuyển tab; tooltip nút chính.
 - **Console kiểu PowerShell** (v0.5.3): kéo vạch giữa tab/console để giãn/thu;
   màu theo mức (lệnh cyan · FAIL đỏ · WARNING vàng · OK xanh); GIỮ lịch sử các
   lần chạy (vạch ngăn + giờ) để cuộn xem lại; nút **Nhật ký…** liệt kê mọi lần
