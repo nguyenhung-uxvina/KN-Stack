@@ -43,6 +43,19 @@ METHOD_CONF = {
     "human-certified":  "HIGH",   # CEO/engineer certified -> top rank (set downstream)
 }
 
+# --- Δ-B single-raster fallback (drawings with NO DXF: RE / supplier scan / hand-drawing) ---
+RASTER_EXT = (".pdf", ".png", ".jpg", ".jpeg", ".tif", ".tiff", ".bmp")
+
+
+def is_raster(path):
+    return path.lower().endswith(RASTER_EXT)
+
+
+def _hil_required(classification):
+    """MẬT / HẠN-CHẾ → human-in-loop mandatory, NO cloud vision (CEO 2026-07-17)."""
+    c = str(classification or "").upper().replace("-", " ").replace("Ậ", "Ậ")
+    return ("MẬT" in c) or ("MAT" in c) or ("HẠN" in c) or ("HAN CHE" in c)
+
 
 def clean_inline(s: str) -> str:
     """Strip MTEXT/dim inline format codes -> plain text."""
@@ -279,16 +292,134 @@ def to_md(r):
     return "\n".join(L)
 
 
+def extract_raster(path, classification):
+    """Δ-B — single-raster ingest: one PDF/image, NO DXF (RE, supplier scan, hand-drawing).
+
+    Emits the SAME cad_extract schema but from a raster. Honors the spatial-blindness law:
+    it does NOT auto-extract geometry/dimensions — those go to missing[] for a human to
+    transcribe. It only harvests TEXT (vector PDF text = MED, Tesseract OCR = LOW), 100% LOCAL.
+    For MẬT/HẠN-CHẾ, human-in-loop is mandatory and cloud vision is never used (CEO 2026-07-17)."""
+    fname = os.path.basename(path)
+    is_pdf = path.lower().endswith(".pdf")
+    fidx_m = re.match(r"\s*([\d.]+)", fname)
+    file_index = fidx_m.group(1).rstrip(".") if fidx_m else None
+    name = re.sub(r"\.[A-Za-z0-9]+$", "", fname)
+    name = re.sub(r"^\s*[\d.]+\s*", "", name).strip() or None
+
+    text, text_method, text_conf, notes = "", None, None, []
+    pdf_text_pages = ocr_pages = 0
+    try:
+        import fitz  # PyMuPDF — LOCAL, offline; Tesseract compiled into MuPDF
+        doc = fitz.open(path)
+        chunks = []
+        for page in doc:
+            t = page.get_text("text") if is_pdf else ""
+            if t and t.strip():
+                chunks.append(t); pdf_text_pages += 1
+            else:
+                try:
+                    tp = page.get_textpage_ocr(full=True)   # Tesseract via MuPDF, LOCAL
+                    ot = page.get_text("text", textpage=tp)
+                    if ot and ot.strip():
+                        chunks.append(ot); ocr_pages += 1
+                except Exception as oe:
+                    notes.append(f"OCR không chạy được 1 trang ({type(oe).__name__}) — cần tessdata local (eng+vie).")
+        doc.close()
+        text = "\n".join(chunks).strip()
+        if text:
+            if ocr_pages and pdf_text_pages:
+                text_method, text_conf = "mixed(pdf-text+ocr)", "LOW"
+            elif ocr_pages:
+                text_method, text_conf = "ocr", "LOW"
+            else:
+                text_method, text_conf = "pdf-text", "MED"
+    except ImportError:
+        notes.append("PyMuPDF (fitz) chưa cài — KHÔNG trích được text; NGƯỜI transcribe toàn bộ từ bản gốc. "
+                     "Cài local: pip install pymupdf (offline wheel cho máy air-gapped).")
+    except Exception as ex:
+        notes.append(f"Không mở được raster: {type(ex).__name__}: {ex}")
+
+    hil = _hil_required(classification)
+    notes.insert(0, f"[SINGLE-RASTER] 1 file raster, KHÔNG có DXF. Chỉ trích TEXT "
+                    f"({text_method or 'none'}, {text_conf or '-'}); KHÔNG tự trích hình học (luật spatial-blindness).")
+    notes.insert(1, (f"[HUMAN-IN-LOOP BẮT BUỘC — {classification}] KHÔNG dùng cloud vision. Mọi giá trị LOW/MED, "
+                     f"CHƯA chứng thực; kỹ sư/CEO phải transcribe kích thước rồi certify trước mọi downstream.")
+                    if hil else
+                    "[THƯỜNG] Local OCR đã dùng; cloud vision được phép nhưng không cần. Vẫn cần người certify.")
+
+    missing = [
+        "Kích thước (dimensions): CHƯA trích — raster không mang geometry máy-đọc; NGƯỜI nhập từ bản gốc rồi CEO certify.",
+        "Dung sai / GD&T: người transcribe từ bản gốc.",
+        "Lỗ (đường kính / số lượng / vị trí): người đếm từ bản vẽ.",
+        "Vật liệu / mã / khung tên: xác nhận từ bản gốc (text OCR chỉ GỢI Ý, LOW).",
+    ]
+    rec = {
+        "meta": {
+            "file_index": file_index,
+            "code_in_dxf": None, "code_confidence": "LOW",
+            "part_id": None, "name": name, "assembly": None,
+            "product": None, "material": None, "mass_kg": None, "scale": None,
+            "org": None, "date": None, "classification": classification,
+            "dxf_version": None, "units": None,
+            "source_files": {"dxf": None,
+                             "pdf": fname if is_pdf else None,
+                             "image": None if is_pdf else fname},
+            "ingested": None, "tool": "helix-cad-ingest",
+            "collection_method": "single-raster",
+            "human_in_loop_required": hil,
+            "provenance": {"text": text_method or "none", "geometry": "human-transcribe"},
+        },
+        "dimensions": [], "tolerances": [], "gdt": [], "holes": [],
+        "surface_finish": {"value": None, "method": None, "source": "raster", "confidence": "LOW"},
+        "layers": [], "blocks": [], "bom": [],
+        "process_notes": notes,
+        "conflicts": [],
+        "missing": missing,
+        "raw_text": ([{"method": text_method, "confidence": text_conf, "text": text[:4000]}] if text else []),
+        "_load_mode": "single-raster",
+    }
+    return rec
+
+
+def to_md_raster(r):
+    m = r["meta"]
+    src = m["source_files"]["pdf"] or m["source_files"]["image"] or "?"
+    L = [f"# CAD Extract (SINGLE-RASTER) — [{m['file_index'] or '?'}] {m['name'] or src}".rstrip(), "",
+         f"> Nguồn: `{src}` · **KHÔNG có DXF** · trích 100% LOCAL · skill helix-cad-ingest",
+         f"> Phân loại: **{m['classification']}**"
+         + ("  · 🔒 HUMAN-IN-LOOP BẮT BUỘC (không cloud vision)" if m.get("human_in_loop_required") else ""),
+         "> ⚠️ Raster KHÔNG có hình học máy-đọc: mọi kích thước / lỗ / dung sai phải do NGƯỜI transcribe "
+         "từ bản gốc rồi CEO certify. Không giá trị nào tự-tin-cậy.", ""]
+    if r["raw_text"]:
+        rt = r["raw_text"][0]
+        L += [f"## Text trích được ({rt['method']}, {rt['confidence']}) — chỉ GỢI Ý, KHÔNG phải geometry",
+              "```", (rt["text"] or "")[:2000], "```", ""]
+    else:
+        L += ["## Text trích được", "- (không trích được text — xem Ghi chú)", ""]
+    if r["process_notes"]:
+        L += ["## Ghi chú"] + [f"- {n}" for n in r["process_notes"]] + [""]
+    if r["missing"]:
+        L += ["## ✍️ NGƯỜI phải transcribe + CEO certify (gate downstream)"] + [f"- [ ] {x}" for x in r["missing"]] + [""]
+    return "\n".join(L)
+
+
 def process(path, outdir, classification):
-    rec = extract(path, classification)
+    if is_raster(path):
+        rec = extract_raster(path, classification)
+    else:
+        rec = extract(path, classification)
     base = os.path.splitext(os.path.basename(path))[0]  # filename = unique reliable key
     stem = os.path.join(outdir, f"{base}.cad_extract")
     with io.open(stem + ".json", "w", encoding="utf-8") as f:
         json.dump(rec, f, ensure_ascii=False, indent=2)
     with io.open(stem + ".md", "w", encoding="utf-8") as f:
-        f.write(to_md(rec))
+        f.write(to_md_raster(rec) if rec.get("_load_mode") == "single-raster" else to_md(rec))
     nd, nh, nc = len(rec["dimensions"]), len(rec["holes"]), len(rec["conflicts"])
     m = rec["meta"]
+    if rec.get("_load_mode") == "single-raster":
+        hil = "HIL" if m.get("human_in_loop_required") else "certify"
+        return (f"{os.path.basename(path):40} [SINGLE-RASTER {hil}] idx={m['file_index'] or '?':8} "
+                f"text={(rec['raw_text'][0]['method'] if rec['raw_text'] else 'none'):18} dims=0(transcribe) missing={len(rec['missing'])}")
     return f"{os.path.basename(path):40} idx={m['file_index'] or '?':8} code_in_dxf={m['code_in_dxf'] or '?':16} dims={nd} holes={nh} confl={nc}"
 
 
@@ -299,21 +430,31 @@ def main():
     ap.add_argument("--classification", default="MẬT")
     ap.add_argument("--prefer", default="dwg", choices=["dwg", "dxf"],
                     help="when a folder has both <stem>.dwg and .dxf, which to ingest (default: dwg = native source)")
+    ap.add_argument("--single-raster", action="store_true",
+                    help="Δ-B: ingest raster/PDF with NO DXF (RE / supplier scan / hand-drawing). "
+                         "Text-only, geometry→human transcribe. MẬT/HẠN-CHẾ = human-in-loop, no cloud.")
     a = ap.parse_args()
 
     targets = []
     if os.path.isdir(a.path):
-        cad = [f for f in sorted(os.listdir(a.path)) if f.lower().endswith((".dxf", ".dwg"))]
-        # de-duplicate by stem, honoring --prefer (DWG = source-of-truth by default)
-        by_stem = {}
-        for f in cad:
-            stem, ext = os.path.splitext(f)
-            ext = ext.lower().lstrip(".")
-            if stem not in by_stem or ext == a.prefer:
-                by_stem[stem] = f
-        targets = [os.path.join(a.path, by_stem[s]) for s in sorted(by_stem)]
+        if a.single_raster:
+            targets = [os.path.join(a.path, f) for f in sorted(os.listdir(a.path)) if is_raster(f)]
+        else:
+            cad = [f for f in sorted(os.listdir(a.path)) if f.lower().endswith((".dxf", ".dwg"))]
+            # de-duplicate by stem, honoring --prefer (DWG = source-of-truth by default)
+            by_stem = {}
+            for f in cad:
+                stem, ext = os.path.splitext(f)
+                ext = ext.lower().lstrip(".")
+                if stem not in by_stem or ext == a.prefer:
+                    by_stem[stem] = f
+            targets = [os.path.join(a.path, by_stem[s]) for s in sorted(by_stem)]
     else:
         targets = [a.path]
+
+    if a.single_raster and _hil_required(a.classification):
+        print(f"[HUMAN-IN-LOOP — {a.classification}] single-raster: local-only, KHÔNG cloud vision; "
+              "kích thước do người transcribe + CEO certify.")
 
     for t in targets:
         outdir = a.out or os.path.dirname(t) or "."
