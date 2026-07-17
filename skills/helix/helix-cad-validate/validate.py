@@ -41,6 +41,17 @@ from datetime import datetime, timezone
 
 CONF_RANK = {"LOW": 0, "MED": 1, "HIGH": 2}
 
+# Densities kg/m^3 for bottom-up mass reconciliation. Substring match on material name
+# (same style as _materials); extend via the contract's mass_reconciliation.densities_kg_m3.
+_DENSITY = {
+    "5083": 2660, "5086": 2660, "5754": 2660, "5052": 2680,
+    "6061": 2700, "6082": 2700, "6005": 2700, "6063": 2700,
+    "nhôm": 2700, "nhom": 2700, "aluminum": 2700, "aluminium": 2700, "al ": 2700,
+    "ss400": 7850, "s235": 7850, "s355": 7850, "ct3": 7850,
+    "thép": 7850, "thep": 7850, "mild steel": 7850, "steel": 7850,
+    "316": 8000, "304": 8000, "inox": 8000, "stainless": 8000,
+}
+
 
 def _load(path):
     with open(path, "r", encoding="utf-8") as f:
@@ -110,6 +121,51 @@ def _materials(extract):
         if b.get("material"):
             mats.append((b["material"], f"bom:{b.get('code') or b.get('item')}"))
     return mats
+
+
+def _density_for(material, table):
+    """Density (kg/m^3) by substring match on material name; None if unknown."""
+    n = _norm(material)
+    if not n:
+        return None
+    for key, rho in table.items():
+        if key in n:
+            return rho
+    return None
+
+
+def _bottomup_mass(extract, mass_props, densities):
+    """Bottom-up mass for reconciliation. Returns (mass_kg|None, source, complete:bool, detail).
+
+    Priority: explicit mass_props.bottom_up_kg (computed upstream by helix-cad-bridge / aggregate)
+    → else compute from BOM rows that carry area_m2 + thickness_mm + a known material density.
+    `complete` is False if any BOM row is missing area/thickness/density (partial sum ≠ trustworthy
+    total) so the caller can fail-safe. validate.py never invents plate areas the extract lacks."""
+    if mass_props and mass_props.get("bottom_up_kg") is not None:
+        try:
+            return float(mass_props["bottom_up_kg"]), "mass_props.bottom_up_kg", True, "provided"
+        except (TypeError, ValueError):
+            return None, "mass_props.bottom_up_kg", False, "unpar. value"
+    bom = extract.get("bom", []) or []
+    if not bom:
+        return None, "bom", False, "no BOM rows and no mass_props.bottom_up_kg"
+    total, used, missing = 0.0, 0, []
+    for b in bom:
+        area, th = b.get("area_m2"), b.get("thickness_mm")
+        rho = _density_for(b.get("material"), densities)
+        qty = b.get("qty") or 1
+        tag = b.get("code") or b.get("item") or b.get("name") or "?"
+        if area is None or th is None or rho is None:
+            missing.append(tag)
+            continue
+        try:
+            total += float(qty) * float(area) * (float(th) / 1000.0) * rho
+            used += 1
+        except (TypeError, ValueError):
+            missing.append(tag)
+    complete = used > 0 and not missing
+    detail = f"{used} part(s) summed" + (f"; incomplete: {missing}" if missing else "")
+    return (total if used > 0 else None), "bom(area×thk×ρ)", complete, detail
 
 
 def _load_master_csv(path):
@@ -292,6 +348,51 @@ def run_checks(extract, rules, mass_props):
                       f"Khối lượng {mass}kg > giới hạn {mmax}kg.", fix="Giảm khối lượng / xét lại tải.", source=src)
             else:
                 r.add("mass_kg", "PASS", sev, f"{mass} kg", f"<= {mmax} kg", "Khối lượng đạt.", source=src)
+
+    # 3b. Mass reconciliation — bottom-up Σ mass vs a reference (lightship) estimate, within tolerance.
+    # The physics Sanity-Check for boats: a bottom-up sum (plates+weld+outfit) that drifts from the
+    # naval-architect lightship estimate flags a mis-extraction / missing part / wrong material.
+    # Deterministic: compares two numbers with a % tolerance. Default ±5% assembly, ±3% critical part.
+    mr = rs.get("mass_reconciliation")
+    if mr:
+        sev = mr.get("severity", "critical")
+        ref = mr.get("reference_kg")
+        scope = _norm(mr.get("scope", "assembly"))
+        tol_pct = mr.get("part_tolerance_pct", 3.0) if scope == "part" else mr.get("tolerance_pct", 5.0)
+        densities = dict(_DENSITY)
+        densities.update(mr.get("densities_kg_m3", {}) or {})
+        bu, src, complete, detail = _bottomup_mass(extract, mass_props, densities)
+        required = mr.get("required", True)
+        if ref is None:
+            r.add("mass_reconciliation", "FAIL" if required else "SKIP", sev,
+                  "(no reference_kg)", "reference_kg in contract",
+                  "Thiếu khối lượng tham chiếu (lightship) trong contract — không thể đối chiếu.",
+                  fix="Kỹ sư định danh khai reference_kg (ước tính lightship/naval-architect).",
+                  source="contract.mass_reconciliation")
+        elif bu is None:
+            r.add("mass_reconciliation", "FAIL" if required else "SKIP", sev,
+                  "(no bottom-up)", f"{ref} kg ±{tol_pct}%",
+                  "Không có khối lượng bottom-up (mass_props.bottom_up_kg hoặc BOM có area_m2) — fail-safe."
+                  if required else "Không có dữ liệu bottom-up (rule không bắt buộc).",
+                  fix="Cấp mass_props.bottom_up_kg (helix-cad-bridge) hoặc BOM kèm area_m2+material+thickness.",
+                  source="mass_props/bom")
+        elif not complete and mr.get("require_complete", True):
+            r.add("mass_reconciliation", "FAIL", sev, f"{bu:.1f} kg ({detail})", "bottom-up ĐỦ part",
+                  f"Bottom-up chưa đủ part ({detail}) — tổng thiếu, đối chiếu không tin cậy (fail-safe).",
+                  fix="Bổ sung area_m2+material+thickness cho part thiếu, hoặc dùng mass_props.bottom_up_kg đã tính đủ.",
+                  source=src)
+        else:
+            dev = abs(bu - float(ref)) / float(ref) * 100.0
+            obs = f"{bu:.1f} kg vs ref {ref} kg (Δ {dev:.1f}%)"
+            exp = f"±{tol_pct}% ({scope})"
+            if dev > float(tol_pct):
+                r.add("mass_reconciliation", "FAIL", sev, obs, exp,
+                      f"Lệch khối lượng {dev:.1f}% > ±{tol_pct}% — dấu hiệu sai trích xuất / thiếu part / vật liệu sai.",
+                      fix="Rà part thiếu-thừa, vật liệu/độ dày sai; hoặc kỹ sư hiệu chỉnh lightship estimate.",
+                      source=src)
+            else:
+                r.add("mass_reconciliation", "PASS", sev, obs, exp,
+                      f"Bottom-up khớp lightship trong ±{tol_pct}%.", source=src)
 
     # 4. Safety factor min
     sf = rs.get("safety_factor")

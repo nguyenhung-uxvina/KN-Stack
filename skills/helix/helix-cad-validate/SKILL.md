@@ -40,8 +40,14 @@ AGENTS.md/context TRƯỚC khi agent vẽ) and the SENSOR's yardstick. Schema + 
 
 Rule keys (mỗi cái tùy chọn): `materials` · `plate_thickness_mm` · `mass_kg` · `safety_factor`
 · `tolerance_mm` · `mandatory_components` · `weld_standard` · `load_class` · `conflicts_block`
-· `bom_master` · `confidence_gate` · **DFM tất định:** `min_hole_dia_mm` · `hole_spacing_mm` ·
-`hole_depth_ratio` (opt-in, cần depth 3D). Severity `critical`/`major` — **mọi FAIL đóng gate**.
+· `bom_master` · `confidence_gate` · `mass_reconciliation` · **DFM tất định:** `min_hole_dia_mm` ·
+`hole_spacing_mm` · `hole_depth_ratio` (opt-in, cần depth 3D). Severity `critical`/`major` — **mọi FAIL đóng gate**.
+
+**`mass_reconciliation` (Sanity-Check vật lý — Δ-C)**: đối chiếu khối lượng **bottom-up** (Σ tôn+outfit
+từ `mass_props.bottom_up_kg`, hoặc tính từ BOM có `area_m2`+`thickness_mm`+vật liệu) ↔ **lightship estimate**
+(`reference_kg`, kỹ sư khai) trong dung sai % (`scope:"assembly"` ±5% / `"part"` ±3%, CEO chốt 2026-07-17).
+Lệch = dấu hiệu sai-trích-xuất/thiếu-part/vật-liệu-sai — neo bằng vật lý, không "đo theo tỷ lệ thước".
+Gate **không bịa** diện tích: BOM thiếu dữ liệu → `require_complete` cho FAIL (fail-safe).
 
 ## Bản đồ kiến trúc 5-bước (Assay)
 Spec 5-bước ánh xạ vào cặp validator — **hard-gate CHỈ tất định; KAN/VLM/LLM-judge là đề xuất, KHÔNG chặn**
@@ -120,6 +126,8 @@ Giữ BƯỚC 1 tối thiểu. CHỈ thêm khi gặp trigger thật:
 - **Windows UTF-8**: chạy với `PYTHONUTF8=1` để tránh cp1252 crash khi report tiếng Việt (file luôn ghi UTF-8).
 - **Fail-safe nhiểu nhầm là "khó tính"**: thiếu dữ liệu cho rule `required` → FAIL là CHỦ Ý (an toàn khí tài), không phải bug. Cấp dữ liệu hoặc hạ `required:false` có chủ đích.
 - **Mandatory components dò bằng text** (tên BOM/notes). Dùng list synonym (vd `["junction plate","tấm liên kết"]`) để bắt cả tiếng Việt/Anh.
+- **`mass_reconciliation` là check cấp CỤM, không phải cấp part**: đối chiếu tổng bottom-up ↔ lightship chỉ có nghĩa khi extract mang **toàn bộ** part (aggregate) hoặc có `mass_props.bottom_up_kg` đã cộng đủ. Chạy trên 1 part lẻ với `require_complete:true` sẽ FAIL đúng (tổng thiếu) — đó là fail-safe, không phải bug. Muốn dùng: trỏ vào extract tổng-hợp hoặc cấp bottom-up đã tính từ `helix-cad-bridge`.
+- **`reference_kg` placeholder**: ví dụ VSN-1500 để `required:false` + số lightship PLACEHOLDER — kỹ sư định danh PHẢI thay bằng ước tính naval-architect thật trước khi bật gate sản xuất (giống `plate_thickness_mm` pilot).
 
 ## Output
 Per-part vào `1_Projects/{{project}}/.../cad/validated/`:

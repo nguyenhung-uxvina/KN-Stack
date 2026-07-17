@@ -1,0 +1,7 @@
+{
+  "meta": { "part_id": "MR-BOM", "product": "MR-TEST", "classification": "THƯỜNG" },
+  "conflicts": [],
+  "bom": [
+    { "item": "hull-plate", "code": "HP1", "qty": 25, "material": "5083", "thickness_mm": 5, "area_m2": 3.0 }
+  ]
+}

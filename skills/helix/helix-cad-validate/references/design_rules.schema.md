@@ -27,6 +27,7 @@
 | `materials` | Whitelist/blacklist vật liệu | `allowed[]`, `forbidden[]`, `required` (bool), `severity` |
 | `plate_thickness_mm` | Độ dày tấm tối thiểu | `min`, `required`, `min_confidence` (LOW/MED/HIGH), `severity` |
 | `mass_kg` | Khối lượng tối đa | `max`, `required`, `severity` |
+| `mass_reconciliation` | Đối chiếu khối lượng bottom-up ↔ lightship estimate (Sanity-Check vật lý cho tàu) | `reference_kg`, `tolerance_pct` (5.0), `part_tolerance_pct` (3.0), `scope` (`assembly`\|`part`), `required`, `require_complete`, `densities_kg_m3{}`, `severity` |
 | `safety_factor` | Hệ số an toàn tối thiểu | `min`, `required`, `severity` |
 | `tolerance_mm` | Dung sai tuyệt đối tối đa | `max`, `min_confidence`, `severity` |
 | `mandatory_components` | Thành phần bắt buộc hiện diện | `items[]` (string hoặc list synonym), `severity` |
@@ -42,6 +43,20 @@
 ### `bom_master` chi tiết (2 check con)
 - **`bom_present`** — fail-safe: thiếu/không đọc được `master_csv` → FAIL (BOM=0 không thể chứng nhận).
 - **`bom_reconciled`** — mã `meta.code_in_dxf`/`part_id` của extract phải có trong master; mã gốc cụm (vd `GT.00.00.00`) khai trong `ignore_codes` để bỏ qua. *Lưu ý:* phát hiện **stale-code theo TÊN** (tên khớp mã khác) chỉ chạy khi tên extract sạch — tên DXF garble (unicode escape) thì để `check_bom.py` chấm trên tài liệu QTCN (tên sạch). Nguồn sự thật = CSV kỹ sư ký, KHÔNG phải title-block.
+
+### `mass_reconciliation` chi tiết (Sanity-Check vật lý — Δ-C, phương pháp Fairley cho tàu)
+Neo bằng **vật lý**, không "đo theo tỷ lệ thước": tổng khối lượng bottom-up phải khớp ước tính
+lightship của naval-architect trong dung sai %. Lệch = dấu hiệu **sai trích xuất / thiếu part /
+vật liệu-độ-dày sai** — bắt được lỗi mà không rule đơn lẻ nào bắt.
+- **Nguồn bottom-up (thứ tự ưu tiên):** `mass_props.bottom_up_kg` (helix-cad-bridge/aggregate tính từ
+  hình học — tin cậy nhất) → nếu không có, tính từ BOM: `Σ qty × area_m2 × (thickness_mm/1000) × ρ(material)`.
+  validate.py **không bịa** diện tích tấm extract không có: BOM thiếu `area_m2`/`thickness_mm`/vật-liệu-lạ
+  → `require_complete:true` (mặc định) cho **FAIL** (tổng thiếu ≠ tin cậy).
+- **Dung sai:** `scope:"assembly"` dùng `tolerance_pct` (mặc định **±5%**); `scope:"part"` dùng
+  `part_tolerance_pct` (mặc định **±3%**, cho part tới hạn). CEO chốt 2 ngưỡng này 2026-07-17.
+- **reference_kg** do **kỹ sư định danh** khai (ước tính lightship). Thiếu reference / thiếu bottom-up khi
+  `required:true` → FAIL (fail-safe). `ρ` mặc định tra bảng nội bộ (nhôm 5083=2660, 6082=2700, thép=7850…);
+  ghi đè per-contract qua `densities_kg_m3`.
 
 ## Severity
 - `critical` / `major` → mọi FAIL đều **đóng gate** (exit 2). `severity` chỉ để phân loại báo cáo.

@@ -1,0 +1,20 @@
+{
+  "meta": {
+    "product": "MR-TEST",
+    "rev": "A",
+    "contract_version": "1.0.0",
+    "classification": "THƯỜNG",
+    "engineer_of_record": "test-fixture"
+  },
+  "rules": {
+    "mass_reconciliation": {
+      "reference_kg": 1000,
+      "tolerance_pct": 5.0,
+      "part_tolerance_pct": 3.0,
+      "scope": "assembly",
+      "required": true,
+      "require_complete": true,
+      "severity": "critical"
+    }
+  }
+}
