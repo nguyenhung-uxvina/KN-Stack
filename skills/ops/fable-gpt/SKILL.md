@@ -41,6 +41,7 @@ của leo-assist/wx-krpano:
   2 lối ra: (a) abstract hóa — đổi tên/số liệu thành generic rồi chạy tiếp;
   (b) CEO tự làm local, không qua Codex.
 - Task code thuần KN-Stack / generic / open-source → PASS.
+- Gate áp cho **MỌI payload dispatch** (task text, ngữ cảnh repo, plan, fix-hints) VÀ **repo đích** — Codex CLI đọc repo trực tiếp, nên repo chứa nội dung MẬT thì DỪNG bất kể task text nghe generic.
 
 ## Step 0.5 — Classify (Claude inline, không tốn Codex)
 
@@ -61,6 +62,8 @@ Override: `--fast` / `--full` thắng classifier.
 2. Dispatch Agent tool `subagent_type: "codex:codex-rescue"`, prompt bắt đầu bằng
    `--model gpt-5.6-sol` (KHÔNG set `--effort` — giữ medium mặc định) + task text.
 3. Nhảy thẳng đến **Verify** (bước 5 của FULL CYCLE, cùng quy tắc 2 vòng).
+
+Lưu ý: `--executor` chỉ áp cho bước Execute của FULL CYCLE — FAST PATH luôn dùng `gpt-5.6-sol` (flag bị bỏ qua).
 
 ## FULL CYCLE — 5 bước
 
@@ -134,6 +137,7 @@ flags: <flags gốc>
 | Plan sai hướng nặng | Trả Codex 1 lần → vẫn lệch → Claude tự viết plan |
 | Diff ngoài phạm vi | Cờ đỏ trong Verify, liệt kê file lạ, chờ CEO |
 | Security Gate chặn | Dừng + 2 lối ra (abstract / local) |
+| `--resume` mà `_fablegpt_state.md` thiếu/hỏng | Báo CEO, đề nghị chạy lại từ đầu — **KHÔNG đoán bước** |
 
 ## Ngoài phạm vi (YAGNI)
 
