@@ -65,6 +65,8 @@ Override: `--fast` / `--full` thắng classifier.
 
 Lưu ý: `--executor` chỉ áp cho bước Execute của FULL CYCLE — FAST PATH luôn dùng `gpt-5.6-sol` (flag bị bỏ qua).
 
+Prompt giao Codex (mọi đường) chỉ yêu cầu EDIT — **KHÔNG yêu cầu executor tự chạy test/eval của repo** (env Codex ≠ git-bash, dễ kẹt hàng chục phút); mọi validation thuộc bước Verify của Claude.
+
 ## FULL CYCLE — 5 bước
 
 | # | Bước | Ai | Model/effort |
@@ -95,6 +97,7 @@ Trình plan đã-review + các điểm Claude đã sửa. Chờ CEO duyệt rồ
 Dispatch `codex:codex-rescue` với prompt: `--model gpt-5.6-terra` (hoặc model theo
 `--executor luna|sol`) + plan đã khóa NGUYÊN VĂN + ranh giới cứng: "only touch
 files listed in the plan". Task giao từng phần cụ thể, không giao cả cụm mơ hồ.
+Không yêu cầu Codex tự chạy test/eval repo — validation thuộc bước 5.
 
 ### 5. Verify — Fable, tối đa 2 vòng
 - Đọc TOÀN BỘ diff (`git diff` / `git status`).
