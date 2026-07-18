@@ -32,7 +32,7 @@
       "id": "FG-PLAN-XHIGH",
       "name": "plan_step_sol_xhigh_readonly",
       "check": "bước Plan dùng gpt-5.6-sol --effort xhigh và read-only (planning only, không sửa file)",
-      "regex": "xhigh.*(read-only|planning|không.*sửa)|--effort xhigh",
+      "regex": "--effort xhigh[\\s\\S]*read-only",
       "required": true
     },
     {
@@ -53,7 +53,7 @@
       "id": "FG-EXECUTOR-TERRA",
       "name": "executor_terra_default_flag_switch",
       "check": "Execute mặc định gpt-5.6-terra, flag --executor <terra|luna|sol> để đổi",
-      "regex": "gpt-5\\.6-terra.*(mặc định|default)|--executor",
+      "regex": "gpt-5\\.6-terra[\\s\\S]*--executor",
       "required": true
     },
     {
@@ -74,14 +74,14 @@
       "id": "FG-STATE-FILE",
       "name": "state_file_resume_never_commit",
       "check": "state file _fablegpt_state.md tại repo đích, --resume đọc lại, xóa khi xong, KHÔNG BAO GIỜ commit",
-      "regex": "_fablegpt_state",
+      "regex": "_fablegpt_state[\\s\\S]*KHÔNG BAO GIỜ commit",
       "required": true
     },
     {
       "id": "FG-DISPATCH-AGENT",
       "name": "dispatch_via_codex_rescue_subagent",
       "check": "mọi dispatch qua Agent tool subagent_type codex:codex-rescue — KHÔNG gọi codex-companion trực tiếp, KHÔNG vendor path plugin",
-      "regex": "codex:codex-rescue",
+      "regex": "codex:codex-rescue[\\s\\S]*KHÔNG gọi[\\s\\S]*codex-companion",
       "required": true
     },
     {
