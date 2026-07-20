@@ -112,6 +112,39 @@ Output: bảng [Bước | Nội dung | Mô-men/Fit | Tiêu chuẩn] + checklist 
 
 ---
 
+## RECIPE — `leo-part-brief`: thiết kế 1 chi tiết nhỏ HOÀN CHỈNH (THƯỜNG, FDM)
+> Khi 1 deliverable cần **cả chuỗi mode** chứ không 1 mode rời (vd phụ kiện gym, jig/gá, tay cầm, đồ đeo):
+> xâu 6 bước dưới thành MỘT brief. Đây là "hình dạng" của một brief CPTRF đa-mode chuẩn.
+> Mỗi bước = 1 mode leo-assist; chạy tuần tự, kết quả bước trước là input bước sau.
+
+```
+Bước 0 — CLASSIFY: THƯỜNG? (đồ cá nhân/gym/R&D không nhạy cảm) → tiếp. MẬT → dừng, chuyển helix-cad-bridge.
+
+Bước 1 — SEARCH FIRST  [Mode A]  → có COTS đáp ứng chức năng không? Liệt kê 3 + kết luận MUA vs CHẾ TẠO.
+         Nếu MUA được → dừng, xuất phương án mua. Nếu không → tiếp.
+
+Bước 2 — CONCEPT + DFMA  [Mode B/D + P2]  → 2–3 concept (vd clamp cứng / clamp+strap / dạng máng),
+         trade-off DFMA từng concept → chọn 1.
+
+Bước 3 — LOAD-CASE + CALC  [Mode C]  → LOAD-CASE CHAIN (tải làm việc → thành phần → hệ số động → F_design;
+         lever → M). Tính ứng suất tại tiết diện tới hạn. MATERIAL LADDER [PETG→PA→PA-CF]:
+         báo vật liệu đầu tiên đạt FoS mục tiêu. Kiểm dị hướng in (σ_Z nếu FoS sát ngưỡng).
+
+Bước 4 — ERGONOMICS  [Mode B-HF]  → nhân trắc bộ phận tiếp xúc (percentile, ANSUR II/DINED/ISO 7250) +
+         góc trung tính + ngưỡng áp lực an toàn → suy bán kính/diện tích pad (A ≥ F/P_limit).
+
+Bước 5 — SPEC + BOM + DOCS  [Mode E2]  → output contract: Concepts | Dimensions | Print Setup |
+         Assembly | Safety Checklist | Variants (basic/padded/adjustable). Bảng in Nozzle|Layer|Infill|
+         Support|Time|Material. BOM gồm vít/dây/lót.
+
+Bước 6 — GEOMETRY CONCEPT (tuỳ chọn, THƯỜNG)  [[leo-prompt]]  → nếu cần mesh hình dung: sinh prompt
+         text-to-CAD với DIMENSIONS + DATUM + hướng in IN-PLANE. NHẮC: mesh chỉ ideation, không gia công.
+```
+> Ví dụ chạy đủ chuỗi: [worked-example-wrist-support.md](worked-example-wrist-support.md) (phụ kiện tay đỡ cổ tay).
+> Mỗi bước vẫn tuân 5 nguyên tắc Leo + cuối mỗi bước liệt kê GIẢ ĐỊNH (gồm số cần ĐO thực tế: Ø tay cầm, tải thật).
+
+---
+
 ## Quy tắc dùng template
 - **MẬT:** mọi prompt trừu tượng hóa — chỉ tham số generic (Ø/N/vật liệu), KHÔNG tên khí tài, KHÔNG upload bản vẽ/PLM. Hình học production → helix-cad-bridge local.
 - **Geometry generation** (cần ra hình) → dùng [[leo-prompt]] (mesh concept, THƯỜNG) thay vì template ở đây.

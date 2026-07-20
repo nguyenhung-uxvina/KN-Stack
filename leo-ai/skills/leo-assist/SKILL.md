@@ -1,6 +1,6 @@
 ---
 name: leo-assist
-description: "Phase × Mode Leo AI (getleo.ai) prompt suite. Two axes: 7 lifecycle PHASES (P0 Pre-Study · P1 Requirements · P2 Concept · P3 Embodiment · P4 Detail · QC · Installation) crossed with 6 strength-based MODES (A Part-Search & Reuse · B Engineering Q&A · C Calculation/Sizing · D DFM/Standards-Inspect · E Documentation/BOM · F Material-Selection). Built on deep research of Leo's REAL strengths — citation-backed calc, 120M+ vendor/PLM part-search, DFM inspect, docs, material — NOT production CAD geometry (Leo only outputs mesh; pivoted to part-search; 60-80% 'new' parts are duplicates). Each task → the right mode template (references/leo-mode-templates.md) or phase template, forcing quantified load + real interface dims + mandatory source-citation + search-before-generate, with a router meta-prompt. Classification-gated: THƯỜNG/COTS/generic → Leo cloud OK; MẬT/HẠN-CHẾ geometry/PLM → STOP+abstract, production geometry → helix-cad-bridge (local). Geometry-concept subtasks → leo-prompt (lowest-priority concept-only mode). Triggers on: 'leo assist', 'leo skill', 'leo cho thiết kế', 'prompt leo theo phase', 'leo mode', 'leo part search', 'leo P1 P2 P3 P4', 'leo QC', 'leo lắp đặt', 'leo tìm part', 'leo tính toán', 'leo tiêu chuẩn', 'leo DFM inspect', 'leo chọn vật liệu', 'bộ prompt leo', 'leo router'."
+description: "Phase × Mode Leo AI (getleo.ai) prompt suite. Two axes: 7 lifecycle PHASES (P0 Pre-Study · P1 Requirements · P2 Concept · P3 Embodiment · P4 Detail · QC · Installation) crossed with strength-based MODES (A Part-Search & Reuse · B Engineering Q&A · B-HF Human-Factors/Anthropometric · C Calculation/Sizing · D DFM/Standards-Inspect · E Documentation/BOM · F Material-Selection), plus a `leo-part-brief` recipe chaining modes for one complete small-part deliverable. Built on deep research of Leo's REAL strengths — citation-backed calc, 120M+ vendor/PLM part-search, DFM inspect, docs, material — NOT production CAD geometry (Leo only outputs mesh; pivoted to part-search; 60-80% 'new' parts are duplicates). Each task → the right mode template (references/leo-mode-templates.md) or phase template, forcing quantified load + real interface dims + mandatory source-citation + search-before-generate, with a router meta-prompt. Classification-gated: THƯỜNG/COTS/generic → Leo cloud OK; MẬT/HẠN-CHẾ geometry/PLM → STOP+abstract, production geometry → helix-cad-bridge (local). Geometry-concept subtasks → leo-prompt (lowest-priority concept-only mode). Triggers on: 'leo assist', 'leo skill', 'leo cho thiết kế', 'prompt leo theo phase', 'leo mode', 'leo part search', 'leo P1 P2 P3 P4', 'leo QC', 'leo lắp đặt', 'leo tìm part', 'leo tính toán', 'leo tiêu chuẩn', 'leo DFM inspect', 'leo chọn vật liệu', 'leo nhân trắc', 'leo ergonomic', 'leo công thái', 'leo part brief', 'thiết kế chi tiết nhỏ leo', 'bộ prompt leo', 'leo router'."
 ---
 
 # leo-assist — Phase-Aware Leo AI Prompt Suite (research-grounded)
@@ -31,8 +31,9 @@ description: "Phase × Mode Leo AI (getleo.ai) prompt suite. Two axes: 7 lifecyc
 
 | Mode | Tác vụ | Dùng khi |
 |----|----|----|
-| **A** Part Search & Reuse ⭐ | tìm part COTS/PDM trước khi vẽ (60–80% part mới là trùng lặp) | cần 1 chi tiết |
+| **A** Part Search & Reuse ⭐ | tìm part COTS/PDM trước khi vẽ (60–80% part mới là trùng lặp); ép kết luận MUA vs CHẾ TẠO | cần 1 chi tiết |
 | **B** Engineering Q&A | tra tiêu chuẩn/fit/quy tắc, có cite | hỏi kỹ thuật |
+| **B-HF** Human-Factors / Nhân trắc | nhân trắc + công thái, ép cite bộ dữ liệu (ANSUR II/DINED/ISO 7250) + ngưỡng áp lực an toàn | thiết kế bề mặt tiếp xúc người (grip/pad/đai) |
 | **C** Calculation / Sizing | tính hiện công thức+logic+nguồn | thay bảng tính |
 | **D** DFM / Standards Inspect | soi vi phạm DFM/quy phạm, mỗi flag có cite | review thiết kế (THƯỜNG) |
 | **E** Documentation / BOM | E1 9-point summary · E2 datasheet/BOM-text · E3 gắp mfg-data có sẵn | đặc tả thiết kế + tài liệu nhanh (KHÔNG: quy trình CN/QMS/nghiệm thu → forge-fabrication/helix-p4-inspection/erp-quality) |
@@ -67,6 +68,10 @@ Phase = *khi nào* · Mode = *loại việc*. Chọn phase → các mode trội 
 | **Lắp đặt** | B (mô-men/tiêu chuẩn) · C (preload) · E (quy trình) | forge-fabrication · helix-p4-handoff |
 
 > **Router nhanh:** dán "Router meta-prompt" (cuối mode-templates) + 1 dòng tác vụ → tự chọn mode + điền template.
+
+> **Recipe đa-mode:** 1 chi tiết nhỏ THƯỜNG hoàn chỉnh (đồ gym/jig/đồ đeo) hiếm khi rơi 1 mode — xâu
+> A→(C+F)→B-HF→E→[[leo-prompt]] bằng recipe `leo-part-brief` (cuối [references/leo-phase-templates.md](references/leo-phase-templates.md)).
+> Ví dụ chạy đủ: [references/worked-example-wrist-support.md](references/worked-example-wrist-support.md) (tay đỡ cổ tay).
 
 ## Step 2: Emit prompt (cấu trúc bắt buộc — 5 nguyên tắc Leo)
 Mọi prompt Leo phải có (đây là điểm Leo > ChatGPT, **phải ép dùng**):

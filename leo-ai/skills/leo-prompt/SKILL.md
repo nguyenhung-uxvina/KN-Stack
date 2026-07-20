@@ -51,10 +51,13 @@ Bo/vát: <R… ở cạnh nào>. Pattern/đối xứng: <mặt phẳng, số lư
 |---|---|---|---|---|
 | … | L | … | mm | |
 SPATIAL/DATUM: gốc = <…>; mặt đối xứng = <…>; +Z = <hướng in>.
+★ ĐỊNH HƯỚNG IN vs TẢI: chi tiết chịu uốn → đặt +Z sao cho ứng suất chính chạy TRONG lớp (in-plane XY),
+KHÔNG để mặt phân lớp vuông góc tải (chống tách lớp tại chân chịu lực). Nêu rõ tải chạy theo trục nào.
 
 # R — RULES / CONSTRAINTS
 FDM, support tối thiểu, in nhanh. Thành ≥ <t> mm (≥3×nozzle). Bo cạnh tiếp xúc da R≥2.
 Vật liệu thân <PETG/Nylon>; grip <TPU>. KHÔNG: overhang>45°, thành mỏng, chi tiết <0.8mm.
+Interlayer: đặt tải chịu uốn IN-PLANE (interlayer adhesion Z ≈ 50–70% độ bền in-plane — dễ nứt tách lớp).
 
 # ACCEPTANCE (đo được — Leo phải đạt)
 Bounding box ≤ <LxWxH>. Khối lượng ≤ <g>. Không thành < <t>. Tự đứng khi in (đáy phẳng).
@@ -68,6 +71,7 @@ Bảng in: Nozzle|Layer|Infill|Support|Time|Material. Ngôn ngữ: vi. Biến th
 - [ ] Mọi tham số trong DIMENSIONS có **số thật** (không có "gọn/nhẹ" thay cho mm); chỗ chưa biết = `[CEO điền]`.
 - [ ] TASK mô tả **theo trình tự dựng** (base→op→fillet→pattern), không phải mô tả tĩnh.
 - [ ] Có **DATUM** (gốc + mặt đối xứng + hướng in) — Leo mới đặt đúng.
+- [ ] Chi tiết chịu lực: **hướng in đặt ứng suất IN-PLANE** (chống tách lớp Z) — nêu rõ trục tải.
 - [ ] Có **ACCEPTANCE đo được** + **negative constraints (KHÔNG…)**.
 - [ ] Có dòng **Phân loại** (chặn nhầm đồ MẬT lên cloud).
 
