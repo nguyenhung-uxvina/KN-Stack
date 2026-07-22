@@ -16,7 +16,7 @@ Biến một NotebookLM notebook thành bộ bài giảng đồng bộ slide + a
 
 Usage: `/learn-lecture <notebook-name-or-alias>` — flags: `--mode compact|full|extend`, `--resume`, `--lesson <N>`
 
-Engine: MCP `notebooklm-mcp` — `notebook_list`, `source_list`, `source_describe`,
+Engine: MCP `notebooklm-mcp` — `notebook_list`, `notebook_get`, `source_describe`,
 `notebook_query` (với `source_ids`), `studio_create`/`studio_status`/`studio_revise`,
 `download_artifact`/`export_artifact`.
 
@@ -47,7 +47,7 @@ nhảy thẳng bài N.
 
 ### Phase 1 — SCAN
 
-1. `source_list` → lấy toàn bộ title + source_id.
+1. `notebook_get` → lấy toàn bộ title + source_id của các nguồn trong notebook.
 2. Claude gom cụm chủ đề từ TITLE (chỉ `source_describe` khi title mơ hồ —
    KHÔNG query từng nguồn, tốn phiên).
 3. Notebook >45 nguồn hoặc 1 cụm quá lớn → cảnh báo, đề xuất extend mode hoặc
@@ -95,7 +95,7 @@ Bài lỗi bỏ qua → ⚠ skipped kèm lý do. Tất cả ✅ → `status: com
 3.2 OUTLINE   notebook_query CHỈ với source_ids của bài đó → trích dàn ý đầy đủ
               theo thứ tự (mục tiêu, đề mục, khái niệm, ví dụ, thao tác, ghi nhớ;
               giữ nguyên số liệu/tên riêng) → chưng cất thành DÀN Ý ĐÁNH SỐ N phần
-3.3 SLIDES    studio_create(slides) với prompt template SLIDE (references/) —
+3.3 SLIDES    studio_create(slide_deck) với prompt template SLIDE (references/) —
               nhúng dàn ý N phần, ràng buộc "ĐÚNG N slide riêng biệt, không gộp,
               CHỈ dùng nguồn đã chọn" → poll studio_status
 3.4 EXTRACT   download/export artifact → đọc nội dung slide THẬT (tiêu đề + bullet

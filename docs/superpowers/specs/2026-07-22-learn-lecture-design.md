@@ -22,7 +22,7 @@ bài tiếp theo.
   - `--mode compact|full|extend` — bỏ qua bước hỏi mode
   - `--resume` — alias tường minh cho hành vi resume mặc định
   - `--lesson <N>` — nhảy thẳng tới bài N trong Curriculum.md
-- Engine: MCP `notebooklm-mcp` (`notebook_list`, `source_list`/`source_describe`,
+- Engine: MCP `notebooklm-mcp` (`notebook_list`, `notebook_get`/`source_describe`,
   `notebook_query` với `source_ids`, `studio_create`/`studio_status`/`studio_revise`,
   `download_artifact`/`export_artifact`). Auth hết phiên → báo CEO chạy `nlm login`,
   retry tối đa 2 lần.
@@ -33,7 +33,7 @@ bài tiếp theo.
 ```
 Phase 0  INTAKE      resolve notebook (fuzzy match tên/alias → CEO xác nhận nếu mơ hồ);
                      check auth
-Phase 1  SCAN        source_list → Claude gom cụm chủ đề từ title (+ source_describe
+Phase 1  SCAN        notebook_get → Claude gom cụm chủ đề từ title (+ source_describe
                      khi title mơ hồ); KHÔNG query từng nguồn
 Phase 2  CURRICULUM  ▸ nếu không có --mode: hiển thị tóm tắt cụm chủ đề + ước tính
                        số bài của CẢ 3 chế độ → CEO chọn mode

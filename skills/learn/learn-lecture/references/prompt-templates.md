@@ -5,7 +5,7 @@ số N phần (mỗi dòng: `N. <Tiêu đề> — <ý chính, số liệu giữ 
 `{{SLIDE_CONTENT}}` = nội dung slide THẬT trích ở bước 3.4 (mỗi slide: tiêu đề +
 bullet). Nguồn: đã tick sẵn đúng source_ids của bài trước khi gửi prompt.
 
-## TEMPLATE 1 — SLIDE (studio_create, artifact_type=slides)
+## TEMPLATE 1 — SLIDE (studio_create, artifact_type=slide_deck)
 
 ```
 Tạo một slide deck bài giảng tiếng Việt cho "{{TÊN_BÀI}}". Giữ nguyên thuật ngữ
