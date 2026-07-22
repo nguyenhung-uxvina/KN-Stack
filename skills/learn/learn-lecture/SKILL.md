@@ -172,6 +172,11 @@ chạy tay 2026-07-22 (bài 1.10 Claude 101, 12 phần).
   `source_ids=[...]`, `confirm=true`, `slide_format="detailed_deck"`.
 - **CLI env:** `export PATH="$PATH:/c/Users/ADMIN/AppData/Roaming/Python/Python313/Scripts"`
   + `PYTHONIOENCODING=utf-8 NO_COLOR=1`. CLI JSON KHÔNG expose url (chỉ id/type/status).
+- **Audio QUOTA:** `studio_create(audio)` có thể trả "Could not create audio" khi
+  notebook đã chạm hạn mức audio/ngày (không phải lỗi prompt — kiểm bằng audio bare
+  không focus_prompt: vẫn fail = quota). Xử: lưu slide + Sync Report ghi audio ⚠
+  deferred, đính kèm prompt audio 12 phần vào outline.md để CEO retry sau (quota
+  reset) / tạo tay NLM UI. KHÔNG lặp retry — 1 lần là đủ để xác nhận.
 
 ## RULES
 
