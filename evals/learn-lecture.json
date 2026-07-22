@@ -1,0 +1,95 @@
+{
+  "skill": "learn-lecture",
+  "version": "1.0",
+  "description": "Binary assertions for learn-lecture — NotebookLM notebook → synced slide+audio lecture series (scan → curriculum → per-lesson produce/verify loop)",
+  "mode": "static",
+  "test_input": "tạo bộ bài giảng từ notebook Claude Course 2026, chế độ full",
+  "total_required": 12,
+  "passing_score": 11,
+  "assertions": [
+    {
+      "id": "LL-FRONTMATTER",
+      "name": "frontmatter_name_and_bilingual_triggers",
+      "check": "frontmatter có name: learn-lecture + description chứa Triggers on với cụm EN và VI",
+      "regex": "name: learn-lecture[\\s\\S]*Triggers on[\\s\\S]*(tạo bài giảng|bài giảng từ notebook)",
+      "required": true
+    },
+    {
+      "id": "LL-PHASES",
+      "name": "five_phase_pipeline",
+      "check": "đủ 5 phase INTAKE / SCAN / CURRICULUM / LESSON LOOP / WRAP",
+      "regex": "INTAKE[\\s\\S]*SCAN[\\s\\S]*CURRICULUM[\\s\\S]*LESSON LOOP[\\s\\S]*WRAP",
+      "required": true
+    },
+    {
+      "id": "LL-MODE-GATE",
+      "name": "mode_chosen_after_scan_when_flag_absent",
+      "check": "không có --mode → sau SCAN hiển thị ước tính cả 3 chế độ rồi CEO chọn",
+      "regex": "(không|KHÔNG) có --mode[\\s\\S]*(3 chế độ|cả 3|compact.*full.*extend)[\\s\\S]*CEO chọn",
+      "required": true
+    },
+    {
+      "id": "LL-CORE-GATE",
+      "name": "curriculum_core_gate",
+      "check": "Phase 2: CEO duyệt/sửa giáo trình trước khi ghi Curriculum.md — gate Core",
+      "regex": "CEO (duyệt|phê duyệt)[\\s\\S]*Curriculum\\.md[\\s\\S]*(Core|CORE)",
+      "required": true
+    },
+    {
+      "id": "LL-SOURCE-SCOPE",
+      "name": "per_lesson_source_ids_only",
+      "check": "outline query và slide của mỗi bài CHỈ dùng source_ids của bài đó",
+      "regex": "(CHỈ|chỉ) (dùng|với) source_ids",
+      "required": true
+    },
+    {
+      "id": "LL-SLIDE-FIRST",
+      "name": "audio_from_real_slide_content",
+      "check": "slide tạo trước; audio prompt sinh TỪ nội dung slide THẬT (không dùng lại dàn ý gốc)",
+      "regex": "slide (THẬT|thật)[\\s\\S]*(không dùng (lại )?dàn ý gốc|ground truth)",
+      "required": true
+    },
+    {
+      "id": "LL-VERIFY-BEFORE-AUDIO",
+      "name": "verify_slides_before_audio",
+      "check": "VERIFY slide chạy TRƯỚC khi tạo audio — không đốt thời gian audio cho slide hỏng",
+      "regex": "(VERIFY|verify)[\\s\\S]{0,200}(TRƯỚC|trước) khi tạo audio",
+      "required": true
+    },
+    {
+      "id": "LL-AUDIO-VI",
+      "name": "audio_always_vietnamese",
+      "check": "audio LUÔN language=vi trừ khi CEO yêu cầu rõ tiếng Anh (rule /nlm)",
+      "regex": "language=vi[\\s\\S]*(LUÔN|luôn|bắt buộc)|LUÔN[\\s\\S]{0,80}language=vi",
+      "required": true
+    },
+    {
+      "id": "LL-REPAIR-ONCE",
+      "name": "repair_max_one_round_then_ceo",
+      "check": "repair slide tối đa 1 vòng (studio_revise/tạo lại) → vẫn lệch thì CEO quyết chấp nhận/bỏ bài",
+      "regex": "(tối đa|TỐI ĐA) 1 vòng[\\s\\S]*CEO quyết",
+      "required": true
+    },
+    {
+      "id": "LL-RESUME",
+      "name": "resume_via_curriculum_md",
+      "check": "Curriculum.md đã tồn tại → bỏ qua Phase 1-2, vào thẳng LESSON LOOP với bài pending",
+      "regex": "Curriculum\\.md (đã )?tồn tại[\\s\\S]*(bỏ qua|skip) Phase 1",
+      "required": true
+    },
+    {
+      "id": "LL-FALLBACK",
+      "name": "extract_fallback_outline_sync_note",
+      "check": "không đọc được nội dung slide → fallback dàn ý duyệt + Sync Report ghi 'đồng bộ mức dàn ý'",
+      "regex": "fallback[\\s\\S]*dàn ý[\\s\\S]*đồng bộ mức dàn ý",
+      "required": true
+    },
+    {
+      "id": "LL-AUTH-RETRY",
+      "name": "auth_fail_nlm_login_retry_two",
+      "check": "auth NLM hết phiên → báo CEO chạy nlm login, retry tối đa 2 lần, dừng có trạng thái",
+      "regex": "nlm login[\\s\\S]*(tối đa|TỐI ĐA) 2",
+      "required": true
+    }
+  ]
+}
