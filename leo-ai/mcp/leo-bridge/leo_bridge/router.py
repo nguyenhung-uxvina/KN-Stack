@@ -22,7 +22,7 @@ def propose_routes(mode: str, parsed: dict) -> list[dict]:
             "target_type": "parts_master_csv",
             "description": "Append part rows vào STAGING CSV (BOM mua ngoài — mọi mục phải VERIFIED trước)",
         })
-    if mode in ("B", "C"):
+    if mode in ("B", "B-HF", "C"):
         routes.append({
             "target_type": "calc_md",
             "description": "Lưu calc sheet markdown (mục UNVERIFIED được gắn nhãn rõ)",

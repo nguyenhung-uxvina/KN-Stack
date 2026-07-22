@@ -16,8 +16,20 @@ _CANDIDATES = [
 ]
 _ENV_PATH = os.environ.get("LEO_TEMPLATES_PATH")
 TEMPLATES_PATH = Path(_ENV_PATH) if _ENV_PATH else next((p for p in _CANDIDATES if p.exists()), _CANDIDATES[-1])
-EXPECTED_MODES = ["A", "B", "C", "D", "E1", "E2", "E3", "F"]
-HEADING_RE = re.compile(r"^#{2,3}\s+([A-F]\d?)[.\s]", re.MULTILINE)
+
+# Recipe (multi-mode orchestration) lives in leo-phase-templates.md, not mode-templates.
+_RECIPE_CANDIDATES = [
+    _ROOT / "skills" / "leo-assist" / "references" / "leo-phase-templates.md",         # flattened plugin
+    _ROOT / "skills" / "helix" / "leo-assist" / "references" / "leo-phase-templates.md",  # canonical KN-Stack
+]
+_ENV_RECIPE_PATH = os.environ.get("LEO_PHASE_TEMPLATES_PATH")
+RECIPES_PATH = Path(_ENV_RECIPE_PATH) if _ENV_RECIPE_PATH else next(
+    (p for p in _RECIPE_CANDIDATES if p.exists()), _RECIPE_CANDIDATES[-1])
+
+EXPECTED_MODES = ["A", "B", "B-HF", "C", "D", "E1", "E2", "E3", "F"]
+# Capture A–F, letter+digit (E1/E2/E3), and the B-HF human-factors sub-mode.
+HEADING_RE = re.compile(r"^#{2,3}\s+([A-F](?:-HF|\d)?)[.\s]", re.MULTILINE)
+RECIPE_HEADING_RE = re.compile(r"^#{2,3}\s+RECIPE\b.*?leo-part-brief", re.MULTILINE | re.IGNORECASE)
 # Bounds every section (including the last mode section) — any heading of any
 # kind ends the previous section, not just the next MODE heading. Without this,
 # a mode section with a missing fence could silently absorb the fenced block of
@@ -57,3 +69,24 @@ def load_templates(path=TEMPLATES_PATH) -> dict:
             "cập nhật leo_bridge/templates.py parser hoặc bỏ fence thừa."
         )
     return out
+
+
+def load_recipe(name: str = "leo-part-brief", path=RECIPES_PATH) -> str:
+    """Đọc scaffold recipe đa-mode (vd leo-part-brief) từ leo-phase-templates.md.
+    Recipe = orchestration nhiều mode, KHÔNG phải template 1 mode. Fail loudly nếu đổi format."""
+    p = Path(path)
+    if not p.exists():
+        raise TemplateFormatError(f"Không thấy phase-templates tại {p}")
+    text = p.read_text(encoding="utf-8")
+    m = RECIPE_HEADING_RE.search(text)
+    if not m:
+        raise TemplateFormatError(
+            f"Không thấy heading RECIPE '{name}' trong {p.name} — "
+            "format đã đổi, cập nhật RECIPE_HEADING_RE."
+        )
+    block = BLOCK_RE.search(text[m.start():])
+    if not block:
+        raise TemplateFormatError(
+            f"RECIPE '{name}' thiếu fenced block (```) ngay sau heading — cập nhật parser."
+        )
+    return block.group(1).rstrip()

@@ -9,7 +9,7 @@ Bộ công cụ LEO AI (getleo.ai) của Workshop X, đóng gói portable: 4 ski
 Trước tiên, luôn cài Python deps cho MCP server (bắt buộc để 6 tool tự động chạy):
 ```bash
 pip install -r mcp/leo-bridge/requirements.txt
-python mcp/leo-bridge/server.py --selftest   # kiểm tra: phải in "selftest OK — 8 templates ... 6 tools"
+python mcp/leo-bridge/server.py --selftest   # kiểm tra: phải in "selftest OK — 9 templates + recipe ... 6 tools"
 ```
 Bỏ bước này thì 4 skill prompt vẫn dùng được — chỉ mất `leo-bridge` MCP (classify/prompt_build/send/ingest/route/ledger). Nếu `python` không có trong PATH (Windows hay chỉ có `py`), sửa `command` trong `.mcp.json` thành `py`.
 

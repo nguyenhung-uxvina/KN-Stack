@@ -37,9 +37,11 @@ def leo_classify(task_text: str) -> dict:
 
 @mcp.tool()
 def leo_prompt_build(mode: str, params: dict, assumptions: list[str] | None = None) -> dict:
-    """Sinh prompt Leo theo mode A/B/C/D/E1/E2/E3/F từ template leo-assist (source of truth).
+    """Sinh prompt Leo theo mode A/B/B-HF/C/D/E1/E2/E3/F từ template leo-assist (source of truth).
     Ép 5 nguyên tắc: load case định lượng, interface thật, process, cite bắt buộc,
-    search-before-generate. Thiếu tham số bắt buộc → lỗi liệt kê rõ."""
+    search-before-generate. Thiếu tham số bắt buộc → lỗi liệt kê rõ.
+    mode='BRIEF' (=recipe leo-part-brief) → sinh scaffold đa-mode cho 1 chi tiết nhỏ hoàn chỉnh
+    (cần params[PART]); đây là KẾ HOẠCH, chạy từng bước bằng leo_prompt_build mode tương ứng."""
     scan_text = " ".join(str(v) for v in params.values())
     if assumptions:
         scan_text += " " + " ".join(str(a) for a in assumptions)
@@ -60,6 +62,7 @@ def leo_prompt_build(mode: str, params: dict, assumptions: list[str] | None = No
 UI_INTENT = {
     "A": "Part search",
     "B": "Learn (lý thuyết/tiêu chuẩn) hoặc Develop (how-to/best-practice)",
+    "B-HF": "Learn (nhân trắc/công thái, ép cite bộ dữ liệu ANSUR II/DINED/ISO 7250)",
     "C": "Calculate (có thể yêu cầu Leo vẽ plot)",
     "D": "Develop (DFM/design practices)",
     "E1": "chat thường — yêu cầu 9-point engineering summary",
@@ -73,10 +76,16 @@ UI_INTENT = {
 def leo_send(prompt: str, mode: str, note: str = "") -> dict:
     """Gate lần 2 (defense-in-depth, hard block) → copy prompt vào clipboard →
     tạo exchange_id + ghi ledger. CEO dán vào app.getleo.ai (1 khung chat thống nhất)."""
+    if mode.upper() in builder.RECIPE_ALIASES:
+        return {
+            "status": "ERROR",
+            "reason": "Recipe (BRIEF) = KẾ HOẠCH nhiều bước, KHÔNG gửi nguyên khối. "
+                      "Build từng bước (A → C/F → B-HF → E) rồi leo_send từng prompt.",
+        }
     if mode.upper() not in builder.REQUIRED_FIELDS:
         return {
             "status": "ERROR",
-            "reason": f"Mode không hợp lệ: {mode}. Hợp lệ: A/B/C/D/E1/E2/E3/F",
+            "reason": f"Mode không hợp lệ: {mode}. Hợp lệ: A/B/B-HF/C/D/E1/E2/E3/F",
         }
     r = gate.classify(prompt)
     if r.verdict == "MAT":
@@ -160,7 +169,7 @@ def leo_ledger(action: str = "list", exchange_id: str = "", status: str = "") ->
 
 def _selftest() -> None:
     t = templates.load_templates()
-    assert set(t) == {"A", "B", "C", "D", "E1", "E2", "E3", "F"}, f"templates: {sorted(t)}"
+    assert set(t) == {"A", "B", "B-HF", "C", "D", "E1", "E2", "E3", "F"}, f"templates: {sorted(t)}"
     assert gate.classify("bạc đạn SKF 6205 chịu 2 kN").verdict == "THUONG"
     assert gate.classify("bạc lót cho UUV").verdict == "MAT"
     # "_" là separator, không phải word char — slug snake_case không được lọt gate
@@ -171,7 +180,19 @@ def _selftest() -> None:
     p = builder.build_prompt("B", {"QUESTION": "dung sai H7/g6 cho trục Ø25?",
                                    "CONTEXT": "thép C45, lắp trượt"})
     assert "[QUESTION] dung sai H7/g6" in p
-    print("selftest OK — 8 templates, gate + builder hoạt động. Tools: leo_classify, "
+    # B-HF: field có dấu cách ("BODY PART") phải fill đúng
+    hf = builder.build_prompt("B-HF", {"BODY PART": "cổ tay", "POPULATION": "người trưởng thành",
+                                       "POSTURE": "trung tính khi vai abduct 0–90°"})
+    assert "[BODY PART] cổ tay" in hf and "[POSTURE] trung tính" in hf
+    # Recipe (BRIEF): scaffold đa-mode, cần [PART]
+    rec = builder.build_prompt("BRIEF", {"PART": "tay đỡ cổ tay Ø28–32, tải ngang ~150 N"})
+    assert "RECIPE leo-part-brief" in rec and "tay đỡ cổ tay" in rec
+    try:
+        builder.build_prompt("BRIEF", {})
+        raise AssertionError("BRIEF thiếu PART phải lỗi")
+    except builder.BuildError:
+        pass
+    print("selftest OK — 9 templates + recipe, gate + builder hoạt động. Tools: leo_classify, "
           "leo_prompt_build, leo_send, leo_ingest, leo_route, leo_ledger")
 
 
