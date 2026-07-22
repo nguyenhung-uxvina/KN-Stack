@@ -93,7 +93,7 @@ Thứ tự thực thi (verify slide chạy TRƯỚC khi tạo audio):
               thứ tự (mục tiêu, đề mục, khái niệm, ví dụ, thao tác, ghi nhớ; giữ
               nguyên số liệu/tên riêng) → Claude chưng cất thành DÀN Ý ĐÁNH SỐ
               N phần (N theo mode)
-3.3 SLIDES    studio_create(slides) — prompt nhúng dàn ý N phần + ràng buộc:
+3.3 SLIDES    studio_create(slide_deck) — prompt nhúng dàn ý N phần + ràng buộc:
               "Tạo ĐÚNG N slide riêng biệt, không gộp; đúng thứ tự + tiêu đề;
               CHỈ dùng nguồn đã chọn, không thêm kiến thức ngoài; tiếng Việt,
               giữ thuật ngữ EN" → poll studio_status
