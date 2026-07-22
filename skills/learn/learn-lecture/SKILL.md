@@ -17,8 +17,10 @@ Biến một NotebookLM notebook thành bộ bài giảng đồng bộ slide + a
 Usage: `/learn-lecture <notebook-name-or-alias>` — flags: `--mode compact|full|extend`, `--resume`, `--lesson <N>`
 
 Engine: MCP `notebooklm-mcp` — `notebook_list`, `notebook_get`, `source_describe`,
-`notebook_query` (với `source_ids`), `studio_create`/`studio_status`/`studio_revise`,
-`download_artifact`/`export_artifact`.
+`source_get_content` (fetch text thô/nguồn — dùng cho OUTLINE), `notebook_query`
+(chỉ khi cần tổng hợp AI; timeout trên notebook lớn), `studio_create`/`studio_status`,
+`download_artifact`. Fallback CLI `nlm` (PATH: Python313/Scripts) khi MCP lỗi —
+xem "Gotchas thực chiến".
 
 Auth: phiên NLM ~20 phút. Lỗi auth → báo CEO chạy `nlm login` ở terminal khác →
 retry, tối đa 2 lần → vẫn fail thì DỪNG có trạng thái (Curriculum.md đã lưu, resume được).
@@ -49,9 +51,14 @@ nhảy thẳng bài N.
 
 1. `notebook_get` → lấy toàn bộ title + source_id của các nguồn trong notebook.
 2. Claude gom cụm chủ đề từ TITLE (chỉ `source_describe` khi title mơ hồ —
-   KHÔNG query từng nguồn, tốn phiên).
-3. Notebook >45 nguồn hoặc 1 cụm quá lớn → cảnh báo, đề xuất extend mode hoặc
-   thu hẹp phạm vi.
+   KHÔNG query từng nguồn, tốn phiên). Nếu title theo mã có tiền tố `NN.` (VD
+   `01.10-...md`) → gom theo prefix `NN.` = 1 khóa.
+3. **Notebook đa khóa (thư viện):** nếu thấy nhiều cụm prefix `NN.` khác nhau
+   (VD 284 nguồn = ~19 khóa), ĐÂY KHÔNG PHẢI 1 khóa — LÀM TỪNG KHÓA MỘT: liệt kê
+   bản đồ khóa (mã · tên · số bài) → CEO chọn 1 khóa → chỉ khóa đó vào Phase 2.
+   Slug vault = `<Tên-khóa>` (không phải tên notebook).
+4. Notebook >45 nguồn hoặc 1 cụm quá lớn → cảnh báo, đề xuất thu hẹp phạm vi
+   (chọn 1 khóa) hoặc extend mode.
 
 ### Phase 2 — CURRICULUM
 
@@ -92,14 +99,17 @@ Bài lỗi bỏ qua → ⚠ skipped kèm lý do. Tất cả ✅ → `status: com
 
 ```
 3.1 PICK      CEO chọn bài (mặc định: bài pending đầu tiên)
-3.2 OUTLINE   notebook_query CHỈ với source_ids của bài đó → trích dàn ý đầy đủ
-              theo thứ tự (mục tiêu, đề mục, khái niệm, ví dụ, thao tác, ghi nhớ;
-              giữ nguyên số liệu/tên riêng) → chưng cất thành DÀN Ý ĐÁNH SỐ N phần
-3.3 SLIDES    studio_create(slide_deck) với prompt template SLIDE (references/) —
-              nhúng dàn ý N phần, ràng buộc "ĐÚNG N slide riêng biệt, không gộp,
-              CHỈ dùng nguồn đã chọn" → poll studio_status
-3.4 EXTRACT   download/export artifact → đọc nội dung slide THẬT (tiêu đề + bullet
-              từng slide) = ground truth cho audio
+3.2 OUTLINE   source_get_content cho từng source_id của bài (CHỈ với source_ids
+              của bài đó) — fetch text thô, TỨC THÌ, không dùng notebook_query
+              (timeout trên notebook lớn). Ghép nội dung → trích dàn ý đầy đủ theo
+              thứ tự (mục tiêu, đề mục, khái niệm, ví dụ, thao tác, ghi nhớ; giữ
+              nguyên số liệu/tên riêng) → chưng cất thành DÀN Ý ĐÁNH SỐ N phần
+3.3 SLIDES    studio_create(slide_deck, source_ids, language=vi) với prompt template
+              SLIDE (references/) — nhúng dàn ý N phần, ràng buộc "ĐÚNG N slide riêng
+              biệt, không gộp, CHỈ dùng nguồn đã chọn". Poll completion QUA CLI nền
+              (không gọi studio_status MCP lặp — nó dump TẤT CẢ artifact, tốn context)
+3.4 EXTRACT   download_artifact(slide_deck→PDF) về vault → Read PDF → đọc nội dung
+              slide THẬT (tiêu đề + bullet từng slide) = ground truth cho audio
 3.5 VERIFY-S  So slide thật vs dàn ý duyệt: đủ N? tiêu đề khớp? PASS → 3.7
 3.6 REPAIR    lệch → tối đa 1 vòng studio_revise (hoặc tạo lại) → quay lại 3.4;
               vẫn lệch → CEO quyết: chấp nhận có ghi chú / bỏ bài (⚠ skipped)
@@ -107,10 +117,11 @@ Bài lỗi bỏ qua → ⚠ skipped kèm lý do. Tất cả ✅ → `status: com
               N đoạn khớp 1-1, mỗi đoạn mở bằng "Phần N — <tiêu đề slide thật>".
               Tự kiểm prompt đủ N callout khớp tiêu đề TRƯỚC khi gửi.
               studio_create(audio) — LUÔN language=vi (bắt buộc, rule /nlm; chỉ đổi
-              khi CEO yêu cầu rõ tiếng Anh) → poll studio_status
-3.8 SAVE      tải PPTX + MP3 → <vault-root>\Bai-NN-<slug>\ + outline.md (dàn ý
-              duyệt + slide content trích + Sync Report) + cập nhật Curriculum.md
-              → hỏi "Tạo bài tiếp theo? (bài N+1)"
+              khi CEO yêu cầu rõ tiếng Anh) → poll completion qua CLI nền
+3.8 SAVE      tải slide PDF (download_artifact) + audio (CLI `nlm download audio
+              --id <aid> -o` — MCP download_artifact AUDIO hay fail) → <vault-root>\
+              Bai-NN-<slug>\ + outline.md (dàn ý duyệt + slide content trích + Sync
+              Report) + cập nhật Curriculum.md → hỏi "Tạo bài tiếp theo? (bài N+1)"
 ```
 
 **Nguyên tắc đồng bộ (bất biến):**
@@ -143,7 +154,24 @@ chạy tay 2026-07-22 (bài 1.10 Claude 101, 12 phần).
 | Không thấy notebook | fuzzy match → CEO xác nhận |
 | studio_create fail/timeout | retry 1 lần → ghi ⚠ Curriculum.md, hỏi CEO bỏ bài/dừng |
 | Slide lệch sau repair | CEO quyết — không lặp vô hạn |
-| Notebook >45 nguồn | cảnh báo ở SCAN |
+| Notebook >45 nguồn | cảnh báo ở SCAN + đề xuất chọn 1 khóa |
+
+## Gotchas thực chiến (live-run 2026-07-22, notebook 284 nguồn)
+
+- **OUTLINE:** `notebook_query` timeout 120s / "Connection closed" trên notebook lớn
+  → LUÔN dùng `source_get_content` (raw, tức thì) cho OUTLINE. notebook_query chỉ khi
+  thật sự cần tổng hợp AI đa nguồn.
+- **Polling:** `studio_status` (MCP) trả VỀ TẤT CẢ artifact mỗi lần (~15K token/lần) —
+  KHÔNG poll lặp bằng MCP. Poll bằng CLI nền: `nlm studio status <nb>` → parse field
+  `status=="completed"` cho `artifact_id` cần, chạy `run_in_background`. Slide ~3–5
+  phút, audio ~7–8 phút.
+- **Download AUDIO:** MCP `download_artifact(audio)` hay trả "Download failed" →
+  fallback CLI `nlm download audio <nb> --id <aid> --no-progress -o <path.m4a>`
+  (chạy ổn; file ~20–25MB/15 phút). Slide_deck qua MCP `download_artifact` thì OK.
+- **studio_create prompt:** đặt full prompt vào `focus_prompt`; set `language="vi"`,
+  `source_ids=[...]`, `confirm=true`, `slide_format="detailed_deck"`.
+- **CLI env:** `export PATH="$PATH:/c/Users/ADMIN/AppData/Roaming/Python/Python313/Scripts"`
+  + `PYTHONIOENCODING=utf-8 NO_COLOR=1`. CLI JSON KHÔNG expose url (chỉ id/type/status).
 
 ## RULES
 
