@@ -1,9 +1,16 @@
 # learn-lecture — Prompt Templates
 
-Placeholder: `{{N}}` = số phần · `{{TÊN_BÀI}}` = tên bài · `{{DÀN_Ý}}` = dàn ý đánh
-số N phần (mỗi dòng: `N. <Tiêu đề> — <ý chính, số liệu giữ nguyên>`) ·
-`{{SLIDE_CONTENT}}` = nội dung slide THẬT trích ở bước 3.4 (mỗi slide: tiêu đề +
-bullet). Nguồn: đã tick sẵn đúng source_ids của bài trước khi gửi prompt.
+Placeholder: `{{N}}` = số phần · `{{TÊN_BÀI}}` = tên bài · `{{DÀN_Ý}}` = dàn ý-nguồn
+đánh số N phần chưng cất từ source_get_content (mỗi dòng: `N. <Tiêu đề> — <ý chính,
+ví dụ, số liệu giữ nguyên>`) · `{{TIÊU_ĐỀ_SLIDE_THẬT}}` = danh sách N tiêu đề slide
+THẬT trích ở 3.4, đúng thứ tự (dùng làm callout "Phần N" cho đồng bộ) · `{{DÀN_Ý_NGUỒN}}`
+= khung N phần cho audio, mỗi dòng `N. [<tiêu đề slide thật N>] — <nội dung NGUỒN đầy
+đủ của phần đó: khái niệm, ví dụ, số liệu, thao tác>`. Nguồn: đã tick sẵn đúng
+source_ids của bài trước khi gửi prompt.
+
+**Nguyên tắc:** slide (TEMPLATE 1) nén nguồn thành bullet; audio (TEMPLATE 2) giảng
+ĐẦY ĐỦ nội dung nguồn, chỉ mượn TIÊU ĐỀ slide thật làm mốc đồng bộ. Audio phải giàu
+hơn slide, không đọc lại bullet.
 
 ## TEMPLATE 1 — SLIDE (studio_create, artifact_type=slide_deck)
 
@@ -28,19 +35,22 @@ Tạo một bài giảng audio tiếng Việt cho "{{TÊN_BÀI}}". Giữ nguyên
 Anh. CHỈ dùng thông tin trong nguồn đã chọn, KHÔNG thêm kiến thức ngoài, KHÔNG bịa
 số liệu.
 
-QUAN TRỌNG — audio này phải ĐỒNG BỘ với một slide deck {{N}} slide. Chia lời giảng
-thành ĐÚNG {{N}} đoạn, ĐÚNG thứ tự dưới đây. Ở đầu mỗi đoạn, XƯỚNG RÕ số và tên
-phần (ví dụ: "Phần 4 — <tiêu đề>") để người nghe lật đúng slide. Mỗi đoạn chỉ diễn
-giảng nội dung của slide tương ứng, không lan man sang phần khác.
+QUAN TRỌNG — nội dung lời giảng lấy TRỰC TIẾP & ĐẦY ĐỦ TỪ NGUỒN (chi tiết, ví dụ,
+số liệu, thao tác — sâu hơn hẳn gạch đầu dòng trên slide). Slide chỉ là KHUNG đồng bộ.
 
-Nội dung {{N}} phần (khớp 1-1 với slide thật):
-{{SLIDE_CONTENT}}
+Chia lời giảng thành ĐÚNG {{N}} đoạn, ĐÚNG thứ tự dưới đây, khớp 1-1 với {{N}} slide.
+Ở đầu mỗi đoạn, XƯỚNG RÕ số và TIÊU ĐỀ SLIDE THẬT (ví dụ: "Phần 4 — <tiêu đề slide
+thật>") để người nghe lật đúng slide. Mỗi đoạn giảng ĐẦY ĐỦ nội dung nguồn thuộc
+phần đó, KHÔNG chỉ đọc lại bullet slide, KHÔNG lan sang phần khác.
+
+Khung {{N}} phần — [Tiêu đề slide thật để xướng] ⇐ nội dung NGUỒN để khai triển:
+{{DÀN_Ý_NGUỒN}}
 
 Giọng: người dẫn giảng bài rõ ràng, mạch lạc, sư phạm. Ngôn ngữ: tiếng Việt.
 ```
 
 ## Checklist tự kiểm trước khi gửi TEMPLATE 2
 
-- [ ] Số đoạn == số slide thật (không phải N kế hoạch, nếu đã chấp-nhận-có-ghi-chú)
-- [ ] Tiêu đề từng đoạn == tiêu đề slide thật, đúng thứ tự
+- [ ] Nội dung mỗi đoạn KHAI TRIỂN từ nguồn (đầy đủ ví dụ/số liệu/thao tác), KHÔNG chỉ đọc lại bullet slide
+- [ ] Số đoạn == số slide thật (không phải N kế hoạch nếu NLM đã gộp); callout đầu đoạn == TIÊU ĐỀ SLIDE THẬT, đúng thứ tự
 - [ ] `language=vi` đã set

@@ -4,7 +4,7 @@
   "description": "Binary assertions for learn-lecture — NotebookLM notebook → synced slide+audio lecture series (scan → curriculum → per-lesson produce/verify loop)",
   "mode": "static",
   "test_input": "tạo bộ bài giảng từ notebook Claude Course 2026, chế độ full",
-  "total_required": 12,
+  "total_required": 14,
   "passing_score": 11,
   "assertions": [
     {
@@ -44,9 +44,9 @@
     },
     {
       "id": "LL-SLIDE-FIRST",
-      "name": "audio_from_real_slide_content",
-      "check": "slide tạo trước; audio prompt sinh TỪ nội dung slide THẬT (không dùng lại dàn ý gốc)",
-      "regex": "slide (THẬT|thật)[\\s\\S]*(không dùng (lại )?dàn ý gốc|ground truth)",
+      "name": "audio_content_from_source_slide_is_sync_skeleton",
+      "check": "nội dung audio lấy TỪ NGUỒN (đầy đủ), slide chỉ là KHUNG đồng bộ (N + tiêu đề); audio phải giàu hơn bullet slide",
+      "regex": "Nội dung audio = từ NGUỒN[\\s\\S]{0,60}slide = KHUNG[\\s\\S]*(giàu hơn slide|KHÔNG chỉ đọc lại bullet)",
       "required": true
     },
     {
@@ -80,8 +80,8 @@
     {
       "id": "LL-FALLBACK",
       "name": "extract_fallback_outline_sync_note",
-      "check": "không đọc được nội dung slide → fallback dàn ý duyệt + Sync Report ghi 'đồng bộ mức dàn ý'",
-      "regex": "fallback[\\s\\S]*dàn ý[\\s\\S]*đồng bộ mức dàn ý",
+      "check": "fallback khi không đọc được PDF slide: dùng dàn ý kế hoạch làm khung đồng bộ, Sync Report ghi rõ; nội dung audio vẫn từ nguồn",
+      "regex": "Fallback 3\\.4[\\s\\S]*dàn ý[\\s\\S]*(đồng bộ theo dàn ý kế hoạch|chưa đối chiếu tiêu đề slide thật)",
       "required": true
     },
     {
@@ -89,6 +89,20 @@
       "name": "auth_fail_nlm_login_retry_two",
       "check": "auth NLM hết phiên → báo CEO chạy nlm login, retry tối đa 2 lần, dừng có trạng thái",
       "regex": "nlm login[\\s\\S]*(tối đa|TỐI ĐA) 2",
+      "required": true
+    },
+    {
+      "id": "LL-VIDEO-STEP",
+      "name": "video_step_after_save_with_script",
+      "check": "bước 3.9 VIDEO dựng MP4 đồng bộ bằng scripts/lecture_video.py, dò mốc 'Phần N' bằng whisper, fail không chặn bài",
+      "regex": "3\\.9 VIDEO[\\s\\S]*lecture_video\\.py[\\s\\S]*(Phần N|word timestamps)[\\s\\S]*KHÔNG chặn bài",
+      "required": true
+    },
+    {
+      "id": "LL-VIDEO-LOCAL",
+      "name": "video_local_not_nlm_studio",
+      "check": "cấm video NLM studio (không đồng bộ) — video dựng cục bộ; transcribe chỉ cho timing",
+      "regex": "word-timestamps cho bước 3\\.9[\\s\\S]*KHÔNG tạo video bằng NLM studio[\\s\\S]*dựng CỤC BỘ",
       "required": true
     }
   ]

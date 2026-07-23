@@ -5,16 +5,20 @@ description: >-
   deck + Vietnamese audio that announces "Phần N" in lockstep with the slides. Scans
   all sources, proposes a curriculum in 3 modes (compact/full/extend), CEO picks
   lessons one by one; auto-selects sources per lesson, creates slides, extracts REAL
-  slide content, generates audio from it, verifies sync, downloads both to the vault,
-  and resumes across sessions via Curriculum.md. Triggers on: "learn lecture",
-  "lecture from notebook", "lecture series", "synced slide audio", "tạo bài giảng",
-  "bài giảng từ notebook", "tạo bộ bài giảng", "giáo trình từ notebook", "slide audio
-  đồng bộ", "bài giảng đồng bộ".
+  slide titles as a sync skeleton, generates audio from the FULL source content (not
+  the compressed slide bullets) chunked to match the slides, downloads both to the vault,
+  then builds a synchronized MP4 video (slides auto-advance at each spoken "Phần N"
+  via whisper word-timestamps), and resumes across sessions via Curriculum.md.
+  Triggers on: "learn lecture", "lecture from notebook", "lecture series", "synced
+  slide audio", "tạo bài giảng", "bài giảng từ notebook", "tạo bộ bài giảng", "giáo
+  trình từ notebook", "slide audio đồng bộ", "bài giảng đồng bộ", "video bài giảng",
+  "lecture video".
 ---
 
-Biến một NotebookLM notebook thành bộ bài giảng đồng bộ slide + audio tiếng Việt.
+Biến một NotebookLM notebook thành bộ bài giảng đồng bộ slide + audio tiếng Việt
++ video MP4 tự chuyển slide theo giọng đọc.
 
-Usage: `/learn-lecture <notebook-name-or-alias>` — flags: `--mode compact|full|extend`, `--resume`, `--lesson <N>`
+Usage: `/learn-lecture <notebook-name-or-alias>` — flags: `--mode compact|full|extend`, `--resume`, `--lesson <N>`, `--no-video`
 
 Engine: MCP `notebooklm-mcp` — `notebook_list`, `notebook_get`, `source_describe`,
 `source_get_content` (fetch text thô/nguồn — dùng cho OUTLINE), `notebook_query`
@@ -34,7 +38,7 @@ Vault root: `D:\Workshop_X\2_Areas\CEO-Self\Learning-Architecture\<notebook-slug
 
 ```
 Phase 0 INTAKE → Phase 1 SCAN → Phase 2 CURRICULUM (CEO gate)
-→ Phase 3 LESSON LOOP (per bài, 8 bước) → Phase 4 WRAP
+→ Phase 3 LESSON LOOP (per bài, 9 bước) → Phase 4 WRAP
 ```
 
 **Resume:** nếu Curriculum.md đã tồn tại cho notebook này → bỏ qua Phase 1-2, vào
@@ -95,7 +99,7 @@ tags: [#type/sop, #status/active, #topic/learning]
 
 Bài lỗi bỏ qua → ⚠ skipped kèm lý do. Tất cả ✅ → `status: completed`.
 
-### Phase 3 — LESSON LOOP (8 bước / bài)
+### Phase 3 — LESSON LOOP (9 bước / bài)
 
 ```
 3.1 PICK      CEO chọn bài (mặc định: bài pending đầu tiên)
@@ -108,30 +112,51 @@ Bài lỗi bỏ qua → ⚠ skipped kèm lý do. Tất cả ✅ → `status: com
               SLIDE (references/) — nhúng dàn ý N phần, ràng buộc "ĐÚNG N slide riêng
               biệt, không gộp, CHỈ dùng nguồn đã chọn". Poll completion QUA CLI nền
               (không gọi studio_status MCP lặp — nó dump TẤT CẢ artifact, tốn context)
-3.4 EXTRACT   download_artifact(slide_deck→PDF) về vault → Read PDF → đọc nội dung
-              slide THẬT (tiêu đề + bullet từng slide) = ground truth cho audio
+3.4 EXTRACT   download_artifact(slide_deck→PDF) về vault → Read PDF → đọc tiêu đề +
+              THỨ TỰ slide THẬT = KHUNG ĐỒNG BỘ cho audio (số phần N + tiêu đề từng
+              phần). LƯU Ý: slide chỉ là khung — nội dung audio KHÔNG lấy từ bullet
+              slide (bullet đã nén), mà lấy từ dàn ý-nguồn ở 3.2 (đầy đủ)
 3.5 VERIFY-S  So slide thật vs dàn ý duyệt: đủ N? tiêu đề khớp? PASS → 3.7
 3.6 REPAIR    lệch → tối đa 1 vòng studio_revise (hoặc tạo lại) → quay lại 3.4;
               vẫn lệch → CEO quyết: chấp nhận có ghi chú / bỏ bài (⚠ skipped)
-3.7 AUDIO     sinh prompt audio TỪ nội dung slide THẬT — không dùng lại dàn ý gốc:
-              N đoạn khớp 1-1, mỗi đoạn mở bằng "Phần N — <tiêu đề slide thật>".
-              Tự kiểm prompt đủ N callout khớp tiêu đề TRƯỚC khi gửi.
+3.7 AUDIO     sinh prompt audio với nội dung LẤY TRỰC TIẾP & ĐẦY ĐỦ TỪ NGUỒN (dàn ý-
+              nguồn 3.2 / source_get_content — chi tiết, ví dụ, số liệu, thao tác, sâu
+              hơn bullet slide), MAP lên KHUNG slide thật: N đoạn = N slide thật, mỗi
+              đoạn mở "Phần N — <tiêu đề slide THẬT>" rồi giảng đầy đủ nội dung nguồn
+              của phần đó. Nếu slide thật gộp/khác N kế hoạch → gom lại các phần dàn ý
+              cho khớp SỐ & TIÊU ĐỀ slide thật (đồng bộ ưu tiên khung slide thật).
+              Tự kiểm: mỗi đoạn khai triển từ nguồn (không chỉ đọc lại bullet) + N
+              callout khớp tiêu đề slide thật TRƯỚC khi gửi.
               studio_create(audio) — LUÔN language=vi (bắt buộc, rule /nlm; chỉ đổi
               khi CEO yêu cầu rõ tiếng Anh) → poll completion qua CLI nền
 3.8 SAVE      tải slide PDF (download_artifact) + audio (CLI `nlm download audio
               --id <aid> -o` — MCP download_artifact AUDIO hay fail) → <vault-root>\
               Bai-NN-<slug>\ + outline.md (dàn ý duyệt + slide content trích + Sync
-              Report) + cập nhật Curriculum.md → hỏi "Tạo bài tiếp theo? (bài N+1)"
+              Report)
+3.9 VIDEO     (bỏ qua nếu --no-video) dựng MP4 đồng bộ từ PDF+audio đã tải:
+              `python D:\KN-Stack\scripts\lecture_video.py --pdf <slides.pdf>
+              --audio <audio.mp3> --out <Bai-NN-video.mp4>` — tách slide→PNG,
+              faster-whisper (word timestamps, vi) dò mốc giọng đọc xướng "Phần N"
+              → slide N hiện đúng mốc đó (mốc sót → nội suy, ghi WARNING), ffmpeg
+              ghép h264+AAC cắt đúng độ dài audio, sinh syncmap.md. Transcribe
+              ~15 phút audio ≈ 3–5 phút CPU → chạy run_in_background. Ghi kết quả
+              vào Sync Report + cập nhật Curriculum.md → hỏi "Tạo bài tiếp theo?
+              (bài N+1)". Video fail → ⚠ ghi chú, KHÔNG chặn bài (slide+audio đã đủ)
 ```
 
 **Nguyên tắc đồng bộ (bất biến):**
-1. Slide trước — audio sau — audio sinh từ slide THẬT. NLM có tự gộp slide thì
-   audio vẫn khớp bộ slide thực tế.
-2. VERIFY chạy TRƯỚC khi tạo audio — không đốt 10–20 phút audio cho bộ slide hỏng.
+1. **Nội dung audio = từ NGUỒN (đầy đủ); slide = KHUNG đồng bộ.** Audio giảng chi
+   tiết theo source_get_content (ví dụ/số liệu/thao tác); slide chỉ cung cấp SỐ PHẦN
+   N + TIÊU ĐỀ để xướng "Phần N" cho người nghe lật đúng. Slide là bullet nén — audio
+   PHẢI giàu hơn slide, KHÔNG chỉ đọc lại bullet. NLM có tự gộp slide thì gom lại các
+   phần dàn ý-nguồn cho khớp SỐ & TIÊU ĐỀ slide thật.
+2. Slide trước — VERIFY trước — audio sau: VERIFY khóa KHUNG slide thật (N + tiêu đề)
+   TRƯỚC khi tạo audio — không đốt 10–20 phút audio cho khung hỏng.
 
-**Fallback 3.4:** API không trả được text slide → fallback dùng dàn ý duyệt ở 3.2
-làm nguồn audio prompt; Sync Report ghi rõ "đồng bộ mức dàn ý, chưa đối chiếu
-slide thật".
+**Fallback 3.4:** không đọc được PDF slide (không lấy được tiêu đề thật) → dùng dàn ý
+duyệt ở 3.2 vừa làm nội dung audio vừa làm khung đồng bộ; Sync Report ghi rõ "đồng bộ
+theo dàn ý kế hoạch, chưa đối chiếu tiêu đề slide thật". (Nội dung audio KHÔNG bị ảnh
+hưởng — luôn từ nguồn; chỉ khung tiêu đề là mức kế hoạch.)
 
 ### Phase 4 — WRAP
 
@@ -155,6 +180,8 @@ chạy tay 2026-07-22 (bài 1.10 Claude 101, 12 phần).
 | studio_create fail/timeout | retry 1 lần → ghi ⚠ Curriculum.md, hỏi CEO bỏ bài/dừng |
 | Slide lệch sau repair | CEO quyết — không lặp vô hạn |
 | Notebook >45 nguồn | cảnh báo ở SCAN + đề xuất chọn 1 khóa |
+| Video fail (whisper/ffmpeg) | ⚠ ghi Sync Report, giữ slide+audio, KHÔNG chặn bài |
+| Whisper sót mốc "Phần N" | script tự nội suy giữa 2 mốc kề + WARNING; syncmap ghi "nội suy" |
 
 ## Gotchas thực chiến (live-run 2026-07-22, notebook 284 nguồn)
 
@@ -167,7 +194,13 @@ chạy tay 2026-07-22 (bài 1.10 Claude 101, 12 phần).
   phút, audio ~7–8 phút.
 - **Download AUDIO:** MCP `download_artifact(audio)` hay trả "Download failed" →
   fallback CLI `nlm download audio <nb> --id <aid> --no-progress -o <path.m4a>`
-  (chạy ổn; file ~20–25MB/15 phút). Slide_deck qua MCP `download_artifact` thì OK.
+  (chạy ổn; file ~17–40MB tùy độ dài). Slide_deck qua MCP `download_artifact` thì OK.
+- **Audio propagation delay (finding #7, live-run 2026-07-23):** sau khi audio
+  `status=="completed"`, URL download có thể CHƯA live ~1–3 phút → cả CLI lẫn MCP
+  download trả "Download failed" dù đã completed (KHÔNG phải auth, KHÔNG phải fail
+  thật). Xử: retry download mỗi 30s, tối đa ~6 phút. Pattern gọn nhất = 1 script nền
+  làm cả 2 phase: poll `status==completed` → rồi retry-download tới khi thấy
+  "Downloaded" (ghi bytes ra file). Tránh gọi download foreground rồi kết luận fail sớm.
 - **studio_create prompt:** đặt full prompt vào `focus_prompt`; set `language="vi"`,
   `source_ids=[...]`, `confirm=true`, `slide_format="detailed_deck"`.
 - **CLI env:** `export PATH="$PATH:/c/Users/ADMIN/AppData/Roaming/Python/Python313/Scripts"`
@@ -180,11 +213,20 @@ chạy tay 2026-07-22 (bài 1.10 Claude 101, 12 phần).
   CHỈ khi auth OK mà audio vẫn fail mới nghĩ tới quota audio/ngày. Xử khi kẹt: lưu
   slide + Sync Report ghi audio ⚠ deferred + prompt audio 12 phần trong outline.md →
   retry đầu phiên resume sau `nlm login`. KHÔNG lặp retry mù.
+- **VIDEO (live-run 2026-07-22, Bài 1 AI Fluency 12/12 mốc):** ffmpeg KHÔNG có trên
+  PATH → dùng binary bundle của `imageio_ffmpeg.get_ffmpeg_exe()` (pip: imageio-ffmpeg,
+  pymupdf, faster-whisper — cài sẵn Python312). Whisper `info.duration` có thể NGẮN hơn
+  mp3 thật (VAD) → script tự parse Duration từ `ffmpeg -i` và cắt `-t` đúng độ dài
+  (không có -t: concat demuxer thừa ~40s slide cuối câm). Windows console cp1252 →
+  script tự wrap stdout UTF-8. Chi tiết: `references/video-build.md`.
 
 ## RULES
 
 - KHÔNG tự thêm nguồn vào notebook (việc của `/nlm add` / deep-research).
-- KHÔNG transcribe audio để kiểm chứng sâu (đồng bộ theo xây dựng là đủ).
-- KHÔNG tạo video/infographic/quiz — chỉ slide + audio.
+- KHÔNG transcribe audio để kiểm chứng NỘI DUNG (đồng bộ theo xây dựng là đủ) —
+  transcribe CHỈ để lấy word-timestamps cho bước 3.9 VIDEO.
+- KHÔNG tạo video bằng NLM studio (video artifact NLM không đồng bộ với slide deck);
+  video bài giảng dựng CỤC BỘ ở 3.9 từ chính slide+audio đã verify. KHÔNG tạo
+  infographic/quiz.
 - KHÔNG tự sản xuất bài khi CEO chưa chọn — mỗi vòng lặp có gate Core.
 - COD: SCAN + sản xuất = Offload · chọn mode, duyệt giáo trình, chọn bài, xử lệch = Core.
