@@ -1,16 +1,20 @@
 # learn-lecture — Prompt Templates
 
-Placeholder: `{{N}}` = số phần · `{{TÊN_BÀI}}` = tên bài · `{{DÀN_Ý}}` = dàn ý-nguồn
-đánh số N phần chưng cất từ source_get_content (mỗi dòng: `N. <Tiêu đề> — <ý chính,
-ví dụ, số liệu giữ nguyên>`) · `{{TIÊU_ĐỀ_SLIDE_THẬT}}` = danh sách N tiêu đề slide
-THẬT trích ở 3.4, đúng thứ tự (dùng làm callout "Phần N" cho đồng bộ) · `{{DÀN_Ý_NGUỒN}}`
-= khung N phần cho audio, mỗi dòng `N. [<tiêu đề slide thật N>] — <nội dung NGUỒN đầy
+Placeholder: `{{N}}` = số phần · `{{TÊN_BÀI}}` = tên bài · `{{PHẠM_VI}}` = khối "PHẠM VI
+BẮT BUỘC" (số mục + tiêu đề tiếng Anh gốc + khoảng trang + câu BỎ QUA phần còn lại) ·
+`{{DÀN_Ý}}` = dàn ý-nguồn đánh số N phần chưng cất từ source_get_content (mỗi dòng:
+`N. <Tiêu đề> — <ý chính, ví dụ, số liệu giữ nguyên>`) · `{{TIÊU_ĐỀ_SLIDE}}` = cột tiêu
+đề đọc từ `slide-script.md` (KHÔNG trích lại từ PDF) · `{{DÀN_Ý_NGUỒN}}` = khung N phần
+cho audio, mỗi dòng `N. [<tiêu đề slide N trong slide-script.md>] — <nội dung NGUỒN đầy
 đủ của phần đó: khái niệm, ví dụ, số liệu, thao tác>`. Nguồn: đã tick sẵn đúng
 source_ids của bài trước khi gửi prompt.
 
 **Nguyên tắc:** slide (TEMPLATE 1) nén nguồn thành bullet; audio (TEMPLATE 2) giảng
-ĐẦY ĐỦ nội dung nguồn, chỉ mượn TIÊU ĐỀ slide thật làm mốc đồng bộ. Audio phải giàu
-hơn slide, không đọc lại bullet.
+ĐẦY ĐỦ nội dung nguồn, chỉ mượn TIÊU ĐỀ từ `slide-script.md` làm mốc đồng bộ. Audio phải
+giàu hơn slide, không đọc lại bullet.
+
+**Sau khi gửi TEMPLATE 1, ghi ngay `slide-script.md`** (định dạng ở SKILL.md) từ chính
+`{{DÀN_Ý}}` vừa gửi. Từ đó trở đi mọi bước đọc file này, không mở lại PDF.
 
 ## TEMPLATE 1 — SLIDE (studio_create, artifact_type=slide_deck)
 

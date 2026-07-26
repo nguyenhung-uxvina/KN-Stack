@@ -4,8 +4,8 @@
   "description": "Binary assertions for learn-lecture — NotebookLM notebook → synced slide+audio lecture series (scan → curriculum → per-lesson produce/verify loop)",
   "mode": "static",
   "test_input": "tạo bộ bài giảng từ notebook Claude Course 2026, chế độ full",
-  "total_required": 14,
-  "passing_score": 11,
+  "total_required": 15,
+  "passing_score": 12,
   "assertions": [
     {
       "id": "LL-FRONTMATTER",
@@ -46,7 +46,7 @@
       "id": "LL-SLIDE-FIRST",
       "name": "audio_content_from_source_slide_is_sync_skeleton",
       "check": "nội dung audio lấy TỪ NGUỒN (đầy đủ), slide chỉ là KHUNG đồng bộ (N + tiêu đề); audio phải giàu hơn bullet slide",
-      "regex": "Nội dung audio = từ NGUỒN[\\s\\S]{0,60}slide = KHUNG[\\s\\S]*(giàu hơn slide|KHÔNG chỉ đọc lại bullet)",
+      "regex": "Nội dung audio = từ NGUỒN[\\s\\S]{0,60}slide-script = KHUNG[\\s\\S]*(giàu hơn slide|KHÔNG chỉ đọc lại bullet)",
       "required": true
     },
     {
@@ -79,9 +79,16 @@
     },
     {
       "id": "LL-FALLBACK",
-      "name": "extract_fallback_outline_sync_note",
-      "check": "fallback khi không đọc được PDF slide: dùng dàn ý kế hoạch làm khung đồng bộ, Sync Report ghi rõ; nội dung audio vẫn từ nguồn",
-      "regex": "Fallback 3\\.4[\\s\\S]*dàn ý[\\s\\S]*(đồng bộ theo dàn ý kế hoạch|chưa đối chiếu tiêu đề slide thật)",
+      "name": "title_fallback_only_when_page_count_mismatch",
+      "check": "PDF slide của NLM không có text layer → fallback render contact sheet để đọc tiêu đề THẬT, chỉ dùng khi lệch số trang, rồi SỬA slide-script.md cho khớp",
+      "regex": "Fallback 3\\.5[\\s\\S]*(text layer|get_text\\(\\) trả rỗng)[\\s\\S]*(contact\\s*sheet|SỬA slide-script\\.md cho khớp slide thật)",
+      "required": true
+    },
+    {
+      "id": "LL-MARKS-ONCE",
+      "name": "marker_timestamps_detected_once_and_persisted",
+      "check": "3.8 dò mốc 'Phần N' MỘT LẦN bằng --detect-only → <audio>.marks.json; 3.9 VIDEO đọc file đó, KHÔNG transcribe lại",
+      "regex": "--detect-only[\\s\\S]*marks\\.json[\\s\\S]*3\\.9 VIDEO[\\s\\S]*KHÔNG transcribe lại",
       "required": true
     },
     {
@@ -101,8 +108,8 @@
     {
       "id": "LL-VIDEO-LOCAL",
       "name": "video_local_not_nlm_studio",
-      "check": "cấm video NLM studio (không đồng bộ) — video dựng cục bộ; transcribe chỉ cho timing",
-      "regex": "word-timestamps cho bước 3\\.9[\\s\\S]*KHÔNG tạo video bằng NLM studio[\\s\\S]*dựng CỤC BỘ",
+      "check": "cấm video NLM studio (không đồng bộ) — video dựng cục bộ; transcribe chỉ để lấy mốc timing, chỉ 1 lần ở 3.8",
+      "regex": "word-timestamps[\\s\\S]{0,200}CHỈ MỘT LẦN ở 3\\.8[\\s\\S]*KHÔNG tạo video bằng NLM studio[\\s\\S]*dựng CỤC BỘ",
       "required": true
     }
   ]
