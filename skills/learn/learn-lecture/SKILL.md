@@ -171,7 +171,13 @@ Bài lỗi bỏ qua → ⚠ skipped kèm lý do. Tất cả ✅ → `status: com
               "Phần N"). N lấy từ slide-script.md — KHÔNG cần PDF ở bước này.
               Đây là mốc chuẩn dùng cho MỌI lần dựng video sau này. In ra số mốc
               tìm được / thiếu → ghi vào Sync Report NGAY (biết sớm hỏng đồng bộ,
-              trước khi tốn công dựng video)
+              trước khi tốn công dựng video).
+              ⚠️ **KIỂM MỐC KHỚP NỘI DUNG — BẮT BUỘC, KHÔNG BỎ:** in transcript tại
+              từng mốc vừa dò và đối chiếu với tiêu đề trong `slide-script.md`.
+              `found == N` KHÔNG đủ: đã gặp ca audio tự bịa cấu trúc phần của riêng
+              nó, xướng "phần 6" rồi giảng nội dung phần 10 → mốc đủ số nhưng video
+              lệch slide toàn bộ nửa sau (lỗi im lặng, chỉ lộ khi xem hết video).
+              Mốc sai nội dung → xử như hỏng: sinh lại audio, KHÔNG vá.
 3.9 VIDEO     (bỏ qua nếu --no-video) dựng MP4 đồng bộ từ PDF+audio+marks đã có:
               `python D:\KN-Stack\scripts\lecture_video.py --pdf <slides.pdf>
               --audio <audio.mp3> --out <Bai-NN-video.mp4>` — ĐỌC `<audio>.marks.json`
@@ -185,6 +191,12 @@ Bài lỗi bỏ qua → ⚠ skipped kèm lý do. Tất cả ✅ → `status: com
               Ghi kết quả vào Sync Report + cập nhật Curriculum.md → hỏi "Tạo bài
               tiếp theo? (bài N+1)". Video fail → ⚠ ghi chú, KHÔNG chặn bài
               (slide+audio+marks đã đủ, dựng lại bất cứ lúc nào không tốn whisper)
+3.9b VERIFY-V ĐỌC syncmap vừa sinh và kiểm 2 điều — 10 giây, bắt được lỗi lệch
+              toàn cục mà mắt thường chỉ thấy khi xem hết video:
+              (a) **slide 1 PHẢI bắt đầu 0:00**. Khác 0 = cả dải slide chạy SỚM
+                  đúng bằng offset đó (xem "Bẫy --timings" ở Gotchas).
+              (b) mốc slide cuối < độ dài audio, và các mốc tăng dần.
+              Sai (a) hoặc (b) → dựng lại, KHÔNG giao video cho người học.
 ```
 
 ### slide-script.md — hợp đồng đồng bộ
@@ -236,6 +248,12 @@ giữ **tên** các phần; marks.json giữ **mốc giây** các phần. Dò M�
   riêng, KHÔNG transcribe lần hai.
 
 **Nguyên tắc đồng bộ (bất biến):**
+0. **Dải slide phải phủ đúng audio: slide 1 bắt đầu 0:00, tổng thời lượng = độ dài audio.**
+   Ảnh luôn phát từ t=0, nên MỌI mốc chỉ có nghĩa khi slide 1 neo ở 0. Mốc nội dung của
+   slide 1 (chỗ audio hết mở đầu) KHÔNG phải điểm bắt đầu của slide 1 — phần mở đầu
+   thuộc về slide 1. Điền mốc đó vào ô đầu tiên = đẩy TOÀN BỘ slide chạy sớm bằng
+   đúng offset ấy. Script nay tự ép về 0 + WARNING, và chặn build nếu tổng thời lượng
+   lệch audio > 1s; vẫn phải tự kiểm ở 3.9b vì đây là lỗi im lặng, xem video mới thấy.
 1. **Nội dung audio = từ NGUỒN (đầy đủ); slide-script = KHUNG đồng bộ.** Audio giảng chi
    tiết theo source_get_content (ví dụ/số liệu/thao tác); script chỉ cung cấp SỐ PHẦN
    N + TIÊU ĐỀ để xướng "Phần N" cho người nghe lật đúng. Slide là bullet nén — audio
@@ -272,15 +290,54 @@ chạy tay 2026-07-22 (bài 1.10 Claude 101, 12 phần).
 |---|---|
 | Auth hết phiên | `nlm login` → retry tối đa 2 → dừng có trạng thái |
 | Không thấy notebook | fuzzy match → CEO xác nhận |
-| studio_create fail/timeout | retry 1 lần → ghi ⚠ Curriculum.md, hỏi CEO bỏ bài/dừng |
+| studio_create fail/timeout | **KIỂM `nlm studio status <nb>` TRƯỚC** — timeout MCP thường vẫn tạo xong artifact (xem Gotchas). Chỉ khi status không có artifact mới → retry 1 lần → ghi ⚠ Curriculum.md, hỏi CEO bỏ bài/dừng |
 | Slide lệch sau repair | CEO quyết — không lặp vô hạn |
 | Notebook >45 nguồn | cảnh báo ở SCAN + đề xuất chọn 1 khóa |
 | Video fail (whisper/ffmpeg) | ⚠ ghi Sync Report, giữ slide+audio+marks, KHÔNG chặn bài |
 | Whisper sót mốc "Phần N" | 3.8 in ra `missing` NGAY → điền tay vào `marks` (giây hoặc "mm:ss"); không sửa thì 3.9 nội suy giữa 2 mốc kề + WARNING, syncmap ghi "nội suy" |
 | Audio sinh lại (bài làm lại) | `audio_bytes` lệch → script tự dò lại + WARNING (không dùng nhầm mốc audio cũ). Ép: `--redetect` |
-| Audio không xướng "Phần N" | 3.8 báo `found: [1]` → đọc `<audio>.transcript.txt` (đã sinh sẵn) → điền `marks` tay theo nội dung (hoặc dựng bằng `--timings`) |
+| Audio không xướng "Phần N" | 3.8 báo `found: [1]` → đọc `<audio>.transcript.txt` (đã sinh sẵn). **Transcript ĐÚNG THỨ TỰ** → điền `marks` tay theo nội dung (rẻ, tất định). **Transcript ĐẢO thứ tự hoặc MẤT phần** → SINH LẠI, vá sẽ ra video đúng mốc nhưng sai slide |
+| Audio ra podcast 2 giọng | Bình thường, ~2/3 số lần. Sinh lại; ngân sách ~3 lượt/bài. Đừng sửa prompt/format/length để "trị" — đã loại hết bằng thực nghiệm (xem gotcha "xổ số ~1/3") |
+| Mốc đủ số nhưng lệch nội dung | Audio tự bịa cấu trúc phần riêng → mốc GIẢ. Xử như hỏng: sinh lại, KHÔNG vá |
 
 ## Gotchas thực chiến (live-run 2026-07-22, notebook 284 nguồn)
+
+- **BẪY `--timings`: giá trị đầu tiên phải là 0, nếu không CẢ DẢI SLIDE CHẠY SỚM
+  (bug thật 2026-07-28, 5 video khoá cowork-persona-sinhvien lệch 74–111 giây).**
+  Triệu chứng CEO thấy: "slide chuyển sớm hơn lời", lệch đều từ đầu tới cuối video —
+  không phải lệch vài giây ở một mốc. Nguyên nhân: khi đọc transcript để đặt mốc nội
+  dung, ta ghi cả mốc của slide 1 (chỗ hết phần mở đầu, ví dụ 1:28) rồi truyền vào
+  `--timings` làm giá trị đầu; nhưng ảnh luôn phát từ t=0 nên slide 1 bị rút ngắn đúng
+  88s và mọi slide sau dồn lên sớm 88s. Marks-file KHÔNG dính (luôn ép slide 1 = 0).
+  Đã vá trong `lecture_video.py`: `explicit_timings()` ép về 0 + WARNING, chặn mốc lùi,
+  và main() từ chối build nếu slide 1 ≠ 0 hoặc tổng thời lượng lệch audio > 1s.
+  Test hồi quy: `scripts/` (case A1 88s → 0). **Vẫn phải làm 3.9b VERIFY-V** vì lỗi cùng
+  loại (nhầm nghĩa mốc) có thể tái xuất ở đường khác.
+
+- **🎲 BƯỚC AUDIO LÀ XỔ SỐ ~1/3 — ĐỪNG ĐI TÌM "NGUYÊN NHÂN" (live-run 2026-07-29→31,
+  21 lần sinh + 4 thí nghiệm có đối chứng).** `studio_create(audio)` đôi khi trả đúng một
+  giọng giảng bài xướng "Phần N", đôi khi trả **podcast 2 giọng** ("Chào mừng đến với phiên
+  đào sâu hôm nay…") không xướng mốc nào, ĐẢO thứ tự các phần, hoặc CẮT hẳn vài phần cuối.
+  Tỉ lệ ăn đo được **~30–40%**, và **KHÔNG có tham số nào điều khiển được**. Đã thử và LOẠI
+  bằng thực nghiệm — đừng thử lại:
+  | Giả thuyết | Phản chứng |
+  |---|---|
+  | Siết prompt (cấm podcast, ép câu đầu, cấm tự đánh số) | Bài dùng ĐÚNG prompt vừa thắng ở bài trước → vẫn hỏng |
+  | Giảm số phần / giảm tải mỗi bài | Bài 6 phần, 6,5K ký tự → vẫn hỏng (trong khi bài 13 phần có lần ăn) |
+  | `audio_format="brief"` | Giữ cấu trúc hoàn hảo (6/6 mốc) NHƯNG chỉ ra 2 phút kiểu điện tín — không dùng làm bài giảng được |
+  | `audio_format="critique"` | Hỏng y như deep_dive |
+  | `audio_length="default"` | Ăn ở bài 6 phần, TRƯỢT ở bài 13 phần |
+  **Cách làm đúng:** coi đây là bước chập chờn có ngân sách **~3 lượt sinh/bài**; 3.8 là cổng
+  kiểm (biết hỏng TRƯỚC khi tốn công dựng video); `found < N` mà transcript đi ĐÚNG THỨ TỰ
+  thì vá mốc tay (rẻ, tất định); transcript ĐẢO thứ tự hoặc MẤT phần thì phải sinh lại, vá
+  sẽ ra video "đúng mốc nhưng sai slide". Giữ bản hỏng thành `_vN-podcast-*` để đối chiếu.
+
+- **⚠️ `found == N` CHƯA ĐỦ để kết luận đồng bộ — phải soi MỐC KHỚP NỘI DUNG.** Live-run
+  2026-07-30: một bản audio báo `found` 6/12 nghe rất khá, nhưng soi transcript thì là **MỐC
+  GIẢ** — audio tự bịa cấu trúc 6 phần của riêng nó, xướng "chuyển sang phần 6" rồi giảng
+  nội dung phần 10 trong slide-script. Dựng theo mốc đó ra video lệch slide toàn bộ nửa sau,
+  và đây là lỗi IM LẶNG (chỉ lộ khi xem hết video). **Bắt buộc ở 3.8:** in transcript tại
+  từng mốc và đối chiếu với tiêu đề trong `slide-script.md` trước khi sang 3.9.
 
 - **OUTLINE:** `notebook_query` timeout 120s / "Connection closed" trên notebook lớn
   → LUÔN dùng `source_get_content` (raw, tức thì) cho OUTLINE. notebook_query chỉ khi
@@ -294,6 +351,12 @@ chạy tay 2026-07-22 (bài 1.10 Claude 101, 12 phần).
   sinh, cả CLI lẫn MCP đều báo `status: "unknown"` chứ không phải `in_progress`, và
   `summary.in_progress` vẫn đếm 0 — dễ kết luận nhầm là xong hoặc lỗi. Tín hiệu đáng
   tin duy nhất: `status=="completed"`, hoặc download thành công (file có bytes).
+- **`studio_create` (MCP) có thể TREO rất lâu rồi trả timeout DÙ ĐÃ TẠO XONG artifact
+  (live-run 2026-07-31):** gọi `studio_create(audio)` bị treo ~38 phút → harness abort với
+  "sent no response or progress"; nhưng `nlm studio status <nb>` cho thấy audio đã
+  `completed`. TUYỆT ĐỐI KHÔNG kick lại (đốt quota audio + sinh artifact trùng). Xử:
+  liệt kê `studio status` lấy artifact_id mới nhất đúng type → download bình thường.
+  Cùng họ với bẫy `unknown`: chỉ `completed`/file-có-bytes mới là tín hiệu thật.
 - **`source_get_content` có thể vượt giới hạn token của tool** — nguồn PDF ~100 trang
   trả ~220K ký tự, tool ghi ra file thay vì trả nội dung. Cách xử: python đọc file JSON
   (`{content, title, char_count}`), tìm offset của chương cần bằng `re.finditer` trên
@@ -310,8 +373,12 @@ chạy tay 2026-07-22 (bài 1.10 Claude 101, 12 phần).
   làm cả 2 phase: poll `status==completed` → rồi retry-download tới khi thấy
   "Downloaded" (ghi bytes ra file). Tránh gọi download foreground rồi kết luận fail sớm.
 - **studio_create prompt:** đặt full prompt vào `focus_prompt`; set `language="vi"`,
-  `source_ids=[...]`, `confirm=true`, `slide_format="detailed_deck"`. Audio dài:
-  `audio_format="deep_dive"`, `audio_length="long"`.
+  `source_ids=[...]`, `confirm=true`, `slide_format="detailed_deck"`. Audio:
+  `audio_format="deep_dive"` (các format khác đã thử và loại — xem gotcha "xổ số ~1/3"),
+  `audio_length="long"` cho bài ≥10 phần, `"default"` cho bài ≤8 phần. **LƯU Ý: hai giá trị
+  length này KHÔNG quyết định thành bại** — chỉ là chọn độ dài mong muốn, đừng kỳ vọng đổi
+  length sẽ sửa được lỗi podcast (đã kiểm chứng: `default` ăn ở bài 6 phần, trượt ở bài
+  13 phần).
 - **Ghim phạm vi khi nguồn là chunk nhiều chương:** nguồn thường là 1 file ~100 trang
   chứa vài chương. Trong `focus_prompt` phải có 1 khối "PHẠM VI BẮT BUỘC" nêu số mục +
   tiêu đề tiếng Anh gốc + khoảng trang + câu "BỎ QUA HOÀN TOÀN mọi nội dung khác trong
