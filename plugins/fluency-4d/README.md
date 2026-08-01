@@ -27,9 +27,13 @@ Vòng dùng bình thường: `preflight` trước việc lớn → làm việc �
 
 ## Import vào Cowork
 
-Copy nguyên thư mục `plugins/fluency-4d/` (gồm `.claude-plugin/plugin.json` + `skills/`) vào thư mục
-plugin của Cowork, hoặc trỏ marketplace của Cowork tới repo `KN-Stack` này. Sau khi import, xác nhận
-**ba skill xuất hiện**: `fluency-4d-preflight`, `fluency-4d-review`, `fluency-4d-weekly`.
+Copy nguyên thư mục `plugins/fluency-4d/` (gồm `.claude-plugin/plugin.json` + `skills/` + `templates/`)
+vào thư mục plugin của Cowork, hoặc trỏ marketplace của Cowork tới repo `KN-Stack` này. Sau khi import,
+xác nhận **ba skill xuất hiện**: `fluency-4d-preflight`, `fluency-4d-review`, `fluency-4d-weekly`.
+
+Copy **nguyên cây**, đừng copy lẻ từng thư mục skill: `skills/_shared/references/` phải nằm cạnh ba
+thư mục skill thì đường dẫn `../_shared/references/…` trong `SKILL.md` mới resolve được. Xong bước
+import thì làm tiếp mục **Khởi tạo sổ điểm** bên dưới — plugin không tự dựng sổ.
 
 Plugin không chứa Python/hook/MCP — chỉ Markdown + JSON — nên không có bước cài đặt phụ thuộc nào khác.
 
@@ -40,16 +44,56 @@ Cấp quyền **đọc/ghi** thư mục sổ điểm: `D:\Workshop_X\2_Areas\CEO
 `fluency-4d-weekly` không chạy được — cả hai đều đọc/ghi trực tiếp vào thư mục này.
 `fluency-4d-preflight` chỉ cần quyền đọc `experiments.md` (không ghi gì).
 
+## Khởi tạo sổ điểm — làm MỘT LẦN trước phiên đầu tiên
+
+Plugin không tự dựng sổ khi import. Trước lần chạy `fluency-4d-review` đầu tiên, tạo ba thứ sau
+(`fluency-4d-review` Bước 6 cũng tự tạo nếu thiếu, nhưng làm tay trước thì chắc hơn và không phụ
+thuộc quyền ghi thư mục mới):
+
+```bash
+mkdir -p "D:/Workshop_X/2_Areas/CEO-Self/AI-Fluency-Ledger/weekly"
+: > "D:/Workshop_X/2_Areas/CEO-Self/AI-Fluency-Ledger/sessions.jsonl"
+cp plugins/fluency-4d/templates/experiments.md \
+   "D:/Workshop_X/2_Areas/CEO-Self/AI-Fluency-Ledger/experiments.md"
+```
+
+`templates/experiments.md` là bản mẫu đi kèm plugin: nó mang **đúng dòng tiêu đề 8 cột**
+(`ID | ô mục tiêu | câu nếu–thì | streak | đứt | trạng thái | ngày mở | ngày đóng`) mà
+`scripts/fluency_4d_lint.py` đọc được. Đừng để AI tự bịa bảng — sai một cột là cả bảng không parse
+được và `fluency-4d-weekly` mất luôn tình trạng streak. `sessions.jsonl` bắt đầu bằng file rỗng
+(0 byte), không phải `[]`.
+
 ## Dùng trong Claude Code
 
-Ba skill được junction vào `~/.claude/commands/` (Windows: `C:\Users\Admin\.claude\commands\`),
+Bốn thư mục được junction vào `~/.claude/commands/` (Windows: `C:\Users\Admin\.claude\commands\`),
 trỏ thẳng về thư mục trong `KN-Stack` này — sửa `SKILL.md` ở đây có hiệu lực ngay, không cần cài lại:
 
 ```
 C:\Users\Admin\.claude\commands\fluency-4d-preflight → D:\KN-Stack\plugins\fluency-4d\skills\fluency-4d-preflight
-C:\Users\Admin\.claude\commands\fluency-4d-review     → D:\KN-Stack\plugins\fluency-4d\skills\fluency-4d-review
-C:\Users\Admin\.claude\commands\fluency-4d-weekly     → D:\KN-Stack\plugins\fluency-4d\skills\fluency-4d-weekly
+C:\Users\Admin\.claude\commands\fluency-4d-review    → D:\KN-Stack\plugins\fluency-4d\skills\fluency-4d-review
+C:\Users\Admin\.claude\commands\fluency-4d-weekly    → D:\KN-Stack\plugins\fluency-4d\skills\fluency-4d-weekly
+C:\Users\Admin\.claude\commands\_shared              → D:\KN-Stack\plugins\fluency-4d\skills\_shared
 ```
+
+**Junction `_shared` là BẮT BUỘC, không phải tuỳ chọn.** Ba `SKILL.md` trỏ tới file tham chiếu bằng
+đường dẫn tương đối `../_shared/references/…`. Khi chạy qua junction, mỗi skill nằm trực tiếp dưới
+`~/.claude/commands/`, nên `..` không còn là `skills/` của plugin mà là chính `~/.claude/commands/`.
+Thiếu junction thứ tư này thì `../_shared/references/` không tồn tại — skill sẽ chạy **không có
+rubric và không có profile**, vẫn in ra một báo cáo trông đầy đủ. Có junction thì cùng một đường dẫn
+tương đối resolve đúng ở **cả hai** kiểu triển khai (junction rời và cây plugin nguyên vẹn trong
+Cowork), nên không `SKILL.md` nào phải sửa. Ba `SKILL.md` cũng đã có chốt "đọc không được thì DỪNG"
+để lỗi này không còn im lặng nữa.
+
+Tạo/kiểm cả bốn junction bằng đúng công cụ của repo — `setup.sh` đã biết đi vào `plugins/*/skills/*/`,
+không phải bước tay:
+
+```bash
+bash setup.sh --install    # tạo junction còn thiếu (bỏ qua cái đã có)
+bash setup.sh --verify     # báo "All 4 plugin skill dirs verified"
+```
+
+⚠️ `bash setup.sh --unlink` gỡ **cả bốn** junction này cùng với các skill khác. Sau `--unlink`, chạy
+lại `--install` để dựng lại; đừng dựng tay từng cái rồi quên mất `_shared`.
 
 Gọi bằng `/fluency-4d-preflight`, `/fluency-4d-review`, `/fluency-4d-weekly` (hoặc các cụm trigger
 tiếng Việt/Anh khai trong `description` của từng `SKILL.md`).
@@ -62,8 +106,25 @@ sửa theo tổ chức. Để phát cho tổ chức khác:
 1. Chép `skills/_shared/references/profile-workshop-x.md` → `profile-<tên tổ chức>.md`.
 2. Giữ nguyên khung mỗi khối: `## <mã ô>` + đúng ba trường `**Tín hiệu:**` / `**Cờ đỏ:**` / `**Ví dụ ngành:**`
    cho đủ 12 mã ô, đúng thứ tự canonical.
-3. Đổi dòng trỏ tới file profile trong cả ba `SKILL.md` (`fluency-4d-preflight`, `fluency-4d-review`,
-   `fluency-4d-weekly`) từ `profile-workshop-x.md` sang `profile-<tên tổ chức>.md`.
+3. Đổi dòng trỏ tới file profile trong **đúng hai** `SKILL.md` — `fluency-4d-preflight` và
+   `fluency-4d-review` — từ `profile-workshop-x.md` sang `profile-<tên tổ chức>.md`.
+   `fluency-4d-weekly` **không** trỏ tới profile và không cần sửa: nó chỉ đọc sổ điểm, không chấm ô nào.
+
+### Giới hạn của việc đổi profile — đọc trước khi hứa với ai
+
+Đổi profile chỉ thay được **tầng tín hiệu chấm điểm** (tín hiệu / cờ đỏ / ví dụ ngành cho 12 ô).
+Những thứ sau vẫn **hardcode trong `SKILL.md`** và phải sửa tay cho từng tổ chức:
+
+| Thứ còn dính Workshop X | Nằm ở đâu |
+|---|---|
+| Đường dẫn sổ điểm `D:\Workshop_X\2_Areas\CEO-Self\AI-Fluency-Ledger\` | cả ba `SKILL.md` (và README này) |
+| Chữ **"CEO"** làm tên vai người dùng | cả ba `SKILL.md` |
+| Chữ **"MẬT"** trong ví dụ cờ đỏ Diligence | `fluency-4d-review/SKILL.md` |
+| Danh sách khung quy trình **"3-Gate, VDI 2225, ODI, Pahl-Beitz"** | `fluency-4d-preflight/SKILL.md` |
+
+Nghĩa là **D4 ("đổi profile là phát cho tổ chức khác dùng được") mới đúng một nửa**: rubric lõi thật
+sự trung lập ngành và không phải đụng, nhưng ba skill thì chưa. Nâng bốn mục trên lên thành trường
+của profile là một đợt tái cấu trúc riêng, **cố ý chưa làm trong đợt này**.
 
 ## Bảo trì
 
@@ -75,7 +136,10 @@ python -m pytest scripts/test_fluency_4d.py -v
 
 Bộ test (nằm ngoài plugin, ở `scripts/`, vì plugin phải thuần Markdown/JSON) khớp-chéo bốn file tham
 chiếu với nhau qua `scripts/fluency_4d_lint.py` — rubric trung lập ngành, profile phủ đủ 12 ô, schema
-sổ điểm hợp lệ, vòng đời thí nghiệm (streak/đứt/WIP=1) đúng luật. Ba eval tĩnh
+sổ điểm hợp lệ, vòng đời thí nghiệm (streak/đứt/WIP=1) đúng luật. `lint_skills()` soi thêm chính ba
+`SKILL.md`: mọi `../_shared/references/<file>.md` được trích dẫn phải tồn tại thật, và đường dẫn sổ
+điểm phải giống hệt nhau ở mọi file `.md` của plugin (kể cả README này) — đây là chốt bắt được lỗi
+"trỏ tới file tham chiếu không có thật". Ba eval tĩnh
 (`evals/fluency-4d-review.json`, `evals/fluency-4d-preflight.json`, `evals/fluency-4d-weekly.json`)
 chạy qua `bash evals/run-eval.sh <skill-name>` để audit nội dung `SKILL.md`.
 
