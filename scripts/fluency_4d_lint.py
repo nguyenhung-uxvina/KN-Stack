@@ -65,6 +65,15 @@ _FIELD_RE = {
     "tin_hieu": re.compile(r"\*\*Tín hiệu:\*\*(.*?)(?=\*\*|\Z)", re.DOTALL),
     "co_do": re.compile(r"\*\*Cờ đỏ:\*\*(.*?)(?=\*\*|\Z)", re.DOTALL),
     "vi_du": re.compile(r"\*\*Ví dụ ngành:\*\*(.*?)(?=\*\*|\Z)", re.DOTALL),
+    "cai_tien": re.compile(r"\*\*Cách cải tiến tại chỗ:\*\*(.*?)(?=\*\*|\Z)", re.DOTALL),
+}
+
+# Playbook cải tiến: cùng khung `## <mã ô>`, bốn trường khác.
+_PLAYBOOK_FIELD_RE = {
+    "cach": re.compile(r"\*\*Cách cải tiến:\*\*(.*?)(?=\*\*|\Z)", re.DOTALL),
+    "dau_hieu": re.compile(r"\*\*Dấu hiệu đã ăn:\*\*(.*?)(?=\*\*|\Z)", re.DOTALL),
+    "bay": re.compile(r"\*\*Bẫy thường gặp:\*\*(.*?)(?=\*\*|\Z)", re.DOTALL),
+    "ceo": re.compile(r"\*\*CEO phải tự chốt:\*\*(.*?)(?=\*\*|\Z)", re.DOTALL),
 }
 
 
@@ -88,7 +97,8 @@ def lint_profile(text: str) -> list[str]:
         if cell not in blocks:
             errors.append(f"profile thiếu khối cho ô: {cell}")
             continue
-        for key, label in (("tin_hieu", "Tín hiệu"), ("co_do", "Cờ đỏ"), ("vi_du", "Ví dụ ngành")):
+        for key, label in (("tin_hieu", "Tín hiệu"), ("co_do", "Cờ đỏ"),
+                           ("vi_du", "Ví dụ ngành"), ("cai_tien", "Cách cải tiến tại chỗ")):
             if not blocks[cell][key].strip():
                 errors.append(f"profile ô {cell} thiếu trường: {label}")
     for cell in blocks:
@@ -102,6 +112,43 @@ def lint_profile(text: str) -> list[str]:
     if "0-3" in text or "0–3" in text:
         errors.append("profile không được định nghĩa lại thang điểm (tìm thấy '0-3' hoặc '0–3')")
 
+    return errors
+
+
+def parse_playbook(text: str) -> dict[str, dict[str, str]]:
+    """Trả {mã ô: {cach, dau_hieu, bay, ceo}} từ improvement-playbook.md."""
+    out: dict[str, dict[str, str]] = {}
+    for cell, body in _PROFILE_BLOCK_RE.findall(text):
+        out[cell] = {
+            key: (m.group(1).strip() if (m := rx.search(body)) else "")
+            for key, rx in _PLAYBOOK_FIELD_RE.items()
+        }
+    return out
+
+
+def lint_playbook(text: str) -> list[str]:
+    """Kiểm playbook cải tiến: đủ 12 ô, đủ bốn trường, trung lập ngành.
+
+    Playbook là MENU CỐ ĐỊNH để weekly chọn dòng. Thiếu ô nào thì ô đó
+    weekly không có gì để in — và luật cấm weekly tự chế cách cải tiến,
+    nên thiếu ở đây là thiếu thật, không phải AI ứng biến bù được.
+    """
+    errors: list[str] = []
+    blocks = parse_playbook(text)
+    for cell in CELLS:
+        if cell not in blocks:
+            errors.append(f"playbook thiếu khối cho ô: {cell}")
+            continue
+        for key, label in (("cach", "Cách cải tiến"), ("dau_hieu", "Dấu hiệu đã ăn"),
+                           ("bay", "Bẫy thường gặp"), ("ceo", "CEO phải tự chốt")):
+            if not blocks[cell][key].strip():
+                errors.append(f"playbook ô {cell} thiếu trường: {label}")
+    for cell in blocks:
+        if cell not in CELLS:
+            errors.append(f"playbook có ô lạ: {cell}")
+    for bad in _RUBRIC_FORBIDDEN:
+        if bad in text:
+            errors.append(f"improvement-playbook.md phải trung lập ngành, tìm thấy: {bad!r}")
     return errors
 
 

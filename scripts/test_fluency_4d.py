@@ -1,5 +1,6 @@
 """pytest cho linter plugin fluency-4d."""
 import importlib.util
+import re
 import sys
 from pathlib import Path
 
@@ -49,11 +50,20 @@ def test_profile_covers_every_rubric_cell():
     assert sorted(lint.parse_profile(PROFILE)) == sorted(lint.CELLS)
 
 
-def test_profile_blocks_have_three_required_fields():
+def test_profile_blocks_have_four_required_fields():
     for cell, block in lint.parse_profile(PROFILE).items():
         assert block["tin_hieu"].strip(), f"{cell} thiếu Tín hiệu"
         assert block["co_do"].strip(), f"{cell} thiếu Cờ đỏ"
         assert block["vi_du"].strip(), f"{cell} thiếu Ví dụ ngành"
+        assert block["cai_tien"].strip(), f"{cell} thiếu Cách cải tiến tại chỗ"
+
+
+def test_profile_lint_flags_missing_improvement_field():
+    """Negative: mất trường cải tiến tại chỗ thì lớp riêng của tổ chức rỗng."""
+    dirty = re.sub(r"\*\*Cách cải tiến tại chỗ:\*\*[^\n]*",
+                   "**Cách cải tiến tại chỗ:**", PROFILE, count=1)
+    errors = lint.lint_profile(dirty)
+    assert any("Cách cải tiến tại chỗ" in e for e in errors), errors
 
 
 def test_profile_is_clean():
@@ -68,6 +78,58 @@ def test_profile_lint_flags_scale_redefinition():
 def test_profile_lint_flags_missing_cell():
     dirty = PROFILE.replace("## dil.deployment", "## dil.xxx", 1)
     assert any("dil.deployment" in e for e in lint.lint_profile(dirty))
+
+
+PLAYBOOK = (lint.REF_DIR / "improvement-playbook.md").read_text(encoding="utf-8")
+
+
+def test_playbook_covers_every_rubric_cell():
+    assert sorted(lint.parse_playbook(PLAYBOOK)) == sorted(lint.CELLS)
+
+
+def test_playbook_blocks_have_four_required_fields():
+    for cell, block in lint.parse_playbook(PLAYBOOK).items():
+        assert block["cach"].strip(), f"{cell} thiếu Cách cải tiến"
+        assert block["dau_hieu"].strip(), f"{cell} thiếu Dấu hiệu đã ăn"
+        assert block["bay"].strip(), f"{cell} thiếu Bẫy thường gặp"
+        assert block["ceo"].strip(), f"{cell} thiếu CEO phải tự chốt"
+
+
+def test_playbook_is_clean():
+    assert lint.lint_playbook(PLAYBOOK) == []
+
+
+def test_playbook_stays_vendor_neutral():
+    """Playbook là tầng lõi — ví dụ riêng tổ chức thuộc về profile, không thuộc đây."""
+    for bad in lint._RUBRIC_FORBIDDEN:
+        assert bad not in PLAYBOOK, f"playbook lẫn tín hiệu riêng ngành: {bad!r}"
+
+
+def test_playbook_lint_flags_deleted_row():
+    """Negative: xoá một mục playbook thì lint phải kêu.
+
+    Weekly bị cấm tự chế cách cải tiến, nên mục biến mất KHÔNG được AI ứng biến bù.
+    Mất mục = mất thật, và cổng phải bắt trước khi tới tay người dùng.
+    """
+    dirty = PLAYBOOK.replace("## dis.process", "## dis.xxx", 1)
+    errors = lint.lint_playbook(dirty)
+    assert any("dis.process" in e for e in errors), errors
+
+
+def test_playbook_lint_flags_missing_ceo_field():
+    """Negative: mất trường 'CEO phải tự chốt' = mất ranh giới không uỷ thác được."""
+    dirty = re.sub(r"\*\*CEO phải tự chốt:\*\*[^\n]*",
+                   "**CEO phải tự chốt:**", PLAYBOOK, count=1)
+    errors = lint.lint_playbook(dirty)
+    assert any("CEO phải tự chốt" in e for e in errors), errors
+
+
+def test_weekly_cites_the_playbook():
+    """Weekly trước đây không trích dẫn file tham chiếu nào nên nằm ngoài mọi guard
+    đường dẫn. Trích dẫn playbook kéo nó vào cùng vòng canh với hai skill kia."""
+    text = (lint.SKILLS_ROOT / "fluency-4d-weekly" / "SKILL.md").read_text(encoding="utf-8")
+    cited = {ref for _, ref in lint._REF_CITE_RE.findall(text)}
+    assert "improvement-playbook.md" in cited, cited
 
 
 import copy

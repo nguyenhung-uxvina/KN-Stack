@@ -1,10 +1,10 @@
 {
   "skill": "fluency-4d-weekly",
-  "version": "1.3",
+  "version": "1.4",
   "description": "Binary assertions cho tổng hợp tuần 4D",
   "mode": "static",
-  "total_required": 8,
-  "passing_score": 8,
+  "total_required": 15,
+  "passing_score": 15,
   "assertions": [
     {
       "id": "4DW-WINDOW",
@@ -60,6 +60,55 @@
       "name": "declares_cod_split",
       "check": "phải khai báo COD: Offload (AI tổng hợp) và Core (CEO chốt D ưu tiên) — chốt D là quyết định của CEO, không phải của AI",
       "regex": "\\*\\*COD:\\*\\*[\\s\\S]{0,20}Offload[\\s\\S]{0,40}Core[\\s\\S]{0,30}chốt D",
+      "required": true
+    },
+    {
+      "id": "4DW-REFPATH",
+      "name": "cites_playbook_by_exact_path",
+      "check": "phải trỏ playbook bằng đường dẫn đầy đủ ../fluency-4d-shared/references/improvement-playbook.md — trước đây weekly không trích dẫn file tham chiếu nào nên nằm ngoài mọi guard đường dẫn",
+      "regex": "\\.\\./fluency-4d-shared/references/improvement-playbook\\.md",
+      "required": true
+    },
+    {
+      "id": "4DW-NO-INVENT",
+      "name": "forbids_inventing_advice",
+      "check": "cấm tự chế cách cải tiến: mọi dòng bảng phải chép từ playbook, ô nào playbook chưa có thì ghi thiếu chứ không điền bù bằng chữ tự nghĩ",
+      "regex": "Không tự chế cách cải tiến[\\s\\S]{0,120}chép từ\\s*`?improvement-playbook\\.md`?[\\s\\S]{0,120}playbook chưa có mục này[\\s\\S]{0,60}không điền bù",
+      "required": true
+    },
+    {
+      "id": "4DW-NO-IFTHEN",
+      "name": "forbids_writing_the_commitment",
+      "check": "cấm AI tự viết câu nếu–thì, kèm LÝ DO chốt chặn (coach tự kê thí nghiệm cho hành vi nó vừa chấm) — không chỉ chữ 'CEO viết'",
+      "regex": "Không tự viết câu nếu–thì[\\s\\S]{0,150}câu cam kết do CEO viết[\\s\\S]{0,120}chấm bài của chính mình[\\s\\S]{0,80}dễ ghi streak",
+      "required": true
+    },
+    {
+      "id": "4DW-DECLINE-DEF",
+      "name": "declining_defined_numerically",
+      "check": "'đang tụt' phải định nghĩa bằng số: ngưỡng ≥2 mẫu, tiêu chí (a) tụt ≥0.5 so tuần trước, tiêu chí (b) ≤1.5 hai tuần liên tiếp",
+      "regex": "có \\*\\*≥ 2 mẫu\\*\\* trong cửa sổ hiện tại[\\s\\S]{0,120}Tụt theo xu hướng:\\*\\* trung bình tuần này ≤ trung bình tuần trước − 0\\.5[\\s\\S]{0,120}Thấp dai dẳng:\\*\\* trung bình ≤ 1\\.5 ở cả tuần này lẫn tuần trước",
+      "required": true
+    },
+    {
+      "id": "4DW-THIN-SAMPLE",
+      "name": "under_two_samples_excluded",
+      "check": "ô dưới 2 mẫu bị loại khỏi cả bảng gợi ý lẫn ứng viên thí nghiệm, kèm lý do một mẫu không phải xu hướng",
+      "regex": "dưới 2 mẫu[\\s\\S]{0,60}chưa đủ mẫu[\\s\\S]{0,120}KHÔNG làm ứng viên thí nghiệm[\\s\\S]{0,60}Một mẫu không phải xu hướng",
+      "required": true
+    },
+    {
+      "id": "4DW-TABLE-4D",
+      "name": "table_grouped_by_four_d",
+      "check": "bảng gợi ý gom thành bốn bảng con theo 4 D, chỉ in ô đang tụt, D nào không có ô tụt thì bỏ bảng con",
+      "regex": "bốn bảng con\\*{0,2} theo D: Delegation, Description, Discernment, Diligence[\\s\\S]{0,120}Chỉ in ô \\*\\*đang tụt\\*\\*[\\s\\S]{0,200}không có ô nào tụt",
+      "required": true
+    },
+    {
+      "id": "4DW-BLANK-IFTHEN",
+      "name": "prints_blank_for_ceo",
+      "check": "khuôn báo cáo phải in ô trống cho CEO tự viết câu nếu–thì, và cấm điền hộ hoặc gợi ý mẫu câu",
+      "regex": "ô trống để CEO tự viết\\*{0,2} câu nếu–thì[\\s\\S]{0,60}Cấm điền hộ, cấm gợi ý mẫu câu",
       "required": true
     }
   ]

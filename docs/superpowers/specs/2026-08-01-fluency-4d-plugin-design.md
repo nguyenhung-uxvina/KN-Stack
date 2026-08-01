@@ -36,6 +36,7 @@ plugins/fluency-4d/
     ├── fluency-4d-weekly/SKILL.md
     └── fluency-4d-shared/references/
         ├── rubric-core.md
+        ├── improvement-playbook.md
         ├── profile-workshop-x.md
         ├── ledger-schema.md
         └── experiment-protocol.md
@@ -45,11 +46,13 @@ plugins/fluency-4d/
 |---|---|---|---|
 | `fluency-4d-preflight` | Cổng trước khi giao việc lớn | rubric · profile · thí nghiệm đang mở | *(không ghi)* |
 | `fluency-4d-review` | Mổ xẻ phiên vừa xong, chấm 4D, kê thí nghiệm | rubric · profile · phiên hiện tại · `experiments.md` | 1 dòng `sessions.jsonl` + cập nhật `experiments.md` |
-| `fluency-4d-weekly` | Xu hướng, chọn D ưu tiên tuần tới | `sessions.jsonl` (cửa sổ 7 ngày) · `experiments.md` | `weekly/<năm>-W<tuần>.md` |
+| `fluency-4d-weekly` | Xu hướng, bảng gợi ý cải tiến, chọn D ưu tiên tuần tới | `sessions.jsonl` (cửa sổ 7 ngày) · `experiments.md` · playbook · profile | `weekly/<năm>-W<tuần>.md` |
 
 **Ranh giới bắt buộc giữ:**
 - `rubric-core.md` không được nhắc tới Workshop X, dự án, hay quy ước nội bộ nào.
-- `profile-*.md` không được định nghĩa lại thang điểm; chỉ bổ sung *tín hiệu cần soi*, *cờ đỏ*, *ví dụ ngành*.
+- `profile-*.md` không được định nghĩa lại thang điểm; chỉ bổ sung *tín hiệu cần soi*, *cờ đỏ*, *ví dụ ngành*, *cách cải tiến tại chỗ*.
+- `improvement-playbook.md` cũng trung lập ngành như rubric. Weekly **chọn dòng** từ menu này, cấm tự sinh cách cải tiến lúc chạy — coach tự kê bài tập cho hành vi nó vừa chấm là vòng lặp tự phục vụ.
+- Weekly **không** tự viết câu nếu–thì. Nó đưa ứng viên kèm số; câu cam kết do người dùng viết.
 - Skill không chứa logic tính toán ngoài số học đơn giản (trung bình, đếm streak).
 
 **Cố tình không làm:** không hook, không Python, không nhân bản vào `skills/learn/` (một nguồn duy nhất, tránh trôi lệch). Muốn dùng trong Claude Code thì tạo junction từ `~/.claude/commands/`.
@@ -86,7 +89,7 @@ Bám nguyên bản AI Fluency Framework (Dakan–Feller / Anthropic, CC BY-NC-SA
 
 ## 5. Lớp hiệu chỉnh (`profile-workshop-x.md`)
 
-Cấu trúc cố định — mỗi ô là một khối `## <mã ô>` chứa `**Tín hiệu:**` / `**Cờ đỏ:**` / `**Ví dụ ngành:**`.
+Cấu trúc cố định — mỗi ô là một khối `## <mã ô>` chứa `**Tín hiệu:**` / `**Cờ đỏ:**` / `**Ví dụ ngành:**` / `**Cách cải tiến tại chỗ:**`.
 
 | Ô | Tín hiệu Workshop X |
 |---|---|

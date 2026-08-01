@@ -7,11 +7,12 @@ Delegation · Description · Discernment · Diligence — ngay trên các phiên
 
 Ba skill chấm/huấn luyện một khung 12 ô năng lực chung (`del.problem`, `del.platform`, `del.task`,
 `des.product`, `des.process`, `des.performance`, `dis.product`, `dis.process`, `dis.performance`,
-`dil.creation`, `dil.transparency`, `dil.deployment`), cộng bốn file tham chiếu dùng chung ở
+`dil.creation`, `dil.transparency`, `dil.deployment`), cộng năm file tham chiếu dùng chung ở
 `skills/fluency-4d-shared/references/`:
 
 - `rubric-core.md` — 12 ô, thang điểm 0–3/`null`, ba chốt chống nịnh. Trung lập ngành, không sửa khi đổi tổ chức.
-- `profile-workshop-x.md` — tín hiệu, cờ đỏ, ví dụ ngành cho từng ô — lớp hiệu chỉnh riêng Workshop X.
+- `improvement-playbook.md` — menu cách cải tiến cho từng ô (cách làm · dấu hiệu đã ăn · bẫy · phần CEO phải tự chốt). Trung lập ngành. `fluency-4d-weekly` **chọn dòng** từ đây, bị cấm tự nghĩ ra cách mới.
+- `profile-workshop-x.md` — tín hiệu, cờ đỏ, ví dụ ngành, và cách cải tiến tại chỗ cho từng ô — lớp hiệu chỉnh riêng Workshop X.
 - `ledger-schema.md` — schema một dòng sổ điểm (`sessions.jsonl`).
 - `experiment-protocol.md` — luật thí nghiệm hành vi (WIP=1, dạng nếu–thì, streak/đứt).
 
@@ -21,7 +22,13 @@ Ba skill chấm/huấn luyện một khung 12 ô năng lực chung (`del.problem
 |---|---|---|
 | **`fluency-4d-preflight`** | TRƯỚC khi giao một việc lớn cho AI | Không ghi sổ điểm — đây là cổng chặn (Delegation + Description), không phải phép đo. Trả về phiếu giao việc đã viết lại. |
 | **`fluency-4d-review`** | NGAY SAU một phiên làm việc vừa xong | Chấm 12 ô kèm bằng chứng trích dẫn, nghiệm thu/kê thí nghiệm hành vi, append 1 dòng vào `sessions.jsonl` + cập nhật `experiments.md`. |
-| **`fluency-4d-weekly`** | Cuối tuần, tổng hợp xu hướng | Đọc `sessions.jsonl` 7 ngày, chốt 1 D ưu tiên tuần tới, ghi `weekly/<năm>-W<tuần>.md`. |
+| **`fluency-4d-weekly`** | Cuối tuần, tổng hợp xu hướng | Đọc `sessions.jsonl` 7 ngày, phát hiện ô đang tụt bằng ngưỡng số, in bảng gợi ý cải tiến gom theo 4 D (chép từ playbook), kê ứng viên thí nghiệm kèm số — **để trống câu nếu–thì cho CEO tự viết**. Chốt 1 D ưu tiên, ghi `weekly/<năm>-W<tuần>.md`. |
+
+**Vì sao weekly không tự viết câu thí nghiệm.** Coach tự kê bài tập cho chính hành vi mà nó vừa
+chấm thì nó đang chấm bài của mình, và sẽ nghiêng về ô dễ ghi streak. Nên ranh giới đặt ở đây:
+AI đưa **menu và số liệu**, CEO viết **cam kết**. Cùng lý do đó, mọi dòng trong bảng gợi ý phải
+chép từ `improvement-playbook.md` — một menu viết trước và CEO duyệt trước — chứ không sinh tại
+lúc chạy.
 
 Vòng dùng bình thường: `preflight` trước việc lớn → làm việc → `review` ngay sau → lặp lại nhiều phiên trong tuần → `weekly` để thấy xu hướng.
 
@@ -104,11 +111,12 @@ tiếng Việt/Anh khai trong `description` của từng `SKILL.md`).
 sửa theo tổ chức. Để phát cho tổ chức khác:
 
 1. Chép `skills/fluency-4d-shared/references/profile-workshop-x.md` → `profile-<tên tổ chức>.md`.
-2. Giữ nguyên khung mỗi khối: `## <mã ô>` + đúng ba trường `**Tín hiệu:**` / `**Cờ đỏ:**` / `**Ví dụ ngành:**`
-   cho đủ 12 mã ô, đúng thứ tự canonical.
-3. Đổi dòng trỏ tới file profile trong **đúng hai** `SKILL.md` — `fluency-4d-preflight` và
-   `fluency-4d-review` — từ `profile-workshop-x.md` sang `profile-<tên tổ chức>.md`.
-   `fluency-4d-weekly` **không** trỏ tới profile và không cần sửa: nó chỉ đọc sổ điểm, không chấm ô nào.
+2. Giữ nguyên khung mỗi khối: `## <mã ô>` + đúng bốn trường `**Tín hiệu:**` / `**Cờ đỏ:**` /
+   `**Ví dụ ngành:**` / `**Cách cải tiến tại chỗ:**` cho đủ 12 mã ô, đúng thứ tự canonical.
+3. Đổi dòng trỏ tới file profile trong **cả ba** `SKILL.md`. `fluency-4d-weekly` nay cũng trỏ tới
+   profile vì nó đọc trường `Cách cải tiến tại chỗ` để chồng lên menu playbook.
+4. `improvement-playbook.md` là tầng lõi trung lập ngành — **không** chép theo tổ chức, không sửa.
+   Muốn thêm cách cải tiến riêng thì viết vào trường `Cách cải tiến tại chỗ` của profile.
 
 ### Giới hạn của việc đổi profile — đọc trước khi hứa với ai
 
