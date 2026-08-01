@@ -1,6 +1,6 @@
 {
   "skill": "fluency-4d-preflight",
-  "version": "1.3",
+  "version": "1.5",
   "description": "Binary assertions cho cổng preflight 4D",
   "mode": "static",
   "total_required": 12,
@@ -72,8 +72,8 @@
     {
       "id": "4DP-REFPATH",
       "name": "cites_shared_dir_by_exact_path",
-      "check": "hai file tham chieu phai duoc tro bang duong dan day du ../fluency-4d-shared/references/<file>.md — thu muc dung chung mang tien to plugin, khong duoc la ten chung kieu _shared (namespace ~/.claude/commands/ la phang)",
-      "regex": "\\.\\./fluency-4d-shared/references/rubric-core\\.md[\\s\\S]{0,80}\\.\\./fluency-4d-shared/references/profile-workshop-x\\.md",
+      "check": "rubric trỏ bằng đường dẫn đầy đủ, và profile trỏ QUA active-profile.md chứ không gọi thẳng tên file — đổi người dùng phải là đổi một dòng ở tầng trỏ, không phải sửa skill",
+      "regex": "\\.\\./fluency-4d-shared/references/rubric-core\\.md[\\s\\S]{0,120}\\.\\./fluency-4d-shared/references/active-profile\\.md[\\s\\S]{0,120}KHÔNG đoán tên profile",
       "required": true
     },
     {

@@ -10,7 +10,10 @@ Ba skill chấm/huấn luyện một khung 12 ô năng lực chung (`del.problem
 `dil.creation`, `dil.transparency`, `dil.deployment`), cộng năm file tham chiếu dùng chung ở
 `skills/fluency-4d-shared/references/`:
 
+- `active-profile.md` — **tầng trỏ**: nêu tên profile đang bật. Ba `SKILL.md` đọc file này rồi mới mở profile; không skill nào còn gọi tên profile trực tiếp.
 - `rubric-core.md` — 12 ô, thang điểm 0–3/`null`, ba chốt chống nịnh. Trung lập ngành, không sửa khi đổi tổ chức.
+- `profile-template.md` — khuôn rỗng 48 ô `⟨CEO chốt: …⟩` để viết profile cho vai mới. Không bao giờ được bật.
+- `profile-quan-doc.md` — **nháp** cho vai quản đốc phân xưởng: tín hiệu/ví dụ/cách cải tiến đã soạn sẵn để gạch xoá, **toàn bộ 12 trường Cờ đỏ bỏ trống**.
 - `improvement-playbook.md` — menu cách cải tiến cho từng ô (cách làm · dấu hiệu đã ăn · bẫy · phần CEO phải tự chốt). Trung lập ngành. `fluency-4d-weekly` **chọn dòng** từ đây, bị cấm tự nghĩ ra cách mới.
 - `profile-workshop-x.md` — tín hiệu, cờ đỏ, ví dụ ngành, và cách cải tiến tại chỗ cho từng ô — lớp hiệu chỉnh riêng Workshop X.
 - `ledger-schema.md` — schema một dòng sổ điểm (`sessions.jsonl`).
@@ -107,32 +110,35 @@ tiếng Việt/Anh khai trong `description` của từng `SKILL.md`).
 
 ## Đổi profile (dùng cho tổ chức khác)
 
-`profile-workshop-x.md` chứa toàn bộ tín hiệu/cờ đỏ riêng Workshop X — `rubric-core.md` KHÔNG bao giờ
-sửa theo tổ chức. Để phát cho tổ chức khác:
+`profile-*.md` chứa toàn bộ tín hiệu/cờ đỏ riêng một vai — `rubric-core.md` và
+`improvement-playbook.md` KHÔNG bao giờ sửa theo tổ chức. Để phát cho vai khác:
 
-1. Chép `skills/fluency-4d-shared/references/profile-workshop-x.md` → `profile-<tên tổ chức>.md`.
+1. Chép `skills/fluency-4d-shared/references/profile-template.md` → `profile-<tên vai>.md`
+   (hoặc chép `profile-workshop-x.md` nếu muốn có sẵn nội dung để sửa).
 2. Giữ nguyên khung mỗi khối: `## <mã ô>` + đúng bốn trường `**Tín hiệu:**` / `**Cờ đỏ:**` /
    `**Ví dụ ngành:**` / `**Cách cải tiến tại chỗ:**` cho đủ 12 mã ô, đúng thứ tự canonical.
-3. Đổi dòng trỏ tới file profile trong **cả ba** `SKILL.md`. `fluency-4d-weekly` nay cũng trỏ tới
-   profile vì nó đọc trường `Cách cải tiến tại chỗ` để chồng lên menu playbook.
+3. Đổi **đúng một dòng** — tên file trong khối mã của `active-profile.md`. Không đụng vào `SKILL.md` nào.
 4. `improvement-playbook.md` là tầng lõi trung lập ngành — **không** chép theo tổ chức, không sửa.
    Muốn thêm cách cải tiến riêng thì viết vào trường `Cách cải tiến tại chỗ` của profile.
 
 ### Giới hạn của việc đổi profile — đọc trước khi hứa với ai
 
-Đổi profile chỉ thay được **tầng tín hiệu chấm điểm** (tín hiệu / cờ đỏ / ví dụ ngành cho 12 ô).
-Những thứ sau vẫn **hardcode trong `SKILL.md`** và phải sửa tay cho từng tổ chức:
+Đổi profile chỉ thay được **tầng tín hiệu chấm điểm** (bốn trường cho 12 ô).
+Những thứ sau vẫn **hardcode trong `SKILL.md`** và phải sửa tay cho từng tổ chức
+(đã đếm lại 2026-08-01, sau khi dựng tầng trỏ):
 
 | Thứ còn dính Workshop X | Nằm ở đâu |
 |---|---|
 | Đường dẫn sổ điểm `D:\Workshop_X\2_Areas\CEO-Self\AI-Fluency-Ledger\` | cả ba `SKILL.md` (và README này) |
-| Chữ **"CEO"** làm tên vai người dùng | cả ba `SKILL.md` |
+| Chữ **"CEO"** làm tên vai người dùng — 15 chỗ | preflight 7 · weekly 6 · review 2 |
 | Chữ **"MẬT"** trong ví dụ cờ đỏ Diligence | `fluency-4d-review/SKILL.md` |
 | Danh sách khung quy trình **"3-Gate, VDI 2225, ODI, Pahl-Beitz"** | `fluency-4d-preflight/SKILL.md` |
 
-Nghĩa là **D4 ("đổi profile là phát cho tổ chức khác dùng được") mới đúng một nửa**: rubric lõi thật
-sự trung lập ngành và không phải đụng, nhưng ba skill thì chưa. Nâng bốn mục trên lên thành trường
-của profile là một đợt tái cấu trúc riêng, **cố ý chưa làm trong đợt này**.
+Tầng trỏ `active-profile.md` đã gỡ được **một** mục khỏi danh sách này: tên file profile.
+Bốn mục còn lại vẫn nằm trong skill. Nghĩa là **D4 ("đổi profile là phát cho tổ chức khác
+dùng được") vẫn chưa trọn**: đổi vai giờ là sửa một dòng thay vì sửa ba file, nhưng người
+nhận vẫn đọc thấy chữ "CEO" và đường dẫn ổ D của Workshop X. Nâng bốn mục còn lại thành
+trường của profile là một đợt riêng, **cố ý chưa làm trong đợt này**.
 
 ## Bảo trì
 

@@ -35,9 +35,12 @@ plugins/fluency-4d/
     ├── fluency-4d-review/SKILL.md
     ├── fluency-4d-weekly/SKILL.md
     └── fluency-4d-shared/references/
+        ├── active-profile.md          ← tầng trỏ: profile nào đang bật
         ├── rubric-core.md
         ├── improvement-playbook.md
+        ├── profile-template.md        ← khuôn rỗng, không bao giờ được bật
         ├── profile-workshop-x.md
+        ├── profile-quan-doc.md        ← nháp, cờ đỏ chờ CEO chốt
         ├── ledger-schema.md
         └── experiment-protocol.md
 ```
@@ -106,7 +109,12 @@ Cấu trúc cố định — mỗi ô là một khối `## <mã ô>` chứa `**T
 | `dil.transparency` | Tài liệu giao ngoài (BQP, hội đồng) ghi rõ phần AI tham gia? |
 | `dil.deployment` | Không commit thẳng main, chạy test trước PR, tự chịu trách nhiệm nội dung ký tên |
 
-Phát cho người khác: viết `profile-<tên>.md` theo đúng khung trên và đổi một dòng trỏ trong 3 skill.
+Phát cho người khác: viết `profile-<tên>.md` theo đúng khung trên rồi đổi **một dòng** trong
+khối mã của `active-profile.md`. Ba skill không gọi tên profile nữa nên không phải sửa.
+
+Chốt của tầng trỏ: profile còn ô `⟨CEO chốt: …⟩` **không được bật**, và `profile-template.md`
+không bao giờ được bật. Bật một profile chưa điền xong nghĩa là chấm điểm theo tín hiệu chưa
+ai chốt — báo cáo vẫn ra đủ hình, nên lỗi này im lặng nếu không có cổng chặn.
 
 ## 6. Sổ điểm
 

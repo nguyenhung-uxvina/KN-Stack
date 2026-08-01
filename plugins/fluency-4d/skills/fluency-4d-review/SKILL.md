@@ -9,11 +9,12 @@ description: Mổ xẻ phiên làm việc vừa xong theo khung AI Fluency 4D �
 
 Đọc trước khi chấm:
 - `../fluency-4d-shared/references/rubric-core.md` — 12 ô, thang điểm, ba chốt chống nịnh
-- `../fluency-4d-shared/references/profile-workshop-x.md` — tín hiệu và cờ đỏ cho từng ô
+- `../fluency-4d-shared/references/active-profile.md` — tên profile đang bật; đọc xong mở đúng file
+  profile đó trong cùng thư mục `references/` để lấy tín hiệu và cờ đỏ cho từng ô. KHÔNG đoán tên profile.
 - `../fluency-4d-shared/references/ledger-schema.md` — schema dòng sổ
 - `../fluency-4d-shared/references/experiment-protocol.md` — luật WIP=1 và streak
 
-**Đọc không được thì DỪNG.** Nếu bất kỳ file nào trong bốn file trên không mở được, KHÔNG chấm điểm.
+**Đọc không được thì DỪNG.** Nếu bất kỳ file nào trong bốn file trên, hoặc file profile được trỏ, không mở được, KHÔNG chấm điểm.
 In thẳng file nào thiếu và dừng lại. Chấm thiếu rubric hoặc thiếu profile sẽ ra một báo cáo trông
 đầy đủ nhưng đã mất sạch thang điểm và tín hiệu ngành — im lặng chấm tiếp là lỗi nặng hơn không chấm.
 
@@ -31,7 +32,7 @@ Sổ điểm: `D:\Workshop_X\2_Areas\CEO-Self\AI-Fluency-Ledger\`
 
 **Bước 1 — Trích bằng chứng.** Đọc lại phiên hội thoại đang trong ngữ cảnh (không đi tìm file log). Trích nguyên văn các đoạn liên quan tới từng ô.
 
-**Bước 2 — Chấm 12 ô.** Theo `rubric-core.md`, soi tín hiệu trong `profile-workshop-x.md`. Ghi chế độ phiên: automation / augmentation / agency. Thứ tự: `del.problem`, `del.platform`, `del.task`, `des.product`, `des.process`, `des.performance`, `dis.product`, `dis.process`, `dis.performance`, `dil.creation`, `dil.transparency`, `dil.deployment`.
+**Bước 2 — Chấm 12 ô.** Theo `rubric-core.md`, soi tín hiệu trong profile đang bật. Ghi chế độ phiên: automation / augmentation / agency. Thứ tự: `del.problem`, `del.platform`, `del.task`, `des.product`, `des.process`, `des.performance`, `dis.product`, `dis.process`, `dis.performance`, `dil.creation`, `dil.transparency`, `dil.deployment`.
 
 **Bước 3 — Nghiệm thu thí nghiệm đang mở TRƯỚC.** Đọc `experiments.md`. Nếu có dòng `OPEN`: phiên này giữ được hay đứt? Giữ → streak +1 (đủ 3 → `PASSED`, ghi ngày đóng). Đứt → streak về 0, cột `đứt` +1 (đủ 3 → `FAILED`). Chưa có file `experiments.md` → coi như chưa có thí nghiệm nào, đi tiếp (Bước 6 sẽ tạo file). Làm xong bước này rồi mới đi tiếp.
 

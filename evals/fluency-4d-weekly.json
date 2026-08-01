@@ -1,10 +1,10 @@
 {
   "skill": "fluency-4d-weekly",
-  "version": "1.4",
+  "version": "1.5",
   "description": "Binary assertions cho tổng hợp tuần 4D",
   "mode": "static",
-  "total_required": 15,
-  "passing_score": 15,
+  "total_required": 16,
+  "passing_score": 16,
   "assertions": [
     {
       "id": "4DW-WINDOW",
@@ -109,6 +109,13 @@
       "name": "prints_blank_for_ceo",
       "check": "khuôn báo cáo phải in ô trống cho CEO tự viết câu nếu–thì, và cấm điền hộ hoặc gợi ý mẫu câu",
       "regex": "ô trống để CEO tự viết\\*{0,2} câu nếu–thì[\\s\\S]{0,60}Cấm điền hộ, cấm gợi ý mẫu câu",
+      "required": true
+    },
+    {
+      "id": "4DW-ACTIVE-PROFILE",
+      "name": "profile_via_pointer",
+      "check": "weekly cũng đi qua active-profile.md thay vì gọi thẳng tên profile",
+      "regex": "\\.\\./fluency-4d-shared/references/active-profile\\.md[\\s\\S]{0,150}KHÔNG đoán tên profile",
       "required": true
     }
   ]

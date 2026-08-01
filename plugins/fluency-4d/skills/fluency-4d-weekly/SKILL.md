@@ -9,8 +9,8 @@ description: Tổng hợp sổ điểm AI Fluency 4D theo tuần — trung bình
 
 Đọc: `D:\Workshop_X\2_Areas\CEO-Self\AI-Fluency-Ledger\sessions.jsonl` và `experiments.md`.
 Đọc thêm: `../fluency-4d-shared/references/improvement-playbook.md` — menu cách cải tiến
-cho từng ô, và `../fluency-4d-shared/references/profile-workshop-x.md` — trường
-`Cách cải tiến tại chỗ` riêng của tổ chức.
+cho từng ô, và `../fluency-4d-shared/references/active-profile.md` — tên profile đang bật; mở đúng
+file profile đó để lấy trường `Cách cải tiến tại chỗ` riêng của tổ chức. KHÔNG đoán tên profile.
 Ghi: `D:\Workshop_X\2_Areas\CEO-Self\AI-Fluency-Ledger\weekly/<năm>-W<số tuần ISO>.md`
 
 **Đọc không được thì DỪNG.** Thiếu `improvement-playbook.md` thì KHÔNG in bảng gợi ý —
@@ -43,7 +43,7 @@ vi phạm chốt chặn ở Bước 5, không phải ứng biến cho tiện.
 
 Ô nào trung bình ≤ 1.5 trong ≥ 2 tuần liên tiếp → đánh dấu dai dẳng (đây là tập con của (b), in kèm số tuần đã kéo dài). Đọc `experiments.md`, báo tình trạng streak của thí nghiệm đang chạy và các thí nghiệm đã đóng trong tuần.
 
-**Bước 5 — Bảng gợi ý cải tiến, gom theo 4 D.** Với mỗi ô đang tụt ở Bước 4, chép dòng tương ứng từ `improvement-playbook.md`, chồng thêm trường `Cách cải tiến tại chỗ` của `profile-workshop-x.md` nếu ô đó có. In thành **bốn bảng con** theo D: Delegation, Description, Discernment, Diligence.
+**Bước 5 — Bảng gợi ý cải tiến, gom theo 4 D.** Với mỗi ô đang tụt ở Bước 4, chép dòng tương ứng từ `improvement-playbook.md`, chồng thêm trường `Cách cải tiến tại chỗ` của profile đang bật nếu ô đó có. In thành **bốn bảng con** theo D: Delegation, Description, Discernment, Diligence.
 
 - Chỉ in ô **đang tụt**. Ô không tụt thì không in — bảng đủ 12 dòng mỗi tuần là bảng vô dụng.
 - D nào không có ô nào tụt → ghi một dòng "không có ô nào tụt", bỏ bảng con đó.

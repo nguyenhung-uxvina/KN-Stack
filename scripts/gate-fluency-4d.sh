@@ -37,11 +37,16 @@ run() {
 
 run "1. pytest" python -m pytest scripts/test_fluency_4d.py -q
 
-run "2. lint bốn file tham chiếu" python -c "
+run "2. lint tầng tham chiếu" python -c "
 import sys; sys.path.insert(0, 'scripts')
 import fluency_4d_lint as l
 errs  = l.lint_rubric((l.REF_DIR / 'rubric-core.md').read_text(encoding='utf-8'))
-errs += l.lint_profile((l.REF_DIR / 'profile-workshop-x.md').read_text(encoding='utf-8'))
+errs += l.lint_playbook((l.REF_DIR / 'improvement-playbook.md').read_text(encoding='utf-8'))
+# Tầng trỏ: profile đang bật phải tồn tại, không phải khuôn rỗng, không còn ô chờ điền.
+errs += l.lint_active_profile((l.REF_DIR / 'active-profile.md').read_text(encoding='utf-8'))
+# Mọi profile khác kiểm ở chế độ nháp — sai khung là lỗi, còn ô chờ điền thì không.
+for p in sorted(l.REF_DIR.glob('profile-*.md')):
+    errs += [f'{p.name}: {e}' for e in l.lint_profile(p.read_text(encoding='utf-8'), allow_draft=True)]
 errs += l.validate_ledger_line(l.extract_sample_record((l.REF_DIR / 'ledger-schema.md').read_text(encoding='utf-8')))
 errs += l.validate_experiments(l.parse_experiments((l.PLUGIN_ROOT / 'templates' / 'experiments.md').read_text(encoding='utf-8')))
 errs += l.lint_skills()

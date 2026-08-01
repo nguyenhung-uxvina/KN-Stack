@@ -89,9 +89,26 @@ def parse_profile(text: str) -> dict[str, dict[str, str]]:
     return out
 
 
-def lint_profile(text: str) -> list[str]:
-    """Kiểm một file profile khớp rubric. Trả danh sách lỗi; rỗng nghĩa là đạt."""
+# Ô chờ người chịu trách nhiệm điền. AI không được tự điền những ô này —
+# đặc biệt trường Cờ đỏ, vốn là tuyên bố hành vi nào không chấp nhận được.
+_TODO_RE = re.compile(r"⟨CEO chốt:[^⟩]*⟩")
+
+
+def count_todo(text: str) -> int:
+    """Số ô ⟨CEO chốt: …⟩ còn bỏ trống trong một file."""
+    return len(_TODO_RE.findall(text))
+
+
+def lint_profile(text: str, allow_draft: bool = False) -> list[str]:
+    """Kiểm một file profile khớp rubric. Trả danh sách lỗi; rỗng nghĩa là đạt.
+
+    `allow_draft=True` cho phép còn ô ⟨CEO chốt: …⟩ — dùng khi kiểm một profile
+    nháp chưa bật. Profile ĐANG BẬT thì không bao giờ được phép còn ô nào:
+    chấm điểm theo tín hiệu chưa ai chốt là chấm theo chữ AI tự viết.
+    """
     errors: list[str] = []
+    if not allow_draft and (n := count_todo(text)):
+        errors.append(f"profile còn {n} ô ⟨CEO chốt: …⟩ chưa điền — chưa dùng được")
     blocks = parse_profile(text)
     for cell in CELLS:
         if cell not in blocks:
@@ -112,6 +129,43 @@ def lint_profile(text: str) -> list[str]:
     if "0-3" in text or "0–3" in text:
         errors.append("profile không được định nghĩa lại thang điểm (tìm thấy '0-3' hoặc '0–3')")
 
+    return errors
+
+
+# active-profile.md: tên file profile đang bật, nằm trong khối mã đầu tiên.
+_ACTIVE_RE = re.compile(r"```\s*\n\s*([A-Za-z0-9._-]+\.md)\s*\n\s*```")
+
+
+def parse_active_profile(text: str) -> str | None:
+    """Trả tên file profile đang bật, hoặc None nếu không đọc được."""
+    m = _ACTIVE_RE.search(text)
+    return m.group(1) if m else None
+
+
+def lint_active_profile(text: str, read=None) -> list[str]:
+    """Kiểm tầng trỏ profile.
+
+    Ba SKILL.md không gọi tên profile nữa; chúng đọc active-profile.md rồi mới
+    đọc file được trỏ. Tầng trỏ hỏng thì skill mất profile mà vẫn chạy được —
+    cùng chế độ hỏng đã trả giá với thư mục tham chiếu, chỉ dời lên một cấp.
+    """
+    if read is None:
+        def read(filename: str) -> str | None:
+            path = REF_DIR / filename
+            return path.read_text(encoding="utf-8") if path.is_file() else None
+
+    errors: list[str] = []
+    name = parse_active_profile(text)
+    if not name:
+        return ["active-profile.md không nêu được tên file profile trong khối mã"]
+    if not name.startswith("profile-"):
+        errors.append(f"profile đang bật phải mang tiền tố 'profile-': {name!r}")
+    if name == "profile-template.md":
+        errors.append("không được bật profile-template.md — đó là khuôn rỗng")
+    body = read(name)
+    if body is None:
+        return errors + [f"profile đang bật không tồn tại: {name}"]
+    errors += [f"{name}: {e}" for e in lint_profile(body)]
     return errors
 
 

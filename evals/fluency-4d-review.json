@@ -1,6 +1,6 @@
 {
   "skill": "fluency-4d-review",
-  "version": "1.3",
+  "version": "1.5",
   "description": "Binary assertions cho skill mổ xẻ phiên theo khung 4D",
   "mode": "static",
   "total_required": 18,
@@ -121,8 +121,8 @@
     {
       "id": "4DR-REFPATH",
       "name": "cites_shared_dir_by_exact_path",
-      "check": "bon file tham chieu phai duoc tro bang duong dan day du ../fluency-4d-shared/references/<file>.md, dung thu tu rubric -> profile -> ledger -> experiment",
-      "regex": "\\.\\./fluency-4d-shared/references/rubric-core\\.md[\\s\\S]{0,120}\\.\\./fluency-4d-shared/references/profile-workshop-x\\.md[\\s\\S]{0,120}\\.\\./fluency-4d-shared/references/ledger-schema\\.md[\\s\\S]{0,120}\\.\\./fluency-4d-shared/references/experiment-protocol\\.md",
+      "check": "bốn nguồn tham chiếu trỏ bằng đường dẫn đầy đủ, profile đi qua active-profile.md; đúng thứ tự rubric → active-profile → ledger → experiment",
+      "regex": "\\.\\./fluency-4d-shared/references/rubric-core\\.md[\\s\\S]{0,150}\\.\\./fluency-4d-shared/references/active-profile\\.md[\\s\\S]{0,200}KHÔNG đoán tên profile[\\s\\S]{0,150}\\.\\./fluency-4d-shared/references/ledger-schema\\.md[\\s\\S]{0,150}\\.\\./fluency-4d-shared/references/experiment-protocol\\.md",
       "required": true
     },
     {

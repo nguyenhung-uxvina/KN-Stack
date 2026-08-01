@@ -7,10 +7,12 @@ description: Cổng kiểm trước khi giao một việc lớn cho AI — ép q
 
 **COD:** Core (CEO quyết C/O/D) · Offload (AI viết lại phiếu giao việc)
 
-Đọc: `../fluency-4d-shared/references/rubric-core.md`, `../fluency-4d-shared/references/profile-workshop-x.md`.
+Đọc: `../fluency-4d-shared/references/rubric-core.md`, rồi `../fluency-4d-shared/references/active-profile.md`
+để biết profile nào đang bật, rồi đọc đúng file profile đó trong cùng thư mục `references/`.
+KHÔNG đoán tên profile — tên nằm trong khối mã của `active-profile.md`.
 Thí nghiệm: `D:\Workshop_X\2_Areas\CEO-Self\AI-Fluency-Ledger\experiments.md`
 
-**Đọc không được thì DỪNG.** Nếu một trong hai file tham chiếu trên không mở được, KHÔNG chạy cổng.
+**Đọc không được thì DỪNG.** Nếu rubric, `active-profile.md`, hoặc file profile được trỏ không mở được, KHÔNG chạy cổng.
 In thẳng file nào thiếu và dừng lại — cổng chạy thiếu profile sẽ trông vẫn đủ bước nhưng đã mất
 toàn bộ tín hiệu ngành.
 
