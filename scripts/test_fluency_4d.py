@@ -227,6 +227,73 @@ def test_apply_session_ignores_failed_row():
         assert out is not row
 
 
+SKILLS = lint.load_skill_sources()
+PLUGIN_MD = lint.load_plugin_markdown()
+SEED_EXP = (lint.PLUGIN_ROOT / "templates" / "experiments.md").read_text(encoding="utf-8")
+
+
+def test_all_three_skills_are_loaded():
+    assert sorted(SKILLS) == [f"{n}/SKILL.md" for n in lint.SKILL_NAMES]
+
+
+def test_skills_are_clean():
+    assert lint.lint_skills() == []
+
+
+def test_skills_cite_at_least_one_shared_reference():
+    cited = {r for text in SKILLS.values() for r in lint._REF_CITE_RE.findall(text)}
+    assert cited, "không SKILL.md nào trích dẫn ../_shared/references/ — regex đã chết"
+    assert "rubric-core.md" in cited
+
+
+def test_lint_skills_flags_missing_reference_file():
+    """Negative: SKILL.md trỏ tới file tham chiếu không tồn tại."""
+    dirty = dict(SKILLS)
+    dirty["fluency-4d-review/SKILL.md"] += "\n- `../_shared/references/khong-co-that.md`\n"
+    errors = lint.lint_skills(skills=dirty, all_markdown=PLUGIN_MD)
+    assert any("khong-co-that.md" in e for e in errors)
+
+
+def test_lint_skills_flags_reference_that_vanishes():
+    """Negative: file tham chiếu có thật biến mất khỏi đĩa."""
+    errors = lint.lint_skills(
+        skills=SKILLS, all_markdown=PLUGIN_MD, ref_exists=lambda fn: False
+    )
+    assert any("rubric-core.md" in e for e in errors)
+
+
+def test_lint_skills_flags_drifted_ledger_path():
+    """Negative: đường dẫn sổ điểm lệch một ký tự ở một file."""
+    dirty = dict(PLUGIN_MD)
+    key = "skills/fluency-4d-weekly/SKILL.md"
+    assert key in dirty
+    dirty[key] = dirty[key].replace("CEO-Self", "CEO_Self")
+    errors = lint.lint_skills(skills=SKILLS, all_markdown=dirty)
+    assert any("lệch nhau" in e for e in errors)
+
+
+def test_ledger_path_appears_in_every_skill():
+    for name, text in SKILLS.items():
+        assert lint._LEDGER_PATH_RE.search(text), f"{name} không nhắc đường dẫn sổ điểm"
+
+
+def test_seed_experiments_header_matches_protocol():
+    """Bản mẫu ledger phải mang ĐÚNG dòng tiêu đề 8 cột mà parse_experiments đọc được."""
+    header = "| ID | ô mục tiêu | câu nếu–thì | streak | đứt | trạng thái | ngày mở | ngày đóng |"
+    assert header in EXP_DOC
+    assert header in SEED_EXP
+    cols = [c.strip() for c in header.strip("|").split("|")]
+    assert len(cols) == len(lint._EXP_COLS) == 8
+
+
+def test_seed_experiments_is_empty_but_usable():
+    assert lint.parse_experiments(SEED_EXP) == []
+    row = "| `EXP-001` | `des.product` | Khi giao task, tôi nêu tiêu chí xong. | 0 | 0 | OPEN | 2026-08-01 |  |"
+    rows = lint.parse_experiments(SEED_EXP + row + "\n")
+    assert len(rows) == 1
+    assert lint.validate_experiments(rows) == []
+
+
 def test_ledger_lifecycle_four_sessions():
     """Bốn phiên liên tiếp: streak 1→2→3→PASSED, mọi dòng sổ hợp lệ."""
     sample = lint.extract_sample_record(LEDGER_DOC)

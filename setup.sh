@@ -28,6 +28,18 @@ log_warn() { echo -e "${YELLOW}[WARN]${NC} $1"; }
 log_err()  { echo -e "${RED}[ERR]${NC} $1"; }
 log_skip() { echo -e "  [SKIP] $1"; }
 
+# ── Plugin skill dirs ──
+# Plugins keep their skills at plugins/<plugin>/skills/<dir>/ and may ship a shared
+# reference dir (e.g. _shared/) that the SKILL.md files reach via ../_shared/…
+# Every child of plugins/*/skills/ must be junctioned — including _shared — otherwise
+# ".." resolves to ~/.claude/commands/ and the shared references vanish silently.
+plugin_skill_dirs() {
+    local d
+    for d in "$KNSTACK_DIR"/plugins/*/skills/*/; do
+        [ -d "$d" ] && echo "${d%/}"
+    done
+}
+
 # ── Install: create junctions for all skills ──
 do_install() {
     echo "=== KN-Stack Install ==="
@@ -59,6 +71,29 @@ do_install() {
     " 2>&1)
 
     log_ok "Skills: $result"
+
+    # Plugin skills (plugins/<plugin>/skills/<dir>/, including shared reference dirs)
+    local win_plugins=$(cygpath -w "$KNSTACK_DIR/plugins" 2>/dev/null || echo "$KNSTACK_DIR/plugins")
+    local presult=$(powershell.exe -ExecutionPolicy Bypass -Command "
+        \$TARGET = '${win_commands}'
+        \$SOURCE = '${win_plugins}'
+        \$count = 0; \$skip = 0; \$err = 0
+        if (Test-Path \$SOURCE) {
+            Get-ChildItem -Path \$SOURCE -Directory | ForEach-Object {
+                \$sk = Join-Path \$_.FullName 'skills'
+                if (-not (Test-Path \$sk)) { return }
+                Get-ChildItem -Path \$sk -Directory | ForEach-Object {
+                    \$t = Join-Path \$TARGET \$_.Name
+                    if (Test-Path \$t) { \$skip++; return }
+                    try { New-Item -ItemType Junction -Path \$t -Target \$_.FullName -ErrorAction Stop | Out-Null; \$count++ }
+                    catch { \$err++ }
+                }
+            }
+        }
+        Write-Output \"\$count linked, \$skip skipped, \$err errors\"
+    " 2>&1)
+
+    log_ok "Plugin skills: $presult"
 
     # Deploy hooks and rules to vault
     if [ -n "$VAULT_DIR" ]; then
@@ -114,11 +149,36 @@ do_verify() {
         done
     done
 
+    local p_ok=0
+    local p_broken=0
+    local p_total=0
+    local src name target
+    while IFS= read -r src; do
+        [ -z "$src" ] && continue
+        name=$(basename "$src")
+        target="$COMMANDS_DIR/$name"
+        p_total=$((p_total + 1))
+        # A plugin skill dir carries SKILL.md; a shared reference dir carries references/.
+        if [ -d "$target" ] && { [ -f "$target/SKILL.md" ] || [ -d "$target/references" ]; }; then
+            p_ok=$((p_ok + 1))
+        else
+            log_err "BROKEN (plugin): $name → $target"
+            p_broken=$((p_broken + 1))
+        fi
+    done < <(plugin_skill_dirs)
+
     echo ""
     if [ $broken -eq 0 ]; then
         log_ok "All $total skills verified"
     else
         log_err "$broken/$total skills broken"
+    fi
+    if [ $p_total -gt 0 ]; then
+        if [ $p_broken -eq 0 ]; then
+            log_ok "All $p_total plugin skill dirs verified"
+        else
+            log_err "$p_broken/$p_total plugin skill dirs broken"
+        fi
     fi
 }
 
@@ -138,6 +198,16 @@ do_unlink() {
             fi
         done
     done
+
+    local src name target
+    while IFS= read -r src; do
+        [ -z "$src" ] && continue
+        name=$(basename "$src")
+        target="$COMMANDS_DIR/$name"
+        if [ -d "$target" ]; then
+            rmdir "$target" 2>/dev/null && count=$((count + 1))
+        fi
+    done < <(plugin_skill_dirs)
 
     log_ok "Removed $count junctions"
     echo "Restore from backup: cp -r ~/.claude/commands.bak.*/* ~/.claude/commands/"
@@ -159,6 +229,15 @@ do_status() {
     done
     echo "  ────────────────"
     printf "  %-12s %3d\n" "TOTAL" "$total"
+
+    echo ""
+    local plugin_dirs=$(plugin_skill_dirs | wc -l)
+    echo "Plugin skill dirs (not counted above): $plugin_dirs"
+    local p
+    while IFS= read -r p; do
+        [ -z "$p" ] && continue
+        printf "  %s\n" "$(basename "$p")"
+    done < <(plugin_skill_dirs)
 
     echo ""
     echo "Deployed junctions:"

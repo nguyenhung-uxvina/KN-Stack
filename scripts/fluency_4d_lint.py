@@ -10,7 +10,9 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 PLUGIN_ROOT = REPO_ROOT / "plugins" / "fluency-4d"
-REF_DIR = PLUGIN_ROOT / "skills" / "_shared" / "references"
+SKILLS_ROOT = PLUGIN_ROOT / "skills"
+REF_DIR = SKILLS_ROOT / "_shared" / "references"
+SKILL_NAMES = ["fluency-4d-preflight", "fluency-4d-review", "fluency-4d-weekly"]
 
 CELLS = [
     "del.problem", "del.platform", "del.task",
@@ -225,6 +227,67 @@ def validate_experiments(rows: list[dict]) -> list[str]:
             errors.append(f"{r['id']}: FAILED phải có đứt = {BREAKS_TO_FAIL}, gặp {r['breaks']}")
         if r["status"] in {"PASSED", "FAILED"} and not r["closed"].strip():
             errors.append(f"{r['id']}: đã đóng nhưng thiếu ngày đóng")
+    return errors
+
+
+# Kiểm chính SKILL.md — không chỉ bốn file tham chiếu.
+# Trích dẫn tham chiếu trong SKILL.md luôn ở dạng ../_shared/references/<file>.md
+_REF_CITE_RE = re.compile(r"\.\./_shared/references/([A-Za-z0-9._-]+\.md)")
+# Đường dẫn sổ điểm, ví dụ: D:\Workshop_X\2_Areas\CEO-Self\AI-Fluency-Ledger
+# Bắt cả dạng gạch chéo ngược (Windows, trong SKILL.md) lẫn gạch chéo xuôi (lệnh bash trong README);
+# hai dạng được chuẩn hoá về một trước khi so, nên chỉ lệch THẬT mới báo lỗi.
+_LEDGER_PATH_RE = re.compile(r"[A-Za-z]:[\\/][^\s`]*AI-Fluency-Ledger")
+
+
+def load_skill_sources() -> dict[str, str]:
+    """Trả về {tên tương đối: nội dung} của ba SKILL.md."""
+    return {
+        f"{name}/SKILL.md": (SKILLS_ROOT / name / "SKILL.md").read_text(encoding="utf-8")
+        for name in SKILL_NAMES
+    }
+
+
+def load_plugin_markdown() -> dict[str, str]:
+    """Trả về {tên tương đối: nội dung} của MỌI file .md trong plugin."""
+    return {
+        p.relative_to(PLUGIN_ROOT).as_posix(): p.read_text(encoding="utf-8")
+        for p in sorted(PLUGIN_ROOT.rglob("*.md"))
+    }
+
+
+def lint_skills(skills=None, all_markdown=None, ref_exists=None) -> list[str]:
+    """Kiểm ba SKILL.md: (a) file tham chiếu được trích dẫn phải tồn tại,
+    (b) đường dẫn sổ điểm phải giống hệt nhau ở mọi file .md của plugin.
+
+    Trả danh sách lỗi; rỗng nghĩa là đạt.
+    """
+    if skills is None:
+        skills = load_skill_sources()
+    if all_markdown is None:
+        all_markdown = load_plugin_markdown()
+    if ref_exists is None:
+        def ref_exists(filename: str) -> bool:
+            return (REF_DIR / filename).is_file()
+
+    errors: list[str] = []
+
+    # (a) Mọi file tham chiếu được SKILL.md trích dẫn phải có thật.
+    for name, text in sorted(skills.items()):
+        for ref in sorted(set(_REF_CITE_RE.findall(text))):
+            if not ref_exists(ref):
+                errors.append(f"{name} trích dẫn file tham chiếu không tồn tại: {ref}")
+
+    # (b) Đường dẫn sổ điểm không được trôi lệch giữa các file.
+    variants: dict[str, list[str]] = {}
+    for name, text in sorted(all_markdown.items()):
+        for hit in _LEDGER_PATH_RE.findall(text):
+            variants.setdefault(hit.replace("\\", "/"), []).append(name)
+    if len(variants) > 1:
+        detail = "; ".join(
+            f"{path!r} ở {sorted(set(files))}" for path, files in sorted(variants.items())
+        )
+        errors.append(f"đường dẫn sổ điểm lệch nhau giữa các file: {detail}")
+
     return errors
 
 
