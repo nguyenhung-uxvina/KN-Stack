@@ -200,3 +200,28 @@ def test_apply_session_does_not_mutate_input():
            "streak": 1, "breaks": 0, "status": "OPEN", "opened": "2026-08-01", "closed": ""}
     lint.apply_session(row, held=True)
     assert row["streak"] == 1
+
+
+def test_hold_does_not_reset_breaks():
+    row = {"id": "EXP-001", "cell": "des.product", "if_then": "Khi giao task, tôi nêu tiêu chí xong.",
+           "streak": 0, "breaks": 2, "status": "OPEN", "opened": "2026-08-01", "closed": ""}
+    out = lint.apply_session(row, held=True)
+    assert out["streak"] == 1 and out["breaks"] == 2
+
+
+def test_apply_session_ignores_passed_row():
+    row = {"id": "EXP-001", "cell": "des.product", "if_then": "Khi giao task, tôi nêu tiêu chí xong.",
+           "streak": 3, "breaks": 0, "status": "PASSED", "opened": "2026-08-01", "closed": "2026-08-04"}
+    for held in (True, False):
+        out = lint.apply_session(row, held=held)
+        assert out["streak"] == 3 and out["breaks"] == 0 and out["status"] == "PASSED"
+        assert out is not row
+
+
+def test_apply_session_ignores_failed_row():
+    row = {"id": "EXP-001", "cell": "des.product", "if_then": "Khi giao task, tôi nêu tiêu chí xong.",
+           "streak": 0, "breaks": 3, "status": "FAILED", "opened": "2026-08-01", "closed": "2026-08-04"}
+    for held in (True, False):
+        out = lint.apply_session(row, held=held)
+        assert out["streak"] == 0 and out["breaks"] == 3 and out["status"] == "FAILED"
+        assert out is not row

@@ -231,6 +231,10 @@ def validate_experiments(rows: list[dict]) -> list[str]:
 def apply_session(row: dict, held: bool) -> dict:
     """Áp kết quả một phiên lên thí nghiệm. Trả bản ghi MỚI."""
     out = dict(row)
+    if row["status"] != "OPEN":
+        # Thí nghiệm đã đóng (PASSED/FAILED) — phiên sau thuộc thí nghiệm KẾ TIẾP,
+        # không được nới thêm streak/breaks trên bản ghi đã kết thúc.
+        return out
     if held:
         out["streak"] = row["streak"] + 1
         if out["streak"] >= STREAK_TO_PASS:
