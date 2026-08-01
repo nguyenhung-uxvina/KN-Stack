@@ -59,8 +59,8 @@
     {
       "id": "LL-AUDIO-VI",
       "name": "audio_always_vietnamese",
-      "check": "audio LUÔN language=vi trừ khi CEO yêu cầu rõ tiếng Anh (rule /nlm)",
-      "regex": "language=vi[\\s\\S]*(LUÔN|luôn|bắt buộc)|LUÔN[\\s\\S]{0,80}language=vi",
+      "check": "audio LUÔN tiếng Việt (language=vi qua MCP hoặc --language vi qua CLI) trừ khi CEO yêu cầu rõ tiếng Anh (rule /nlm)",
+      "regex": "language[=\\s]+\\\"?vi\\\"?[\\s\\S]*(LUÔN|luôn|bắt buộc)|LUÔN[\\s\\S]{0,80}language[=\\s]+\\\"?vi\\\"?",
       "required": true
     },
     {

@@ -33,6 +33,12 @@ chỉ còn ffmpeg → foreground, vài giây đến vài chục giây.
 ## Thứ tự ưu tiên nguồn mốc (trong script)
 
 1. `--timings "0,1:01,2:35,…"` — CEO chỉ định tay, thắng tất cả (nhận giây hoặc `mm:ss`).
+   ⚠ **Giá trị đầu tiên PHẢI là 0.** Ảnh phát từ t=0, nên mốc của slide 1 không phải
+   "chỗ audio bắt đầu nói nội dung slide 1" mà là 0 — phần mở đầu thuộc slide 1. Ghi
+   mốc nội dung (vd `1:28`) vào ô đầu = đẩy TOÀN BỘ slide sớm 88 giây (bug 2026-07-28,
+   5 video khoá cowork lệch 74–111s). Script nay tự ép về 0 kèm WARNING và từ chối
+   build nếu tổng thời lượng slide lệch audio > 1s, nhưng đừng dựa vào đó: viết đúng
+   từ đầu, rồi đọc syncmap xác nhận `| 1 | 0.0 | 0:00 |`.
 2. `<audio>.marks.json` — mặc định; bỏ qua hẳn whisper. Ghi đè đường dẫn bằng `--marks`.
 3. Dò mới bằng whisper — chỉ khi file mốc thiếu / hỏng / lệch `audio_bytes`, hoặc
    ép bằng `--redetect`. Dò xong GHI LẠI file mốc.
@@ -53,9 +59,15 @@ Syncmap có dòng `Nguồn mốc:` ghi rõ lần dựng này lấy mốc từ đ
   `"2:35"`. Đây là cách vá lệch đồng bộ rẻ nhất — không phải liệt kê lại cả N mốc như
   `--timings`.
 - **`<audio>.transcript.txt` sinh kèm** (dòng `[mm:ss] câu`): whisper đã chạy nên không
-  tốn thêm gì. Khi audio là podcast 2 giọng không xướng "Phần N" (finding #8), đọc file
-  này tìm câu mở đầu từng chủ đề rồi điền vào `marks` — thay hẳn script dump transcript
-  ad-hoc và lần transcribe thứ hai.
+  tốn thêm gì. Dùng nó cho hai việc:
+  1. **Sót 1–2 mốc** (ca thường gặp nhất): gần như luôn là whisper nghe nhầm SỐ ĐẾM
+     tiếng Việt — đã gặp "phần chín"→"phần triển", "phần sáu"→"phần solve",
+     "Phần bảy"→"Phần B", "Phần năm"→"Phật nằm". Dump transcript trong KHOẢNG TRỐNG giữa
+     hai mốc kề là thấy ngay, kèm đúng tiêu đề slide → điền `marks`, KHÔNG sinh lại audio.
+  2. **Audio không xướng "Phần N" chút nào**: tìm câu mở đầu từng chủ đề rồi điền `marks` —
+     thay hẳn script dump transcript ad-hoc và lần transcribe thứ hai.
+  Lưu ý: podcast 2 giọng VẪN thường xướng đủ "Phần N" (live-run 2026-07-31) — đừng mặc
+  định là không, và đừng loại bản audio chỉ vì nó hai giọng.
 
 ## Cơ chế
 
