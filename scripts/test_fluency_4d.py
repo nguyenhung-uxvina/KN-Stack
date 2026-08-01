@@ -225,3 +225,23 @@ def test_apply_session_ignores_failed_row():
         out = lint.apply_session(row, held=held)
         assert out["streak"] == 0 and out["breaks"] == 3 and out["status"] == "FAILED"
         assert out is not row
+
+
+def test_ledger_lifecycle_four_sessions():
+    """Bốn phiên liên tiếp: streak 1→2→3→PASSED, mọi dòng sổ hợp lệ."""
+    sample = lint.extract_sample_record(LEDGER_DOC)
+    exp = {"id": "EXP-001", "cell": "des.product",
+           "if_then": "Khi giao task > 30 phút, tôi nêu tiêu chí xong trước khi bấm gửi.",
+           "streak": 0, "breaks": 0, "status": "OPEN", "opened": "2026-08-01", "closed": ""}
+    streaks = []
+    for day, held in enumerate([True, True, True, True], start=1):
+        rec = dict(sample)
+        rec["id"] = f"2026-08-0{day}-1"
+        rec["date"] = f"2026-08-0{day}"
+        rec["exp_active"] = exp["id"]
+        rec["exp_held"] = held
+        assert lint.validate_ledger_line(rec) == [], rec["id"]
+        if exp["status"] == "OPEN":
+            exp = lint.apply_session(exp, held=held)
+        streaks.append((exp["streak"], exp["status"]))
+    assert streaks == [(1, "OPEN"), (2, "OPEN"), (3, "PASSED"), (3, "PASSED")]
