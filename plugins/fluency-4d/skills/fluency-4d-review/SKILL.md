@@ -13,6 +13,10 @@ description: Mổ xẻ phiên làm việc vừa xong theo khung AI Fluency 4D �
 - `../_shared/references/ledger-schema.md` — schema dòng sổ
 - `../_shared/references/experiment-protocol.md` — luật WIP=1 và streak
 
+**Đọc không được thì DỪNG.** Nếu bất kỳ file nào trong bốn file trên không mở được, KHÔNG chấm điểm.
+In thẳng file nào thiếu và dừng lại. Chấm thiếu rubric hoặc thiếu profile sẽ ra một báo cáo trông
+đầy đủ nhưng đã mất sạch thang điểm và tín hiệu ngành — im lặng chấm tiếp là lỗi nặng hơn không chấm.
+
 Sổ điểm: `D:\Workshop_X\2_Areas\CEO-Self\AI-Fluency-Ledger\`
 
 ## Ba chốt bắt buộc
@@ -29,13 +33,19 @@ Sổ điểm: `D:\Workshop_X\2_Areas\CEO-Self\AI-Fluency-Ledger\`
 
 **Bước 2 — Chấm 12 ô.** Theo `rubric-core.md`, soi tín hiệu trong `profile-workshop-x.md`. Ghi chế độ phiên: automation / augmentation / agency. Thứ tự: `del.problem`, `del.platform`, `del.task`, `des.product`, `des.process`, `des.performance`, `dis.product`, `dis.process`, `dis.performance`, `dil.creation`, `dil.transparency`, `dil.deployment`.
 
-**Bước 3 — Nghiệm thu thí nghiệm đang mở TRƯỚC.** Đọc `experiments.md`. Nếu có dòng `OPEN`: phiên này giữ được hay đứt? Giữ → streak +1 (đủ 3 → `PASSED`, ghi ngày đóng). Đứt → streak về 0, cột `đứt` +1 (đủ 3 → `FAILED`). Làm xong bước này rồi mới đi tiếp.
+**Bước 3 — Nghiệm thu thí nghiệm đang mở TRƯỚC.** Đọc `experiments.md`. Nếu có dòng `OPEN`: phiên này giữ được hay đứt? Giữ → streak +1 (đủ 3 → `PASSED`, ghi ngày đóng). Đứt → streak về 0, cột `đứt` +1 (đủ 3 → `FAILED`). Chưa có file `experiments.md` → coi như chưa có thí nghiệm nào, đi tiếp (Bước 6 sẽ tạo file). Làm xong bước này rồi mới đi tiếp.
 
-**Bước 4 — Chọn ô yếu nhất.** Điểm thấp nhất. Hòa → ô xuất hiện làm `weakest` nhiều lần nhất trong `sessions.jsonl` 30 ngày gần nhất. Vẫn hòa → thứ tự ưu tiên `dil` > `dis` > `des` > `del`.
+**Bước 4 — Chốt hai thứ KHÁC NHAU: `weakest` và ô mục tiêu thí nghiệm.** Đừng gộp hai cái này.
 
-**Bước 5 — Kê hoặc giữ thí nghiệm.** **WIP = 1.** Còn dòng `OPEN` sau Bước 3 → giữ nguyên, KHÔNG kê mới, kể cả khi Bước 4 tìm được ô yếu nặng hơn; chỉ nói một dòng rằng ô đó đang xếp hàng. Không còn dòng `OPEN` → kê đúng một thí nghiệm dạng nếu–thì ("Khi …, tôi …"), nhắm ô ở Bước 4. Nếu thí nghiệm vừa `FAILED` → kê cái NHỎ HƠN cho cùng ô, cấm chép lại câu cũ.
+- **`weakest` (ghi vào sổ)** = ô có điểm **thấp nhất tuyệt đối** trong phiên, **kể cả** ô `dil.*` đang bị cờ đỏ. Không ô nào ≤ 2 → `weakest: null`. Ô chấm `null` (n/a) không tham gia so sánh. Giữ cờ đỏ trong `weakest` là cố ý: một thất bại Diligence mạn tính phải còn nhìn thấy được trong lịch sử 30 ngày.
+- **Ô mục tiêu thí nghiệm** = ô thấp nhất **sau khi LOẠI mọi ô `dil.*` chấm `0`**. Những ô đó đi vào CỜ ĐỎ — xem mục "Ngoại lệ cờ đỏ": xử ngay trong phiên, cấm đưa vào vòng thí nghiệm. Hòa → ô xuất hiện làm `weakest` nhiều lần nhất trong `sessions.jsonl` 30 ngày gần nhất. Vẫn hòa → thứ tự ưu tiên `dil` > `dis` > `des` > `del`, áp lên các ô CÒN LẠI sau khi loại. Loại xong không còn ô nào ≤ 2 → không kê thí nghiệm, nói thẳng lý do.
+
+**Bước 5 — Kê hoặc giữ thí nghiệm.** **WIP = 1.** Còn dòng `OPEN` sau Bước 3 → giữ nguyên, KHÔNG kê mới, kể cả khi Bước 4 tìm được ô yếu nặng hơn; chỉ nói một dòng rằng ô đó đang xếp hàng. Không còn dòng `OPEN` → kê đúng một thí nghiệm dạng nếu–thì ("Khi …, tôi …"), nhắm **ô mục tiêu thí nghiệm** ở Bước 4 (KHÔNG phải `weakest`, nếu hai ô đó khác nhau). Nếu thí nghiệm vừa `FAILED` → kê cái NHỎ HƠN cho cùng ô, cấm chép lại câu cũ.
 
 **Bước 6 — Ghi sổ.** Append đúng một dòng vào `sessions.jsonl` theo `ledger-schema.md`; cập nhật `experiments.md`. Trích dẫn bằng chứng KHÔNG được đưa vào `sessions.jsonl` — nó chỉ nằm trong báo cáo in ra màn hình.
+
+- **Chưa có sổ → tạo trước khi ghi.** Thiếu thư mục `AI-Fluency-Ledger/` → tạo, kèm thư mục con `weekly/`. Thiếu `sessions.jsonl` → tạo file rỗng. Thiếu `experiments.md` → tạo với đúng dòng tiêu đề 8 cột của bảng trong `experiment-protocol.md` cộng dòng gạch, chưa có dòng dữ liệu nào. Cấm tự chế cột hoặc đổi tên cột.
+- **Phiên vừa mở thí nghiệm ở Bước 5 thì ghi gì.** Phiên MỞ thí nghiệm ghi `"exp_active": null, "exp_held": null` — thí nghiệm chỉ được tính từ phiên KẾ TIẾP trở đi. Dòng `OPEN` mới vẫn được thêm vào `experiments.md` với `streak` = 0. Chỉ phiên nghiệm thu ở Bước 3 mới ghi `exp_active` = ID và `exp_held: true/false`.
 
 ## Ngoại lệ cờ đỏ
 
