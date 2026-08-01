@@ -1,0 +1,20 @@
+{
+  "skill": "fluency-4d-review",
+  "version": "1.0",
+  "description": "Binary assertions cho skill mổ xẻ phiên theo khung 4D",
+  "mode": "static",
+  "total_required": 10,
+  "passing_score": 10,
+  "assertions": [
+    {"id": "4DR-CELLS", "name": "twelve_cells", "check": "liệt kê đủ 12 mã ô, mốc đầu và mốc cuối", "regex": "del\\.problem[\\s\\S]*dil\\.deployment", "required": true},
+    {"id": "4DR-SCALE", "name": "scale_with_na", "check": "thang 0-3 và null tách bạch khỏi 0", "regex": "null[^\\n]*n/a|n/a[^\\n]*khác", "required": true},
+    {"id": "4DR-EVIDENCE", "name": "no_evidence_no_score", "check": "chốt 1: không trích dẫn được thì chấm null", "regex": "[Kk]hông bằng chứng, không điểm", "required": true},
+    {"id": "4DR-PAIN", "name": "must_find_pain", "check": "chốt 2: bắt buộc nêu ô ≤ 1 hoặc tuyên bố rõ", "regex": "ít nhất một ô ≤ ?1|không tìm thấy ô nào dưới 2", "required": true},
+    {"id": "4DR-ORDER", "name": "score_before_praise", "check": "chốt 3: chấm trước, khen sau", "regex": "[Cc]hấm trước, khen sau", "required": true},
+    {"id": "4DR-6STEPS", "name": "six_steps", "check": "quy trình có đủ 6 bước đánh số", "regex": "Bước 6", "required": true},
+    {"id": "4DR-VERIFY-FIRST", "name": "experiment_verified_first", "check": "nghiệm thu thí nghiệm đang mở TRƯỚC khi kê mới", "regex": "nghiệm thu[\\s\\S]{0,120}trước", "required": true},
+    {"id": "4DR-WIP", "name": "wip_one", "check": "còn thí nghiệm OPEN thì không kê mới", "regex": "WIP ?= ?1", "required": true},
+    {"id": "4DR-REDFLAG", "name": "diligence_red_flag", "check": "Diligence = 0 bật cờ đỏ, không vào vòng thí nghiệm", "regex": "cờ đỏ", "required": true},
+    {"id": "4DR-LEDGER", "name": "append_ledger", "check": "append đúng 1 dòng vào sessions.jsonl, bằng chứng không vào JSONL", "regex": "sessions\\.jsonl", "required": true}
+  ]
+}
