@@ -11,6 +11,7 @@ sys.modules["fluency_4d_lint"] = lint
 _spec.loader.exec_module(lint)
 
 RUBRIC = (lint.REF_DIR / "rubric-core.md").read_text(encoding="utf-8")
+PROFILE = (lint.REF_DIR / "profile-workshop-x.md").read_text(encoding="utf-8")
 
 
 def test_cells_are_the_canonical_twelve():
@@ -38,3 +39,32 @@ def test_rubric_lint_flags_workshop_x_leakage():
 def test_rubric_lint_flags_missing_cell():
     stripped = RUBRIC.replace("`dil.deployment`", "`dil.deploy`", 1)
     assert lint.lint_rubric(stripped)
+
+
+def test_modes_constant_is_canonical():
+    assert lint.MODES == {"automation", "augmentation", "agency"}
+
+
+def test_profile_covers_every_rubric_cell():
+    assert sorted(lint.parse_profile(PROFILE)) == sorted(lint.CELLS)
+
+
+def test_profile_blocks_have_three_required_fields():
+    for cell, block in lint.parse_profile(PROFILE).items():
+        assert block["tin_hieu"].strip(), f"{cell} thiếu Tín hiệu"
+        assert block["co_do"].strip(), f"{cell} thiếu Cờ đỏ"
+        assert block["vi_du"].strip(), f"{cell} thiếu Ví dụ ngành"
+
+
+def test_profile_is_clean():
+    assert lint.lint_profile(PROFILE) == []
+
+
+def test_profile_lint_flags_scale_redefinition():
+    dirty = PROFILE + "\n## Thang điểm\nDùng thang 0-3 riêng.\n"
+    assert any("thang điểm" in e.lower() for e in lint.lint_profile(dirty))
+
+
+def test_profile_lint_flags_missing_cell():
+    dirty = PROFILE.replace("## dil.deployment", "## dil.xxx", 1)
+    assert any("dil.deployment" in e for e in lint.lint_profile(dirty))
