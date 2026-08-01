@@ -68,3 +68,65 @@ def test_profile_lint_flags_scale_redefinition():
 def test_profile_lint_flags_missing_cell():
     dirty = PROFILE.replace("## dil.deployment", "## dil.xxx", 1)
     assert any("dil.deployment" in e for e in lint.lint_profile(dirty))
+
+
+import copy
+import json
+
+LEDGER_DOC = (lint.REF_DIR / "ledger-schema.md").read_text(encoding="utf-8")
+
+
+def _good_record():
+    return copy.deepcopy(lint.extract_sample_record(LEDGER_DOC))
+
+
+def test_sample_record_in_doc_is_valid():
+    assert lint.validate_ledger_line(_good_record()) == []
+
+
+def test_sample_record_has_every_cell():
+    rec = _good_record()
+    flat = {f"{g}.{k}" for g, sub in rec["scores"].items() for k in sub}
+    assert flat == set(lint.CELLS)
+
+
+def test_rejects_missing_top_level_key():
+    rec = _good_record()
+    del rec["weakest"]
+    assert any("weakest" in e for e in lint.validate_ledger_line(rec))
+
+
+def test_rejects_score_out_of_range():
+    rec = _good_record()
+    rec["scores"]["del"]["problem"] = 4
+    assert any("del.problem" in e for e in lint.validate_ledger_line(rec))
+
+
+def test_accepts_null_as_na():
+    rec = _good_record()
+    rec["scores"]["del"]["problem"] = None
+    assert lint.validate_ledger_line(rec) == []
+
+
+def test_rejects_unknown_mode():
+    rec = _good_record()
+    rec["mode"] = "collaboration"
+    assert any("mode" in e for e in lint.validate_ledger_line(rec))
+
+
+def test_rejects_bad_id_format():
+    rec = _good_record()
+    rec["id"] = "2026-08-01"
+    assert any("id" in e for e in lint.validate_ledger_line(rec))
+
+
+def test_rejects_weakest_not_a_cell():
+    rec = _good_record()
+    rec["weakest"] = "des.speed"
+    assert any("weakest" in e for e in lint.validate_ledger_line(rec))
+
+
+def test_exp_active_and_exp_held_must_agree():
+    rec = _good_record()
+    rec["exp_active"] = None
+    assert any("exp_held" in e for e in lint.validate_ledger_line(rec))

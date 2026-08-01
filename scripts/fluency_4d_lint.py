@@ -4,6 +4,7 @@ Nằm ngoài plugin (plugin phải thuần Markdown để Cowork nạp được)
 """
 from __future__ import annotations
 
+import json
 import re
 from pathlib import Path
 
@@ -93,5 +94,79 @@ def lint_profile(text: str) -> list[str]:
         errors.append("profile không được định nghĩa lại thang điểm")
     if "0-3" in text or "0–3" in text:
         errors.append("profile không được định nghĩa lại thang điểm (tìm thấy '0-3' hoặc '0–3')")
+
+    return errors
+
+
+# Ledger schema validation
+_JSON_BLOCK_RE = re.compile(r"```json\s*\n(.*?)\n```", re.DOTALL)
+_ID_RE = re.compile(r"^\d{4}-\d{2}-\d{2}-\d+$")
+_DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
+_EXP_RE = re.compile(r"^EXP-\d{3}$")
+
+_GROUPS = {
+    "del": ["problem", "platform", "task"],
+    "des": ["product", "process", "performance"],
+    "dis": ["product", "process", "performance"],
+    "dil": ["creation", "transparency", "deployment"],
+}
+_TOP_KEYS = ["id", "date", "project", "mode", "scores", "weakest", "exp_active", "exp_held"]
+
+
+def extract_sample_record(text: str) -> dict:
+    """Lấy bản ghi mẫu trong khối ```json đầu tiên của ledger-schema.md."""
+    m = _JSON_BLOCK_RE.search(text)
+    if not m:
+        raise ValueError("ledger-schema.md không có khối ```json nào")
+    return json.loads(m.group(1))
+
+
+def validate_ledger_line(obj: dict) -> list[str]:
+    """Kiểm một bản ghi sổ điểm. Trả danh sách lỗi; rỗng nghĩa là đạt."""
+    errors: list[str] = []
+    for key in _TOP_KEYS:
+        if key not in obj:
+            errors.append(f"thiếu khóa bắt buộc: {key}")
+    if errors:
+        return errors
+
+    if not _ID_RE.match(str(obj["id"])):
+        errors.append(f"id sai định dạng <YYYY-MM-DD>-<n>: {obj['id']!r}")
+    if not _DATE_RE.match(str(obj["date"])):
+        errors.append(f"date sai định dạng YYYY-MM-DD: {obj['date']!r}")
+    if not str(obj["project"]).strip():
+        errors.append("project rỗng")
+    if obj["mode"] not in MODES:
+        errors.append(f"mode không hợp lệ: {obj['mode']!r} (phải thuộc {sorted(MODES)})")
+
+    scores = obj["scores"]
+    if not isinstance(scores, dict):
+        errors.append("scores phải là object")
+    else:
+        if set(scores) != set(_GROUPS):
+            errors.append(f"scores sai nhóm: {sorted(scores)} (cần {sorted(_GROUPS)})")
+        for group, subs in _GROUPS.items():
+            sub = scores.get(group)
+            if not isinstance(sub, dict):
+                errors.append(f"scores.{group} phải là object")
+                continue
+            if set(sub) != set(subs):
+                errors.append(f"scores.{group} sai khóa con: {sorted(sub)} (cần {sorted(subs)})")
+            for name, val in sub.items():
+                if val is None:
+                    continue
+                if not isinstance(val, int) or isinstance(val, bool) or not 0 <= val <= 3:
+                    errors.append(f"{group}.{name} phải là số nguyên 0-3 hoặc null, gặp: {val!r}")
+
+    if obj["weakest"] is not None and obj["weakest"] not in CELLS:
+        errors.append(f"weakest không phải mã ô hợp lệ: {obj['weakest']!r}")
+
+    exp, held = obj["exp_active"], obj["exp_held"]
+    if exp is not None and not _EXP_RE.match(str(exp)):
+        errors.append(f"exp_active sai định dạng EXP-###: {exp!r}")
+    if held is not None and not isinstance(held, bool):
+        errors.append(f"exp_held phải là true/false/null, gặp: {held!r}")
+    if (exp is None) != (held is None):
+        errors.append("exp_active và exp_held phải cùng null hoặc cùng có giá trị")
 
     return errors
