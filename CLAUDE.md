@@ -26,8 +26,7 @@ KN-Stack/
 │   ├── system/       (16) — System design tools (gate0-3, decide, cld)
 │   └── tana/         (9)  — Tana integration (THỊNH workflow capture: tana-thu/hoa/ich/nho/hanh, tana-session, tana-weekly)
 ├── plugins/          ← Self-contained portable Claude plugins (copy-anywhere, no junction dependency)
-│   ├── fluency-4d/   — AI Fluency 4D coach (3 skills: preflight/review/weekly; Markdown/JSON only, ledger at D:\Workshop_X\2_Areas\CEO-Self\AI-Fluency-Ledger\)
-│   └── leo-ai/       — 4 LEO skills + leo-bridge MCP server packaged for copy-anywhere deployment
+│   └── fluency-4d/   — AI Fluency 4D coach (3 skills: preflight/review/weekly; Markdown/JSON only, ledger at D:\Workshop_X\2_Areas\CEO-Self\AI-Fluency-Ledger\)
 ├── scripts/          ← Python scripts codified from skills (Naval code leverage)
 │   └── _codify_ledger.md  (append-only registry of markdown→Python conversions)
 ├── hooks/            ← 3 hook scripts (SessionStart, UserPromptSubmit, Stop)
