@@ -1,26 +1,129 @@
 {
   "skill": "fluency-4d-review",
-  "version": "1.3",
+  "version": "1.2",
   "description": "Binary assertions cho skill mổ xẻ phiên theo khung 4D",
   "mode": "static",
-  "total_required": 16,
-  "passing_score": 16,
+  "total_required": 17,
+  "passing_score": 17,
   "assertions": [
-    {"id": "4DR-CELLS", "name": "twelve_cells", "check": "liệt kê đủ 12 mã ô theo đúng thứ tự chính tắc", "regex": "del\\.problem[\\s\\S]*del\\.platform[\\s\\S]*del\\.task[\\s\\S]*des\\.product[\\s\\S]*des\\.process[\\s\\S]*des\\.performance[\\s\\S]*dis\\.product[\\s\\S]*dis\\.process[\\s\\S]*dis\\.performance[\\s\\S]*dil\\.creation[\\s\\S]*dil\\.transparency[\\s\\S]*dil\\.deployment", "required": true},
-    {"id": "4DR-SCALE", "name": "scale_with_na", "check": "câu phân biệt rõ null (không có cơ hội quan sát) khác 0 (có cơ hội mà bỏ qua)", "regex": "null[\\s\\S]{0,20}phiên không tạo cơ hội quan sát[\\s\\S]{0,20}khác[\\s\\S]{0,15}0[\\s\\S]{0,20}có cơ hội mà bỏ qua", "required": true},
-    {"id": "4DR-EVIDENCE", "name": "no_evidence_no_score", "check": "chốt 1: không trích dẫn được thì chấm null — cả tên chốt lẫn cơ chế null", "regex": "Không bằng chứng, không điểm[\\s\\S]{0,150}Không trích dẫn được[\\s\\S]{0,30}chấm[\\s\\S]{0,20}null", "required": true},
-    {"id": "4DR-PAIN", "name": "must_find_pain", "check": "chốt 2: bắt buộc nêu ô ≤ 1 hoặc tuyên bố rõ", "regex": "ít nhất một ô ≤ ?1|không tìm thấy ô nào dưới 2", "required": true},
-    {"id": "4DR-ORDER", "name": "score_before_praise", "check": "chốt 3: chấm trước, khen sau — cả tên chốt lẫn cơ chế (in bảng điểm xong mới viết)", "regex": "Chấm trước, khen sau[\\s\\S]{0,150}In bảng điểm[\\s\\S]{0,120}xong mới được viết", "required": true},
-    {"id": "4DR-6STEPS", "name": "six_steps", "check": "quy trình có đủ 6 bước đánh số riêng biệt, theo thứ tự", "regex": "Bước 1[\\s\\S]*Bước 2[\\s\\S]*Bước 3[\\s\\S]*Bước 4[\\s\\S]*Bước 5[\\s\\S]*Bước 6", "required": true},
-    {"id": "4DR-VERIFY-FIRST", "name": "experiment_verified_first", "check": "nghiệm thu thí nghiệm đang mở TRƯỚC, và bước này phải xong rồi mới đi tiếp", "regex": "Nghiệm thu thí nghiệm đang mở[\\s\\S]{0,20}TRƯỚC[\\s\\S]{0,300}Làm xong bước này rồi mới đi tiếp", "required": true},
-    {"id": "4DR-WIP", "name": "wip_one", "check": "WIP=1 gắn với cơ chế: còn dòng OPEN thì không kê mới, kể cả khi bước 4 tìm được ô yếu hơn", "regex": "WIP ?= ?1[\\s\\S]{0,30}OPEN[\\s\\S]{0,80}KHÔNG kê mới[\\s\\S]{0,80}Bước 4", "required": true},
-    {"id": "4DR-REDFLAG", "name": "diligence_red_flag", "check": "dil.* = 0 không vào vòng thí nghiệm, cảnh báo lên đầu báo cáo — không chỉ tiêu đề mục", "regex": "dil[\\s\\S]{0,40}0[\\s\\S]{0,150}không[\\s\\S]{0,60}vòng thí nghiệm[\\s\\S]{0,100}lên đầu báo cáo", "required": true},
-    {"id": "4DR-LEDGER", "name": "append_ledger", "check": "append đúng một dòng vào sessions.jsonl, và bằng chứng bị loại khỏi JSONL", "regex": "đúng một dòng[\\s\\S]{0,30}sessions\\.jsonl[\\s\\S]{0,150}bằng chứng[\\s\\S]{0,20}KHÔNG[\\s\\S]{0,40}sessions\\.jsonl", "required": true},
-    {"id": "4DR-REFS-STOP", "name": "halts_when_references_unreadable", "check": "đọc không được file tham chiếu thì DỪNG, không chấm — kèm lý do báo cáo trông đủ nhưng mất thang điểm và tín hiệu ngành", "regex": "Đọc không được thì DỪNG[\\s\\S]{0,80}không mở được[\\s\\S]{0,30}KHÔNG chấm điểm[\\s\\S]{0,200}mất sạch thang điểm và tín hiệu ngành", "required": true},
-    {"id": "4DR-WEAKEST", "name": "weakest_is_absolute_lowest_with_tiebreak", "check": "weakest = ô thấp nhất TUYỆT ĐỐI kể cả ô dil.* bị cờ đỏ, null khi không ô nào ≤ 2, PLUS đủ 3 bước tie-break xác định (tần suất weakest 30 ngày → ưu tiên nhóm dil>dis>des>del → thứ tự chính tắc trong nhóm) — không chỉ chữ 'ô yếu nhất'", "regex": "weakest[\\s\\S]{0,40}thấp nhất tuyệt đối[\\s\\S]{0,40}kể cả[\\s\\S]{0,60}cờ đỏ[\\s\\S]{0,40}Không ô nào ≤ ?2[\\s\\S]{0,20}weakest: null[\\s\\S]{0,200}Hòa[\\s\\S]{0,70}sessions\\.jsonl[\\s\\S]{0,40}Vẫn hòa[\\s\\S]{0,40}dil[\\s\\S]{0,10}>[\\s\\S]{0,10}dis[\\s\\S]{0,10}>[\\s\\S]{0,10}des[\\s\\S]{0,10}>[\\s\\S]{0,10}del[\\s\\S]{0,80}thứ tự chính tắc[\\s\\S]{0,150}creation[\\s\\S]{0,20}transparency[\\s\\S]{0,20}deployment", "required": true},
-    {"id": "4DR-EXP-TARGET", "name": "experiment_target_excludes_red_flags", "check": "ô mục tiêu thí nghiệm phải LOẠI mọi ô dil.* chấm 0 — tách bạch với weakest, không để Bước 4 trỏ vào ô Bước 5 cấm, PLUS tie-break trong nhóm (thứ tự chính tắc) để chuỗi hòa kết thúc dứt điểm chứ không dừng ở ưu tiên nhóm", "regex": "Ô mục tiêu thí nghiệm[\\s\\S]{0,40}sau khi LOẠI mọi ô `dil\\.\\*` chấm[\\s\\S]{0,10}0[\\s\\S]{0,120}cấm đưa vào vòng thí nghiệm[\\s\\S]{0,300}áp lên các ô CÒN LẠI sau khi loại[\\s\\S]{0,80}thứ tự chính tắc[\\s\\S]{0,150}creation[\\s\\S]{0,20}transparency[\\s\\S]{0,20}deployment[\\s\\S]{0,80}Loại xong không còn ô nào ≤ ?2", "required": true},
-    {"id": "4DR-EXP-TARGET-USE", "name": "step5_aims_at_target_not_weakest", "check": "Bước 5 kê thí nghiệm nhắm ô mục tiêu ở Bước 4, nói rõ KHÔNG phải weakest khi hai ô khác nhau", "regex": "nhắm \\*\\*ô mục tiêu thí nghiệm\\*\\* ở Bước 4[\\s\\S]{0,20}KHÔNG phải[\\s\\S]{0,15}weakest", "required": true},
-    {"id": "4DR-EXP-OPEN", "name": "opening_session_writes_null_pair", "check": "phiên MỞ thí nghiệm ghi exp_active null và exp_held null, thí nghiệm tính từ phiên KẾ TIẾP — không chỉ nhắc tên trường", "regex": "Phiên MỞ thí nghiệm ghi[\\s\\S]{0,10}\"exp_active\": null, \"exp_held\": null[\\s\\S]{0,40}chỉ được tính từ phiên KẾ TIẾP trở đi", "required": true},
-    {"id": "4DR-BOOTSTRAP", "name": "creates_ledger_when_missing", "check": "Bước 6 tự dựng sổ khi chưa có: thư mục + sessions.jsonl rỗng + experiments.md đúng tiêu đề 8 cột, cấm tự chế cột", "regex": "Chưa có sổ[\\s\\S]{0,40}Thiếu thư mục[\\s\\S]{0,40}AI-Fluency-Ledger[\\s\\S]{0,60}Thiếu[\\s\\S]{0,20}sessions\\.jsonl[\\s\\S]{0,30}tạo file rỗng[\\s\\S]{0,60}experiments\\.md[\\s\\S]{0,80}tiêu đề 8 cột[\\s\\S]{0,120}Cấm tự chế cột", "required": true}
+    {
+      "id": "4DR-CELLS",
+      "name": "twelve_cells",
+      "check": "liệt kê đủ 12 mã ô theo đúng thứ tự chính tắc",
+      "regex": "del\\.problem[\\s\\S]*del\\.platform[\\s\\S]*del\\.task[\\s\\S]*des\\.product[\\s\\S]*des\\.process[\\s\\S]*des\\.performance[\\s\\S]*dis\\.product[\\s\\S]*dis\\.process[\\s\\S]*dis\\.performance[\\s\\S]*dil\\.creation[\\s\\S]*dil\\.transparency[\\s\\S]*dil\\.deployment",
+      "required": true
+    },
+    {
+      "id": "4DR-SCALE",
+      "name": "scale_with_na",
+      "check": "câu phân biệt rõ null (không có cơ hội quan sát) khác 0 (có cơ hội mà bỏ qua)",
+      "regex": "null[\\s\\S]{0,20}phiên không tạo cơ hội quan sát[\\s\\S]{0,20}khác[\\s\\S]{0,15}0[\\s\\S]{0,20}có cơ hội mà bỏ qua",
+      "required": true
+    },
+    {
+      "id": "4DR-EVIDENCE",
+      "name": "no_evidence_no_score",
+      "check": "chốt 1: không trích dẫn được thì chấm null — cả tên chốt lẫn cơ chế null",
+      "regex": "Không bằng chứng, không điểm[\\s\\S]{0,150}Không trích dẫn được[\\s\\S]{0,30}chấm[\\s\\S]{0,20}null",
+      "required": true
+    },
+    {
+      "id": "4DR-PAIN",
+      "name": "must_find_pain",
+      "check": "chốt 2: bắt buộc nêu ô ≤ 1 hoặc tuyên bố rõ",
+      "regex": "ít nhất một ô ≤ ?1|không tìm thấy ô nào dưới 2",
+      "required": true
+    },
+    {
+      "id": "4DR-ORDER",
+      "name": "score_before_praise",
+      "check": "chốt 3: chấm trước, khen sau — cả tên chốt lẫn cơ chế (in bảng điểm xong mới viết)",
+      "regex": "Chấm trước, khen sau[\\s\\S]{0,150}In bảng điểm[\\s\\S]{0,120}xong mới được viết",
+      "required": true
+    },
+    {
+      "id": "4DR-6STEPS",
+      "name": "six_steps",
+      "check": "quy trình có đủ 6 bước đánh số riêng biệt, theo thứ tự",
+      "regex": "Bước 1[\\s\\S]*Bước 2[\\s\\S]*Bước 3[\\s\\S]*Bước 4[\\s\\S]*Bước 5[\\s\\S]*Bước 6",
+      "required": true
+    },
+    {
+      "id": "4DR-VERIFY-FIRST",
+      "name": "experiment_verified_first",
+      "check": "nghiệm thu thí nghiệm đang mở TRƯỚC, và bước này phải xong rồi mới đi tiếp",
+      "regex": "Nghiệm thu thí nghiệm đang mở[\\s\\S]{0,20}TRƯỚC[\\s\\S]{0,300}Làm xong bước này rồi mới đi tiếp",
+      "required": true
+    },
+    {
+      "id": "4DR-WIP",
+      "name": "wip_one",
+      "check": "WIP=1 gắn với cơ chế: còn dòng OPEN thì không kê mới, kể cả khi bước 4 tìm được ô yếu hơn",
+      "regex": "WIP ?= ?1[\\s\\S]{0,30}OPEN[\\s\\S]{0,80}KHÔNG kê mới[\\s\\S]{0,80}Bước 4",
+      "required": true
+    },
+    {
+      "id": "4DR-REDFLAG",
+      "name": "diligence_red_flag",
+      "check": "dil.* = 0 không vào vòng thí nghiệm, cảnh báo lên đầu báo cáo — không chỉ tiêu đề mục",
+      "regex": "dil[\\s\\S]{0,40}0[\\s\\S]{0,150}không[\\s\\S]{0,60}vòng thí nghiệm[\\s\\S]{0,100}lên đầu báo cáo",
+      "required": true
+    },
+    {
+      "id": "4DR-LEDGER",
+      "name": "append_ledger",
+      "check": "append đúng một dòng vào sessions.jsonl, và bằng chứng bị loại khỏi JSONL",
+      "regex": "đúng một dòng[\\s\\S]{0,30}sessions\\.jsonl[\\s\\S]{0,150}bằng chứng[\\s\\S]{0,20}KHÔNG[\\s\\S]{0,40}sessions\\.jsonl",
+      "required": true
+    },
+    {
+      "id": "4DR-REFS-STOP",
+      "name": "halts_when_references_unreadable",
+      "check": "đọc không được file tham chiếu thì DỪNG, không chấm — kèm lý do báo cáo trông đủ nhưng mất thang điểm và tín hiệu ngành",
+      "regex": "Đọc không được thì DỪNG[\\s\\S]{0,80}không mở được[\\s\\S]{0,30}KHÔNG chấm điểm[\\s\\S]{0,200}mất sạch thang điểm và tín hiệu ngành",
+      "required": true
+    },
+    {
+      "id": "4DR-WEAKEST",
+      "name": "weakest_is_absolute_lowest_with_tiebreak",
+      "check": "weakest = ô thấp nhất TUYỆT ĐỐI kể cả ô dil.* bị cờ đỏ, null khi không ô nào ≤ 2, PLUS đủ 3 bước tie-break xác định (tần suất weakest 30 ngày → ưu tiên nhóm dil>dis>des>del → thứ tự chính tắc trong nhóm) — không chỉ chữ 'ô yếu nhất'",
+      "regex": "weakest[\\s\\S]{0,40}thấp nhất tuyệt đối[\\s\\S]{0,40}kể cả[\\s\\S]{0,60}cờ đỏ[\\s\\S]{0,40}Không ô nào ≤ ?2[\\s\\S]{0,20}weakest: null[\\s\\S]{0,200}Hòa[\\s\\S]{0,70}sessions\\.jsonl[\\s\\S]{0,40}Vẫn hòa[\\s\\S]{0,40}dil[\\s\\S]{0,10}>[\\s\\S]{0,10}dis[\\s\\S]{0,10}>[\\s\\S]{0,10}des[\\s\\S]{0,10}>[\\s\\S]{0,10}del[\\s\\S]{0,80}thứ tự chính tắc[\\s\\S]{0,150}creation[\\s\\S]{0,20}transparency[\\s\\S]{0,20}deployment",
+      "required": true
+    },
+    {
+      "id": "4DR-EXP-TARGET",
+      "name": "experiment_target_excludes_red_flags",
+      "check": "ô mục tiêu thí nghiệm phải LOẠI mọi ô dil.* chấm 0 — tách bạch với weakest, không để Bước 4 trỏ vào ô Bước 5 cấm, PLUS tie-break trong nhóm (thứ tự chính tắc) để chuỗi hòa kết thúc dứt điểm chứ không dừng ở ưu tiên nhóm",
+      "regex": "Ô mục tiêu thí nghiệm[\\s\\S]{0,40}sau khi LOẠI mọi ô `dil\\.\\*` chấm[\\s\\S]{0,10}0[\\s\\S]{0,120}cấm đưa vào vòng thí nghiệm[\\s\\S]{0,300}áp lên các ô CÒN LẠI sau khi loại[\\s\\S]{0,80}thứ tự chính tắc[\\s\\S]{0,150}creation[\\s\\S]{0,20}transparency[\\s\\S]{0,20}deployment[\\s\\S]{0,80}Loại xong không còn ô nào ≤ ?2",
+      "required": true
+    },
+    {
+      "id": "4DR-EXP-TARGET-USE",
+      "name": "step5_aims_at_target_not_weakest",
+      "check": "Bước 5 kê thí nghiệm nhắm ô mục tiêu ở Bước 4, nói rõ KHÔNG phải weakest khi hai ô khác nhau",
+      "regex": "nhắm \\*\\*ô mục tiêu thí nghiệm\\*\\* ở Bước 4[\\s\\S]{0,20}KHÔNG phải[\\s\\S]{0,15}weakest",
+      "required": true
+    },
+    {
+      "id": "4DR-EXP-OPEN",
+      "name": "opening_session_writes_null_pair",
+      "check": "phiên MỞ thí nghiệm ghi exp_active null và exp_held null, thí nghiệm tính từ phiên KẾ TIẾP — không chỉ nhắc tên trường",
+      "regex": "Phiên MỞ thí nghiệm ghi[\\s\\S]{0,10}\"exp_active\": null, \"exp_held\": null[\\s\\S]{0,40}chỉ được tính từ phiên KẾ TIẾP trở đi",
+      "required": true
+    },
+    {
+      "id": "4DR-BOOTSTRAP",
+      "name": "creates_ledger_when_missing",
+      "check": "Bước 6 tự dựng sổ khi chưa có: thư mục + sessions.jsonl rỗng + experiments.md đúng tiêu đề 8 cột, cấm tự chế cột",
+      "regex": "Chưa có sổ[\\s\\S]{0,40}Thiếu thư mục[\\s\\S]{0,40}AI-Fluency-Ledger[\\s\\S]{0,60}Thiếu[\\s\\S]{0,20}sessions\\.jsonl[\\s\\S]{0,30}tạo file rỗng[\\s\\S]{0,60}experiments\\.md[\\s\\S]{0,80}tiêu đề 8 cột[\\s\\S]{0,120}Cấm tự chế cột",
+      "required": true
+    },
+    {
+      "id": "4DR-REFPATH",
+      "name": "cites_shared_dir_by_exact_path",
+      "check": "bon file tham chieu phai duoc tro bang duong dan day du ../fluency-4d-shared/references/<file>.md, dung thu tu rubric -> profile -> ledger -> experiment",
+      "regex": "\\.\\./fluency-4d-shared/references/rubric-core\\.md[\\s\\S]{0,120}\\.\\./fluency-4d-shared/references/profile-workshop-x\\.md[\\s\\S]{0,120}\\.\\./fluency-4d-shared/references/ledger-schema\\.md[\\s\\S]{0,120}\\.\\./fluency-4d-shared/references/experiment-protocol\\.md",
+      "required": true
+    }
   ]
 }

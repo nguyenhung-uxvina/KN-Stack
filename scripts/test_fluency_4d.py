@@ -241,17 +241,65 @@ def test_skills_are_clean():
 
 
 def test_skills_cite_at_least_one_shared_reference():
-    cited = {r for text in SKILLS.values() for r in lint._REF_CITE_RE.findall(text)}
-    assert cited, "không SKILL.md nào trích dẫn ../_shared/references/ — regex đã chết"
+    cited = {r for text in SKILLS.values() for _, r in lint._REF_CITE_RE.findall(text)}
+    assert cited, "không SKILL.md nào trích dẫn thư mục tham chiếu — regex đã chết"
     assert "rubric-core.md" in cited
+
+
+def test_cited_dirs_are_all_the_shared_dir():
+    """Mọi citation phải trỏ đúng thư mục dùng chung, không chỉ đúng tên file."""
+    dirs = {d for text in SKILLS.values() for d, _ in lint._REF_CITE_RE.findall(text)}
+    assert dirs == {lint.SHARED_DIR_NAME}, f"thư mục lạ trong citation: {dirs}"
+
+
+def test_citations_resolve_relative_to_skill_dir():
+    """Copy trần: '..' trỏ thư mục cha thật, nên citation phải resolve từ chính skill dir.
+
+    Kiểm này khác `test_skills_are_clean` — chỗ kia hỏi 'file có tồn tại ở REF_DIR
+    không', chỗ này hỏi 'đi từ skill dir theo đúng chuỗi ../ có tới file không'.
+    Chỉ kiểm này bắt được lỗi cây thư mục bị dựng sai hình khi đem plugin đi nơi khác.
+    """
+    for name in lint.SKILL_NAMES:
+        skill_dir = lint.SKILLS_ROOT / name
+        text = (skill_dir / "SKILL.md").read_text(encoding="utf-8")
+        for ref_dir, ref in sorted(set(lint._REF_CITE_RE.findall(text))):
+            target = (skill_dir / ".." / ref_dir / "references" / ref).resolve()
+            assert target.is_file(), f"{name}: ../{ref_dir}/references/{ref} không resolve được"
 
 
 def test_lint_skills_flags_missing_reference_file():
     """Negative: SKILL.md trỏ tới file tham chiếu không tồn tại."""
     dirty = dict(SKILLS)
-    dirty["fluency-4d-review/SKILL.md"] += "\n- `../_shared/references/khong-co-that.md`\n"
+    dirty["fluency-4d-review/SKILL.md"] += (
+        f"\n- `../{lint.SHARED_DIR_NAME}/references/khong-co-that.md`\n"
+    )
     errors = lint.lint_skills(skills=dirty, all_markdown=PLUGIN_MD)
     assert any("khong-co-that.md" in e for e in errors)
+
+
+def test_lint_skills_flags_stale_shared_dir_in_skill():
+    """Negative — chế độ hỏng đã trả giá ở PR #16: tên file đúng, THƯ MỤC đã chết.
+
+    Trước khi siết, ca này xanh 43/43: regex nướng cứng tên thư mục nên citation
+    trỏ thư mục không tồn tại vẫn cho ra tên file có thật và vẫn được coi là đạt.
+    """
+    dirty = {
+        name: text.replace(f"../{lint.SHARED_DIR_NAME}/", "../_shared/")
+        for name, text in SKILLS.items()
+    }
+    assert dirty != SKILLS, "fixture không đổi được gì — citation đã không còn ở dạng ../"
+    errors = lint.lint_skills(skills=dirty, all_markdown=PLUGIN_MD)
+    assert any("sai thư mục dùng chung" in e for e in errors)
+
+
+def test_lint_skills_flags_stale_shared_dir_in_readme():
+    """Negative: đổi tên nửa vời — SKILL.md sửa rồi nhưng README còn trỏ tên cũ."""
+    dirty = dict(PLUGIN_MD)
+    key = "README.md"
+    assert key in dirty
+    dirty[key] = dirty[key].replace(f"{lint.SHARED_DIR_NAME}/references/", "_shared/references/")
+    errors = lint.lint_skills(skills=SKILLS, all_markdown=dirty)
+    assert any("thư mục tham chiếu lạ" in e for e in errors)
 
 
 def test_lint_skills_flags_reference_that_vanishes():
@@ -312,3 +360,28 @@ def test_ledger_lifecycle_four_sessions():
             exp = lint.apply_session(exp, held=held)
         streaks.append((exp["streak"], exp["status"]))
     assert streaks == [(1, "OPEN"), (2, "OPEN"), (3, "PASSED"), (3, "PASSED")]
+
+
+def test_ledger_lifecycle_same_broken_fixture_fails():
+    """Spec §9.3: chạy lại CÙNG một fixture 4 lần thì phải ra FAILED, không phải PASSED.
+
+    Fixture cài sẵn chính lỗi mà thí nghiệm nhắm tới, nên hành vi đứt mọi lần chạy.
+    Nhánh PASSED ở test trên là fixture ĐÃ SỬA — hai phép thử khác nhau, đừng gộp.
+    """
+    sample = lint.extract_sample_record(LEDGER_DOC)
+    exp = {"id": "EXP-001", "cell": "dil.creation",
+           "if_then": "Khi soạn prompt so sánh chi phí, tôi thay tên và giá thật bằng nhà cung cấp A/B.",
+           "streak": 0, "breaks": 0, "status": "OPEN", "opened": "2026-08-01", "closed": ""}
+    states = []
+    for day in range(1, 5):
+        rec = dict(sample)
+        rec["id"] = f"2026-08-0{day}-1"
+        rec["date"] = f"2026-08-0{day}"
+        rec["exp_active"] = exp["id"]
+        rec["exp_held"] = False  # fixture chứa sẵn lỗi → đứt, mọi lần
+        assert lint.validate_ledger_line(rec) == [], rec["id"]
+        if exp["status"] == "OPEN":
+            exp = lint.apply_session(exp, held=False)
+        states.append((exp["breaks"], exp["status"]))
+    assert states == [(1, "OPEN"), (2, "OPEN"), (3, "FAILED"), (3, "FAILED")]
+    assert exp["streak"] == 0, "streak không được nhích khi hành vi đứt mọi lần"

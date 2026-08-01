@@ -7,7 +7,7 @@ description: Cổng kiểm trước khi giao một việc lớn cho AI — ép q
 
 **COD:** Core (CEO quyết C/O/D) · Offload (AI viết lại phiếu giao việc)
 
-Đọc: `../_shared/references/rubric-core.md`, `../_shared/references/profile-workshop-x.md`.
+Đọc: `../fluency-4d-shared/references/rubric-core.md`, `../fluency-4d-shared/references/profile-workshop-x.md`.
 Thí nghiệm: `D:\Workshop_X\2_Areas\CEO-Self\AI-Fluency-Ledger\experiments.md`
 
 **Đọc không được thì DỪNG.** Nếu một trong hai file tham chiếu trên không mở được, KHÔNG chạy cổng.

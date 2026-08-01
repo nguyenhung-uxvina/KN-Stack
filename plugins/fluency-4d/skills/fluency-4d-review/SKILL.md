@@ -8,10 +8,10 @@ description: Mổ xẻ phiên làm việc vừa xong theo khung AI Fluency 4D �
 **COD:** Offload (AI chấm + ghi sổ) · Core (CEO nhận thí nghiệm và thực thi)
 
 Đọc trước khi chấm:
-- `../_shared/references/rubric-core.md` — 12 ô, thang điểm, ba chốt chống nịnh
-- `../_shared/references/profile-workshop-x.md` — tín hiệu và cờ đỏ cho từng ô
-- `../_shared/references/ledger-schema.md` — schema dòng sổ
-- `../_shared/references/experiment-protocol.md` — luật WIP=1 và streak
+- `../fluency-4d-shared/references/rubric-core.md` — 12 ô, thang điểm, ba chốt chống nịnh
+- `../fluency-4d-shared/references/profile-workshop-x.md` — tín hiệu và cờ đỏ cho từng ô
+- `../fluency-4d-shared/references/ledger-schema.md` — schema dòng sổ
+- `../fluency-4d-shared/references/experiment-protocol.md` — luật WIP=1 và streak
 
 **Đọc không được thì DỪNG.** Nếu bất kỳ file nào trong bốn file trên không mở được, KHÔNG chấm điểm.
 In thẳng file nào thiếu và dừng lại. Chấm thiếu rubric hoặc thiếu profile sẽ ra một báo cáo trông

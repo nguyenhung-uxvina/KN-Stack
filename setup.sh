@@ -30,14 +30,36 @@ log_skip() { echo -e "  [SKIP] $1"; }
 
 # ── Plugin skill dirs ──
 # Plugins keep their skills at plugins/<plugin>/skills/<dir>/ and may ship a shared
-# reference dir (e.g. _shared/) that the SKILL.md files reach via ../_shared/…
-# Every child of plugins/*/skills/ must be junctioned — including _shared — otherwise
+# reference dir (e.g. fluency-4d-shared/) that the SKILL.md files reach via ../fluency-4d-shared/…
+# Every child of plugins/*/skills/ must be junctioned — including the shared dir — otherwise
 # ".." resolves to ~/.claude/commands/ and the shared references vanish silently.
+#
+# ~/.claude/commands/ is a FLAT namespace shared by every plugin, so a generic dir
+# name (_shared, common, refs) collides across plugins. Name shared dirs <plugin>-shared.
 plugin_skill_dirs() {
     local d
     for d in "$KNSTACK_DIR"/plugins/*/skills/*/; do
         [ -d "$d" ] && echo "${d%/}"
     done
+}
+
+# Map every junction under COMMANDS_DIR to the path it actually points at.
+# Emits "<name>|<windows target path>" lines, lowercased for comparison.
+junction_targets() {
+    local win_commands=$(cygpath -w "$COMMANDS_DIR" 2>/dev/null || echo "$COMMANDS_DIR")
+    powershell.exe -ExecutionPolicy Bypass -Command "
+        Get-ChildItem -Path '${win_commands}' -Directory -Force |
+            Where-Object { \$_.LinkType } | ForEach-Object {
+                \$t = \$_.Target; if (\$t -is [array]) { \$t = \$t[0] }
+                Write-Output (\$_.Name + '|' + \$t)
+            }
+    " 2>/dev/null | tr -d '\r' | tr '[:upper:]' '[:lower:]'
+}
+
+# Windows path, lowercased, backslashes — same shape junction_targets emits.
+win_key() {
+    local p=$(cygpath -w "$1" 2>/dev/null || echo "$1")
+    echo "$p" | tr '[:upper:]' '[:lower:]'
 }
 
 # ── Install: create junctions for all skills ──
@@ -153,17 +175,35 @@ do_verify() {
     local p_broken=0
     local p_total=0
     local src name target
+
+    # Shape alone is not enough: another plugin owning the same name produces a
+    # junction that has SKILL.md/references/ and verifies green while pointing
+    # somewhere else entirely. Compare the junction TARGET against this source.
+    declare -A JT
+    local line
+    while IFS= read -r line; do
+        [ -z "$line" ] && continue
+        JT["${line%%|*}"]="${line#*|}"
+    done < <(junction_targets)
+
     while IFS= read -r src; do
         [ -z "$src" ] && continue
         name=$(basename "$src")
         target="$COMMANDS_DIR/$name"
         p_total=$((p_total + 1))
         # A plugin skill dir carries SKILL.md; a shared reference dir carries references/.
-        if [ -d "$target" ] && { [ -f "$target/SKILL.md" ] || [ -d "$target/references" ]; }; then
-            p_ok=$((p_ok + 1))
-        else
+        if [ ! -d "$target" ] || { [ ! -f "$target/SKILL.md" ] && [ ! -d "$target/references" ]; }; then
             log_err "BROKEN (plugin): $name → $target"
             p_broken=$((p_broken + 1))
+            continue
+        fi
+        local want=$(win_key "$src")
+        local got="${JT[$(echo "$name" | tr '[:upper:]' '[:lower:]')]:-}"
+        if [ -n "$got" ] && [ "$got" != "$want" ]; then
+            log_err "HIJACKED (plugin): $name → $got (phải là $want)"
+            p_broken=$((p_broken + 1))
+        else
+            p_ok=$((p_ok + 1))
         fi
     done < <(plugin_skill_dirs)
 

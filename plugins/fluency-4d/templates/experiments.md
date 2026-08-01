@@ -5,7 +5,7 @@
 >
 > Dòng tiêu đề 8 cột phải giữ **nguyên văn**: công cụ đọc sổ khớp theo đúng 8 cột này, tự chế thêm/bớt
 > cột là bảng không đọc được nữa. Luật vòng đời (WIP = 1, streak 3 → `PASSED`, đứt 3 → `FAILED`) nằm ở
-> `skills/_shared/references/experiment-protocol.md`.
+> `skills/fluency-4d-shared/references/experiment-protocol.md`.
 >
 > Trạng thái hợp lệ: `OPEN` · `PASSED` · `FAILED`. Ô mục tiêu phải là một trong 12 mã ô.
 > Câu nếu–thì phải bắt đầu bằng `Khi ` và chứa ` tôi `.

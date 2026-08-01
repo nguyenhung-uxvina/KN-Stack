@@ -34,7 +34,7 @@ plugins/fluency-4d/
     ├── fluency-4d-preflight/SKILL.md
     ├── fluency-4d-review/SKILL.md
     ├── fluency-4d-weekly/SKILL.md
-    └── _shared/references/
+    └── fluency-4d-shared/references/
         ├── rubric-core.md
         ├── profile-workshop-x.md
         ├── ledger-schema.md
@@ -175,7 +175,11 @@ Không ghi gì vào sổ.
 
 1. **Eval tĩnh** `evals/fluency-4d-review.json` (`mode: "static"`) — soi `SKILL.md` có đủ: 6 bước theo đúng thứ tự, 3 chốt chống nịnh, ràng buộc WIP = 1, ngoại lệ cờ đỏ Diligence, schema JSONL khớp `ledger-schema.md`.
 2. **Fixture hội thoại mẫu** đặt tại `evals/fixtures/fluency-4d-session.md`, cài sẵn lỗi biết trước: mô tả sản phẩm mơ hồ, nhận số liệu không kiểm chứng, dán giá nhà cung cấp vào prompt. Chạy `fluency-4d-review` lên fixture phải cho: `des.product` ≤ 1, `dis.product` ≤ 1, và bật cờ đỏ `dil.creation` = 0. Không đạt → rubric chưa dùng được.
-3. **Thử vòng đời sổ:** chạy review 4 lần liên tiếp trên fixture, kiểm `sessions.jsonl` có đúng 4 dòng hợp lệ JSON, `experiments.md` streak chạy đúng 1→2→3→`PASSED`.
+3. **Thử vòng đời sổ:** chạy review 4 lần liên tiếp **trên cùng một fixture**, kiểm `sessions.jsonl` có đúng 4 dòng hợp lệ JSON, `experiments.md` chạy đúng đứt 1→2→3→`FAILED`.
+
+   Chạy lại cùng fixture thì **`FAILED` mới là kết quả đúng, không phải `PASSED`.** Fixture ở mục 2 cài sẵn chính lỗi mà thí nghiệm nhắm tới (`dil.creation` = 0 vì dán giá nhà cung cấp); lỗi đó có mặt trong mọi lần chạy, nên hành vi bị đứt mọi lần, streak không thể nhích. Đòi vừa chạy cùng fixture vừa lên `PASSED` là đòi hai thứ loại trừ nhau — bản spec trước mắc đúng lỗi này.
+
+   Muốn thử nhánh `PASSED` thì phải là **fixture thứ hai đã sửa lỗi đó**, chạy 3 lần: streak 1→2→3→`PASSED`. Hai nhánh là hai phép thử khác nhau, đừng gộp.
 4. **README.md** ghi các bước import vào Cowork và đường dẫn sổ cần cấp quyền đọc/ghi.
 
 ## 10. Ngoài phạm vi

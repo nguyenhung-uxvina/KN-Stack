@@ -11,7 +11,12 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parents[1]
 PLUGIN_ROOT = REPO_ROOT / "plugins" / "fluency-4d"
 SKILLS_ROOT = PLUGIN_ROOT / "skills"
-REF_DIR = SKILLS_ROOT / "_shared" / "references"
+
+# Tên thư mục tham chiếu dùng chung. Phải mang tiền tố plugin: nó được junction
+# THẲNG vào ~/.claude/commands/ — một namespace phẳng dùng chung cho mọi plugin.
+# Tên chung như "_shared" sẽ bị plugin nạp sau va vào và setup.sh bỏ qua im lặng.
+SHARED_DIR_NAME = "fluency-4d-shared"
+REF_DIR = SKILLS_ROOT / SHARED_DIR_NAME / "references"
 SKILL_NAMES = ["fluency-4d-preflight", "fluency-4d-review", "fluency-4d-weekly"]
 
 CELLS = [
@@ -231,8 +236,17 @@ def validate_experiments(rows: list[dict]) -> list[str]:
 
 
 # Kiểm chính SKILL.md — không chỉ bốn file tham chiếu.
-# Trích dẫn tham chiếu trong SKILL.md luôn ở dạng ../_shared/references/<file>.md
-_REF_CITE_RE = re.compile(r"\.\./_shared/references/([A-Za-z0-9._-]+\.md)")
+#
+# Trích dẫn trong SKILL.md ở dạng ../<thư mục dùng chung>/references/<file>.md.
+# Thư mục PHẢI được bắt lại, không được nướng cứng vào chuỗi khớp: nướng cứng thì
+# citation trỏ thư mục đã chết vẫn khớp và vẫn cho ra tên file có thật (kiểm thấy
+# tồn tại → xanh), còn citation đã sửa đúng lại không khớp gì nên không được kiểm.
+# Cả hai chiều đều im lặng. Đó chính là chế độ hỏng phải chặn ở đây.
+_REF_CITE_RE = re.compile(r"\.\./([A-Za-z0-9._-]+)/references/([A-Za-z0-9._-]+\.md)")
+
+# Mọi đường dẫn kiểu <thư mục>/references/<file>.md trong BẤT KỲ file .md nào của
+# plugin — bắt cả README và template, nơi đường dẫn được viết đầy đủ chứ không dùng "../".
+_ANY_REF_PATH_RE = re.compile(r"([A-Za-z0-9._-]+)/references/([A-Za-z0-9._-]+\.md)")
 # Đường dẫn sổ điểm, ví dụ: D:\Workshop_X\2_Areas\CEO-Self\AI-Fluency-Ledger
 # Bắt cả dạng gạch chéo ngược (Windows, trong SKILL.md) lẫn gạch chéo xuôi (lệnh bash trong README);
 # hai dạng được chuẩn hoá về một trước khi so, nên chỉ lệch THẬT mới báo lỗi.
@@ -256,8 +270,9 @@ def load_plugin_markdown() -> dict[str, str]:
 
 
 def lint_skills(skills=None, all_markdown=None, ref_exists=None) -> list[str]:
-    """Kiểm ba SKILL.md: (a) file tham chiếu được trích dẫn phải tồn tại,
-    (b) đường dẫn sổ điểm phải giống hệt nhau ở mọi file .md của plugin.
+    """Kiểm ba SKILL.md: (a) file tham chiếu được trích dẫn phải tồn tại và nằm
+    đúng thư mục dùng chung, (b) không file .md nào của plugin nhắc thư mục tham
+    chiếu lạ, (c) đường dẫn sổ điểm phải giống hệt nhau ở mọi file .md của plugin.
 
     Trả danh sách lỗi; rỗng nghĩa là đạt.
     """
@@ -271,13 +286,31 @@ def lint_skills(skills=None, all_markdown=None, ref_exists=None) -> list[str]:
 
     errors: list[str] = []
 
-    # (a) Mọi file tham chiếu được SKILL.md trích dẫn phải có thật.
+    # (a) Mọi file tham chiếu được SKILL.md trích dẫn phải có thật — VÀ phải nằm
+    # đúng thư mục dùng chung. Trỏ đúng tên file nhưng sai thư mục là lỗi nặng
+    # nhất của plugin này: skill mất sạch rubric+profile mà vẫn in báo cáo đủ bước.
     for name, text in sorted(skills.items()):
-        for ref in sorted(set(_REF_CITE_RE.findall(text))):
+        for ref_dir, ref in sorted(set(_REF_CITE_RE.findall(text))):
+            if ref_dir != SHARED_DIR_NAME:
+                errors.append(
+                    f"{name} trích dẫn sai thư mục dùng chung: "
+                    f"../{ref_dir}/references/{ref} (phải là ../{SHARED_DIR_NAME}/)"
+                )
+                continue
             if not ref_exists(ref):
                 errors.append(f"{name} trích dẫn file tham chiếu không tồn tại: {ref}")
 
-    # (b) Đường dẫn sổ điểm không được trôi lệch giữa các file.
+    # (b) Không file .md nào của plugin được trỏ tới thư mục tham chiếu khác —
+    # README và template viết đường dẫn đầy đủ nên không lọt qua kiểm (a).
+    for name, text in sorted(all_markdown.items()):
+        for ref_dir, ref in sorted(set(_ANY_REF_PATH_RE.findall(text))):
+            if ref_dir != SHARED_DIR_NAME:
+                errors.append(
+                    f"{name} nhắc thư mục tham chiếu lạ: "
+                    f"{ref_dir}/references/{ref} (phải là {SHARED_DIR_NAME}/)"
+                )
+
+    # (c) Đường dẫn sổ điểm không được trôi lệch giữa các file.
     variants: dict[str, list[str]] = {}
     for name, text in sorted(all_markdown.items()):
         for hit in _LEDGER_PATH_RE.findall(text):
