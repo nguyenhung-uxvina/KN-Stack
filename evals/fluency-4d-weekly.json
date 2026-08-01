@@ -1,17 +1,66 @@
 {
   "skill": "fluency-4d-weekly",
-  "version": "1.1",
+  "version": "1.3",
   "description": "Binary assertions cho tổng hợp tuần 4D",
   "mode": "static",
-  "total_required": 7,
-  "passing_score": 7,
+  "total_required": 8,
+  "passing_score": 8,
   "assertions": [
-    {"id": "4DW-WINDOW", "name": "seven_day_window", "check": "cửa sổ 7 ngày gần nhất VÀ cửa sổ 7 ngày liền trước để so sánh — không chỉ chữ '7 ngày' rời rạc", "regex": "7 ngày gần nhất[\\s\\S]{0,60}7 ngày liền trước[\\s\\S]{0,30}so sánh", "required": true},
-    {"id": "4DW-NULLSKIP", "name": "null_excluded_from_mean", "check": "trung bình bỏ qua null vì n/a không phải 0 và không được kéo trung bình xuống", "regex": "bỏ qua[\\s\\S]{0,10}null[\\s\\S]{0,40}không phải 0[\\s\\S]{0,50}kéo trung bình xuống", "required": true},
-    {"id": "4DW-THIN", "name": "thin_data_gate", "check": "dưới 3 phiên thì in dữ liệu mỏng, DỪNG thật (không chốt D ưu tiên), không chỉ nói 'dữ liệu mỏng'", "regex": "dưới 3 phiên[\\s\\S]{0,60}dữ liệu mỏng, không kết luận xu hướng[\\s\\S]{0,80}rồi DỪNG[\\s\\S]{0,100}không chốt D ưu tiên", "required": true},
-    {"id": "4DW-PERSIST", "name": "persistent_weak_cell", "check": "ô ≤ 1.5 trong ≥ 2 tuần liên tiếp mới được đánh dấu dai dẳng — cả hai ngưỡng số", "regex": "≤ ?1\\.5[\\s\\S]{0,30}≥ ?2 tuần liên tiếp[\\s\\S]{0,30}đánh dấu dai dẳng", "required": true},
-    {"id": "4DW-ONE-D", "name": "one_priority_d", "check": "chốt đúng một D (không phải một ô) kèm lý do bằng số, không chỉ nhắc '1 D ưu tiên' như nhãn", "regex": "Đúng một D[\\s\\S]{0,20}không phải một ô[\\s\\S]{0,40}kèm lý do bằng số", "required": true},
-    {"id": "4DW-STREAK", "name": "experiment_status", "check": "khuôn báo cáo phải in cả streak x/3 và đứt y/3 và trạng thái PASSED/FAILED trong tuần — không chỉ chữ 'streak'", "regex": "streak x/3[\\s\\S]{0,10}đứt y/3[\\s\\S]{0,40}PASSED/FAILED", "required": true},
-    {"id": "4DW-FILE", "name": "writes_weekly_file", "check": "câu 'Ghi:' phải nêu đích danh tên file weekly/<năm>-W<số tuần ISO>.md — không chỉ mảnh 'weekly/'", "regex": "Ghi:[\\s\\S]{0,90}weekly/<năm>-W<số tuần ISO>\\.md", "required": true}
+    {
+      "id": "4DW-WINDOW",
+      "name": "seven_day_window",
+      "check": "cửa sổ 7 ngày gần nhất VÀ cửa sổ 7 ngày liền trước để so sánh — không chỉ chữ '7 ngày' rời rạc",
+      "regex": "7 ngày gần nhất[\\s\\S]{0,60}7 ngày liền trước[\\s\\S]{0,30}so sánh",
+      "required": true
+    },
+    {
+      "id": "4DW-NULLSKIP",
+      "name": "null_excluded_from_mean",
+      "check": "trung bình bỏ qua null vì n/a không phải 0 và không được kéo trung bình xuống",
+      "regex": "bỏ qua[\\s\\S]{0,10}null[\\s\\S]{0,40}không phải 0[\\s\\S]{0,50}kéo trung bình xuống",
+      "required": true
+    },
+    {
+      "id": "4DW-THIN",
+      "name": "thin_data_gate",
+      "check": "dưới 3 phiên thì in dữ liệu mỏng, DỪNG thật (không chốt D ưu tiên), không chỉ nói 'dữ liệu mỏng'",
+      "regex": "dưới 3 phiên[\\s\\S]{0,60}dữ liệu mỏng, không kết luận xu hướng[\\s\\S]{0,80}rồi DỪNG[\\s\\S]{0,100}không chốt D ưu tiên",
+      "required": true
+    },
+    {
+      "id": "4DW-PERSIST",
+      "name": "persistent_weak_cell",
+      "check": "ô ≤ 1.5 trong ≥ 2 tuần liên tiếp mới được đánh dấu dai dẳng — cả hai ngưỡng số",
+      "regex": "≤ ?1\\.5[\\s\\S]{0,30}≥ ?2 tuần liên tiếp[\\s\\S]{0,30}đánh dấu dai dẳng",
+      "required": true
+    },
+    {
+      "id": "4DW-ONE-D",
+      "name": "one_priority_d",
+      "check": "chốt đúng một D (không phải một ô) kèm lý do bằng số, không chỉ nhắc '1 D ưu tiên' như nhãn",
+      "regex": "Đúng một D[\\s\\S]{0,20}không phải một ô[\\s\\S]{0,40}kèm lý do bằng số",
+      "required": true
+    },
+    {
+      "id": "4DW-STREAK",
+      "name": "experiment_status",
+      "check": "khuôn báo cáo phải in cả streak x/3 và đứt y/3 và trạng thái PASSED/FAILED trong tuần — không chỉ chữ 'streak'",
+      "regex": "streak x/3[\\s\\S]{0,10}đứt y/3[\\s\\S]{0,40}PASSED/FAILED",
+      "required": true
+    },
+    {
+      "id": "4DW-FILE",
+      "name": "writes_weekly_file",
+      "check": "câu 'Ghi:' phải nêu đích danh tên file weekly/<năm>-W<số tuần ISO>.md — không chỉ mảnh 'weekly/'",
+      "regex": "Ghi:[\\s\\S]{0,90}weekly/<năm>-W<số tuần ISO>\\.md",
+      "required": true
+    },
+    {
+      "id": "4DW-COD",
+      "name": "declares_cod_split",
+      "check": "phải khai báo COD: Offload (AI tổng hợp) và Core (CEO chốt D ưu tiên) — chốt D là quyết định của CEO, không phải của AI",
+      "regex": "\\*\\*COD:\\*\\*[\\s\\S]{0,20}Offload[\\s\\S]{0,40}Core[\\s\\S]{0,30}chốt D",
+      "required": true
+    }
   ]
 }

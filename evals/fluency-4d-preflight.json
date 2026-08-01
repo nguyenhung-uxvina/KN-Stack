@@ -1,10 +1,10 @@
 {
   "skill": "fluency-4d-preflight",
-  "version": "1.2",
+  "version": "1.3",
   "description": "Binary assertions cho cổng preflight 4D",
   "mode": "static",
-  "total_required": 10,
-  "passing_score": 10,
+  "total_required": 12,
+  "passing_score": 12,
   "assertions": [
     {
       "id": "4DP-GATE-DEL",
@@ -74,6 +74,20 @@
       "name": "cites_shared_dir_by_exact_path",
       "check": "hai file tham chieu phai duoc tro bang duong dan day du ../fluency-4d-shared/references/<file>.md — thu muc dung chung mang tien to plugin, khong duoc la ten chung kieu _shared (namespace ~/.claude/commands/ la phang)",
       "regex": "\\.\\./fluency-4d-shared/references/rubric-core\\.md[\\s\\S]{0,80}\\.\\./fluency-4d-shared/references/profile-workshop-x\\.md",
+      "required": true
+    },
+    {
+      "id": "4DP-COD",
+      "name": "declares_cod_split",
+      "check": "phải khai báo COD ngay đầu skill: phần nào Core (CEO quyết C/O/D), phần nào Offload (AI viết lại phiếu) — CLAUDE.md cấm bỏ qua phân loại COD",
+      "regex": "\\*\\*COD:\\*\\*[\\s\\S]{0,20}Core[\\s\\S]{0,40}Offload",
+      "required": true
+    },
+    {
+      "id": "4DP-BRIEF-FIELDS",
+      "name": "brief_carries_four_fields",
+      "check": "phiếu giao việc phải có đủ bốn trường: phân loại+chế độ, phần giữ lại, công cụ/skill, thí nghiệm đang chạy — không chỉ có tiêu đề phiếu",
+      "regex": "Phân loại:[\\s\\S]{0,60}Giữ lại:[\\s\\S]{0,60}Công cụ/skill:[\\s\\S]{0,80}Thí nghiệm đang chạy:",
       "required": true
     }
   ]

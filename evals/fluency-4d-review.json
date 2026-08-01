@@ -1,16 +1,16 @@
 {
   "skill": "fluency-4d-review",
-  "version": "1.2",
+  "version": "1.3",
   "description": "Binary assertions cho skill mổ xẻ phiên theo khung 4D",
   "mode": "static",
-  "total_required": 17,
-  "passing_score": 17,
+  "total_required": 18,
+  "passing_score": 18,
   "assertions": [
     {
       "id": "4DR-CELLS",
       "name": "twelve_cells",
-      "check": "liệt kê đủ 12 mã ô theo đúng thứ tự chính tắc",
-      "regex": "del\\.problem[\\s\\S]*del\\.platform[\\s\\S]*del\\.task[\\s\\S]*des\\.product[\\s\\S]*des\\.process[\\s\\S]*des\\.performance[\\s\\S]*dis\\.product[\\s\\S]*dis\\.process[\\s\\S]*dis\\.performance[\\s\\S]*dil\\.creation[\\s\\S]*dil\\.transparency[\\s\\S]*dil\\.deployment",
+      "check": "liệt kê đủ 12 mã ô theo đúng thứ tự chính tắc, LIỀN MẠCH trong một danh sách — khoảng hở chặn 40 ký tự để 12 mã rải rác khắp file không đủ khớp",
+      "regex": "del\\.problem[\\s\\S]{0,40}del\\.platform[\\s\\S]{0,40}del\\.task[\\s\\S]{0,40}des\\.product[\\s\\S]{0,40}des\\.process[\\s\\S]{0,40}des\\.performance[\\s\\S]{0,40}dis\\.product[\\s\\S]{0,40}dis\\.process[\\s\\S]{0,40}dis\\.performance[\\s\\S]{0,40}dil\\.creation[\\s\\S]{0,40}dil\\.transparency[\\s\\S]{0,40}dil\\.deployment",
       "required": true
     },
     {
@@ -30,8 +30,8 @@
     {
       "id": "4DR-PAIN",
       "name": "must_find_pain",
-      "check": "chốt 2: bắt buộc nêu ô ≤ 1 hoặc tuyên bố rõ",
-      "regex": "ít nhất một ô ≤ ?1|không tìm thấy ô nào dưới 2",
+      "check": "chốt 2 phải là LUẬT trong mục ba chốt — nhãn in đậm + cả hai vế (nêu ô ≤ 1 HOẶC tuyên bố không tìm thấy) + đòi kèm lý do. Trước đây regex là phép hoặc, khớp được cả từ khuôn báo cáo, nên xoá sạch chốt 2 khỏi skill mà eval vẫn 17/17",
+      "regex": "\\*\\*Bắt buộc tìm điểm đau\\.\\*\\*[\\s\\S]{0,80}nêu ít nhất một ô ≤ ?1[\\s\\S]{0,40}không tìm thấy ô nào dưới 2\\\"? kèm lý do",
       "required": true
     },
     {
@@ -44,8 +44,8 @@
     {
       "id": "4DR-6STEPS",
       "name": "six_steps",
-      "check": "quy trình có đủ 6 bước đánh số riêng biệt, theo thứ tự",
-      "regex": "Bước 1[\\s\\S]*Bước 2[\\s\\S]*Bước 3[\\s\\S]*Bước 4[\\s\\S]*Bước 5[\\s\\S]*Bước 6",
+      "check": "sáu bước phải là SÁU TIÊU ĐỀ in đậm '**Bước N — ' theo thứ tự, khoảng hở chặn 1600 ký tự. Trước đây bắt chuỗi 'Bước N' trần với khoảng hở vô hạn — mà 'Bước 3/4/5/6' còn xuất hiện trong văn xuôi tham chiếu chéo, nên nhắc rải rác cũng đủ khớp",
+      "regex": "\\*\\*Bước 1 —[\\s\\S]{0,1600}\\*\\*Bước 2 —[\\s\\S]{0,1600}\\*\\*Bước 3 —[\\s\\S]{0,1600}\\*\\*Bước 4 —[\\s\\S]{0,1600}\\*\\*Bước 5 —[\\s\\S]{0,1600}\\*\\*Bước 6 —",
       "required": true
     },
     {
@@ -123,6 +123,13 @@
       "name": "cites_shared_dir_by_exact_path",
       "check": "bon file tham chieu phai duoc tro bang duong dan day du ../fluency-4d-shared/references/<file>.md, dung thu tu rubric -> profile -> ledger -> experiment",
       "regex": "\\.\\./fluency-4d-shared/references/rubric-core\\.md[\\s\\S]{0,120}\\.\\./fluency-4d-shared/references/profile-workshop-x\\.md[\\s\\S]{0,120}\\.\\./fluency-4d-shared/references/ledger-schema\\.md[\\s\\S]{0,120}\\.\\./fluency-4d-shared/references/experiment-protocol\\.md",
+      "required": true
+    },
+    {
+      "id": "4DR-COD",
+      "name": "declares_cod_split",
+      "check": "phải khai báo COD: Offload (AI chấm + ghi sổ) và Core (CEO nhận thí nghiệm) — ranh giới ai làm gì phải nằm trong skill",
+      "regex": "\\*\\*COD:\\*\\*[\\s\\S]{0,20}Offload[\\s\\S]{0,40}Core",
       "required": true
     }
   ]
