@@ -25,7 +25,8 @@ Usage: `/learn-lecture <notebook-name-or-alias>` — flags: `--mode compact|full
 Engine: MCP `notebooklm-mcp` — `notebook_list`, `notebook_get`, `source_describe`,
 `source_get_content` (fetch text thô/nguồn — dùng cho OUTLINE), `notebook_query`
 (chỉ khi cần tổng hợp AI; timeout trên notebook lớn), `studio_create`/`studio_status`,
-`download_artifact`. Fallback CLI `nlm` (PATH: Python313/Scripts) khi MCP lỗi —
+`download_artifact`. CLI `nlm` là đường CHÍNH để TẠO artifact (xem "Bắn hàng loạt") và là
+fallback khi MCP lỗi. Đường dẫn thật: `C:\Users\Admin\AppData\Local\Programs\Python\Python312\Scripts\nlm.exe` —
 xem "Gotchas thực chiến".
 
 Auth: phiên NLM ~20 phút. Lỗi auth → báo CEO chạy `nlm login` ở terminal khác →
@@ -84,11 +85,23 @@ lớn (VD "systems theory + Value Analysis + VDI 2221 + mục tiêu sách"), ho�
 dày đặc tên riêng/tiêu chí (VD phần lịch sử ~20 nhân vật → tách 2 slide). Tham chiếu:
 26 trang sách dày ≈ 20 slide.
 
-**Trần thời lượng — biết trước để khỏi kỳ vọng sai:** NLM giới hạn tổng độ dài audio
-(đo được ~18 phút với `audio_length="long"`) rồi CHIA ĐỀU cho các phần. Nên tăng N làm
-mỗi phần MỊN hơn, KHÔNG làm tổng nội dung NHIỀU hơn. Hệ quả 2 chiều: N quá thấp → phần
-dày bị nén (32 giây cho 1 phần trong live-run); N quá cao (>25) → mọi phần đều bị băm
-vụn. Muốn giảng sâu hơn nữa thì TÁCH THÀNH 2 BÀI, đừng tăng N vô hạn.
+**⚠ TRẦN N ≈ 14 — số đo, không phải cảm tính (live-run 2026-08-01):** NLM **KHÔNG giãn
+thời lượng audio theo lượng nội dung**. Nó giữ trần (~16–20 phút với `audio_length="long"`)
+rồi **CHIA ĐỀU** cho N phần. Ba bài liên tiếp cùng khóa, cùng cấu hình:
+
+| Bài | Nguồn | N | Audio | TB/phần | Ngắn nhất |
+|---|---|---|---|---|---|
+| 9  | 20,6K | 14 | 20:11 | **87s** | 59s |
+| 11 | 31,7K (nửa) | 13 | 16:09 | 75s | — |
+| 10 | 23,9K | **16** | **15:52** | **60s** | **36s** |
+
+Bài 10 nguồn DÀY HƠN và N CAO HƠN mà audio lại NGẮN HƠN 4 phút → **tăng N không mua thêm
+nội dung, chỉ làm mỗi phần mỏng đi ~31%**. Hậu quả thật: phần cảnh báo an toàn quan trọng
+nhất bài 10 chỉ được **36 giây**.
+
+**Quy tắc:** giữ **N ≤ 14**. Nội dung vượt tải thì **GỘP các mục ngắn cùng nhóm vào 1 slide**,
+hoặc **TÁCH THÀNH 2 BÀI** — ĐỪNG tăng N. (Ngưỡng "N > 25" ở các bản trước quá cao so với
+thực tế đo được.) N quá THẤP cũng hại: phần dày bị nén (32 giây cho 1 phần, live-run cũ).
 
 2. Đề xuất giáo trình chi tiết: mỗi bài = số thứ tự · tên · 1 câu mô tả · nguồn dự
    kiến (title + source_id) · ước tính slide/phút.
@@ -126,14 +139,21 @@ Bài lỗi bỏ qua → ⚠ skipped kèm lý do. Tất cả ✅ → `status: com
               CHỌN N Ở ĐÂY, sau khi đã đọc nguồn thật — không dùng N mặc định của mode.
               Mỗi slide đúng MỘT khái niệm; phần nào phải gộp ≥3 chủ đề lớn → tách ra.
               Xem "N KHÔNG cố định" ở Phase 2.
-3.3 SLIDES    (a) studio_create(slide_deck, source_ids, language=vi) với prompt template
-              SLIDE (references/) — nhúng dàn ý N phần, ràng buộc "ĐÚNG N slide riêng
-              biệt, không gộp, CHỈ dùng nguồn đã chọn". Poll completion QUA CLI nền
-              (không gọi studio_status MCP lặp — nó dump TẤT CẢ artifact, tốn context)
+3.3 SLIDES    (a) TẠO QUA CLI (trả về artifact_id NGAY, không block — xem "Bắn hàng loạt"):
+              `nlm slides create <nb> -f detailed_deck --language vi -s <sid>
+               --focus "$(cat prompt.txt)" -y -j`
+              Prompt theo template SLIDE (references/) — nhúng dàn ý N phần, ràng buộc
+              "ĐÚNG N slide riêng biệt, không gộp, CHỈ dùng nguồn đã chọn". Poll completion
+              QUA CLI nền (không gọi studio_status MCP lặp — nó dump TẤT CẢ artifact, tốn
+              context). MCP `studio_create(slide_deck, …)` vẫn dùng được nhưng có ca treo
+              rất lâu → ưu tiên CLI.
               (b) NGAY LẬP TỨC ghi `slide-script.md` vào thư mục bài (không đợi PDF) —
               chính là N tiêu đề + bullet đã gửi trong prompt. ĐÂY LÀ HỢP ĐỒNG ĐỒNG BỘ
               DUY NHẤT cho audio (3.7), video (3.9) và outline (3.8). Định dạng bắt
               buộc: xem "slide-script.md" bên dưới.
+              (c) CHÉP PROMPT vào chính thư mục bài: `_prompt-slide-<N>-phan.txt` (và ở
+              3.7 là `_prompt-audio-<N>-phan.txt`). Scratchpad KHÔNG sống qua phiên, còn
+              treo auth qua đêm là chuyện thường — mất prompt là phải soạn lại từ đầu.
 3.4 EXTRACT   download_artifact(slide_deck→PDF) về vault. KHÔNG đọc PDF để lấy tiêu đề —
               tiêu đề đã có trong slide-script.md. Chỉ lấy SỐ TRANG bằng pymupdf:
               `python -c "import fitz;print(fitz.open(r'<pdf>').page_count)"` (rẻ,
@@ -156,8 +176,13 @@ Bài lỗi bỏ qua → ⚠ skipped kèm lý do. Tất cả ✅ → `status: com
               nguồn của phần đó.
               Tự kiểm: mỗi đoạn khai triển từ nguồn (không chỉ đọc lại bullet) + N
               callout khớp ĐÚNG CHUỖI tiêu đề trong slide-script.md TRƯỚC khi gửi.
-              studio_create(audio) — LUÔN language=vi (bắt buộc, rule /nlm; chỉ đổi
-              khi CEO yêu cầu rõ tiếng Anh) → poll completion qua CLI nền
+              TẠO QUA CLI — LUÔN `--language vi` (bắt buộc, rule /nlm; chỉ đổi khi CEO
+              yêu cầu rõ tiếng Anh):
+              `nlm audio create <nb> -f deep_dive -l <long|default> --language vi
+               -s <sid> --focus "$(cat prompt.txt)" -y -j`
+              (`long` cho bài ≥10 phần, `default` cho bài ≤8 phần). Trả artifact_id NGAY
+              → BẮN LIỀN 2–3 BÀI rồi poll chung (xem "Bắn hàng loạt"), thay vì chờ nối
+              tiếp. → poll completion qua CLI nền
 3.8 SAVE      tải slide PDF (download_artifact) + audio (CLI `nlm download audio
     +MARKS    --id <aid> -o` — MCP download_artifact AUDIO hay fail) → <vault-root>\
               Bai-NN-<slug>\ + slide-script.md (đã ghi ở 3.3) + outline.md (dàn ý-nguồn
@@ -223,6 +248,19 @@ verified_pages: <điền ở 3.5: số trang PDF thật>
 Quy tắc: **tiêu đề trong bảng này là chuỗi phải xướng nguyên văn ở đầu mỗi đoạn audio.**
 Sửa file → phải sửa cả audio; đừng sửa sau khi audio đã sinh.
 
+**⚠️ HAI RÀNG BUỘC KHI ĐẶT TIÊU ĐỀ — cả hai đều là lỗi TỰ GÂY đã dính thật:**
+
+1. **Tiêu đề KHÔNG được bắt đầu bằng SỐ.** Audio đọc "Phần 9" rồi đọc tiếp tiêu đề "10 skill
+   starter…" → whisper ghi liền thành **"Phần 910 skill starter"**, regex mất mốc (live-run
+   2026-08-01 bài 14; đã từng dính ở khoá student-drills với tiêu đề "Vòng N"/"Chiều N").
+   Viết "Mười skill starter" cũng KHÔNG cứu được vì NLM tự đổi sang chữ số khi đọc.
+   → **Dẫn tiêu đề bằng CHỮ**: "Bộ mười skill starter…", "Danh sách skill khởi đầu…".
+2. **Tiêu đề BÀI (và mọi cách bài tự xưng) không được chứa "phần I/II".** Audio sẽ nói
+   *"lật mở **phần 2** của Thư viện…"* → sinh **mốc giả ở giây thứ 7**, detector khoá sai rồi
+   trượt gần hết (live-run 2026-08-01 bài 12: báo 4/14 trong khi audio xướng đủ 11/14).
+   → Trong prompt audio thêm ràng buộc: *"cụm 'Phần &lt;số&gt;' CHỈ dùng mở đầu mỗi phần giảng;
+   khi nhắc tới bài này thì gọi 'nửa sau'/'bài trước', KHÔNG nói 'phần hai'."*
+
 ### `<audio>.marks.json` — hợp đồng MỐC THỜI GIAN
 
 Sinh ở 3.8 bằng `lecture_video.py --detect-only`, nằm cạnh file audio. slide-script.md
@@ -242,10 +280,13 @@ giữ **tên** các phần; marks.json giữ **mốc giây** các phần. Dò M�
   WARNING (không im lặng dùng mốc của audio cũ). Ép dò lại: `--redetect`.
 - **Sửa tay được:** whisper sót mốc nào thì điền vào `marks` (số giây hoặc `"mm:ss"`)
   thay vì phải truyền `--timings` cho cả N slide. Đây là cách vá RẺ NHẤT khi lệch đồng bộ.
-- **Audio không xướng "Phần N"** (định dạng podcast 2 giọng — xem finding #8) → `found`
-  chỉ có `1`. Biết ngay ở 3.8, và `<audio>.transcript.txt` ĐÃ có sẵn: đọc transcript,
-  tìm câu mở đầu từng chủ đề, điền mốc vào `marks`. KHÔNG cần script dump transcript
-  riêng, KHÔNG transcribe lần hai.
+  Sót 1–2 mốc gần như luôn là whisper nghe nhầm số đếm, KHÔNG phải NLM bỏ mốc — dump
+  transcript trong khoảng trống giữa 2 mốc kề là ra (xem gotcha "`found < N`").
+- **Audio không xướng "Phần N" chút nào** (podcast 2 giọng kể tự do) → `found` chỉ có `1`.
+  Biết ngay ở 3.8, và `<audio>.transcript.txt` ĐÃ có sẵn: đọc transcript, tìm câu mở đầu
+  từng chủ đề, điền mốc vào `marks`. KHÔNG cần script dump transcript riêng, KHÔNG
+  transcribe lần hai. (Lưu ý: podcast 2 giọng VẪN thường xướng đủ "Phần N" — đừng mặc định
+  là không.)
 
 **Nguyên tắc đồng bộ (bất biến):**
 0. **Dải slide phải phủ đúng audio: slide 1 bắt đầu 0:00, tổng thời lượng = độ dài audio.**
@@ -288,7 +329,7 @@ chạy tay 2026-07-22 (bài 1.10 Claude 101, 12 phần).
 
 | Tình huống | Xử lý |
 |---|---|
-| Auth hết phiên | `nlm login` → retry tối đa 2 → dừng có trạng thái |
+| Auth hết phiên | `nlm login` → retry tối đa 2 → dừng có trạng thái. **Triệu chứng có thể là TIMEOUT chứ không phải báo lỗi**: `nlm studio status` treo hết 180s. Đừng nhầm với "artifact đang sinh lâu" — kiểm dứt điểm bằng `nlm notebook list` (nhanh, live) |
 | Không thấy notebook | fuzzy match → CEO xác nhận |
 | studio_create fail/timeout | **KIỂM `nlm studio status <nb>` TRƯỚC** — timeout MCP thường vẫn tạo xong artifact (xem Gotchas). Chỉ khi status không có artifact mới → retry 1 lần → ghi ⚠ Curriculum.md, hỏi CEO bỏ bài/dừng |
 | Slide lệch sau repair | CEO quyết — không lặp vô hạn |
@@ -297,7 +338,7 @@ chạy tay 2026-07-22 (bài 1.10 Claude 101, 12 phần).
 | Whisper sót mốc "Phần N" | 3.8 in ra `missing` NGAY → điền tay vào `marks` (giây hoặc "mm:ss"); không sửa thì 3.9 nội suy giữa 2 mốc kề + WARNING, syncmap ghi "nội suy" |
 | Audio sinh lại (bài làm lại) | `audio_bytes` lệch → script tự dò lại + WARNING (không dùng nhầm mốc audio cũ). Ép: `--redetect` |
 | Audio không xướng "Phần N" | 3.8 báo `found: [1]` → đọc `<audio>.transcript.txt` (đã sinh sẵn). **Transcript ĐÚNG THỨ TỰ** → điền `marks` tay theo nội dung (rẻ, tất định). **Transcript ĐẢO thứ tự hoặc MẤT phần** → SINH LẠI, vá sẽ ra video đúng mốc nhưng sai slide |
-| Audio ra podcast 2 giọng | Bình thường, ~2/3 số lần. Sinh lại; ngân sách ~3 lượt/bài. Đừng sửa prompt/format/length để "trị" — đã loại hết bằng thực nghiệm (xem gotcha "xổ số ~1/3") |
+| Audio ra podcast 2 giọng | **KHÔNG phải lý do loại bản audio.** Podcast 2 giọng vẫn có thể xướng đủ mốc, đúng thứ tự → dùng được (live-run 2026-07-31, bài 7 và 8). Chỉ loại khi transcript ĐẢO thứ tự hoặc MẤT phần. Đừng sửa prompt/format/length để "trị" giọng — đã loại hết bằng thực nghiệm |
 | Mốc đủ số nhưng lệch nội dung | Audio tự bịa cấu trúc phần riêng → mốc GIẢ. Xử như hỏng: sinh lại, KHÔNG vá |
 
 ## Gotchas thực chiến (live-run 2026-07-22, notebook 284 nguồn)
@@ -314,12 +355,15 @@ chạy tay 2026-07-22 (bài 1.10 Claude 101, 12 phần).
   Test hồi quy: `scripts/` (case A1 88s → 0). **Vẫn phải làm 3.9b VERIFY-V** vì lỗi cùng
   loại (nhầm nghĩa mốc) có thể tái xuất ở đường khác.
 
-- **🎲 BƯỚC AUDIO LÀ XỔ SỐ ~1/3 — ĐỪNG ĐI TÌM "NGUYÊN NHÂN" (live-run 2026-07-29→31,
-  21 lần sinh + 4 thí nghiệm có đối chứng).** `studio_create(audio)` đôi khi trả đúng một
-  giọng giảng bài xướng "Phần N", đôi khi trả **podcast 2 giọng** ("Chào mừng đến với phiên
-  đào sâu hôm nay…") không xướng mốc nào, ĐẢO thứ tự các phần, hoặc CẮT hẳn vài phần cuối.
-  Tỉ lệ ăn đo được **~30–40%**, và **KHÔNG có tham số nào điều khiển được**. Đã thử và LOẠI
-  bằng thực nghiệm — đừng thử lại:
+- **🎯 TIÊU CHÍ LOẠI BẢN AUDIO: THỨ TỰ/ĐỦ PHẦN — KHÔNG PHẢI SỐ GIỌNG (sửa 2026-07-31, sau
+  khi phát hiện phép đo cũ sai).** Bước audio CÓ chập chờn, nhưng đừng dùng "ra podcast 2
+  giọng" làm dấu hiệu hỏng: mẻ 6B+7+8 (2026-07-31) có bài 7 và bài 8 đều là **podcast 2 giọng
+  mà xướng đủ 13/14 mốc, đúng thứ tự, không mất phần** → VERIFY-V pass sạch, dùng được.
+  Bảng thống kê "~31% ăn" trước đó đã đếm cả những bản chỉ có tội đổi giọng, làm tỉ lệ hỏng bị
+  thổi phồng và suýt dẫn tới quyết định đắt (tái cấu trúc cả giáo trình 19 bài).
+  **Loại bản audio KHI VÀ CHỈ KHI** transcript ĐẢO thứ tự các phần, MẤT phần, hoặc mốc GIẢ
+  (xướng số này giảng phần kia). Ngân sách thực tế **~2 lượt/bài**.
+  Vẫn đúng: **KHÔNG có tham số nào ép được NLM dùng một giọng.** Đã thử và LOẠI — đừng thử lại:
   | Giả thuyết | Phản chứng |
   |---|---|
   | Siết prompt (cấm podcast, ép câu đầu, cấm tự đánh số) | Bài dùng ĐÚNG prompt vừa thắng ở bài trước → vẫn hỏng |
@@ -327,10 +371,31 @@ chạy tay 2026-07-22 (bài 1.10 Claude 101, 12 phần).
   | `audio_format="brief"` | Giữ cấu trúc hoàn hảo (6/6 mốc) NHƯNG chỉ ra 2 phút kiểu điện tín — không dùng làm bài giảng được |
   | `audio_format="critique"` | Hỏng y như deep_dive |
   | `audio_length="default"` | Ăn ở bài 6 phần, TRƯỢT ở bài 13 phần |
-  **Cách làm đúng:** coi đây là bước chập chờn có ngân sách **~3 lượt sinh/bài**; 3.8 là cổng
-  kiểm (biết hỏng TRƯỚC khi tốn công dựng video); `found < N` mà transcript đi ĐÚNG THỨ TỰ
-  thì vá mốc tay (rẻ, tất định); transcript ĐẢO thứ tự hoặc MẤT phần thì phải sinh lại, vá
-  sẽ ra video "đúng mốc nhưng sai slide". Giữ bản hỏng thành `_vN-podcast-*` để đối chiếu.
+  **Cách làm đúng:** 3.8 là cổng kiểm (biết hỏng TRƯỚC khi tốn công dựng video); `found < N`
+  mà transcript đi ĐÚNG THỨ TỰ thì vá mốc tay (rẻ, tất định); transcript ĐẢO thứ tự hoặc MẤT
+  phần thì phải sinh lại, vá sẽ ra video "đúng mốc nhưng sai slide". Giữ bản hỏng thành
+  `_vN-podcast-*` để đối chiếu.
+
+- **🔢 `found < N` THƯỜNG LÀ WHISPER NGHE NHẦM SỐ ĐẾM, KHÔNG PHẢI NLM BỎ MỐC — kiểm trước
+  khi sinh lại (live-run 2026-07-31).** Ba lần liên tiếp mốc "thiếu" hóa ra NLM có xướng đủ,
+  chỉ là whisper transcribe sai:
+  | Bài | NLM thực sự nói | Whisper ghi thành |
+  |---|---|---|
+  | 7 | "đổi góc nhìn sang **phần chín**…" | "sang **phần triển**" |
+  | 8 | "**Phần sáu**, pattern analysis…" | "**Phần solve**" |
+  | 13 | "**Phần sáu**, cách tạo thứ nhất…" | "**Phần xấu**" |
+  | 14 | "**Phần chín**, 10 skill starter…" | "**Phần 910** skill starter" (dính số) |
+  | 16, 17, 19 | "**Phần** 2…" · "**Phần** 5…" · "**Phần** 9…" | "**Vần** 2" · "**Và** 5" · "**Vần** 9" — **nhầm CHỮ "Phần", phụ âm ph→v. 3 ca trong 4 bài liên tiếp ⇒ MODE LỖI CÓ HỆ THỐNG, nghi hướng này TRƯỚC khi nghi mất mốc** |
+  | (cũ) | "Phần **bảy**" · "Phần **năm**" | "Phần **B**" · "**Phật nằm**" |
+
+  **Còn một kiểu nữa KHÔNG phải lỗi whisper: AUDIO XƯỚNG SAI SỐ nhưng TIÊU ĐỀ ĐÚNG.** Bài 13
+  mốc 9: NLM đọc *"**Phần 6** skill với parameters, khác biệt giữa rigid và reusable"* — tiêu đề
+  chính xác từng chữ, chỉ con số sai. ⇒ **khi vá mốc, khớp theo TIÊU ĐỀ đáng tin hơn khớp theo
+  SỐ**: con số sai được ở hai tầng độc lập (NLM đọc nhầm · whisper nghe nhầm), còn chuỗi tiêu đề
+  đã ghim trong prompt nên gần như luôn đúng.
+  **Cách tìm rẻ nhất:** dump transcript trong KHOẢNG TRỐNG giữa hai mốc kề (`[mm:ss]` trong
+  `<audio>.transcript.txt`) — mốc thật gần như luôn nằm ở đó, kèm đúng tiêu đề slide. Vá 1
+  dòng JSON, KHÔNG tốn 8 phút sinh lại audio.
 
 - **⚠️ `found == N` CHƯA ĐỦ để kết luận đồng bộ — phải soi MỐC KHỚP NỘI DUNG.** Live-run
   2026-07-30: một bản audio báo `found` 6/12 nghe rất khá, nhưng soi transcript thì là **MỐC
@@ -357,6 +422,32 @@ chạy tay 2026-07-22 (bài 1.10 Claude 101, 12 phần).
   `completed`. TUYỆT ĐỐI KHÔNG kick lại (đốt quota audio + sinh artifact trùng). Xử:
   liệt kê `studio status` lấy artifact_id mới nhất đúng type → download bình thường.
   Cùng họ với bẫy `unknown`: chỉ `completed`/file-có-bytes mới là tín hiệu thật.
+  → **Đây là lý do 3.3/3.7 chuyển sang tạo bằng CLI.**
+
+- **🚀 BẮN HÀNG LOẠT QUA CLI (live-run 2026-07-31, 3 bài một mẻ, 3/3 đạt):** `nlm audio create`
+  và `nlm slides create` **trả `artifact_id` NGAY** (submit rồi thoát, không block) — khác hẳn
+  MCP `studio_create`. Nhờ đó gửi liền 2–3 bài rồi **poll chung một lượt**, biến 3 lần chờ nối
+  tiếp (~24 phút) thành một (~10 phút). Cả hai lệnh nhận đủ tham số cần: `--focus`
+  (prompt dài, truyền `"$(cat prompt.txt)"`), `-s <source_ids>`, `-f`, `-l`, `--language`,
+  `-y`, `-j`. Mẫu script nền: poll `status=="completed"` cho từng artifact_id → download có
+  retry (chống propagation delay) → `lecture_video.py --detect-only`.
+  **Hai bẫy khi viết script nền đó:**
+  1. `nlm.exe` KHÔNG nằm ở `Roaming\Python\Python313\Scripts` (đường đó không tồn tại; chỉ
+     tình cờ chạy được nhờ PATH). Đường thật:
+     `C:\Users\Admin\AppData\Local\Programs\Python\Python312\Scripts\nlm.exe`.
+  2. Gọi `nlm` từ `subprocess` PHẢI ép `encoding="utf-8", errors="replace"` **và**
+     `sys.stdout.reconfigure(encoding="utf-8")`. Mặc định cp1252 gây hai lỗi khác nhau:
+     `UnicodeDecodeError` lúc ĐỌC (hỏng parse JSON tiếng Việt) và `UnicodeEncodeError` lúc
+     IN kết quả — lỗi thứ hai làm chết cả batch DÙ công việc đã xong (whisper chạy xong, chỉ
+     chết ở dòng `print`). Kiểm file thật trước khi kết luận batch hỏng.
+
+- **👥 CHỈ CHẠY MỘT PHIÊN /learn-lecture TRÊN MỘT KHÓA (live-run 2026-07-31):** phát hiện một
+  phiên Claude thứ hai ghi song song vào cùng thư mục khóa — nó tự dựng video một bài và sửa
+  `Curriculum.md` trong lúc phiên này đang chạy. Lần đó hai phiên tình cờ xử lý CÙNG một
+  artifact audio nên kết quả trùng khít, không hỏng; nhưng rủi ro thật là **đốt trùng quota
+  audio** và **mất cập nhật** trên `Curriculum.md`/`outline.md`. Dấu hiệu nhận biết: file vault
+  chứa nội dung mình không viết, mtime rơi đúng khung giờ phiên. Gặp thì DỪNG, báo CEO chọn
+  phiên nào tiếp, đừng vừa ghi vừa đoán.
 - **`source_get_content` có thể vượt giới hạn token của tool** — nguồn PDF ~100 trang
   trả ~220K ký tự, tool ghi ra file thay vì trả nội dung. Cách xử: python đọc file JSON
   (`{content, title, char_count}`), tìm offset của chương cần bằng `re.finditer` trên
@@ -389,7 +480,8 @@ chạy tay 2026-07-22 (bài 1.10 Claude 101, 12 phần).
 - **Download slide_deck có thể fail vài lần trước khi sẵn sàng** — giống audio, dùng
   vòng retry (`nlm download slide-deck <nb> --id <aid> -o <path>`), coi "file có bytes"
   là tín hiệu hoàn tất. Live-run: thành công ở lần thử thứ 4.
-- **CLI env:** `export PATH="$PATH:/c/Users/ADMIN/AppData/Roaming/Python/Python313/Scripts"`
+- **CLI env:** `export PATH="$PATH:/c/Users/Admin/AppData/Local/Programs/Python/Python312/Scripts"`
+  (đường Python313 ghi ở các bản trước KHÔNG tồn tại — xem "Bắn hàng loạt")
   + `PYTHONIOENCODING=utf-8 NO_COLOR=1`. CLI JSON KHÔNG expose url (chỉ id/type/status).
 - **Audio fail "Could not create audio" = NGHI AUTH HẾT HẠN TRƯỚC TIÊN.** Session NLM
   ~20 phút; giữa phiên dài auth hết hạn. BẪY: MCP `server_info` trả `auth_status:
