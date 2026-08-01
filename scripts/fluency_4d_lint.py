@@ -170,3 +170,76 @@ def validate_ledger_line(obj: dict) -> list[str]:
         errors.append("exp_active và exp_held phải cùng null hoặc cùng có giá trị")
 
     return errors
+
+
+# Experiment protocol: parser + WIP=1 validator + streak state machine
+STREAK_TO_PASS = 3
+BREAKS_TO_FAIL = 3
+_STATUSES = {"OPEN", "PASSED", "FAILED"}
+_EXP_COLS = ["id", "cell", "if_then", "streak", "breaks", "status", "opened", "closed"]
+
+
+def parse_experiments(text: str) -> list[dict]:
+    """Đọc bảng thí nghiệm trong Markdown. Bỏ qua dòng tiêu đề và dòng gạch."""
+    rows: list[dict] = []
+    for line in text.splitlines():
+        line = line.strip()
+        if not line.startswith("|"):
+            continue
+        cells = [c.strip().strip("`") for c in line.strip("|").split("|")]
+        if len(cells) != len(_EXP_COLS):
+            continue
+        if not re.match(r"^EXP-\d{3}$", cells[0]):
+            continue
+        row = dict(zip(_EXP_COLS, cells))
+        for key in ("streak", "breaks"):
+            row[key] = int(row[key]) if row[key].isdigit() else -1
+        rows.append(row)
+    return rows
+
+
+def validate_experiments(rows: list[dict]) -> list[str]:
+    """Kiểm bảng thí nghiệm. Trả danh sách lỗi; rỗng nghĩa là đạt."""
+    errors: list[str] = []
+    seen: set[str] = set()
+    open_rows = [r for r in rows if r["status"] == "OPEN"]
+    if len(open_rows) > 1:
+        errors.append(f"vi phạm WIP=1: có {len(open_rows)} thí nghiệm OPEN ({[r['id'] for r in open_rows]})")
+    for r in rows:
+        if r["id"] in seen:
+            errors.append(f"trùng ID: {r['id']}")
+        seen.add(r["id"])
+        if r["cell"] not in CELLS:
+            errors.append(f"{r['id']}: ô mục tiêu không hợp lệ: {r['cell']!r}")
+        if not r["if_then"].startswith("Khi ") or " tôi " not in r["if_then"]:
+            errors.append(f"{r['id']}: câu phải ở dạng nếu–thì hành vi 'Khi ... , tôi ...': {r['if_then']!r}")
+        if r["status"] not in _STATUSES:
+            errors.append(f"{r['id']}: trạng thái lạ: {r['status']!r}")
+        if not 0 <= r["streak"] <= STREAK_TO_PASS:
+            errors.append(f"{r['id']}: streak ngoài khoảng 0-{STREAK_TO_PASS}: {r['streak']}")
+        if not 0 <= r["breaks"] <= BREAKS_TO_FAIL:
+            errors.append(f"{r['id']}: đứt ngoài khoảng 0-{BREAKS_TO_FAIL}: {r['breaks']}")
+        if r["status"] == "PASSED" and r["streak"] != STREAK_TO_PASS:
+            errors.append(f"{r['id']}: PASSED phải có streak = {STREAK_TO_PASS}, gặp {r['streak']}")
+        if r["status"] == "FAILED" and r["breaks"] != BREAKS_TO_FAIL:
+            errors.append(f"{r['id']}: FAILED phải có đứt = {BREAKS_TO_FAIL}, gặp {r['breaks']}")
+        if r["status"] in {"PASSED", "FAILED"} and not r["closed"].strip():
+            errors.append(f"{r['id']}: đã đóng nhưng thiếu ngày đóng")
+    return errors
+
+
+def apply_session(row: dict, held: bool) -> dict:
+    """Áp kết quả một phiên lên thí nghiệm. Trả bản ghi MỚI."""
+    out = dict(row)
+    if held:
+        out["streak"] = row["streak"] + 1
+        if out["streak"] >= STREAK_TO_PASS:
+            out["streak"] = STREAK_TO_PASS
+            out["status"] = "PASSED"
+    else:
+        out["streak"] = 0
+        out["breaks"] = row["breaks"] + 1
+        if out["breaks"] >= BREAKS_TO_FAIL:
+            out["breaks"] = BREAKS_TO_FAIL
+            out["status"] = "FAILED"
+    return out

@@ -130,3 +130,73 @@ def test_exp_active_and_exp_held_must_agree():
     rec = _good_record()
     rec["exp_active"] = None
     assert any("exp_held" in e for e in lint.validate_ledger_line(rec))
+
+
+EXP_DOC = (lint.REF_DIR / "experiment-protocol.md").read_text(encoding="utf-8")
+
+
+def test_sample_table_parses():
+    rows = lint.parse_experiments(EXP_DOC)
+    assert rows, "experiment-protocol.md phải có bảng mẫu"
+    assert rows[0]["id"].startswith("EXP-")
+    assert rows[0]["cell"] in lint.CELLS
+
+
+def test_sample_table_is_valid():
+    assert lint.validate_experiments(lint.parse_experiments(EXP_DOC)) == []
+
+
+def test_wip_one_enforced():
+    rows = [
+        {"id": "EXP-001", "cell": "des.product", "if_then": "Khi giao task, tôi nêu tiêu chí xong.",
+         "streak": 1, "breaks": 0, "status": "OPEN", "opened": "2026-08-01", "closed": ""},
+        {"id": "EXP-002", "cell": "dis.product", "if_then": "Khi nhận số, tôi hỏi nguồn.",
+         "streak": 0, "breaks": 0, "status": "OPEN", "opened": "2026-08-02", "closed": ""},
+    ]
+    assert any("WIP" in e for e in lint.validate_experiments(rows))
+
+
+def test_if_then_form_required():
+    rows = [{"id": "EXP-001", "cell": "des.product", "if_then": "Chú ý Description hơn.",
+             "streak": 0, "breaks": 0, "status": "OPEN", "opened": "2026-08-01", "closed": ""}]
+    assert any("nếu–thì" in e for e in lint.validate_experiments(rows))
+
+
+def test_passed_requires_streak_three():
+    rows = [{"id": "EXP-001", "cell": "des.product", "if_then": "Khi giao task, tôi nêu tiêu chí xong.",
+             "streak": 2, "breaks": 0, "status": "PASSED", "opened": "2026-08-01", "closed": "2026-08-04"}]
+    assert any("PASSED" in e for e in lint.validate_experiments(rows))
+
+
+def test_streak_increments_on_hold():
+    row = {"id": "EXP-001", "cell": "des.product", "if_then": "Khi giao task, tôi nêu tiêu chí xong.",
+           "streak": 1, "breaks": 0, "status": "OPEN", "opened": "2026-08-01", "closed": ""}
+    assert lint.apply_session(row, held=True)["streak"] == 2
+
+
+def test_third_hold_passes_the_experiment():
+    row = {"id": "EXP-001", "cell": "des.product", "if_then": "Khi giao task, tôi nêu tiêu chí xong.",
+           "streak": 2, "breaks": 0, "status": "OPEN", "opened": "2026-08-01", "closed": ""}
+    out = lint.apply_session(row, held=True)
+    assert out["streak"] == 3 and out["status"] == "PASSED"
+
+
+def test_break_resets_streak_and_counts():
+    row = {"id": "EXP-001", "cell": "des.product", "if_then": "Khi giao task, tôi nêu tiêu chí xong.",
+           "streak": 2, "breaks": 0, "status": "OPEN", "opened": "2026-08-01", "closed": ""}
+    out = lint.apply_session(row, held=False)
+    assert out["streak"] == 0 and out["breaks"] == 1 and out["status"] == "OPEN"
+
+
+def test_third_break_fails_the_experiment():
+    row = {"id": "EXP-001", "cell": "des.product", "if_then": "Khi giao task, tôi nêu tiêu chí xong.",
+           "streak": 1, "breaks": 2, "status": "OPEN", "opened": "2026-08-01", "closed": ""}
+    out = lint.apply_session(row, held=False)
+    assert out["breaks"] == 3 and out["status"] == "FAILED"
+
+
+def test_apply_session_does_not_mutate_input():
+    row = {"id": "EXP-001", "cell": "des.product", "if_then": "Khi giao task, tôi nêu tiêu chí xong.",
+           "streak": 1, "breaks": 0, "status": "OPEN", "opened": "2026-08-01", "closed": ""}
+    lint.apply_session(row, held=True)
+    assert row["streak"] == 1

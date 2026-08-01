@@ -139,7 +139,8 @@ AI-Fluency-Ledger/
 - **Cách đo:** quan sát được ngay trong phiên sau → `exp_held: true/false`.
 - **Nghiệm thu:** giữ được **3 phiên liên tiếp** → `PASSED`, đóng, mở thí nghiệm mới. Đứt giữa chừng → streak đếm lại từ 0. Đứt 3 lần → `FAILED`; coach phải kê thí nghiệm **nhỏ hơn**, không kê lại nguyên văn cái cũ.
 
-**Bảng `experiments.md`:** `ID | ô mục tiêu | câu nếu–thì | streak | trạng thái | ngày mở | ngày đóng`
+**Bảng `experiments.md`:** `ID | ô mục tiêu | câu nếu–thì | streak | đứt | trạng thái | ngày mở | ngày đóng`
+Cột `đứt` đếm số lần streak bị phá; đạt 3 → `FAILED`.
 Trạng thái: `OPEN` · `PASSED` · `FAILED`.
 
 ## 8. Ba quy trình
