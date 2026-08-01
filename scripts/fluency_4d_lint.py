@@ -18,7 +18,6 @@ CELLS = [
     "dil.creation", "dil.transparency", "dil.deployment",
 ]
 MODES = {"automation", "augmentation", "agency"}
-assert MODES == {"automation", "augmentation", "agency"}
 
 # Mã ô trong rubric nằm ở cột đầu của bảng, bọc backtick: | `del.problem` | ...
 _RUBRIC_CELL_RE = re.compile(r"^\|\s*`([a-z]{3}\.[a-z]+)`\s*\|", re.MULTILINE)
