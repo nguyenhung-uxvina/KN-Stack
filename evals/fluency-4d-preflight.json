@@ -1,0 +1,17 @@
+{
+  "skill": "fluency-4d-preflight",
+  "version": "1.0",
+  "description": "Binary assertions cho cổng preflight 4D",
+  "mode": "static",
+  "total_required": 7,
+  "passing_score": 7,
+  "assertions": [
+    {"id": "4DP-GATE-DEL", "name": "delegation_gate", "check": "cổng Delegation phải hỏi đủ ba câu: C/O/D, chế độ, phần giữ lại — không chỉ nêu tên cổng", "regex": "Core ?/ ?Offload ?/ ?Default[\\s\\S]{0,250}Chế độ nào[\\s\\S]{0,300}Giữ lại phần nào cho mình", "required": true},
+    {"id": "4DP-MODE", "name": "mode_choice", "check": "ba chế độ phải kèm định nghĩa hành vi, không chỉ liệt kê tên", "regex": "automation[\\s\\S]{0,20}AI thực thi tác vụ cụ thể[\\s\\S]{0,150}augmentation[\\s\\S]{0,20}cùng nghĩ cùng làm[\\s\\S]{0,150}agency[\\s\\S]{0,20}AI chạy độc lập", "required": true},
+    {"id": "4DP-BLOCK", "name": "blocks_core_delegation", "check": "task phân loại Core mà định giao trọn thì bị chặn thật, và chỉ đi tiếp khi CEO đổi phân loại hoặc đồng ý tách", "regex": "phân loại là Core[\\s\\S]{0,60}giao trọn[\\s\\S]{0,30}chặn[\\s\\S]{0,250}Chỉ đi tiếp khi CEO", "required": true},
+    {"id": "4DP-GATE-DES", "name": "description_gate", "check": "cổng Description phải hỏi đủ ba câu cụ thể — sản phẩm/đầu ra, quy trình/khung, vai/phản biện — không chỉ nêu ba từ khoá", "regex": "Sản phẩm\\*\\*[\\s\\S]{0,20}đầu ra là gì[\\s\\S]{0,150}Quy trình\\*\\*[\\s\\S]{0,20}theo khung nào[\\s\\S]{0,150}Vai\\*\\*[\\s\\S]{0,20}phản biện hay thừa hành", "required": true},
+    {"id": "4DP-EXP", "name": "reminds_open_experiment", "check": "bước phải thật sự đọc experiments.md, tìm dòng OPEN, và in lại đúng câu nếu-thì — không chỉ nói từ OPEN", "regex": "Đọc `experiments\\.md`[\\s\\S]{0,40}trạng thái `OPEN`[\\s\\S]{0,60}In lại đúng một dòng câu nếu", "required": true},
+    {"id": "4DP-NOWRITE", "name": "writes_nothing", "check": "phải có câu khẳng định preflight không ghi vào sổ điểm vì nó là cổng chứ không phải phép đo — không chỉ chữ 'không ghi' rời rạc", "regex": "Không ghi gì vào sổ điểm[\\s\\S]{0,40}Đây là cổng, không phải phép đo", "required": true},
+    {"id": "4DP-OUTPUT", "name": "returns_brief", "check": "đầu ra phải là khuôn phiếu giao việc có mục Prompt đã viết lại dán được ngay — không chỉ nhắc tên 'phiếu giao việc'", "regex": "phiếu giao việc[\\s\\S]{0,250}Prompt đã viết lại[\\s\\S]{0,60}dán được ngay", "required": true}
+  ]
+}
