@@ -36,7 +36,7 @@ chỉ được tính từ phiên KẾ TIẾP trở đi. Không thể "giữ" m�
 Luật này ghi giống hệt ở `experiment-protocol.md` luật 3.
 
 **`weakest` không phải ô mục tiêu thí nghiệm.** `weakest` giữ ô thấp nhất tuyệt đối, kể cả cờ đỏ
-`dil.*` = 0 — để một thất bại Diligence mạn tính vẫn nhìn thấy được trong lịch sử `weakest` 30 ngày.
+`dil.*` = 0 — để một thất bại Diligence mạn tính vẫn nhìn thấy được trong lịch sử `weakest` 30 ngày. **Hòa** → ô xuất hiện làm `weakest` nhiều lần nhất trong `sessions.jsonl` 30 ngày gần nhất. **Vẫn hòa** → thứ tự ưu tiên `dil` > `dis` > `des` > `del`, trong cùng nhóm theo thứ tự chính tắc (`problem`/`platform`/`task` cho `del`; `product`/`process`/`performance` cho `des` và `dis`; `creation`/`transparency`/`deployment` cho `dil`).
 Ô mà thí nghiệm nhắm tới (đã loại cờ đỏ) nằm ở cột `ô mục tiêu` của `experiments.md`, không có
 trường riêng trong sổ này.
 
