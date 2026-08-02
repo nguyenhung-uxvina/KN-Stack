@@ -34,10 +34,13 @@ vi phạm chốt chặn ở Bước 5, không phải ứng biến cho tiện.
 
 **Bước 3 — Trung bình từng ô.** Với mỗi ô trong 12 ô, tính trung bình các điểm, **bỏ qua `null`** (n/a không phải 0, kéo trung bình xuống là sai). Ghi kèm số lần được chấm — trung bình từ 1 mẫu phải nói rõ là 1 mẫu. So với cửa sổ trước: ↑ / ↓ / =.
 
-**Bước 4 — Xác định ô đang tụt.** Định nghĩa bằng số, không bằng cảm tính. Một ô gọi là **đang tụt** khi có **≥ 2 mẫu** trong cửa sổ hiện tại VÀ thoả ít nhất một trong hai:
+**Bước 4 — Xác định ô đang tụt.** Định nghĩa bằng số, không bằng cảm tính. Một ô gọi là **đang tụt** khi có **≥ 2 mẫu** trong cửa sổ hiện tại VÀ thoả ít nhất một trong ba:
 
 - **(a) Tụt theo xu hướng:** trung bình tuần này ≤ trung bình tuần trước − 0.5
 - **(b) Thấp dai dẳng:** trung bình ≤ 1.5 ở cả tuần này lẫn tuần trước
+- **(c) Thấp tuyệt đối:** trung bình ≤ 1.5 với ≥ 3 mẫu ngay trong cửa sổ hiện tại, không cần cửa sổ trước
+
+Tiêu chí (c) có mặt vì (a) và (b) đều đòi cửa sổ trước, mà tuần ĐẦU TIÊN không bao giờ có: thiếu (c) thì báo cáo tuần đầu luôn rỗng kể cả khi có ô ở 0.50 — vô dụng đúng lúc cần nhất. Ngưỡng mẫu của (c) cao hơn (3 thay vì 2) vì nó không có cửa sổ trước để đối chứng.
 
 Ô có dưới 2 mẫu → ghi "chưa đủ mẫu", KHÔNG đưa vào bảng gợi ý và KHÔNG làm ứng viên thí nghiệm. Một mẫu không phải xu hướng.
 

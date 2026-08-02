@@ -1,10 +1,10 @@
 {
   "skill": "fluency-4d-weekly",
-  "version": "1.5",
+  "version": "1.6",
   "description": "Binary assertions cho tổng hợp tuần 4D",
   "mode": "static",
-  "total_required": 16,
-  "passing_score": 16,
+  "total_required": 17,
+  "passing_score": 17,
   "assertions": [
     {
       "id": "4DW-WINDOW",
@@ -86,8 +86,8 @@
     {
       "id": "4DW-DECLINE-DEF",
       "name": "declining_defined_numerically",
-      "check": "'đang tụt' phải định nghĩa bằng số: ngưỡng ≥2 mẫu, tiêu chí (a) tụt ≥0.5 so tuần trước, tiêu chí (b) ≤1.5 hai tuần liên tiếp",
-      "regex": "có \\*\\*≥ 2 mẫu\\*\\* trong cửa sổ hiện tại[\\s\\S]{0,120}Tụt theo xu hướng:\\*\\* trung bình tuần này ≤ trung bình tuần trước − 0\\.5[\\s\\S]{0,120}Thấp dai dẳng:\\*\\* trung bình ≤ 1\\.5 ở cả tuần này lẫn tuần trước",
+      "check": "'đang tụt' định nghĩa bằng số với ĐỦ BA tiêu chí: ngưỡng ≥2 mẫu, (a) tụt ≥0.5 so tuần trước, (b) ≤1.5 hai tuần liên tiếp, (c) thấp tuyệt đối ≤1.5 với ≥3 mẫu không cần cửa sổ trước — thiếu (c) thì báo cáo tuần đầu tiên luôn rỗng vì (a) và (b) đều đòi cửa sổ trước",
+      "regex": "có \\*\\*≥ 2 mẫu\\*\\* trong cửa sổ hiện tại[\\s\\S]{0,120}Tụt theo xu hướng:\\*\\* trung bình tuần này ≤ trung bình tuần trước − 0\\.5[\\s\\S]{0,120}Thấp dai dẳng:\\*\\* trung bình ≤ 1\\.5 ở cả tuần này lẫn tuần trước[\\s\\S]{0,120}Thấp tuyệt đối:\\*\\* trung bình ≤ 1\\.5 với ≥ 3 mẫu ngay trong cửa sổ hiện tại",
       "required": true
     },
     {
@@ -116,6 +116,13 @@
       "name": "profile_via_pointer",
       "check": "weekly cũng đi qua active-profile.md thay vì gọi thẳng tên profile",
       "regex": "\\.\\./fluency-4d-shared/references/active-profile\\.md[\\s\\S]{0,150}KHÔNG đoán tên profile",
+      "required": true
+    },
+    {
+      "id": "4DW-FIRST-WEEK",
+      "name": "explains_why_criterion_c_exists",
+      "check": "phải ghi LÝ DO tiêu chí (c) tồn tại — tuần đầu không có cửa sổ trước nên (a)/(b) không kích hoạt được — và lý do ngưỡng mẫu của (c) cao hơn. Thiếu lý do thì lần dọn dẹp sau sẽ xoá (c) vì trông như trùng (b)",
+      "regex": "\\(c\\) có mặt vì \\(a\\) và \\(b\\) đều đòi cửa sổ trước[\\s\\S]{0,80}tuần ĐẦU TIÊN không bao giờ có[\\s\\S]{0,200}Ngưỡng mẫu của \\(c\\) cao hơn[\\s\\S]{0,60}không có cửa sổ trước để đối chứng",
       "required": true
     }
   ]
