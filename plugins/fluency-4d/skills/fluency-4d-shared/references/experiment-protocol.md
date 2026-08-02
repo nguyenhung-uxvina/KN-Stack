@@ -5,6 +5,11 @@
 1. **WIP = 1.** Chỉ một thí nghiệm `OPEN` tại một thời điểm. Phát hiện 5 điểm yếu vẫn chỉ kê 1. Ràng buộc cứng, không phải gợi ý.
 2. **Dạng nếu–thì.** Câu phải bắt đầu bằng "Khi " và chứa " tôi ", mô tả hành vi quan sát được. Cấm viết kiểu "chú ý Description hơn".
 3. **Cách đo.** Phiên MỞ thí nghiệm ghi `"exp_active": null, "exp_held": null` — thí nghiệm chỉ được tính từ phiên KẾ TIẾP trở đi. Từ phiên kế tiếp, mỗi phiên ghi `exp_active` = ID thí nghiệm và `exp_held: true/false`.
+
+   Luật này áp cho **phiên tự kê thí nghiệm**, vì không thể "giữ" một cam kết chưa tồn tại
+   lúc phiên đó diễn ra. Thí nghiệm mở **ngoài phiên** — CEO chốt ở bước weekly sau khi cờ
+   `LỆCH Ô` bật — thì cam kết đã có trước, nên phiên được chấm kế tiếp **tính ngay**, không
+   bỏ trống một nhịp. Ghi nhầm ở đây làm streak chậm mất một phiên mà không ai thấy.
 4. **Nghiệm thu.** Giữ 3 phiên liên tiếp → `PASSED`, đóng, mở thí nghiệm mới.
 5. **Đứt.** Streak về 0, số lần đứt +1. Đứt lần thứ 3 → `FAILED`.
 6. **Sau `FAILED`.** Kê thí nghiệm NHỎ HƠN nhắm cùng ô. Cấm chép lại nguyên văn câu cũ.
