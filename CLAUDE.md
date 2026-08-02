@@ -25,8 +25,14 @@ KN-Stack/
 │   ├── session/      (5)  — Session management (catchup, checkpoint)
 │   ├── system/       (16) — System design tools (gate0-3, decide, cld)
 │   └── tana/         (9)  — Tana integration (THỊNH workflow capture: tana-thu/hoa/ich/nho/hanh, tana-session, tana-weekly)
-├── plugins/          ← Self-contained portable Claude plugins (copy-anywhere, no junction dependency)
-│   └── fluency-4d/   — AI Fluency 4D coach (3 skills: preflight/review/weekly; Markdown/JSON only, ledger at D:\Workshop_X\2_Areas\CEO-Self\AI-Fluency-Ledger\)
+├── plugins/          ← Self-contained Claude plugins. Copy the WHOLE tree and it runs as-is; but
+│                       under junction deployment every child of plugins/*/skills/ must be
+│                       junctioned — including the shared reference dir. Miss one and "../" resolves
+│                       to ~/.claude/commands/, so the skill loads NO references and still prints a
+│                       full-looking report. Silent, not a crash. Verify with setup.sh --verify.
+│   └── fluency-4d/   — AI Fluency 4D coach (3 skills: preflight/review/weekly + 7 shared reference
+│                       files in skills/fluency-4d-shared/references/; Markdown/JSON only; ledger at
+│                       D:\Workshop_X\2_Areas\CEO-Self\AI-Fluency-Ledger\). Gate: bash scripts/gate-fluency-4d.sh
 ├── scripts/          ← Python scripts codified from skills (Naval code leverage)
 │   └── _codify_ledger.md  (append-only registry of markdown→Python conversions)
 ├── hooks/            ← 3 hook scripts (SessionStart, UserPromptSubmit, Stop)
@@ -53,6 +59,12 @@ KN-Stack/
 - Mentor skills: `mentor-<kebab-name>` (e.g., `mentor-palmer-luckey`) — created via `/mentor-board --add`
 - Guard rails: descriptive name without prefix (e.g., `analyst-trap`, `ratio-check`)
 - Skill file: always `SKILL.md` (uppercase)
+- **Plugin shared dirs: `<plugin-name>-shared/`, never a generic name.** Every child of
+  `plugins/*/skills/` is junctioned straight into `~/.claude/commands/`, which is a FLAT namespace
+  shared by every plugin. A generic name (`_shared`, `common`, `refs`) collides the moment a second
+  plugin uses it — `setup.sh` skips the duplicate **silently**, `--verify` still passes the shape
+  check, and plugin B ends up reading plugin A's references. `--verify` now compares the junction
+  TARGET and reports `HIJACKED`, but the naming rule is the real fix.
 
 ## Deployment
 
