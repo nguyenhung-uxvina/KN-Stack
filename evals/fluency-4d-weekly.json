@@ -1,10 +1,10 @@
 {
   "skill": "fluency-4d-weekly",
-  "version": "1.6",
-  "description": "Binary assertions cho tổng hợp tuần 4D",
+  "version": "2.0",
+  "description": "Binary assertions cho tổng hợp tuần 4D + vòng cải tiến DMIR (D ràng buộc · M bản đồ · I thí nghiệm · R nghiệm thu). KHÔNG assertion nào được khớp chỉ chữ 'DMIR' — mọi anchor neo vào luật số.",
   "mode": "static",
-  "total_required": 17,
-  "passing_score": 17,
+  "total_required": 39,
+  "passing_score": 39,
   "assertions": [
     {
       "id": "4DW-WINDOW",
@@ -123,6 +123,160 @@
       "name": "explains_why_criterion_c_exists",
       "check": "phải ghi LÝ DO tiêu chí (c) tồn tại — tuần đầu không có cửa sổ trước nên (a)/(b) không kích hoạt được — và lý do ngưỡng mẫu của (c) cao hơn. Thiếu lý do thì lần dọn dẹp sau sẽ xoá (c) vì trông như trùng (b)",
       "regex": "\\(c\\) có mặt vì \\(a\\) và \\(b\\) đều đòi cửa sổ trước[\\s\\S]{0,80}tuần ĐẦU TIÊN không bao giờ có[\\s\\S]{0,200}Ngưỡng mẫu của \\(c\\) cao hơn[\\s\\S]{0,60}không có cửa sổ trước để đối chứng",
+      "required": true
+    },
+    {
+      "id": "4DW-PROTOCOL-PATH",
+      "name": "cites_protocol_by_exact_path",
+      "check": "weekly phải trỏ experiment-protocol.md bằng đường dẫn đầy đủ ../fluency-4d-shared/references/ VÀ nêu đích danh Bảng 2 + Luật bước R — sai một cấp thư mục là skill đọc rỗng mà vẫn in báo cáo trông đủ",
+      "regex": "\\.\\./fluency-4d-shared/references/experiment-protocol\\.md[\\s\\S]{0,60}Bảng 2 \\(bản đồ ô kéo ô, 18 cạnh\\)[\\s\\S]{0,60}Luật bước R",
+      "required": true
+    },
+    {
+      "id": "4DW-NO-MAP-INVENT",
+      "name": "forbids_inventing_causal_map",
+      "check": "cấm AI tự dựng bản đồ nhân quả, kèm LÝ DO chốt chặn (bản đồ dựng lúc chạy sẽ dựng thành cái biện minh cho ô vừa chọn) — không chỉ chữ 'Bảng 2'",
+      "regex": "Không tự dựng bản đồ nhân quả\\.\\*\\*[\\s\\S]{0,60}chép từ Bảng 2[\\s\\S]{0,60}Cấm suy tương quan giữa các ô[\\s\\S]{0,200}biện minh cho ô vừa chọn",
+      "required": true
+    },
+    {
+      "id": "4DW-CONSTRAINT-DEF",
+      "name": "constraint_defined_by_upstream",
+      "check": "ràng buộc định nghĩa bằng quan hệ thượng nguồn trong Bảng 2, tính bắc cầu — không phải 'ô yếu nhất' hay cảm nhận",
+      "regex": "\\*\\*Ràng buộc\\*\\* = ô trong nhóm ứng viên mà \\*\\*không ô ứng viên nào khác nằm thượng nguồn của nó\\*\\*[\\s\\S]{0,60}tính cả bắc cầu",
+      "required": true
+    },
+    {
+      "id": "4DW-CONSTRAINT-TIEBREAK",
+      "name": "constraint_tiebreak_numeric",
+      "check": "hoà thì gỡ bằng số theo đúng thứ tự: thâm hụt lớn hơn → nhiều mẫu hơn → thứ tự chính tắc. Thiếu thì hai ô cùng thượng nguồn sẽ do AI tuỳ chọn",
+      "regex": "Còn nhiều ô như vậy\\*\\*[\\s\\S]{0,30}thâm hụt lớn hơn \\(trung bình thấp hơn\\) thắng[\\s\\S]{0,30}nhiều mẫu hơn[\\s\\S]{0,30}thứ tự chính tắc",
+      "required": true
+    },
+    {
+      "id": "4DW-NO-CONSTRAINT",
+      "name": "empty_pool_prints_insufficient_data",
+      "check": "nhóm ứng viên rỗng thì in thẳng 'chưa đủ dữ liệu để chốt ràng buộc' và cấm chọn đại một ô — đây là chốt chống bịa ràng buộc trên dữ liệu thưa",
+      "regex": "Nhóm ứng viên rỗng\\*\\* → in thẳng \"\\*\\*chưa đủ dữ liệu để chốt ràng buộc\\*\\*\"[\\s\\S]{0,60}Cấm chọn đại một ô cho có",
+      "required": true
+    },
+    {
+      "id": "4DW-UPSTREAM-WARN",
+      "name": "outside_pool_upstream_is_warning_only",
+      "check": "ô thượng nguồn ngoài nhóm ứng viên mà TB < 2.0 chỉ được cảnh báo, KHÔNG tự thành ràng buộc, kèm lý do (cho nó lên là phá cửa ≥2 mẫu từ phía sau)",
+      "regex": "Ô thượng nguồn NGOÀI nhóm ứng viên mà trung bình < 2\\.0\\*\\*[\\s\\S]{0,40}\\*\\*KHÔNG\\*\\* tự động thành ràng buộc[\\s\\S]{0,150}phá cửa từ phía sau",
+      "required": true
+    },
+    {
+      "id": "4DW-BOTH-CELLS",
+      "name": "prints_lowest_and_constraint",
+      "check": "báo cáo phải in CẢ HAI ô thấp nhất tuyệt đối và ô ràng buộc kèm vì sao khác nhau — in mỗi ô thấp nhất là quay về luật cũ",
+      "regex": "bắt buộc in cả hai\\*\\*: ô thấp nhất tuyệt đối và ô ràng buộc[\\s\\S]{0,90}In mỗi ô thấp nhất là quay về luật cũ",
+      "required": true
+    },
+    {
+      "id": "4DW-MAP-COPY",
+      "name": "m_step_copies_three_things",
+      "check": "bước M phải chép đủ ba thứ từ bảng cố định: tối đa 4 cạnh ra kèm cột Vì sao nguyên văn, mọi ô thượng nguồn kèm trung bình, và tầng đòn bẩy từ Bảng 3",
+      "regex": "Tối đa 4 cạnh ra\\*\\* của ô ràng buộc[\\s\\S]{0,60}kèm cột \"Vì sao\" nguyên văn[\\s\\S]{0,140}Mọi ô thượng nguồn\\*\\* của ô ràng buộc, kèm trung bình tuần này[\\s\\S]{0,120}Tầng đòn bẩy\\*\\* của ô ràng buộc lấy từ Bảng 3",
+      "required": true
+    },
+    {
+      "id": "4DW-MAP-FORBID",
+      "name": "m_step_forbidden_trio",
+      "check": "bước M cấm đúng ba thứ: vẽ cạnh ngoài Bảng 2, gọi bảng là 'mô hình', ước lượng tương quan từ sổ. Chữ 'mô hình' là lời mời bịa số nên phải cấm đích danh",
+      "regex": "Cấm ba thứ ở bước này: vẽ cạnh không có trong Bảng 2; gọi bảng là \"mô hình\"; ước lượng tương quan giữa các ô từ sổ",
+      "required": true
+    },
+    {
+      "id": "4DW-CANDIDATE-FIRST",
+      "name": "first_candidate_is_constraint",
+      "check": "ứng viên thí nghiệm thứ nhất phải là ô ràng buộc, KHÔNG phải ô tụt sâu nhất — đây là chỗ D thật sự đổi hành vi",
+      "regex": "Ứng viên thứ nhất \\*\\*phải là ô ràng buộc\\*\\* ở Bước 5, không phải ô tụt sâu nhất[\\s\\S]{0,60}ô ràng buộc đứng đầu",
+      "required": true
+    },
+    {
+      "id": "4DW-WIP-WINS",
+      "name": "wip_one_beats_constraint",
+      "check": "WIP=1 vẫn thắng ràng buộc (ràng buộc không có quyền phá luật), và khi lệch ô thì in đúng dòng cờ LỆCH Ô để CEO tự quyết đóng sớm hay chạy nốt",
+      "regex": "WIP = 1 vẫn thắng ràng buộc\\.\\*\\*[\\s\\S]{0,120}KHÔNG kê mới\\. Ràng buộc không có quyền phá luật này[\\s\\S]{0,120}LỆCH Ô: thí nghiệm đang chạy nhắm <ô cũ>, ràng buộc tuần này là <ô mới>",
+      "required": true
+    },
+    {
+      "id": "4DW-ESCALATE",
+      "name": "escalate_leverage_after_failed",
+      "check": "ô ràng buộc đã có thí nghiệm FAILED thì cấm câu nếu–thì ở tầng tham số L12 ('làm kỹ hơn'), phải leo lên mục tiêu/luật/dòng thông tin — và AI vẫn không viết hộ câu",
+      "regex": "Luật leo tầng\\.\\*\\* Ô ràng buộc đã có ≥ 1 thí nghiệm `FAILED` nhắm đúng nó[\\s\\S]{0,180}không được là tham số L12 kiểu \"làm kỹ hơn\"[\\s\\S]{0,40}Vẫn không viết hộ câu",
+      "required": true
+    },
+    {
+      "id": "4DW-R-NUMERIC",
+      "name": "r1_verdict_numeric",
+      "check": "R1 phán quyết bằng ba ngưỡng số +0.5 / ±0.5 / −0.5 và phải in cả ba con số chứ không chỉ kết luận",
+      "regex": "R1 — ô ràng buộc tuần trước có nhúc nhích không\\.\\*\\*[\\s\\S]{0,60}≥ \\+0\\.5 → `ĐỠ`; trong khoảng ±0\\.5 → `ĐỨNG YÊN`; ≤ −0\\.5 → `TỆ ĐI`[\\s\\S]{0,60}In cả ba con số",
+      "required": true
+    },
+    {
+      "id": "4DW-R-EDGE",
+      "name": "r2_challenges_the_bet_edge",
+      "check": "R2 chất vấn đúng giả định của vòng trước (cạnh đặt cược), ngưỡng +0.3 cho ô hạ nguồn, 3 tuần nghi vấn thì đề nghị xoá cạnh — và AI không tự xoá Bảng 2",
+      "regex": "R2 — cạnh đặt cược có đúng không\\.\\*\\*[\\s\\S]{0,90}giả định bị chất vấn[\\s\\S]{0,120}không ô hạ nguồn nào đỡ ≥ \\+0\\.3\\*\\* → đánh dấu cạnh `NGHI VẤN`[\\s\\S]{0,60}3 tuần liên tiếp\\*\\* → in đề nghị CEO xoá cạnh khỏi Bảng 2",
+      "required": true
+    },
+    {
+      "id": "4DW-R-NO-PRIOR",
+      "name": "no_prior_week_no_hindsight",
+      "check": "không có weekly tuần trước thì in 'vòng trước: không có' và cấm dựng lại hồi cứu từ trí nhớ — chống bịa nghiệm thu",
+      "regex": "Không có file weekly tuần trước\\*\\* → in `vòng trước: không có`[\\s\\S]{0,60}Cấm dựng lại hồi cứu từ trí nhớ",
+      "required": true
+    },
+    {
+      "id": "4DW-R-NO-WRITE",
+      "name": "weekly_never_writes_experiments",
+      "check": "weekly KHÔNG được sửa experiments.md — đóng thí nghiệm là việc của fluency-4d-review. Thiếu luật này thì hai skill cùng ghi một file trạng thái",
+      "regex": "Weekly KHÔNG sửa `experiments\\.md` — đóng thí nghiệm là việc của `fluency-4d-review`",
+      "required": true
+    },
+    {
+      "id": "4DW-D-DEFINITION",
+      "name": "constraint_is_not_lowest_stated",
+      "check": "câu định nghĩa bước D phải nói thẳng ràng buộc là ô KÉO ô khác và KHÔNG phải ô điểm thấp nhất, và rằng luật quyết định bằng số chứ không bằng cảm nhận",
+      "regex": "Bước 5 \\(D\\) — Chốt đúng một ô ràng buộc\\.\\*\\* Ràng buộc là ô mà cải thiện nó kéo theo ô khác — \\*\\*không phải\\*\\* ô điểm thấp nhất[\\s\\S]{0,80}quyết định bằng số chứ không bằng cảm nhận",
+      "required": true
+    },
+    {
+      "id": "4DW-PROTOCOL-MISSING",
+      "name": "degrades_when_protocol_unreadable",
+      "check": "thiếu experiment-protocol.md thì bỏ đúng ba bước DMIR và in tên file thiếu — không được im lặng chạy tiếp rồi in báo cáo trông đủ (bẫy junction)",
+      "regex": "Thiếu `experiment-protocol\\.md`[\\s\\S]{0,20}thì KHÔNG chạy Bước 5, 6, 9 — in tên file thiếu, chạy phần còn lại như bản chưa có DMIR",
+      "required": true
+    },
+    {
+      "id": "4DW-M-TERMINAL",
+      "name": "terminal_cells_named",
+      "check": "bốn ô cuối nhánh phải gọi đích danh và ghi 'không có cạnh ra, cố ý' — thiếu thì AI sẽ bịa cạnh ra cho đủ đối xứng khi ràng buộc rơi vào một trong bốn ô đó",
+      "regex": "Ô ràng buộc là một trong bốn ô cuối nhánh \\(`dis\\.performance`, `dil\\.creation`, `dil\\.transparency`, `dil\\.deployment`\\) → ghi \"không có cạnh ra, cố ý\"",
+      "required": true
+    },
+    {
+      "id": "4DW-REPORT-D",
+      "name": "report_prints_constraint_block",
+      "check": "khuôn báo cáo phải có mục D in cả ô thấp nhất tuyệt đối lẫn ràng buộc lẫn dòng cảnh báo thượng nguồn TB < 2.0 — xoá mục này thì ràng buộc biến mất khỏi đầu ra mà mọi luật phía trên vẫn còn",
+      "regex": "## D — Ràng buộc tuần này[\\s\\S]{0,40}Ô thấp nhất tuyệt đối: <mã ô> <TB>[\\s\\S]{0,200}Cảnh báo thượng nguồn ngoài nhóm ứng viên, TB < 2\\.0",
+      "required": true
+    },
+    {
+      "id": "4DW-REPORT-M",
+      "name": "report_prints_map_block",
+      "check": "khuôn báo cáo phải có mục M in tầng đòn bẩy và bảng cạnh chép từ Bảng 2, kèm lối thoát cho ô cuối nhánh",
+      "regex": "## M — Bản đồ \\(chép từ Bảng 2\\)[\\s\\S]{0,60}Tầng đòn bẩy của ô ràng buộc: <L3 Mục tiêu \\| L5 Luật \\| L6 Dòng thông tin>[\\s\\S]{0,220}tối đa 4 cạnh ra; ô cuối nhánh ghi \"không có cạnh ra, cố ý\"",
+      "required": true
+    },
+    {
+      "id": "4DW-REPORT-R",
+      "name": "report_prints_retro_block",
+      "check": "khuôn báo cáo phải có mục R với ba phán quyết ĐỠ/ĐỨNG YÊN/TỆ ĐI, lối thoát 'vòng trước: không có', và mục Cạnh nghi vấn liền sau",
+      "regex": "## R — Nghiệm thu vòng trước[\\s\\S]{0,120}ĐỠ / ĐỨNG YÊN / TỆ ĐI[\\s\\S]{0,140}## Cạnh nghi vấn",
       "required": true
     }
   ]
