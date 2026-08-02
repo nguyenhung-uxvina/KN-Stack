@@ -32,7 +32,7 @@ Trường thứ tư là cam kết và phán đoán riêng của người dùng.
 
 **Bẫy thường gặp:** Viết tiêu chí xong ở dạng không đo được ("làm cho tốt", "đầy đủ"). Tiêu chí phải chỉ được ai đọc và nhìn vào đâu để biết đã đạt.
 
-**CEO phải tự chốt:** Việc này thuộc loại nào và vì sao. Phân loại sai từ đầu thì mọi bước sau đều lệch.
+**CEO phải tự chốt:** "Xong" nghĩa là gì và ai nghiệm thu. AI đề xuất được tiêu chí; ngưỡng chấp nhận thì không.
 
 ## del.platform
 
@@ -52,7 +52,7 @@ Trường thứ tư là cam kết và phán đoán riêng của người dùng.
 
 **Bẫy thường gặp:** Cắt khối theo thứ tự thời gian thay vì theo loại năng lực. Khối phải tách được vì "cái này cần phán đoán, cái kia không", không phải vì "cái này làm trước".
 
-**CEO phải tự chốt:** Ranh giới giữa phần giao và phần giữ. Ranh giới này là bản chất của Delegation, không có công thức chung.
+**CEO phải tự chốt:** Phần nào không giao dù AI làm tốt hơn — và vì sao giữ nó.
 
 ## des.product
 
@@ -62,7 +62,7 @@ Trường thứ tư là cam kết và phán đoán riêng của người dùng.
 
 **Bẫy thường gặp:** Mô tả sản phẩm bằng chủ đề ("báo cáo về X") thay vì bằng hình dạng và tiêu chí. Chủ đề không phải là mô tả sản phẩm.
 
-**CEO phải tự chốt:** Ngưỡng "đủ tốt" cho việc cụ thể này. Không ai bên ngoài định được ngưỡng đó thay mình.
+**CEO phải tự chốt:** Ai là người đọc thật và họ cần gì ở đầu ra này. AI không biết người đọc của bạn.
 
 ## des.process
 
@@ -112,7 +112,7 @@ Trường thứ tư là cam kết và phán đoán riêng của người dùng.
 
 **Bẫy thường gặp:** Nhận ra đang trôi nhưng để phiên chạy tiếp vì đang có đà. Nhận ra mà không kéo lại thì bằng không nhận ra.
 
-**CEO phải tự chốt:** Lúc nào thì thêm phân tích là đúng, lúc nào là né việc khó.
+**CEO phải tự chốt:** Khi nào chấp nhận kết quả chưa hoàn hảo để đi tiếp.
 
 ## dil.creation
 
@@ -122,7 +122,7 @@ Trường thứ tư là cam kết và phán đoán riêng của người dùng.
 
 **Bẫy thường gặp:** Quét khi dán tay nhưng quên khi để công cụ tự đọc file. Đường rò lớn nhất là đường không đi qua mắt mình.
 
-**CEO phải tự chốt:** Cái gì là nhạy cảm trong bối cảnh cụ thể này. Danh sách chung không thay được phán đoán tại chỗ.
+**CEO phải tự chốt:** Dữ liệu nào tuyệt đối không được rời khỏi tổ chức, trong mọi hoàn cảnh.
 
 ## dil.transparency
 
@@ -132,7 +132,7 @@ Trường thứ tư là cam kết và phán đoán riêng của người dùng.
 
 **Bẫy thường gặp:** Ghi nhận chung chung ("có dùng AI hỗ trợ") mà không nói phần nào. Người đọc cần biết chỗ nào cần kiểm kỹ hơn.
 
-**CEO phải tự chốt:** Mức chi tiết cần nêu cho từng loại người đọc.
+**CEO phải tự chốt:** Tài liệu nào bắt buộc ghi nhận phần AI tham gia, tài liệu nào không cần.
 
 ## dil.deployment
 
