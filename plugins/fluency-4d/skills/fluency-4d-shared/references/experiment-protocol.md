@@ -8,6 +8,17 @@
 4. **Nghiệm thu.** Giữ 3 phiên liên tiếp → `PASSED`, đóng, mở thí nghiệm mới.
 5. **Đứt.** Streak về 0, số lần đứt +1. Đứt lần thứ 3 → `FAILED`.
 6. **Sau `FAILED`.** Kê thí nghiệm NHỎ HƠN nhắm cùng ô. Cấm chép lại nguyên văn câu cũ.
+7. **`SUPERSEDED` — đóng sớm.** Chỉ CEO quyết, thường khi weekly in cờ `LỆCH Ô`: thí nghiệm
+   đang chạy nhắm một ô, ràng buộc tuần đã đổi sang ô khác. Ghi trạng thái `SUPERSEDED` kèm
+   ngày đóng, **giữ nguyên `streak` và `đứt` tại thời điểm đóng** — đó là dữ liệu, không phải
+   điểm số. `SUPERSEDED` chỉ hợp lệ khi `streak < 3` VÀ `đứt < 3`; đủ một trong hai thì nó đã
+   là `PASSED`/`FAILED` rồi, dán `SUPERSEDED` lên là xoá mất một kết quả thật.
+   Luật 6 **không** áp cho `SUPERSEDED` — thí nghiệm sau nhắm ô ràng buộc mới, không phải
+   bản nhỏ hơn của ô cũ. AI **không** tự đặt `SUPERSEDED`: weekly chỉ in cờ và dừng ở đó.
+
+   Trạng thái này tồn tại vì thiếu nó thì một thí nghiệm bị bỏ giữa chừng chỉ có hai đường
+   ghi sổ, cả hai đều nói dối: `PASSED` khi chưa giữ đủ 3 phiên, hoặc `FAILED` khi chưa đứt
+   3 lần. Sổ chỉ append — ghi sai một lần là sai vĩnh viễn.
 
 ## Bảng `experiments.md`
 
