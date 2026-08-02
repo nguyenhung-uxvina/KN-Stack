@@ -22,5 +22,5 @@ Không đường dẫn, không backtick, không chú thích kèm theo.
 | File | Dùng cho | Trạng thái |
 |---|---|---|
 | `profile-workshop-x.md` | CEO Workshop X | dùng được |
-| `profile-quan-doc.md` | Quản đốc phân xưởng | **nháp — chờ CEO chốt cờ đỏ** |
+| `profile-quan-doc.md` | Quản đốc phân xưởng | dùng được — CEO chốt 12 cờ đỏ 2026-08-02 |
 | `profile-template.md` | Khuôn để viết profile mới | khuôn rỗng |

@@ -1,11 +1,12 @@
 # Lớp hiệu chỉnh — Quản đốc phân xưởng
 
-> **NHÁP — chưa dùng được.** Ba trường `Tín hiệu`, `Ví dụ ngành`, `Cách cải tiến tại chỗ`
-> là bản soạn sẵn để CEO gạch xoá, viết đè, hoặc bỏ hẳn. Toàn bộ 12 trường `Cờ đỏ` bỏ trống
-> có chủ đích: cờ đỏ là tuyên bố hành vi nào không chấp nhận được trong xưởng — đó là chuẩn
-> mực của người chịu trách nhiệm, không phải suy đoán của AI.
+> **Dùng được.** Toàn bộ 12 trường Cờ đỏ do CEO chốt ngày 2026-08-02 — cờ đỏ là tuyên bố
+> hành vi nào không chấp nhận được trong xưởng, AI không viết hộ trường này.
 >
-> Còn sót ô `⟨CEO chốt: …⟩` thì `active-profile.md` từ chối bật file này. Đó là cố ý.
+> Ba trường còn lại — `Tín hiệu`, `Ví dụ ngành`, `Cách cải tiến tại chỗ` — vẫn là bản AI
+> soạn, chưa qua tay quản đốc thật. Sửa được bất cứ lúc nào mà không phải hỏi ai.
+>
+> Bật profile này: đổi tên file trong khối mã của `active-profile.md`.
 >
 > Thang điểm nằm ở `rubric-core.md`, KHÔNG định nghĩa lại ở đây.
 
@@ -23,7 +24,7 @@ lớn đến từ trên xuống), nặng về `dis.product` (số sai xuống x�
 
 **Tín hiệu:** Trước khi hỏi AI, đã đọc hết bản vẽ và phiếu công nghệ được giao chưa; đã biết chi tiết này thuộc cụm nào, lắp với cái gì. Hỏi AI để hiểu nhanh hơn thì được, hỏi AI thay cho việc đọc thì không.
 
-**Cờ đỏ:** ⟨CEO chốt: quản đốc dùng AI tới mức nào thì thành thay cho việc đọc bản vẽ? Ranh giới này quyết định cả cách chấm ô này⟩
+**Cờ đỏ:** Ra quyết định có hệ quả xuống xưởng chỉ dựa vào câu trả lời AI, chưa đối chiếu hồ sơ gốc.
 
 **Ví dụ ngành:** "Chi tiết này dung sai bao nhiêu" là câu tra được. "Nên gá thế nào cho khỏi vênh" là câu cần hiểu cụm lắp trước khi hỏi.
 
@@ -33,7 +34,7 @@ lớn đến từ trên xuống), nặng về `dis.product` (số sai xuống x�
 
 **Tín hiệu:** Biết việc nào AI trả lời được ngay, việc nào phải tra tiêu chuẩn hoặc hỏi thiết kế. Không hỏi AI những thứ chỉ có trong hồ sơ nội bộ mà AI không thấy.
 
-**Cờ đỏ:** ⟨CEO chốt: hỏi AI thông số khí tài hoặc nội dung hồ sơ nội bộ — mức nào là nhầm lẫn công cụ, mức nào là vi phạm bảo mật?⟩
+**Cờ đỏ:** Lấy thông số thiết bị xưởng từ AI rồi dùng như số thật, không tra lý lịch máy.
 
 **Ví dụ ngành:** Hỏi AI thông số máy trong xưởng thì nó đoán; thông số đó nằm ở lý lịch máy, phải tra.
 
@@ -43,7 +44,7 @@ lớn đến từ trên xuống), nặng về `dis.product` (số sai xuống x�
 
 **Tín hiệu:** Giao AI phần soạn thảo và tra cứu, giữ lại phần quyết định thao tác và phân công người. Nói rõ phần nào tự làm.
 
-**Cờ đỏ:** ⟨CEO chốt: có phần việc nào của quản đốc tuyệt đối không được để AI soạn dù chỉ là bản nháp?⟩
+**Cờ đỏ:** Để AI chốt chế độ gia công hoặc thứ tự nguyên công, kể cả dưới dạng bản nháp.
 
 **Ví dụ ngành:** Để AI soạn khung phiếu công nghệ thì được; chọn chế độ cắt và thứ tự nguyên công là việc của quản đốc.
 
@@ -53,7 +54,7 @@ lớn đến từ trên xuống), nặng về `dis.product` (số sai xuống x�
 
 **Tín hiệu:** Nói rõ đầu ra cần gì: phiếu cho ai đọc, thợ bậc mấy, in ra hay xem trên máy, dài bao nhiêu. Mọi kích thước và chế độ ghi hệ mét.
 
-**Cờ đỏ:** ⟨CEO chốt: tài liệu xuống xưởng thiếu thông tin gì thì coi là không đạt, phải trả lại?⟩
+**Cờ đỏ:** Ban hành tài liệu xuống xưởng thiếu thông số hoặc dung sai bắt buộc, để thợ tự đoán.
 
 **Ví dụ ngành:** "Viết hướng dẫn thao tác cho thợ hàn bậc 3, một trang, có bảng thông số hàn, đọc xong là làm được không cần hỏi lại."
 
@@ -63,7 +64,7 @@ lớn đến từ trên xuống), nặng về `dis.product` (số sai xuống x�
 
 **Tín hiệu:** Chỉ định theo quy trình và biểu mẫu sẵn có của xưởng thay vì để AI tự bịa ra một trình tự lạ.
 
-**Cờ đỏ:** ⟨CEO chốt: quy trình nào bắt buộc phải theo đúng biểu mẫu, không được để AI đề xuất trình tự khác?⟩
+**Cờ đỏ:** Để AI tự chế khung cho bất kỳ tài liệu nào đi vào hồ sơ chất lượng sản phẩm.
 
 **Ví dụ ngành:** "Soạn theo đúng khung phiếu công nghệ đang dùng, không thêm bớt mục."
 
@@ -73,7 +74,7 @@ lớn đến từ trên xuống), nặng về `dis.product` (số sai xuống x�
 
 **Tín hiệu:** Có yêu cầu AI chỉ ra chỗ dễ sai, chỗ nguy hiểm, thay vì chỉ viết cho trôi.
 
-**Cờ đỏ:** ⟨CEO chốt: với việc có rủi ro an toàn, bắt buộc phải yêu cầu AI nêu cảnh báo hay không? Nếu có thì trường hợp nào⟩
+**Cờ đỏ:** Ban hành tài liệu thao tác do AI soạn mà không có mục cảnh báo chỗ dễ sai và chỗ nguy hiểm.
 
 **Ví dụ ngành:** "Viết xong thì chỉ ra ba chỗ thợ mới hay làm sai trong quy trình này."
 
@@ -83,7 +84,7 @@ lớn đến từ trên xuống), nặng về `dis.product` (số sai xuống x�
 
 **Tín hiệu:** Mọi con số đi xuống xưởng — chế độ cắt, thông số hàn, dung sai, lực siết — đều đối chiếu tiêu chuẩn hoặc sổ tay trước khi ban hành. Không dùng số AI đưa mà chưa đối chiếu.
 
-**Cờ đỏ:** ⟨CEO chốt: loại số nào tuyệt đối không được xuống xưởng nếu chưa có người đối chiếu và ký? Đây là ô dễ gây hỏng phôi và tai nạn nhất⟩
+**Cờ đỏ:** Số chạm tới an toàn hoặc khả năng chịu lực đi xuống xưởng khi chưa có người đối chiếu và ký.
 
 **Ví dụ ngành:** AI đưa dòng hàn cho tôn 6 mm — đối chiếu sổ tay hàn và máy đang có trước khi ghi vào phiếu.
 
@@ -93,7 +94,7 @@ lớn đến từ trên xuống), nặng về `dis.product` (số sai xuống x�
 
 **Tín hiệu:** Hỏi AI dựa vào đâu mà ra con số đó — tiêu chuẩn nào, vật liệu nào, chiều dày nào — trước khi tin.
 
-**Cờ đỏ:** ⟨CEO chốt: câu trả lời không nêu được căn cứ thì xử lý thế nào — bỏ hẳn, hay dùng tạm và đánh dấu?⟩
+**Cờ đỏ:** Dùng một thông số mà không biết nó ứng với vật liệu, chiều dày, thiết bị nào.
 
 **Ví dụ ngành:** Cùng một mác thép mà khác chiều dày thì chế độ khác nhau; câu trả lời không nói chiều dày là câu chưa dùng được.
 
@@ -103,7 +104,7 @@ lớn đến từ trên xuống), nặng về `dis.product` (số sai xuống x�
 
 **Tín hiệu:** Nhận ra lúc AI đang viết dài ra thay vì giải quyết; kéo về câu hỏi thao tác cụ thể.
 
-**Cờ đỏ:** ⟨CEO chốt: dấu hiệu nào cho thấy quản đốc đang dùng AI để trì hoãn việc xuống xưởng xử lý trực tiếp?⟩
+**Cờ đỏ:** Thiết bị đang dừng mà hỏi AI quá hai vòng vẫn chưa ra được thao tác kiểm tra nào.
 
 **Ví dụ ngành:** Máy đang lỗi mà ngồi hỏi AI phân tích nguyên nhân vòng vo — câu đúng là hỏi cách kiểm tra từng bước, rồi ra máy kiểm.
 
@@ -113,7 +114,7 @@ lớn đến từ trên xuống), nặng về `dis.product` (số sai xuống x�
 
 **Tín hiệu:** Không đưa bản vẽ có dấu, thông số sản phẩm quốc phòng, tên và giá nhà cung cấp vào công cụ ngoài. Cần hỏi thì mô tả bằng hình học và vật liệu chung.
 
-**Cờ đỏ:** ⟨CEO chốt: danh mục cụ thể những thứ tuyệt đối không được đưa ra ngoài, và mức xử lý khi vi phạm. Đây là trường không được để trống⟩
+**Cờ đỏ:** Đưa ra công cụ ngoài bất kỳ thứ nào sau đây: bản vẽ còn khung tên hoặc dấu · thông số sản phẩm quốc phòng · tên và giá nhà cung cấp.
 
 **Ví dụ ngành:** Hỏi cách gá một chi tiết thì mô tả "tấm thép 8 mm, 300×200, bốn lỗ M12", không dán bản vẽ có khung tên.
 
@@ -123,7 +124,7 @@ lớn đến từ trên xuống), nặng về `dis.product` (số sai xuống x�
 
 **Tín hiệu:** Tài liệu xuống xưởng hoặc vào hồ sơ có ghi phần nào AI soạn, và ai đã kiểm.
 
-**Cờ đỏ:** ⟨CEO chốt: hồ sơ nào bắt buộc phải ghi nhận phần AI tham gia, hồ sơ nào không cần? Ranh giới do CEO định⟩
+**Cờ đỏ:** Tài liệu đi vào hồ sơ chất lượng hoặc ra khỏi xưởng mà không ghi phần nào AI soạn, ai đã kiểm.
 
 **Ví dụ ngành:** Phiếu công nghệ AI soạn khung, quản đốc chốt thông số — ghi rõ như vậy vào ô ghi chú.
 
@@ -133,7 +134,7 @@ lớn đến từ trên xuống), nặng về `dis.product` (số sai xuống x�
 
 **Tín hiệu:** Không ban hành tài liệu chưa đọc hết. Thứ đã ký là thứ chịu trách nhiệm, kể cả phần AI soạn.
 
-**Cờ đỏ:** ⟨CEO chốt: ban hành tài liệu do AI soạn mà chưa đọc hết — xử lý thế nào? Mức này định ra toàn bộ sức nặng của ô Diligence⟩
+**Cờ đỏ:** Ký và ban hành tài liệu do AI soạn mà chưa đọc hết từng dòng thông số.
 
 **Ví dụ ngành:** Phiếu công nghệ do AI soạn phải đọc lại từng dòng thông số trước khi ký và phát cho tổ.
 

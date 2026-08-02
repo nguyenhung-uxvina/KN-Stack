@@ -105,12 +105,16 @@ def test_active_profile_rejects_the_blank_template():
 def test_active_profile_rejects_a_draft_with_open_todos():
     """Chốt chính của tầng trỏ: profile còn ô ⟨CEO chốt: …⟩ thì KHÔNG được bật.
 
-    profile-quan-doc.md cố ý bỏ trống toàn bộ 12 trường Cờ đỏ — cờ đỏ là tuyên bố
-    hành vi nào không chấp nhận được, AI không viết hộ. Bật nó lên lúc này nghĩa là
-    chấm điểm theo chuẩn mực chưa ai chốt.
+    Bật một profile chưa điền xong nghĩa là chấm điểm theo tín hiệu chưa ai chốt —
+    báo cáo vẫn ra đủ hình, nên lỗi này im lặng nếu không có cổng chặn.
+
+    Nháp được bơm vào qua `read` thay vì trỏ tới một file thật: file thật rồi sẽ
+    được điền xong (profile-quan-doc đã điền xong 2026-08-02), lúc đó test mất răng
+    mà không ai biết.
     """
-    dirty = ACTIVE.replace("profile-workshop-x.md", "profile-quan-doc.md", 1)
-    errors = lint.lint_active_profile(dirty)
+    dirty = ACTIVE.replace("profile-workshop-x.md", "profile-nhap.md", 1)
+    draft = TEMPLATE  # khuôn rỗng = nháp cực đoan, mọi trường đều còn ô chờ điền
+    errors = lint.lint_active_profile(dirty, read=lambda name: draft)
     assert any("⟨CEO chốt" in e for e in errors), errors
 
 
@@ -128,20 +132,30 @@ def test_template_is_entirely_unfilled():
             assert "⟨CEO chốt:" in block[key], f"{cell}/{key} đã bị điền sẵn trong khuôn"
 
 
-def test_draft_profile_leaves_every_red_flag_open():
-    """AI soạn được tín hiệu/ví dụ/cách cải tiến, KHÔNG soạn cờ đỏ. Đủ 12 ô, không sót ô nào."""
+def test_quandoc_profile_is_complete_and_activatable():
+    """CEO chốt đủ 12 cờ đỏ ngày 2026-08-02 → profile này bật được.
+
+    Trước đó nó là nháp với 12 trường Cờ đỏ bỏ trống. Cờ đỏ là tuyên bố hành vi nào
+    không chấp nhận được trong xưởng — AI soạn tín hiệu/ví dụ/cách cải tiến, nhưng
+    không soạn trường này.
+    """
+    assert lint.count_todo(QUANDOC) == 0, "còn ô chờ điền — chưa bật được"
+    assert lint.lint_profile(QUANDOC) == []
     blocks = lint.parse_profile(QUANDOC)
     assert sorted(blocks) == sorted(lint.CELLS)
-    for cell, block in blocks.items():
-        assert "⟨CEO chốt:" in block["co_do"], f"{cell}: cờ đỏ đã bị AI tự chốt"
-        for key in ("tin_hieu", "vi_du", "cai_tien"):
-            assert "⟨CEO chốt:" not in block[key], f"{cell}/{key}: nháp bỏ trống chỗ đáng ra soạn được"
 
 
-def test_draft_profile_is_structurally_valid_apart_from_todos():
-    """Nháp phải đúng khung — sai khung thì CEO điền xong vẫn không bật được."""
-    assert lint.lint_profile(QUANDOC, allow_draft=True) == []
-    assert lint.lint_profile(QUANDOC) != [], "nháp mà lint mặc định vẫn cho qua là hỏng chốt"
+def test_every_profile_keeps_the_four_field_frame():
+    """Mọi profile phải cùng khung — kể cả khuôn rỗng và profile mới thêm sau này.
+
+    Quét cả thư mục thay vì liệt kê tên file: profile thứ tư thêm vào mà sai khung
+    thì phải đỏ ngay, không đợi ai nhớ ra viết thêm test.
+    """
+    files = sorted(lint.REF_DIR.glob("profile-*.md"))
+    assert len(files) >= 3, [f.name for f in files]
+    for f in files:
+        text = f.read_text(encoding="utf-8")
+        assert lint.lint_profile(text, allow_draft=True) == [], f.name
 
 
 PLAYBOOK = (lint.REF_DIR / "improvement-playbook.md").read_text(encoding="utf-8")
