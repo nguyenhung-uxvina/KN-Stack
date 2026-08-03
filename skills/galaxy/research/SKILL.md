@@ -1,6 +1,6 @@
-End-to-end research pipeline v4.0 with multi-channel source discovery (Web + YouTube + Authority + Patents), source tier classification (S/A/B/C), analysis routing by quality, cross-validation, and structured NLM extraction templates. The "super skill" combining WebSearch + /yt-search + /nlm + Deep Content Analyzer into one workflow. v4.0 adds 3 extraction modes for deep NLM analysis.
+End-to-end research pipeline v4.1 with multi-channel source discovery (Web + YouTube + Authority + Patents + Exa semantic), source tier classification (S/A/B/C), analysis routing by quality, cross-validation, and structured NLM extraction templates. The "super skill" combining WebSearch + Exa + /yt-search + /nlm + Deep Content Analyzer into one workflow. v4.0 adds 3 extraction modes for deep NLM analysis. v4.1 adds Exa integration (semantic search channel + fetch-recovery cho domain chặn bot) và Wayback rescue cho domain đã chết.
 
-Usage: /research <topic> [--notebook <alias>] [--output report|audio|mindmap|quiz] [--count N] [--deep] [--patents] [--update] [--extract miner|cross-std|structure]
+Usage: /research <topic> [--notebook <alias>] [--output report|audio|mindmap|quiz] [--count N] [--deep] [--patents] [--exa] [--update] [--extract miner|cross-std|structure]
 
 PATH setup (required for all commands):
 ```bash
@@ -16,6 +16,7 @@ export NO_COLOR=1
 ```
 [1] MULTI-CHANNEL SEARCH (parallel)
     ├── Channel 1: WebSearch academic/OEM/standards
+    ├── Channel 1E: Exa semantic search (--exa, or auto khi WebSearch < 3 nguồn S/A)
     ├── Channel 2: YouTube (yt-dlp)
     ├── Channel 3: Known authority domains
     └── Channel 4: Patent search (engineering topics or --patents)
@@ -96,6 +97,21 @@ Q3 (Defense/Standards):
 ```
 
 Take top 5 results per query → max 15 web sources.
+
+### Channel 1E — Exa Semantic Search (v4.1)
+
+**Activation:** `--exa` flag, OR auto-activate when Channel 1 returns < 3 Tier S/A candidates (Exa tìm theo ngữ nghĩa nên bắt được nguồn mà keyword search bỏ sót).
+
+Use MCP tool `mcp__exa__web_search_exa` — 2 queries per topic:
+
+```
+Q1 (Neural/semantic): "{{topic phrased as a natural-language claim or question}}"
+Q2 (Contrarian/gap):  "{{limitations OR failure modes OR comparison của topic}}"
+```
+
+Take top 5 per query. Tier-classify kết quả bằng cùng heuristics như Channel 1.
+
+**Exa fetch làm recovery mặc định (không cần flag):** `mcp__exa__web_fetch_exa` dùng crawler riêng, vượt được nhiều domain chặn WebFetch/NLM (đã chứng minh: elbitsystems.com 403 với WebFetch nhưng Exa lấy full text; apps.dtic.mil PDF chặn cả NLM lẫn curl nhưng Exa đọc được nội dung). Batch nhiều URL trong 1 call, đặt `maxCharacters` 8000–12000 khi cần full text để inject vào NLM.
 
 ### Channel 2 — YouTube (existing)
 
@@ -258,9 +274,27 @@ FOR each selected source URL:
     → Fetch via WebFetch, then inject as text source
     → Log: "⚠ NLM URL failed, injected as text: {{title}}"
 
-  IF TRY 2 fails:
+  IF TRY 2 fails (403 / JS-rendered / bot-blocked):
+  TRY 2E (v4.1): Exa fetch → inject as text
+    → mcp__exa__web_fetch_exa(urls=[...], maxCharacters=12000)
+    → Crawler riêng của Exa vượt được nhiều domain chặn WebFetch (Elbit, DTIC...)
+    → Inject với header ghi rõ provenance: "SOURCE: {{url}} (fetched via Exa {{date}}). Tier {{X}}."
+    → Log: "🔄 Recovered via Exa fetch→text: {{title}}"
+
+  IF TRY 2E fails AND domain chết hoặc PDF chặn bot:
+  TRY 2W (v4.1): Wayback Machine rescue cho PDF
+    → curl -sL -o file.pdf "https://web.archive.org/web/{{year}}id_/{{url}}"
+    → Thử nhiều năm (2022 → 2021 → 2019...) đến khi head -c 5 = "%PDF"
+    → BẪY 1MB: Wayback edge cắt file ở đúng 1,048,576 bytes — LUÔN kiểm tra
+      tail có "%%EOF"; nếu thiếu → curl -C - (resume) lặp đến khi COMPLETE
+    → Upload: mcp__notebooklm__source_add(source_type="file", file_path=...)
+    → Log: "🔄 Recovered via Wayback: {{title}} ({{size}})"
+
+  IF TRY 2W fails:
   TRY 3: WebSearch for alternative URL of same content → TRY 1 again
-    → Search: "{{title}} {{author}}" to find mirror/preprint
+    → Search: "{{title}} {{author}}" to find mirror/preprint/journal gốc
+    → ResearchGate chặn TẤT CẢ (NLM, WebFetch, Exa đều fail) — đừng phí retry,
+      đi thẳng tìm bản journal gốc (dergipark, publikasiindonesia, DOI...)
     → Log: "⚠ Trying alternative URL: {{alt_url}}"
 
   IF ALL fail:
@@ -325,6 +359,18 @@ FOR each failed source:
     → Try WebFetch on original URL (may work where NLM failed)
     → If content retrieved → nlm source add --text "{{content}}" --title "{{title}}"
     → Log: "🔄 Recovered via WebFetch→text injection"
+
+  RECOVERY 2E (v4.1): Exa fetch → inject as text (khi WebFetch 403/JS-rendered)
+    → mcp__exa__web_fetch_exa(urls=[...], maxCharacters=12000) — batch được nhiều URL
+    → Đã chứng minh vượt: elbitsystems.com, apps.dtic.mil (PDF), nhiều trang OEM
+    → KHÔNG vượt được: ResearchGate (CRAWL_LIVECRAWL_TIMEOUT) — skip, tìm journal gốc
+    → Log: "🔄 Recovered via Exa fetch: {{title}}"
+
+  RECOVERY 2W (v4.1): Wayback rescue cho domain chết / PDF chặn bot
+    → web.archive.org/web/{{year}}id_/{{url}} → verify %PDF header + %%EOF tail
+    → File cắt đúng 1MB = truncated → curl -C - resume đến khi có %%EOF
+    → Upload qua source_add(source_type="file")
+    → Log: "🔄 Recovered via Wayback: {{title}}"
 
   RECOVERY 3: Search for YouTube explanation of same content
     → If source is a paper/standard: search "{{title}} explained" on YouTube
@@ -1084,6 +1130,8 @@ Persona pasted: YES/NO
 - **Cross-validate** — never present Tier C insight as fact without S/A confirmation
 - **--deep flag** activates Deep Content Analyzer v2 for Tier S/A sources
 - **--patents flag** forces Channel 4 patent search even for non-technical topics
+- **--exa flag** activates Channel 1E (Exa semantic search). Exa FETCH recovery (TRY 2E / RECOVERY 2E) luôn bật mặc định, không cần flag. Text inject từ Exa PHẢI có header provenance (URL + ngày fetch + tier) để NLM cite đúng.
+- **Prefer MCP notebooklm tools over `nlm` CLI** — CLI có thể không có trong PATH; MCP tools (notebook_list/notebook_create/source_add/notebook_query) luôn sẵn và source_add hỗ trợ cả file upload lẫn bulk URLs.
 - **Source dedup** — check before adding to NLM, auto-skip duplicates with log
 - **Source limit** — warn at 45+ sources in notebook, suggest sub-notebook
 - Link to Galaxy: [[Analyst Trap]] (extract insights, don't just collect), [[Vault = Graveyard]] (use what you save), [[Reliability Trumps Precision]] (pro sources > many sources)
@@ -1096,6 +1144,10 @@ Persona pasted: YES/NO
 4. **NLM auth expires mid-pipeline ~20 min** — The detect-pause protocol works, but the REAL gotcha is running Steps 4-5 sequentially on 20+ sources. Batch source adds (all in Step 4) BEFORE any queries (Step 5). Interleaving add→query→add→query doubles auth exposure window. (Source: Session 52, 3 pipelines)
 5. **Skipping source verification = garbage-in-garbage-out** — Session 56 lost 3/21 sources (2 ScienceDirect paywall + 1 core.ac.uk 502) and proceeded to NLM queries without notifying CEO. NLM then analyzed only 19/21 sources but reported confidence as if all 21 were present. The Source Quality Gate (Step 4G) now STOPS the pipeline for CEO verification. Recovery options (alt URL, WebFetch→text, YouTube substitute) catch 50-70% of failures. CEO can also manually add PDFs they have locally. NEVER proceed to Step 5 without CEO confirming "đủ nguồn". (Source: Session 56 VDI 2221 research)
 6. **YouTube view count ≠ credibility** — A 500K-view "tutorial" by non-engineer is still Tier C. Check channel credentials (description, about page) before promoting to Tier B. "Professional" means the creator has verifiable domain expertise, not just production quality. (Source: semi-sub USV research, multiple Tier C misclassifications)
+7. **Domain "sống" trong search results có thể đã chết** — shipstructure.org vẫn ra trong WebSearch nhưng DNS trỏ về trang "Unknown Domain"; cả 2 PDF SSC phải cứu qua Wayback. Khi curl trả về HTML `<!DOCTYPE` thay vì `%PDF`, đừng retry URL gốc — đi thẳng Wayback với suffix `id_` (raw file). (Source: USV hull material research 2026-08)
+8. **Wayback cắt file ở đúng 1MB** — download qua web.archive.org hay dừng ở 1,048,576 bytes mà không báo lỗi. LUÔN verify `tail` có `%%EOF` trước khi upload vào NLM; nếu thiếu → `curl -C -` resume (có thể phải lặp vài lần). PDF thiếu EOF vẫn upload được nhưng NLM chỉ đọc phần đầu → phân tích sai lệch âm thầm. (Source: SSC-439/403 rescue, USV research 2026-08)
+9. **ResearchGate chặn tuyệt đối mọi ngả** — NLM URL, WebFetch (403), Exa (livecrawl timeout) đều fail. Đừng đốt 3 recovery vào RG; tìm bản journal gốc ngay (search "title -researchgate" hoặc "title journal pdf" — paper Indonesia thường có ở publikasiindonesia.id, paper Thổ ở dergipark). (Source: USV research 2026-08 — 2 paper RG, 1 cứu được qua journal gốc, 1 gap)
+10. **NLM URL-add lỗi vẫn đẻ source "xác" trong notebook** — batch add fail một phần vẫn tạo entry với title = raw URL, không có nội dung, mỗi lần retry đẻ thêm bản trùng (notebook 12 nguồn chọn → 25 entries). Không ảnh hưởng query nhưng làm sai source count và rác UI. Sau Step 4G, liệt kê zombie entries và đề xuất CEO prune bằng source_delete. (Source: USV research 2026-08)
 
 ## COD CLASSIFICATION
 

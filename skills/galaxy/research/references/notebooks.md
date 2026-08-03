@@ -16,6 +16,7 @@
 | `stability` | Stability analysis | Marine engineering |
 | `hdpe-mooring` | HDPE mooring systems | VN-AST-MSL-001 |
 | `multi-agent-design` | Multi-Agent Collaborative Conceptual Design | 30 sources, deep research 2026-04-22 |
+| `usv-hull` | USV 12m 40-45kt — Hull Material | id 7fcd4897-cac0-4707-bcc2-39c243bc24b1, 11 nguồn hoạt động + zombie entries chờ prune, 2026-08-03 |
 
 ## Notebook Management Commands
 
