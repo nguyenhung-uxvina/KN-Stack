@@ -42,25 +42,48 @@ def parse_active_workspace(text: str) -> str | None:
     return name or None
 
 
+def parse_workspace_rows(text: str) -> list[tuple[str, str]]:
+    """Từng hàng thô `| `trường` | giá trị |` theo đúng thứ tự xuất hiện, GIỮ hàng trùng.
+
+    Dùng cho lint — `parse_workspace_profile` gom về dict nên nuốt mất hàng
+    trùng (khoá sau đè khoá trước); hàm này giữ nguyên để lint chấm được cả
+    hàng trùng, hàng thừa, sai thứ tự.
+    """
+    return [(k, v.strip("` ")) for k, v in _PROFILE_ROW_RE.findall(text)]
+
+
 def parse_workspace_profile(text: str) -> dict[str, str]:
     """Bảng `| `trường` | giá trị |` của một file workspace-*.md → dict."""
-    return {k: v.strip("` ") for k, v in _PROFILE_ROW_RE.findall(text)}
+    return dict(parse_workspace_rows(text))
 
 
 def lint_workspace_profile(text: str) -> list[str]:
     """Kiểm một file workspace-*.md. Trả danh sách lỗi; rỗng nghĩa là đạt."""
     errors: list[str] = []
-    found = list(parse_workspace_profile(text).keys())
+    rows = parse_workspace_rows(text)
+    found = [k for k, _ in rows]
+
+    seen: set[str] = set()
+    duplicates: list[str] = []
+    for f in found:
+        if f in seen and f not in duplicates:
+            duplicates.append(f)
+        seen.add(f)
+    if duplicates:
+        errors.append(f"profile có hàng trùng: {duplicates}")
+
     if found != WORKSPACE_FIELDS:
+        unique_found = list(dict.fromkeys(found))
         missing = [f for f in WORKSPACE_FIELDS if f not in found]
-        extra = [f for f in found if f not in WORKSPACE_FIELDS]
+        extra = [f for f in unique_found if f not in WORKSPACE_FIELDS]
         if missing:
             errors.append(f"profile thiếu trường: {missing}")
         if extra:
             errors.append(f"profile có trường lạ: {extra}")
-        if not missing and not extra:
+        if not missing and not extra and not duplicates:
             errors.append(f"profile sai thứ tự trường: {found}")
-    surface = parse_workspace_profile(text).get("surface")
+
+    surface = dict(rows).get("surface")
     if surface is not None and surface not in VALID_SURFACES:
         errors.append(f"surface phải là local|cloud, thấy: {surface!r}")
     return errors

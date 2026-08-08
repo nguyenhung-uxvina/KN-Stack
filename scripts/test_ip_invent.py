@@ -76,3 +76,44 @@ def test_profile_lint_flags_bad_surface():
         f"| `{f}` | `{'hybrid' if f == 'surface' else 'x'}` |" for f in lint.WORKSPACE_FIELDS
     )
     assert any("surface phải là local|cloud" in e for e in lint.lint_workspace_profile(rows))
+
+
+def _valid_rows(overrides: dict[str, str] | None = None) -> dict[str, str]:
+    base = {
+        "surface": "local", "root": "X", "output_pattern": "Y",
+        "scan_sources": "none", "triz_refs": "none",
+        "patent_search": "none", "nlm_notebook": "none",
+    }
+    if overrides:
+        base.update(overrides)
+    return base
+
+
+def test_profile_lint_flags_an_extra_field():
+    fields = _valid_rows()
+    lines = [f"| `{k}` | `{v}` |" for k, v in fields.items()]
+    lines.append("| `extra_field` | `x` |")
+    dirty = "\n".join(lines)
+    assert any("trường lạ" in e for e in lint.lint_workspace_profile(dirty))
+
+
+def test_profile_lint_flags_wrong_order():
+    fields = _valid_rows()
+    swapped = list(fields.items())
+    swapped[0], swapped[1] = swapped[1], swapped[0]  # surface <-> root
+    dirty = "\n".join(f"| `{k}` | `{v}` |" for k, v in swapped)
+    assert any("sai thứ tự trường" in e for e in lint.lint_workspace_profile(dirty))
+
+
+def test_profile_lint_flags_a_duplicate_row_even_when_dict_would_hide_it():
+    # Bằng chứng lỗi gốc: 7 hàng đúng + 1 hàng `surface` dư dán ở cuối, giá trị
+    # dư vẫn hợp lệ (`cloud`). Trước khi vá, dict comprehension nuốt hàng dư
+    # (khoá sau đè khoá trước) và lint_workspace_profile trả về [] — im lặng
+    # hoàn toàn dù sai khung bảng "bảy hàng" mà workspace-template.md hứa.
+    fields = _valid_rows()
+    lines = [f"| `{k}` | `{v}` |" for k, v in fields.items()]
+    lines.append("| `surface` | `cloud` |")
+    dirty = "\n".join(lines)
+    errors = lint.lint_workspace_profile(dirty)
+    assert any("hàng trùng" in e for e in errors), errors
+    assert errors != []
