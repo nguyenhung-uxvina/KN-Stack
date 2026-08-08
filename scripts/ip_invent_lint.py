@@ -100,16 +100,60 @@ GATE_OWNERSHIP_PHRASES = [
 
 _TABLE_SEP_RE = re.compile(r"^:?-+:?$")
 
+# Nội dung trong code fence không render thành bảng Markdown thật (fence bọc
+# quanh bảng thật) và không phải thủ tục đang có hiệu lực (fence chứa bảng
+# "ví dụ" dán thêm) — bỏ trước khi tìm hàng, ở CẢ HAI hướng.
+_FENCE_RE = re.compile(r"^```[^\n]*\n.*?\n```[ \t]*$", re.MULTILINE | re.DOTALL)
+
+# Bảng 3 ngả chỉ có hiệu lực trong đúng mục Bước 0′ — một bảng/danh sách khác
+# hình dạng ở heading khác trong file không phải là thủ tục thật đang chạy.
+_STEP0_SECTION_RE = re.compile(r"^##[ \t]*Bước 0′.*?(?=^##[ \t]|\Z)", re.MULTILINE | re.DOTALL)
+
+# Dấu hiệu phủ định/ngoại lệ NẰM NGAY TRONG Ô đủ để vô hiệu hoá một tuyên bố
+# DỪNG hay coi-như-thuộc — kiểm "token có mặt trong ô" vẫn là kiểm có-mặt
+# chuỗi, chỉ thu hẹp phạm vi từ cả file xuống một ô; "KHÔNG DỪNG" hay "DỪNG
+# là không cần thiết" vẫn giữ nguyên token nên lọt nếu không có danh sách này.
+_NEGATION_CUES = [
+    "không dừng",
+    "không coi như thuộc",
+    "là không cần thiết",
+    "trừ khi",
+    "ngoại lệ",
+]
+# "chạy tiếp" chỉ tính là phủ định khi xét ô của hàng ĐÁNG LẼ PHẢI DỪNG (bí
+# mật nhà nước / Chưa rõ). Ở hàng Không thuộc, "Chạy tiếp." chính là nội dung
+# ĐÚNG — không được liệt cue này vào đó, nếu không lint sẽ tự mâu thuẫn.
+_CONTINUE_CUE = "chạy tiếp"
+
+_ACTIVATION_CUE = "kích hoạt"
+_DEACTIVATION_CUE = "không chạy"
+
+
+def _strip_code_fences(text: str) -> str:
+    """Bỏ toàn bộ nội dung trong code fence (```…```)."""
+    return _FENCE_RE.sub("", text)
+
+
+def _extract_step0_section(text: str) -> str:
+    """Phần dưới heading '## Bước 0′…' đến heading `##` kế tiếp (hoặc hết file)."""
+    m = _STEP0_SECTION_RE.search(text)
+    return m.group(0) if m else ""
+
 
 def parse_gate_table_rows(text: str) -> list[tuple[str, str]]:
     """Hàng thô `| Phân loại | Xử |` của bảng Bước 0′, GIỮ hàng trùng và thứ tự.
 
-    Bỏ header (`Phân loại`) và hàng phân cách markdown (`|---|---|`). Không
-    gom dict — cùng lý do parse_workspace_rows không gom: gom sẽ nuốt hàng
-    trùng hoặc hàng thiếu, làm phép đếm "đúng 3 hàng" phía dưới vô hiệu.
+    Chỉ quét bên trong mục '## Bước 0′…', sau khi đã bỏ mọi code fence (xem
+    `_extract_step0_section` / `_strip_code_fences`) — một bảng "ví dụ" dán ở
+    heading khác hoặc trong fence, hoặc bảng thật bị bọc vào fence để không
+    còn render, đều không được tính là hàng thật. Bỏ header (`Phân loại`) và
+    hàng phân cách markdown (`|---|---|`). Không gom dict — cùng lý do
+    `parse_workspace_rows` không gom: gom sẽ nuốt hàng trùng hoặc hàng
+    thiếu, làm phép đếm "đúng 3 hàng" phía dưới vô hiệu.
     """
+    section = _extract_step0_section(_strip_code_fences(text))
     rows: list[tuple[str, str]] = []
-    for line in text.splitlines():
+    for line in section.splitlines():
         line = line.strip()
         if not line.startswith("|") or not line.endswith("|") or len(line) < 2:
             continue
@@ -125,17 +169,40 @@ def parse_gate_table_rows(text: str) -> list[tuple[str, str]]:
     return rows
 
 
+def _is_undermined(cell: str, *, reject_continue: bool = False) -> bool:
+    """True nếu ô mang dấu hiệu phủ định/ngoại lệ đủ vô hiệu hoá một tuyên bố
+    DỪNG hay coi-như-thuộc NẰM TRONG CHÍNH ô đó."""
+    low = cell.lower()
+    if any(cue in low for cue in _NEGATION_CUES):
+        return True
+    if reject_continue and _CONTINUE_CUE in low:
+        return True
+    return False
+
+
+def _has_effective(cell: str, token: str, *, reject_continue: bool = False) -> bool:
+    """True nếu `token` có mặt trong ô VÀ không bị phủ định/ngoại lệ hoá."""
+    return token in cell.lower() and not _is_undermined(cell, reject_continue=reject_continue)
+
+
 def lint_gate_doc(text: str) -> list[str]:
-    """Kiểm co-mat-gate.md bằng QUAN HỆ giữa ô với ô của bảng 3 ngả, không
-    phải bằng việc đếm token có mặt ở đâu đó trong file.
+    """Kiểm co-mat-gate.md bằng QUAN HỆ giữa ô với ô của bảng 3 ngả — có
+    HIỆU LỰC, không phải bằng việc đếm token có mặt ở đâu đó.
 
     Vì sao đổi cách kiểm: `evals/ip-invent.json` (trường description) ghi
     nguyên văn một mutation test đã bắt được IP-DISCLOSE từng là cổng-đếm-từ-
     khoá — một cổng bộc lộ bị ĐẢO NGHĨA vẫn xanh vì các token rải rác nơi khác
-    thoả mãn phép match không giới hạn. Kiểm có-mặt chuỗi chỉ chặn được XOÁ,
-    không chặn được ĐẢO NGHĨA. Bảng 3 ngả ở đây là chỗ đảo-nghĩa nguy hiểm
-    nhất trong tài liệu (một hàng bị đổi Xử là đổi hành vi cổng), nên nó phải
-    được chấm theo quan hệ cột-với-cột của TỪNG hàng.
+    thoả mãn phép match không giới hạn. Vòng review đầu của chính lint này lặp
+    lại đúng lớp lỗi đó ở phạm vi hẹp hơn: kiểm "DỪNG có mặt trong ô" vẫn là
+    kiểm có-mặt chuỗi, nên "KHÔNG DỪNG" hay "DỪNG là không cần thiết → chạy
+    tiếp" vẫn xanh vì token còn nguyên. `_has_effective` đóng lỗ đó bằng cách
+    đòi token có mặt VÀ không bị một cue phủ định/ngoại lệ nào trong CHÍNH ô
+    đó vô hiệu hoá. Bảng cũng chỉ được soát trong đúng mục Bước 0′ sau khi bỏ
+    code fence — một bảng "ví dụ" ở chỗ khác hoặc bảng thật bị bọc fence đều
+    không phải thủ tục đang có hiệu lực. Điều kiện KÍCH HOẠT (`surface:
+    cloud` mới chạy, `surface: local` thì không) cũng được kiểm theo CẶP GHÉP
+    — cả hai giá trị đều có mặt ở cả hai chiều nên chỉ đếm có-mặt không phân
+    biệt được cổng bị đảo hướng.
     """
     errors: list[str] = []
 
@@ -148,6 +215,35 @@ def lint_gate_doc(text: str) -> list[str]:
     for phrase in GATE_OWNERSHIP_PHRASES:
         if phrase not in normalized:
             errors.append(f"co-mat-gate.md thiếu mệnh đề: {phrase!r}")
+
+    # Điều kiện KÍCH HOẠT: một dòng phải ghép 'kích hoạt' với `surface:
+    # cloud` (không phải local); một dòng khác phải ghép 'KHÔNG chạy' với
+    # `surface: local` (không phải cloud). Kiểm CẶP GHÉP trên từng dòng,
+    # không phải bốn chuỗi rời — nếu không thì đảo `cloud`⇄`local` giữa hai
+    # dòng vẫn để cả bốn chuỗi có mặt đâu đó, lint không phân biệt được.
+    lines = text.splitlines()
+    activation_ok = any(
+        _ACTIVATION_CUE in ln.lower()
+        and "surface: cloud" in ln.lower()
+        and "surface: local" not in ln.lower()
+        for ln in lines
+    )
+    if not activation_ok:
+        errors.append(
+            "dòng kích hoạt cổng phải ghép 'Kích hoạt' với `surface: cloud` "
+            "(không phải `surface: local`)"
+        )
+    deactivation_ok = any(
+        _DEACTIVATION_CUE in ln.lower()
+        and "surface: local" in ln.lower()
+        and "surface: cloud" not in ln.lower()
+        for ln in lines
+    )
+    if not deactivation_ok:
+        errors.append(
+            "dòng 'KHÔNG chạy' phải ghép với `surface: local` "
+            "(không phải `surface: cloud`)"
+        )
 
     rows = parse_gate_table_rows(text)
     if len(rows) != 3:
@@ -170,19 +266,22 @@ def lint_gate_doc(text: str) -> list[str]:
 
     if len(secret_rows) == 1:
         _, xu = secret_rows[0]
-        if "dừng" not in xu.lower():
-            errors.append("hàng bí mật nhà nước: cột Xử phải mang DỪNG")
+        if not _has_effective(xu, "dừng", reject_continue=True):
+            errors.append(
+                "hàng bí mật nhà nước: cột Xử phải mang DỪNG có hiệu lực "
+                "(không bị phủ định/gắn ngoại lệ trong chính ô đó)"
+            )
 
     if len(unknown_rows) == 1:
         _, xu = unknown_rows[0]
-        if "coi như thuộc" not in xu.lower():
-            errors.append("hàng Chưa rõ: cột Xử phải mang 'coi như thuộc'")
-        if "dừng" not in xu.lower():
-            errors.append("hàng Chưa rõ: cột Xử phải mang DỪNG")
+        if not _has_effective(xu, "coi như thuộc", reject_continue=True):
+            errors.append("hàng Chưa rõ: cột Xử phải mang 'coi như thuộc' có hiệu lực")
+        if not _has_effective(xu, "dừng", reject_continue=True):
+            errors.append("hàng Chưa rõ: cột Xử phải mang DỪNG có hiệu lực")
 
     if len(na_rows) == 1:
         _, xu = na_rows[0]
-        if "dừng" in xu.lower():
-            errors.append("hàng Không thuộc: cột Xử KHÔNG được mang DỪNG")
+        if _has_effective(xu, "dừng"):
+            errors.append("hàng Không thuộc: cột Xử KHÔNG được mang DỪNG có hiệu lực")
 
     return errors
