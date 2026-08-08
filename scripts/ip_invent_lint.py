@@ -87,3 +87,102 @@ def lint_workspace_profile(text: str) -> list[str]:
     if surface is not None and surface not in VALID_SURFACES:
         errors.append(f"surface phải là local|cloud, thấy: {surface!r}")
     return errors
+
+
+# Hai mệnh đề quyền-sở-hữu-quyết-định bắt buộc có mặt trong co-mat-gate.md.
+# Chỉ hai cái này kiểm bằng có-mặt chuỗi là đủ, vì chúng là TUYÊN BỐ đứng độc
+# lập (không phải một quan hệ giữa hai ô bảng) — đảo nghĩa chúng đồng nghĩa
+# xoá rồi viết lại bằng chữ khác, việc soát bảng 3-ngả bên dưới không với tới.
+GATE_OWNERSHIP_PHRASES = [
+    "Điều 60.2",
+    "quyết định của CEO, không phải kết luận pháp lý",
+]
+
+_TABLE_SEP_RE = re.compile(r"^:?-+:?$")
+
+
+def parse_gate_table_rows(text: str) -> list[tuple[str, str]]:
+    """Hàng thô `| Phân loại | Xử |` của bảng Bước 0′, GIỮ hàng trùng và thứ tự.
+
+    Bỏ header (`Phân loại`) và hàng phân cách markdown (`|---|---|`). Không
+    gom dict — cùng lý do parse_workspace_rows không gom: gom sẽ nuốt hàng
+    trùng hoặc hàng thiếu, làm phép đếm "đúng 3 hàng" phía dưới vô hiệu.
+    """
+    rows: list[tuple[str, str]] = []
+    for line in text.splitlines():
+        line = line.strip()
+        if not line.startswith("|") or not line.endswith("|") or len(line) < 2:
+            continue
+        cells = [c.strip() for c in line[1:-1].split("|")]
+        if len(cells) != 2:
+            continue
+        c1, c2 = cells
+        if _TABLE_SEP_RE.fullmatch(c1) and _TABLE_SEP_RE.fullmatch(c2):
+            continue  # hàng phân cách markdown
+        if c1.lower() == "phân loại":
+            continue  # hàng header
+        rows.append((c1, c2))
+    return rows
+
+
+def lint_gate_doc(text: str) -> list[str]:
+    """Kiểm co-mat-gate.md bằng QUAN HỆ giữa ô với ô của bảng 3 ngả, không
+    phải bằng việc đếm token có mặt ở đâu đó trong file.
+
+    Vì sao đổi cách kiểm: `evals/ip-invent.json` (trường description) ghi
+    nguyên văn một mutation test đã bắt được IP-DISCLOSE từng là cổng-đếm-từ-
+    khoá — một cổng bộc lộ bị ĐẢO NGHĨA vẫn xanh vì các token rải rác nơi khác
+    thoả mãn phép match không giới hạn. Kiểm có-mặt chuỗi chỉ chặn được XOÁ,
+    không chặn được ĐẢO NGHĨA. Bảng 3 ngả ở đây là chỗ đảo-nghĩa nguy hiểm
+    nhất trong tài liệu (một hàng bị đổi Xử là đổi hành vi cổng), nên nó phải
+    được chấm theo quan hệ cột-với-cột của TỪNG hàng.
+    """
+    errors: list[str] = []
+
+    # Markdown coi một newline đơn trong cùng đoạn văn là soft-break — hiển
+    # thị ra khoảng trắng, không phải xuống dòng thật. co-mat-gate.md có câu
+    # bị word-wrap giữa chừng một cụm bắt buộc; gộp mọi chuỗi khoảng trắng
+    # (kể cả newline) về một dấu cách trước khi so khớp cho đúng cách người
+    # đọc thấy, KHÔNG sửa nội dung file cho khớp regex.
+    normalized = re.sub(r"\s+", " ", text)
+    for phrase in GATE_OWNERSHIP_PHRASES:
+        if phrase not in normalized:
+            errors.append(f"co-mat-gate.md thiếu mệnh đề: {phrase!r}")
+
+    rows = parse_gate_table_rows(text)
+    if len(rows) != 3:
+        errors.append(f"bảng phân loại Bước 0′ phải có đúng 3 hàng, thấy {len(rows)}")
+        return errors  # khung bảng đã sai thì không còn gì để so quan hệ
+
+    secret_rows = [r for r in rows if "bí mật nhà nước" in r[0].lower()]
+    unknown_rows = [r for r in rows if "chưa rõ" in r[0].lower()]
+    na_rows = [r for r in rows if "không thuộc" in r[0].lower()]
+
+    for label, matches in (
+        ("bí mật nhà nước", secret_rows),
+        ("Chưa rõ", unknown_rows),
+        ("Không thuộc", na_rows),
+    ):
+        if len(matches) != 1:
+            errors.append(
+                f"bảng phân loại phải có đúng 1 hàng khớp {label!r}, thấy {len(matches)}"
+            )
+
+    if len(secret_rows) == 1:
+        _, xu = secret_rows[0]
+        if "dừng" not in xu.lower():
+            errors.append("hàng bí mật nhà nước: cột Xử phải mang DỪNG")
+
+    if len(unknown_rows) == 1:
+        _, xu = unknown_rows[0]
+        if "coi như thuộc" not in xu.lower():
+            errors.append("hàng Chưa rõ: cột Xử phải mang 'coi như thuộc'")
+        if "dừng" not in xu.lower():
+            errors.append("hàng Chưa rõ: cột Xử phải mang DỪNG")
+
+    if len(na_rows) == 1:
+        _, xu = na_rows[0]
+        if "dừng" in xu.lower():
+            errors.append("hàng Không thuộc: cột Xử KHÔNG được mang DỪNG")
+
+    return errors

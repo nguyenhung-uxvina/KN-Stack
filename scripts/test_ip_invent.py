@@ -105,6 +105,53 @@ def test_profile_lint_flags_wrong_order():
     assert any("sai thứ tự trường" in e for e in lint.lint_workspace_profile(dirty))
 
 
+def test_gate_doc_table_has_all_three_verdicts_and_ceo_ownership():
+    assert lint.lint_gate_doc(_ref("co-mat-gate.md")) == []
+
+
+def test_gate_lint_flags_unknown_row_flipped_to_continue():
+    # Đột biến 1: đảo nghĩa hàng "Chưa rõ" — thay 'coi như thuộc → DỪNG' bằng
+    # 'coi như không thuộc → chạy tiếp', giữ nguyên phần còn lại của file.
+    original = _ref("co-mat-gate.md")
+    mutated = original.replace(
+        "**coi như thuộc** → **DỪNG.**",
+        "**coi như không thuộc** → **chạy tiếp.**",
+        1,
+    )
+    assert mutated != original, "đột biến không khớp được văn bản thật — regex/chuỗi cần cập nhật"
+    errors = lint.lint_gate_doc(mutated)
+    assert errors, "lint phải bắt hàng Chưa rõ bị đảo nghĩa thành cho chạy tiếp"
+    assert any("Chưa rõ" in e for e in errors), errors
+
+
+def test_gate_lint_flags_not_applicable_row_flipped_to_stop():
+    # Đột biến 2: hàng "Không thuộc" bị đổi cột Xử thành DỪNG — mọi ngả đều
+    # dừng thì bảng vô nghĩa. Giữ nguyên phần còn lại của file.
+    original = _ref("co-mat-gate.md")
+    mutated = original.replace(
+        "hoặc đã khóa priority date | Chạy tiếp. |",
+        "hoặc đã khóa priority date | DỪNG. |",
+        1,
+    )
+    assert mutated != original, "đột biến không khớp được văn bản thật — regex/chuỗi cần cập nhật"
+    errors = lint.lint_gate_doc(mutated)
+    assert errors, "lint phải bắt hàng Không thuộc bị đổi thành DỪNG"
+    assert any("Không thuộc" in e for e in errors), errors
+
+
+def test_gate_lint_flags_a_deleted_row():
+    # Đột biến 3: xoá hẳn hàng "Chưa rõ" khỏi bảng (còn 2 hàng), giữ nguyên
+    # phần còn lại của file.
+    original = _ref("co-mat-gate.md")
+    lines = original.splitlines(keepends=True)
+    mutated_lines = [l for l in lines if not l.lstrip().startswith("| **Chưa rõ**")]
+    assert len(mutated_lines) == len(lines) - 1, "đột biến không tìm thấy đúng 1 hàng để xoá"
+    mutated = "".join(mutated_lines)
+    errors = lint.lint_gate_doc(mutated)
+    assert errors, "lint phải bắt bảng bị thiếu hàng"
+    assert any("3 hàng" in e for e in errors), errors
+
+
 def test_profile_lint_flags_a_duplicate_row_even_when_dict_would_hide_it():
     # Bằng chứng lỗi gốc: 7 hàng đúng + 1 hàng `surface` dư dán ở cuối, giá trị
     # dư vẫn hợp lệ (`cloud`). Trước khi vá, dict comprehension nuốt hàng dư
