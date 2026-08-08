@@ -1,11 +1,11 @@
 {
   "skill": "ip-screen",
-  "version": "1.0",
+  "version": "1.1",
   "description": "Static assertions for ip-screen (block B2 of ip-invent) — the block holding the pipeline's load-bearing rule: score protectability and credential-value on TWO SEPARATE AXES and never average them, because the axes are anti-correlated (deployed = strong application evidence but disclosed; unbuilt = clean novelty but no application evidence). Must also preserve: Điều 60.3 twelve-month grace computation from a real date, Điều 10a AI-authorship gate that blocks back to B1, four-way routing including secret patents with its two unanswered questions stated, Điều 14a fast-examination condition table, three paths A/B/C presented without the AI choosing, GPHI-vs-patent inventive-step distinction, and the industrial-applicability vs already-applied distinction. All regex windows bounded — an unbounded [\\s\\S]* match is a keyword gate, not an assertion.",
   "mode": "static",
   "test_input": "rà soát khả thi hai ứng viên: một cơ cấu chưa bộc lộ chưa chế tạo, và một sản phẩm đã triển khai ngoài biển từ 2024",
-  "total_required": 11,
-  "passing_score": 13,
+  "total_required": 13,
+  "passing_score": 15,
   "assertions": [
     {
       "id": "SCR-NOAVG",
@@ -97,6 +97,20 @@
       "check": "distinguishes Điều 62 industrial applicability (protection condition) from đã được áp dụng (credential condition)",
       "regex": "khả năng áp dụng \\*\\*công nghiệp\\*\\*[\\s\\S]{0,140}đã được áp dụng",
       "required": false
+    },
+    {
+      "id": "SCR-BYFEATURE",
+      "name": "prior_art_searched_by_claim_feature_not_application_name",
+      "check": "requires searching prior art per claim FEATURE and per feature-pair, not by application name; only 🟢 when every pair is clean",
+      "regex": "TRA THEO TỪNG DẤU HIỆU CỦA CLAIM, KHÔNG THEO TÊN ỨNG DỤNG[\\s\\S]{0,900}từng cặp dấu hiệu",
+      "required": true
+    },
+    {
+      "id": "SCR-ACADEMIC",
+      "name": "academic_literature_counts_as_prior_art",
+      "check": "requires searching academic literature (papers/proceedings/theses) because Điều 60.1 counts written description anywhere in the world, not only patents",
+      "regex": "PHẢI TRA CẢ TÀI LIỆU HỌC THUẬT[\\s\\S]{0,500}(Scholar|ScienceDirect|Springer)",
+      "required": true
     }
   ]
 }

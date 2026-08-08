@@ -47,7 +47,26 @@ tạo" mỏng → GPHI sống, sáng chế rủi ro.
 > **chức danh**). Đạt cái trước không cho cái sau.
 
 ### I.3 Pre-search prior art
-Gọi `/research --patents <chức năng lõi>`. Dùng lại khuôn phân loại của **QP-02-06 §7.2**:
+
+> ⛔ **TRA THEO TỪNG DẤU HIỆU CỦA CLAIM, KHÔNG THEO TÊN ỨNG DỤNG.** Đây là lỗi đã xảy ra thật và tốn 53
+> ngày tin sai:
+> · Một ứng viên tự khai novelty ở **cơ cấu hạ-đặt trên catamaran**, nhưng pre-search chỉ tra
+> `"torpedo launch"` (tên ứng dụng) → kết luận "prior art giải sai bài, novelty sạch". Khi tra lại theo
+> **cơ cấu** (`catamaran + hydraulic cylinders + lowering platform`) thì ra ngay một patent phủ đúng cụm
+> đó. **Novelty nằm ở dấu hiệu, nên prior art cũng phải tìm theo dấu hiệu.**
+> · Tương tự: bia phát hiện trúng đạn chỉ lộ prior art khi tra `steel plate + accelerometer + impact`,
+> không lộ khi tra `bia huấn luyện`.
+>
+> **Thủ tục bắt buộc:** liệt kê các dấu hiệu kỹ thuật của khung claim dự kiến → **tra riêng từng dấu hiệu
+> và từng cặp dấu hiệu** → chỉ khi mọi cặp đều sạch mới được ghi 🟢.
+>
+> ⛔ **PHẢI TRA CẢ TÀI LIỆU HỌC THUẬT, KHÔNG CHỈ PATENT.** Điều 60.1 tính *"mô tả bằng văn bản hoặc bất kỳ
+> hình thức nào khác, ở trong nước **hoặc ở nước ngoài**"* → **bài báo, kỷ yếu, luận án đều là prior art
+> phá tính mới**. Ca thật: một cấu hình sàn nổi tưởng là điểm mới, hoá ra đã công bố trong kỷ yếu Springer
+> và bài ScienceDirect — không có patent nào, nhưng vẫn đủ giết claim. Tra: Google Scholar, ScienceDirect,
+> Springer, ASME/IEEE, ResearchGate.
+
+Gọi `/research --patents <từng dấu hiệu>`. Dùng lại khuôn phân loại của **QP-02-06 §7.2**:
 **(A)** expired → tự do dùng · **(B)** active, không bao phủ · **(C)** active, bao phủ một phần →
 claim map · **(D)** active, bao phủ core → blocking. Áp cả **doctrine of equivalents** và
 **prosecution history estoppel** (QP-02-06 §8.4).
