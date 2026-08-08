@@ -16,6 +16,12 @@ KN-Stack/
 │   ├── galaxy/       (12) — Knowledge management (+ skill-to-public, codify, mentor-board — Naval outbound + code + mentor leverage)
 │   ├── mentors/      (58, dynamic) — Per-mentor advisor skills (add more via /mentor-board --add <leader>); orchestrator at galaxy/mentor-board/
 │   ├── book/         (23) — Book pipelines: codebase-to-book (9-phase, book-* blocks), book-to-codebase (btc-* blocks), book-to-skill, notebook-to-book
+│   ├── ip/           (6)  — Sở hữu trí tuệ TẤN CÔNG: ip-invent orchestrator + 5 block
+│   │                       (ip-criteria/harvest/screen/claim/dossier). Cặp đối xứng của QP-02-06 FTO
+│   │                       — FTO tránh claim người khác, ip/ dựng claim của mình. B0 ip-criteria là
+│   │                       CHẶN: dựng thước đo "cái gì được tính" (QĐ 431/QĐ-BQP ↔ QĐ 12/2025/QĐ-TTg)
+│   │                       TRƯỚC khi rà ứng viên. Luật nền đổi rất nhanh (NĐ 65/2023 → 15/2026 →
+│   │                       33/2026 → 100/2026) nên mọi đầu ra có quy cách PHẢI in ngày kiểm chuỗi sửa đổi.
 │   ├── erp/          (6)  — ERPNext integration
 │   ├── extract/      (7)  — Content extraction (social, chat, yt-extract/yt-learn/yt-search)
 │   ├── learn/        (3)  — Learning methodology

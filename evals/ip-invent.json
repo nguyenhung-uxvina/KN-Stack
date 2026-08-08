@@ -1,0 +1,116 @@
+{
+  "skill": "ip-invent",
+  "version": "1.1",
+  "description": "Static assertions for ip-invent — offensive-IP orchestrator (ý tưởng → hồ sơ nộp đơn) commanding 5 ip-* blocks, distinct from and complementary to QP-02-06 FTO. Must preserve: B0-criteria-before-screening gate, disclosure gate, egress gate (no unpublished invention content to cloud), advisory-only stance, mandatory amendment-chain verification with printed date, 4-way routing including secret patents, fast-examination claim cap, Điều 14 foreign-filing security gate, Điều 10a AI-authorship gate, and one-block-per-turn ledger discipline. v1.1: all cross-document [\\s\\S]* windows bounded after a mutation test proved IP-DISCLOSE was a keyword gate — an inverted disclosure gate still passed because scattered tokens elsewhere satisfied the unbounded match.",
+  "mode": "static",
+  "test_input": "lập hồ sơ sáng chế cho một cơ cấu cơ khí chưa bộc lộ, nhắm cả hai đích chức danh, cân nhắc nộp kép và khả năng nộp ra nước ngoài",
+  "total_required": 14,
+  "passing_score": 15,
+  "assertions": [
+    {
+      "id": "IP-BLOCKS",
+      "name": "commands_five_blocks_in_order",
+      "check": "orchestrator commands the 5 ip-* block skills in pipeline order criteria -> harvest -> screen -> claim -> dossier",
+      "regex": "ip-criteria[\\s\\S]{0,600}ip-harvest[\\s\\S]{0,600}ip-screen[\\s\\S]{0,600}ip-claim[\\s\\S]{0,600}ip-dossier",
+      "required": true
+    },
+    {
+      "id": "IP-B0GATE",
+      "name": "criteria_block_gates_screening",
+      "check": "B0 is a blocking gate: screening cannot run without a CEO-confirmed yardstick. Inverting this to make B0 optional must fail.",
+      "regex": "B0 là bắt buộc và không được bỏ qua[\\s\\S]{0,400}Không có thước đo",
+      "required": true
+    },
+    {
+      "id": "IP-B0RULE",
+      "name": "b0_before_b2_stated_as_rule",
+      "check": "the rules section states B0 before B2 with the reason (no yardstick = cannot score the credential axis)",
+      "regex": "B0 trước B2[^\\n]{0,120}thước đo",
+      "required": true
+    },
+    {
+      "id": "IP-DISCLOSE",
+      "name": "disclosure_gate_forbids_publication",
+      "check": "the disclosure gate must FORBID publication before the priority date is locked. Inverting CẤM to ĐƯỢC PHÉP must fail this assertion.",
+      "regex": "chưa khóa priority date[\\s\\S]{0,15}CẤM[\\s\\S]{0,30}đăng web",
+      "required": true
+    },
+    {
+      "id": "IP-EGRESS",
+      "name": "no_unpublished_content_to_external_tools",
+      "check": "forbids sending not-yet-disclosed invention content to NotebookLM/cloud/external prompts",
+      "regex": "KHÔNG[\\s\\S]{0,12}đưa nội dung giải pháp chưa bộc lộ vào NotebookLM",
+      "required": true
+    },
+    {
+      "id": "IP-ADVISORY",
+      "name": "advisory_only_not_ip_agent",
+      "check": "declares it does not replace the industrial-property agent or the credential-granting authority",
+      "regex": "Không thay thế[\\s\\S]{0,15}đại diện sở hữu công nghiệp[\\s\\S]{0,40}cơ quan xét chức danh",
+      "required": true
+    },
+    {
+      "id": "IP-AMENDCHAIN",
+      "name": "amendment_chain_check_is_mandatory_and_dated",
+      "check": "requires every block emitting a form/spec/deadline/fee to print a dated amendment-chain check line",
+      "regex": "PHẢI in dòng[\\s\\S]{0,80}Chuỗi sửa đổi kiểm tại",
+      "required": true
+    },
+    {
+      "id": "IP-AMENDCHAIN2",
+      "name": "names_current_decree_chain",
+      "check": "names the actual decree chain so a stale anchor is visible: NĐ 65/2023 -> 15/2026 -> 33/2026 -> 100/2026",
+      "regex": "NĐ 65/2023[\\s\\S]{0,160}NĐ 100/2026",
+      "required": true
+    },
+    {
+      "id": "IP-ART10A",
+      "name": "ai_authorship_gate",
+      "check": "carries the Điều 10a gate tying human substantial contribution to authorship",
+      "regex": "Điều 10a[\\s\\S]{0,80}(xuất xứ đóng góp|đóng góp đáng kể|tác giả)",
+      "required": true
+    },
+    {
+      "id": "IP-ART14",
+      "name": "foreign_filing_security_gate",
+      "check": "carries the Điều 14 gate — foreign filing requires prior Ministry of Defence / Public Security permission",
+      "regex": "Điều 14[\\s\\S]{0,80}nộp nước ngoài[\\s\\S]{0,40}BQP",
+      "required": true
+    },
+    {
+      "id": "IP-ROUTE4",
+      "name": "four_way_routing_includes_secret_patent",
+      "check": "routing has four destinations not two — sáng chế, GPHI, nộp kép, and sáng chế MẬT",
+      "regex": "sang-che\\|gphi\\|kep\\|mat",
+      "required": true
+    },
+    {
+      "id": "IP-FASTCAP",
+      "name": "fast_examination_claim_cap",
+      "check": "surfaces the quantified fast-examination ceiling: at most 10 claim points, at most 2 independent",
+      "regex": "≤10 điểm[\\s\\S]{0,40}≤02 điểm độc lập",
+      "required": true
+    },
+    {
+      "id": "IP-LEDGER",
+      "name": "one_block_per_turn_ledger",
+      "check": "_pipeline_state.md is the sole inter-block channel, not conversation memory",
+      "regex": "_pipeline_state\\.md[\\s\\S]{0,60}kênh DUY NHẤT",
+      "required": true
+    },
+    {
+      "id": "IP-VSFTO",
+      "name": "distinct_from_fto_opposite_direction",
+      "check": "positions itself as the mirror of QP-02-06 FTO — FTO avoids others' claims, this builds our own",
+      "regex": "tránh claim người khác[\\s\\S]{0,140}dựng claim của mình",
+      "required": true
+    },
+    {
+      "id": "IP-NOAVG",
+      "name": "forbids_averaging_two_axes",
+      "check": "forbids collapsing the protectability axis and the credential-value axis into one averaged score",
+      "regex": "Không bình quân hai trục",
+      "required": false
+    }
+  ]
+}

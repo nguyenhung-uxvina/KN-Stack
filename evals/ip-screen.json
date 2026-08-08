@@ -1,0 +1,102 @@
+{
+  "skill": "ip-screen",
+  "version": "1.0",
+  "description": "Static assertions for ip-screen (block B2 of ip-invent) — the block holding the pipeline's load-bearing rule: score protectability and credential-value on TWO SEPARATE AXES and never average them, because the axes are anti-correlated (deployed = strong application evidence but disclosed; unbuilt = clean novelty but no application evidence). Must also preserve: Điều 60.3 twelve-month grace computation from a real date, Điều 10a AI-authorship gate that blocks back to B1, four-way routing including secret patents with its two unanswered questions stated, Điều 14a fast-examination condition table, three paths A/B/C presented without the AI choosing, GPHI-vs-patent inventive-step distinction, and the industrial-applicability vs already-applied distinction. All regex windows bounded — an unbounded [\\s\\S]* match is a keyword gate, not an assertion.",
+  "mode": "static",
+  "test_input": "rà soát khả thi hai ứng viên: một cơ cấu chưa bộc lộ chưa chế tạo, và một sản phẩm đã triển khai ngoài biển từ 2024",
+  "total_required": 11,
+  "passing_score": 13,
+  "assertions": [
+    {
+      "id": "SCR-NOAVG",
+      "name": "forbidden_to_average_axes",
+      "check": "explicitly forbids collapsing the two axes into one total score, with the reason that averaging hides the conflict the CEO needs to see",
+      "regex": "KHÔNG được cộng hai trục thành một điểm tổng[\\s\\S]{0,220}che",
+      "required": true
+    },
+    {
+      "id": "SCR-ANTICORR",
+      "name": "axes_are_anti_correlated",
+      "check": "states the anti-correlation: deployed/commercialised = strong application evidence but disclosed; unbuilt = clean novelty but no evidence",
+      "regex": "Đã triển khai[\\s\\S]{0,120}Chưa chế tạo, chưa lộ[\\s\\S]{0,120}không có",
+      "required": true
+    },
+    {
+      "id": "SCR-GRACE",
+      "name": "twelve_month_grace_computed_from_real_date",
+      "check": "computes the Điều 60.3 grace deadline as disclosure date + 12 months and compares to today, rather than guessing",
+      "regex": "ngày_bộc_lộ \\+ 12 tháng[\\s\\S]{0,200}hôm_nay",
+      "required": true
+    },
+    {
+      "id": "SCR-GRACEVN",
+      "name": "grace_only_saves_domestic_filing",
+      "check": "warns the 12-month grace only rescues a filing made in Vietnam; prior disclosure generally forfeits foreign/PCT options",
+      "regex": "cửa 12 tháng chỉ cứu đơn[\\s\\S]{0,60}VIỆT NAM[\\s\\S]{0,120}(nước ngoài|PCT)",
+      "required": true
+    },
+    {
+      "id": "SCR-NODATE",
+      "name": "undatable_disclosure_is_high_risk_not_safe",
+      "check": "an undatable disclosure must be treated as HIGH RISK, never as not-yet-disclosed",
+      "regex": "(Ngày bộc lộ không tra được|không tra được)[\\s\\S]{0,60}RỦI RO CAO[\\s\\S]{0,60}không coi như",
+      "required": true
+    },
+    {
+      "id": "SCR-ART10A",
+      "name": "ai_authorship_gate_blocks_back_to_b1",
+      "check": "Điều 10a gate blocks and returns to B1 when human substantial contribution cannot be documented",
+      "regex": "Không ghi được[\\s\\S]{0,40}CHẶN[\\s\\S]{0,60}quay lại B1",
+      "required": true
+    },
+    {
+      "id": "SCR-ART10ARISK",
+      "name": "names_the_authorship_failure_mode",
+      "check": "names the concrete failure mode: a granted patent that cannot be used for the credential because authorship is shaky",
+      "regex": "có bằng mà không dùng được cho chức danh",
+      "required": true
+    },
+    {
+      "id": "SCR-ROUTE4",
+      "name": "four_way_routing_with_secret_patent",
+      "check": "routing table has four destinations including sáng chế MẬT as the unpublished track",
+      "regex": "Sáng chế[\\s\\S]{0,400}GPHI[\\s\\S]{0,400}Nộp kép[\\s\\S]{0,400}Sáng chế MẬT",
+      "required": true
+    },
+    {
+      "id": "SCR-MATOPEN",
+      "name": "secret_patent_open_questions_stated",
+      "check": "when proposing the secret-patent route, states the two unanswered questions — missing implementing circular, and whether a secret patent can be evidenced in a credential dossier",
+      "regex": "hai câu chưa có đáp án[\\s\\S]{0,400}chứng minh được trong hồ sơ chức danh",
+      "required": true
+    },
+    {
+      "id": "SCR-PATHS",
+      "name": "three_paths_presented_not_chosen",
+      "check": "presents paths A/B/C with trade-offs and explicitly refuses to choose, because the trade-off is a CEO Core decision",
+      "regex": "bày cả ba, không tự chọn",
+      "required": true
+    },
+    {
+      "id": "SCR-14A",
+      "name": "fast_examination_condition_table",
+      "check": "evaluates all Điều 14a conditions including the claim cap and the timing traps (early-publication request at filing, divisional applications excluded)",
+      "regex": "≤10 điểm YCBH[\\s\\S]{0,120}≤02 điểm độc lập",
+      "required": true
+    },
+    {
+      "id": "SCR-GPHI",
+      "name": "gphi_does_not_require_inventive_step",
+      "check": "states GPHI does not require inventive step but does require not-common-knowledge — the main routing pivot",
+      "regex": "GPHI không đòi trình độ sáng tạo",
+      "required": false
+    },
+    {
+      "id": "SCR-APPLIED",
+      "name": "industrial_applicability_is_not_already_applied",
+      "check": "distinguishes Điều 62 industrial applicability (protection condition) from đã được áp dụng (credential condition)",
+      "regex": "khả năng áp dụng \\*\\*công nghiệp\\*\\*[\\s\\S]{0,140}đã được áp dụng",
+      "required": false
+    }
+  ]
+}
