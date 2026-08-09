@@ -150,9 +150,20 @@ _TABLE_SEP_RE = re.compile(r"^:?-+:?$")
 # dụ" dán thêm (không phải thủ tục thật).
 _FENCE_RE = re.compile(r"^(```|~~~)[^\n]*\n.*?\n\1[ \t]*$", re.MULTILINE | re.DOTALL)
 
+# HTML comment ĐÃ ĐÓNG ĐỦ CẶP — cũng không render (trình duyệt/markdown ẩn
+# nội dung trong `<!-- … -->`), nên một bảng bọc trong comment (dù cân) cũng
+# phải biến mất khỏi vùng được soát, giống hệt bảng bị bọc trong fence.
+_HTML_COMMENT_RE = re.compile(r"<!--.*?-->", re.DOTALL)
+
 # Bảng 3 ngả chỉ có hiệu lực trong đúng mục Bước 0′ — một bảng/danh sách khác
 # hình dạng ở heading khác trong file không phải là thủ tục thật đang chạy.
 _STEP0_SECTION_RE = re.compile(r"^##[ \t]*Bước 0′.*?(?=^##[ \t]|\Z)", re.MULTILINE | re.DOTALL)
+
+# Đếm MỌI heading bắt đầu bằng "## Bước 0" (bắt cả "Bước 0′" và biến thể như
+# "Bước 0″") — phải có ĐÚNG 1. `_STEP0_SECTION_RE.search` ở trên chỉ lấy mục
+# ĐẦU TIÊN; nếu có mục thứ hai (trùng tên hoặc heading anh em cùng tiền tố),
+# nó nằm ngoài vùng được soát hoàn toàn và không ai kiểm — phải chặn trước.
+_STEP0_HEADING_RE = re.compile(r"^##[ \t]*Bước 0", re.MULTILINE)
 
 # Heading H1 đầu file, dùng để cắt vùng kích hoạt (giữa H1 và H2 đầu tiên).
 # `[ \t]+` sau `#` loại trừ heading H2 (`##…`) — sau "##" ký tự kế tiếp là
@@ -161,15 +172,55 @@ _ACTIVATION_SECTION_RE = re.compile(r"^#[ \t]+.*?\n(.*?)(?=^##[ \t])", re.MULTIL
 
 
 def _strip_code_fences(text: str) -> str:
-    """Bỏ nội dung không render thành Markdown thường: code fence backtick
-    (```) hoặc dấu ngã (~~~), VÀ khối thụt lề ≥4 dấu cách/tab (indented code
-    block — CommonMark coi đây cũng là code, không phải bảng hay đoạn văn
-    thật). Áp dụng cho cả vùng kích hoạt lẫn vùng bảng.
+    """Bỏ nội dung không render thành Markdown/HTML thường: code fence
+    backtick (```) hoặc dấu ngã (~~~) ĐÃ ĐÓNG ĐỦ CẶP, HTML comment
+    (`<!-- … -->`) ĐÃ ĐÓNG ĐỦ CẶP, và khối thụt lề ≥4 dấu cách/tab (indented
+    code block — CommonMark coi đây cũng là code). Áp dụng cho cả vùng kích
+    hoạt lẫn vùng bảng.
+
+    Chỉ xử lý cặp ĐÃ ĐÓNG — fence/comment KHÔNG đóng phải bị chặn riêng ở
+    `_unclosed_markup_errors` trước khi hàm này chạy, vì một fence hở không
+    khớp được `_FENCE_RE` (không có gì để bỏ) nhưng vẫn nuốt cả phần còn lại
+    của file khi render.
     """
     text = _FENCE_RE.sub("", text)
+    text = _HTML_COMMENT_RE.sub("", text)
     lines = text.split("\n")
     kept = [ln for ln in lines if not (ln.startswith("    ") or ln.startswith("\t"))]
     return "\n".join(kept)
+
+
+def _unclosed_markup_errors(text: str) -> list[str]:
+    """Phát hiện fence/comment KHÔNG đóng đủ cặp — không cần hiểu nội dung.
+
+    Một fence ``` hoặc ~~~ mở mà không có dấu đóng cùng kiểu ở đâu đó sau nó
+    không khớp `_FENCE_RE` (regex cần cặp), nên `_strip_code_fences` không bỏ
+    được nó — bảng/đoạn văn phía sau vẫn parse "bình thường" theo con mắt
+    regex, dù renderer thật sẽ nuốt toàn bộ phần còn lại của file thành code.
+    Cùng logic cho HTML comment lệch cặp mở/đóng. Phát hiện bằng cách đếm
+    marker CÒN SÓT sau khi đã bỏ mọi cặp ĐÃ đóng, và đếm `<!--` so với `-->`
+    trên toàn văn bản — không cần biết nội dung nói gì.
+    """
+    errors: list[str] = []
+
+    after_fence_strip = _FENCE_RE.sub("", text)
+    leftover = re.findall(r"^(?:```|~~~)", after_fence_strip, re.MULTILINE)
+    if leftover:
+        errors.append(
+            f"co-mat-gate.md có {len(leftover)} fence code (```/~~~) không đóng đủ cặp — "
+            "không thể xác định vùng có hiệu lực (renderer sẽ nuốt toàn bộ phần còn lại "
+            "của file thành code)"
+        )
+
+    open_count = len(re.findall(r"<!--", text))
+    close_count = len(re.findall(r"-->", text))
+    if open_count != close_count:
+        errors.append(
+            f"co-mat-gate.md có HTML comment không cân (`<!--` xuất hiện {open_count} lần, "
+            f"`-->` xuất hiện {close_count} lần) — không thể xác định vùng có hiệu lực"
+        )
+
+    return errors
 
 
 def _extract_step0_section(text: str) -> str:
@@ -239,14 +290,40 @@ def lint_gate_doc(text: str) -> list[str]:
     băng — thừa/thiếu/hoán vị/sửa một chữ đều là "trôi khỏi bản duyệt" và bị
     báo lỗi, bất kể nội dung mới nghe có hợp lý đến đâu.
 
-    Vì sao đi theo hướng này thay vì phân tích ngữ nghĩa: `evals/ip-invent.
-    json` ghi một mutation test đã bắt được IP-DISCLOSE từng là cổng-đếm-từ-
-    khoá bị đảo nghĩa vẫn xanh. Vòng vá đầu của chính lint này thử thu hẹp
-    phép đếm-từ-khoá xuống một ô (`_has_effective`) — vẫn bị phá (14/15 đột
-    biến: thêm `**`, chèn chữ giữa cue, bỏ dấu, nới lỏng mệnh lệnh, đổi kiểu
-    fence, thụt lề, chèn dòng ngoại lệ). Không có danh sách từ cấm nào đóng
-    được lớp lỗi "diễn đạt lại" — chỉ so khớp nguyên văn mới đóng được, vì nó
-    không cố phân biệt "lành tính" với "đảo nghĩa", nó chỉ hỏi "có đổi không".
+    CHỈ HAI VÙNG được đóng băng: khối 2 dòng kích hoạt/tắt (giữa H1 và heading
+    `## Vì sao…`), và bảng 3 hàng của mục `## Bước 0′…`. TOÀN BỘ phần còn lại
+    của file — chính tiêu đề H1, mục `## Vì sao có cổng này`, mục `## Cái
+    cổng này KHÔNG làm`, mục `## Ghi và in lại`, và bất kỳ mục nào được thêm
+    mới ngoài hai vùng trên — KHÔNG được kiểm ở đây. Đổi ý nghĩa tiêu đề H1
+    (ví dụ đảo hẳn điều kiện kích hoạt viết trong câu tiêu đề, không phải
+    trong khối > kích hoạt đã đóng băng), hay chèn văn xuôi mới ở các mục
+    chưa đóng băng, đều lọt qua hàm này — người duyệt phải tự đọc phần văn
+    xuôi đó, không có gì thay được việc đó ở lớp lint. (Xem sổ hoãn
+    task-3-report.md: M17/N14/X8′/X10/X11/X12.)
+
+    Trước khi so khớp hai vùng đóng băng, hàm chặn hai lớp "vùng có hiệu lực
+    không xác định được" — không cần hiểu nội dung, chỉ cần đếm marker:
+    - Fence (```/~~~) hoặc HTML comment (`<!-- -->`) KHÔNG đóng đủ cặp: renderer
+      thật sẽ nuốt cả phần còn lại của file thành code/ẩn, nhưng một fence hở
+      không khớp được cặp trong regex nên bảng phía sau vẫn "parse bình
+      thường" nếu không chặn riêng (`_unclosed_markup_errors`).
+    - Nhiều hơn 1 heading bắt đầu bằng `## Bước 0`: `_STEP0_SECTION_RE` chỉ
+      lấy mục ĐẦU TIÊN, nên một mục `## Bước 0′` thứ hai (heading trùng) hay
+      một mục anh em cùng tiền tố (`## Bước 0″`) mang bảng khác hoàn toàn nằm
+      ngoài vùng được soát — không ai kiểm nó.
+
+    Vì sao đi theo hướng đóng-băng-nguyên-văn thay vì phân tích ngữ nghĩa:
+    `evals/ip-invent.json` ghi một mutation test đã bắt được IP-DISCLOSE từng
+    là cổng-đếm-từ-khoá bị đảo nghĩa vẫn xanh. Vòng vá đầu của chính lint này
+    thử thu hẹp phép đếm-từ-khoá xuống một ô (`_has_effective`) — vẫn bị phá
+    (14/15 đột biến: thêm `**`, chèn chữ giữa cue, bỏ dấu, nới lỏng mệnh
+    lệnh, đổi kiểu fence, thụt lề, chèn dòng ngoại lệ). Không có danh sách từ
+    cấm nào đóng được lớp lỗi "diễn đạt lại" — chỉ so khớp nguyên văn mới
+    đóng được, vì nó không cố phân biệt "lành tính" với "đảo nghĩa", nó chỉ
+    hỏi "có đổi không". Nhưng so khớp nguyên văn tự nó vẫn giả định "vùng
+    được kiểm chính là vùng có hiệu lực" — hai lớp chặn markup/heading ở trên
+    đóng đúng giả định đó, sau khi bị phá bằng fence hở, HTML comment, và
+    heading trùng/anh em.
     """
     errors: list[str] = []
 
@@ -254,6 +331,19 @@ def lint_gate_doc(text: str) -> list[str]:
     for phrase in GATE_OWNERSHIP_PHRASES:
         if phrase not in normalized:
             errors.append(f"co-mat-gate.md thiếu mệnh đề: {phrase!r}")
+
+    markup_errors = _unclosed_markup_errors(text)
+    if markup_errors:
+        errors.extend(markup_errors)
+        return errors  # ranh giới render không xác định được — mọi phép soát sau vô nghĩa
+
+    step0_headings = _STEP0_HEADING_RE.findall(text)
+    if len(step0_headings) != 1:
+        errors.append(
+            "co-mat-gate.md phải có đúng 1 mục bắt đầu bằng '## Bước 0', thấy "
+            f"{len(step0_headings)} mục — không rõ mục nào là thủ tục thật đang có hiệu lực"
+        )
+        return errors  # không xác định được mục nào là canon thì không so khớp được nữa
 
     fence_free = _strip_code_fences(text)
 

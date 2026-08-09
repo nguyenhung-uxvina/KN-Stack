@@ -316,6 +316,104 @@ def test_gate_lint_flags_activation_region_with_inserted_exception_line():
     assert any("kích hoạt" in e.lower() for e in errors), errors
 
 
+def test_gate_lint_flags_unclosed_backtick_fence_before_table():
+    # X14 (review vòng 3) — mở ``` KHÔNG ĐÓNG ngay trước bảng thật. _FENCE_RE
+    # cần cặp nên không khớp fence hở này -> bảng vẫn parse được y nguyên
+    # (rows_parsed=3, khớp canon), nhưng renderer thật nuốt toàn bộ phần còn
+    # lại của file thành code. Phải chặn riêng bằng đếm marker còn sót.
+    original = _ref("co-mat-gate.md")
+    lines = original.splitlines()
+    start, end = _gate_table_line_bounds(lines)
+    mutated_lines = lines[:start] + ["```"] + lines[start:]
+    mutated = "\n".join(mutated_lines)
+    assert mutated != original, "đột biến không khớp được văn bản thật"
+    errors = lint.lint_gate_doc(mutated)
+    assert errors, "lint phải bắt fence ``` không đóng trước bảng"
+    assert any("fence" in e.lower() and "không đóng" in e for e in errors), errors
+
+
+def test_gate_lint_flags_unclosed_tilde_fence_before_table():
+    # X18 (review vòng 3) — cùng cơ chế X14 nhưng dùng ~~~ không đóng.
+    original = _ref("co-mat-gate.md")
+    lines = original.splitlines()
+    start, end = _gate_table_line_bounds(lines)
+    mutated_lines = lines[:start] + ["~~~"] + lines[start:]
+    mutated = "\n".join(mutated_lines)
+    assert mutated != original, "đột biến không khớp được văn bản thật"
+    errors = lint.lint_gate_doc(mutated)
+    assert errors, "lint phải bắt fence ~~~ không đóng trước bảng"
+    assert any("fence" in e.lower() and "không đóng" in e for e in errors), errors
+
+
+def test_gate_lint_flags_table_wrapped_in_html_comment():
+    # X16 (review vòng 3) — bọc bảng thật trong `<!-- … -->` CÂN ĐỦ CẶP (nên
+    # phép đếm mở/đóng không bắt được nó — đó không phải lớp lỗi này). Bảng
+    # vô hình khi render dù lint kiểu "có chứa" từng thấy 3 hàng khớp canon.
+    # _strip_code_fences giờ cũng bỏ HTML comment đã đóng cặp, nên bảng biến
+    # mất khỏi vùng được soát y hệt N11/N12 — đếm hàng về 0.
+    original = _ref("co-mat-gate.md")
+    lines = original.splitlines()
+    start, end = _gate_table_line_bounds(lines)
+    wrapped = ["<!--"] + lines[start:end + 1] + ["-->"]
+    mutated_lines = lines[:start] + wrapped + lines[end + 1:]
+    mutated = "\n".join(mutated_lines)
+    assert mutated != original, "đột biến không khớp được văn bản thật"
+    errors = lint.lint_gate_doc(mutated)
+    assert errors, "lint phải bắt bảng thật bị bọc trong HTML comment"
+    assert any("3 hàng" in e for e in errors), errors
+
+
+def test_gate_lint_flags_a_second_step0_prime_section():
+    # X6 (review vòng 3) — hai mục `## Bước 0′`: mục đầu giữ bảng canon
+    # (lint chỉ soát mục ĐẦU TIÊN qua _STEP0_SECTION_RE.search), mục sau
+    # mang bảng nới lỏng "dùng khi gấp" mà không ai soát nếu không đếm số
+    # heading trước.
+    original = _ref("co-mat-gate.md")
+    duplicate_section = (
+        "## Bước 0′ — dùng khi gấp\n\n"
+        "| Phân loại | Xử |\n"
+        "|---|---|\n"
+        "| Thuộc bí mật nhà nước | Chạy tiếp nếu gấp |\n"
+        "| Chưa rõ | Chạy tiếp nếu gấp |\n"
+        "| Không thuộc | Chạy tiếp |\n\n"
+    )
+    mutated = original.replace(
+        "## Ghi và in lại",
+        duplicate_section + "## Ghi và in lại",
+        1,
+    )
+    assert mutated != original, "đột biến không khớp được văn bản thật"
+    errors = lint.lint_gate_doc(mutated)
+    assert errors, "lint phải bắt tài liệu có 2 mục '## Bước 0′'"
+    assert any("Bước 0" in e and "2 mục" in e for e in errors), errors
+
+
+def test_gate_lint_flags_a_sibling_step0_double_prime_section():
+    # X7 (review vòng 3) — thêm mục `## Bước 0″ — ghi đè Bước 0′` (dấu prime
+    # ĐÔI, khác `Bước 0′` gốc) mang bảng đảo nghĩa hoàn toàn (bí mật nhà nước
+    # -> Chạy tiếp). Heading khác nên nằm ngoài _STEP0_SECTION_RE hoàn toàn;
+    # phải bắt bằng đếm MỌI heading có tiền tố "## Bước 0", không chỉ khớp
+    # đúng "Bước 0′".
+    original = _ref("co-mat-gate.md")
+    override_section = (
+        "## Bước 0″ — ghi đè Bước 0′\n\n"
+        "| Phân loại | Xử |\n"
+        "|---|---|\n"
+        "| Thuộc bí mật nhà nước | Chạy tiếp |\n"
+        "| Chưa rõ | Chạy tiếp |\n"
+        "| Không thuộc | Chạy tiếp |\n\n"
+    )
+    mutated = original.replace(
+        "## Ghi và in lại",
+        override_section + "## Ghi và in lại",
+        1,
+    )
+    assert mutated != original, "đột biến không khớp được văn bản thật"
+    errors = lint.lint_gate_doc(mutated)
+    assert errors, "lint phải bắt mục '## Bước 0″' ghi đè Bước 0′ thật"
+    assert any("Bước 0" in e and "2 mục" in e for e in errors), errors
+
+
 def test_gate_lint_flags_table_replaced_with_loose_bullets_plus_fenced_decoy():
     # M7 (review vòng 1) — bảng thật bị thay bằng danh sách gạch đầu dòng
     # nới lỏng, rồi một bảng 3 hàng "ví dụ" được dán trong code fence ở cuối
