@@ -121,7 +121,9 @@ def test_gate_lint_flags_unknown_row_flipped_to_continue():
     assert mutated != original, "đột biến không khớp được văn bản thật — regex/chuỗi cần cập nhật"
     errors = lint.lint_gate_doc(mutated)
     assert errors, "lint phải bắt hàng Chưa rõ bị đảo nghĩa thành cho chạy tiếp"
-    assert any("Chưa rõ" in e for e in errors), errors
+    # Vòng 2: đỏ vì lệch nguyên văn hàng 2 (Chưa rõ) cột Xử so với canon,
+    # không phải vì trúng nhãn "Chưa rõ" trong thông điệp lỗi.
+    assert any("hàng 2" in e and "cột Xử" in e for e in errors), errors
 
 
 def test_gate_lint_flags_not_applicable_row_flipped_to_stop():
@@ -136,7 +138,9 @@ def test_gate_lint_flags_not_applicable_row_flipped_to_stop():
     assert mutated != original, "đột biến không khớp được văn bản thật — regex/chuỗi cần cập nhật"
     errors = lint.lint_gate_doc(mutated)
     assert errors, "lint phải bắt hàng Không thuộc bị đổi thành DỪNG"
-    assert any("Không thuộc" in e for e in errors), errors
+    # Vòng 2: đỏ vì lệch nguyên văn hàng 3 (Không thuộc) cột Xử so với canon,
+    # không phải vì trúng nhãn "Không thuộc" trong thông điệp lỗi.
+    assert any("hàng 3" in e and "cột Xử" in e for e in errors), errors
 
 
 def test_gate_lint_flags_a_deleted_row():
@@ -166,7 +170,8 @@ def _gate_table_line_bounds(lines: list[str]) -> tuple[int, int]:
 def test_gate_lint_flags_secret_row_negated_inside_the_cell():
     # M1 (review vòng 1) — token DỪNG còn nguyên nhưng bị phủ định ngay
     # trong ô: "**DỪNG.** Không xử nội dung" -> "**KHÔNG DỪNG.** Cứ xử nội
-    # dung". Kiểm có-mặt-token thu hẹp-về-một-ô vẫn lọt cái này.
+    # dung". Vòng 2: không còn cue-detection, đỏ vì lệch nguyên văn hàng 1
+    # cột Xử so với GATE_TABLE_CANON.
     original = _ref("co-mat-gate.md")
     mutated = original.replace(
         "**DỪNG.** Không xử nội dung",
@@ -176,13 +181,13 @@ def test_gate_lint_flags_secret_row_negated_inside_the_cell():
     assert mutated != original, "đột biến không khớp được văn bản thật"
     errors = lint.lint_gate_doc(mutated)
     assert errors, "lint phải bắt hàng bí mật nhà nước bị phủ định DỪNG ngay trong ô"
-    assert any("bí mật nhà nước" in e and "hiệu lực" in e for e in errors), errors
+    assert any("hàng 1" in e and "cột Xử" in e for e in errors), errors
 
 
 def test_gate_lint_flags_unknown_row_exception_clause_inside_the_cell():
     # M2 (review vòng 1) — cả hai token bắt buộc ("coi như thuộc", "DỪNG")
     # vẫn còn nguyên chuỗi, nhưng bị gắn mệnh đề ngoại lệ ngay trong ô khiến
-    # nghĩa đảo ngược hoàn toàn.
+    # nghĩa đảo ngược hoàn toàn. Vòng 2: đỏ vì lệch nguyên văn hàng 2 cột Xử.
     original = _ref("co-mat-gate.md")
     mutated = original.replace(
         "**coi như thuộc** → **DỪNG.**",
@@ -192,12 +197,13 @@ def test_gate_lint_flags_unknown_row_exception_clause_inside_the_cell():
     assert mutated != original, "đột biến không khớp được văn bản thật"
     errors = lint.lint_gate_doc(mutated)
     assert errors, "lint phải bắt hàng Chưa rõ bị gắn ngoại lệ 'là không cần thiết' ngay trong ô"
-    assert any("Chưa rõ" in e and "hiệu lực" in e for e in errors), errors
+    assert any("hàng 2" in e and "cột Xử" in e for e in errors), errors
 
 
 def test_gate_lint_flags_secret_row_trailing_exception_clause():
     # M10 (review vòng 1) — DỪNG vẫn đứng đầu ô, nhưng một mệnh đề "Trừ khi…
     # thì chạy tiếp." nối vào cuối ô làm DỪNG hết hiệu lực trong thực tế.
+    # Vòng 2: đỏ vì lệch nguyên văn hàng 1 cột Xử (thừa một câu).
     original = _ref("co-mat-gate.md")
     mutated = original.replace(
         "sang `workspace-knstack.md`). |",
@@ -207,21 +213,107 @@ def test_gate_lint_flags_secret_row_trailing_exception_clause():
     assert mutated != original, "đột biến không khớp được văn bản thật"
     errors = lint.lint_gate_doc(mutated)
     assert errors, "lint phải bắt mệnh đề ngoại lệ nối cuối ô hàng bí mật nhà nước"
-    assert any("bí mật nhà nước" in e and "hiệu lực" in e for e in errors), errors
+    assert any("hàng 1" in e and "cột Xử" in e for e in errors), errors
 
 
-def test_gate_lint_accepts_meaning_preserving_reword_of_not_applicable_row():
-    # M9 (review vòng 1) — báo động giả cần vá cùng lúc: "Chạy tiếp, không
-    # DỪNG." giữ ĐÚNG nghĩa cho hàng Không thuộc (phủ định DỪNG một cách
-    # tường minh) — sau khi có khái niệm "có hiệu lực", ca này phải XANH.
+def test_gate_lint_flags_secret_row_extra_bold_markers_around_negation():
+    # N7 (review vòng 2) — chỉ thêm 2 dấu `*` so với M1: "**KHÔNG** **DỪNG.**
+    # Cứ xử nội dung". _has_effective (đã xoá) từng lọt ca này vì token "DỪNG"
+    # còn nguyên bất kể markdown bao quanh. So khớp nguyên văn không quan tâm
+    # markdown — chỉ cần khác canon là đỏ.
     original = _ref("co-mat-gate.md")
     mutated = original.replace(
-        "hoặc đã khóa priority date | Chạy tiếp. |",
-        "hoặc đã khóa priority date | Chạy tiếp, không DỪNG. |",
+        "**DỪNG.** Không xử nội dung",
+        "**KHÔNG** **DỪNG.** Cứ xử nội dung",
         1,
     )
     assert mutated != original, "đột biến không khớp được văn bản thật"
-    assert lint.lint_gate_doc(mutated) == []
+    errors = lint.lint_gate_doc(mutated)
+    assert errors, "lint phải bắt hàng bí mật nhà nước bị phủ định kiểu tách dấu **"
+    assert any("hàng 1" in e and "cột Xử" in e for e in errors), errors
+
+
+def test_gate_lint_flags_secret_row_softened_into_a_recommendation():
+    # N1 (review vòng 2) — nới lỏng mệnh lệnh DỪNG thành khuyến nghị không
+    # bắt buộc. Không có cue phủ định kiểu "không X" nào ở đây — chỉ so khớp
+    # nguyên văn mới bắt được, vì nội dung khác canon dù không mang từ cấm.
+    original = _ref("co-mat-gate.md")
+    mutated = original.replace(
+        "**DỪNG.** Không xử nội dung, không tóm tắt, không diễn giải.",
+        "**Khuyến nghị DỪNG** (không bắt buộc). Không xử nội dung, không tóm tắt, không diễn giải.",
+        1,
+    )
+    assert mutated != original, "đột biến không khớp được văn bản thật"
+    errors = lint.lint_gate_doc(mutated)
+    assert errors, "lint phải bắt DỪNG bị nới lỏng thành khuyến nghị không bắt buộc"
+    assert any("hàng 1" in e and "cột Xử" in e for e in errors), errors
+
+
+def test_gate_lint_flags_secret_row_with_diacritics_stripped():
+    # N9 (review vòng 2) — bỏ dấu tiếng Việt. Không mang cue tiếng Việt có
+    # dấu nào, và nghĩa bề mặt gần như giữ nguyên — nhưng so khớp nguyên văn
+    # không quan tâm nghĩa, chỉ hỏi "có khác canon không".
+    original = _ref("co-mat-gate.md")
+    mutated = original.replace(
+        "Không xử nội dung, không tóm tắt, không diễn giải.",
+        "Khong xu noi dung, khong tom tat, khong dien giai.",
+        1,
+    )
+    assert mutated != original, "đột biến không khớp được văn bản thật"
+    errors = lint.lint_gate_doc(mutated)
+    assert errors, "lint phải bắt hàng bị viết lại không dấu"
+    assert any("hàng 1" in e and "cột Xử" in e for e in errors), errors
+
+
+def test_gate_lint_flags_table_wrapped_in_tilde_fence():
+    # N11 (review vòng 2) — cùng ý M11 nhưng dùng fence dấu ngã (~~~) thay vì
+    # backtick. _FENCE_RE dùng backreference \1 nên phải khớp cả hai kiểu.
+    original = _ref("co-mat-gate.md")
+    lines = original.splitlines()
+    start, end = _gate_table_line_bounds(lines)
+    fenced = ["~~~"] + lines[start:end + 1] + ["~~~"]
+    mutated_lines = lines[:start] + fenced + lines[end + 1:]
+    mutated = "\n".join(mutated_lines)
+    assert mutated != original, "đột biến không khớp được văn bản thật"
+    errors = lint.lint_gate_doc(mutated)
+    assert errors, "lint phải bắt bảng thật bị bọc trong fence ~~~"
+    assert any("3 hàng" in e for e in errors), errors
+
+
+def test_gate_lint_flags_table_wrapped_in_indented_code_block():
+    # N12 (review vòng 2) — thụt 4 dấu cách biến bảng thật thành indented
+    # code block theo CommonMark, không còn render ra bảng.
+    original = _ref("co-mat-gate.md")
+    lines = original.splitlines()
+    start, end = _gate_table_line_bounds(lines)
+    indented = ["    " + ln for ln in lines[start:end + 1]]
+    mutated_lines = lines[:start] + indented + lines[end + 1:]
+    mutated = "\n".join(mutated_lines)
+    assert mutated != original, "đột biến không khớp được văn bản thật"
+    errors = lint.lint_gate_doc(mutated)
+    assert errors, "lint phải bắt bảng thật bị thụt lề thành indented code block"
+    assert any("3 hàng" in e for e in errors), errors
+
+
+def test_gate_lint_flags_activation_region_with_inserted_exception_line():
+    # N13 (review vòng 2) — giữ NGUYÊN 2 dòng kích hoạt gốc, CHÈN THÊM một
+    # dòng "ngoại lệ vận hành". So khớp toàn vùng: bằng nghĩa là bằng, thừa
+    # một câu cũng đỏ — không cần hiểu nội dung câu chèn thêm nói gì.
+    original = _ref("co-mat-gate.md")
+    activation_block = (
+        "> Kích hoạt: chỉ khi profile workspace đang bật khai `surface: cloud`.\n"
+        "> Ở `surface: local` cổng này KHÔNG chạy, hành vi pipeline giữ nguyên như cũ."
+    )
+    mutated = original.replace(
+        activation_block,
+        activation_block
+        + "\n> Ngoại lệ vận hành: ở `surface: cloud` cổng này KHÔNG chạy nếu CEO đang gấp.",
+        1,
+    )
+    assert mutated != original, "đột biến không khớp được văn bản thật"
+    errors = lint.lint_gate_doc(mutated)
+    assert errors, "lint phải bắt vùng kích hoạt bị chèn thêm dòng ngoại lệ"
+    assert any("kích hoạt" in e.lower() for e in errors), errors
 
 
 def test_gate_lint_flags_table_replaced_with_loose_bullets_plus_fenced_decoy():
