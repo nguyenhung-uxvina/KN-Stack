@@ -744,23 +744,37 @@ def cited_refs(text: str) -> list[str]:
 # bằng test_path_lint_allowlist_scrub_does_not_swallow_the_surrounding_root_anchor).
 PATH_ALLOWLIST = ["_meta/decisions.md", "_meta/learnings.md"]
 
-# CÁCH ĐỌC — ba nhánh nối bằng `|`, đúng ba loại cấm nêu trên:
+# CÁCH ĐỌC — ba nhánh nối bằng `|`, đúng ba loại cấm nêu trên. Biên dịch với
+# `re.IGNORECASE`: Windows không phân biệt hoa/thường trên đường dẫn, nên
+# `1_projects/`, `1_PROJECTS/`, `Skills/Helix/` phải bị bắt y hệt bản chuẩn.
 #
-#   Nhánh 1 (tuyệt đối): `[A-Za-z]:[\\/]...` — chấp nhận CẢ backslash lẫn
-#   forward slash ngay sau dấu `:`, và char class cho phần còn lại của đường
-#   dẫn cũng chấp nhận cả hai — Windows tự nhận cả `D:\x` lẫn `D:/x`, và người
-#   viết SKILL.md không phải lúc nào cũng gõ backslash.
+#   Nhánh 1 (tuyệt đối): `(?<![A-Za-z])[A-Za-z]:[\\/]...` — chấp nhận CẢ
+#   backslash lẫn forward slash ngay sau dấu `:`, và char class cho phần còn
+#   lại của đường dẫn cũng chấp nhận cả hai — Windows tự nhận cả `D:\x` lẫn
+#   `D:/x`. Lookbehind phủ định `(?<![A-Za-z])` đứng TRƯỚC ký tự ổ đĩa — KHÔNG
+#   phải trang trí: thiếu nó thì `[A-Za-z]:[\\/]` khớp luôn đuôi mọi URL scheme
+#   (`http` **s** `://`, `ftp` → chữ cuối + `:` + `/` là một "ổ đĩa" giả). Có
+#   lookbehind: ký tự ngay trước "S" trong "httpS:" là "p" (một chữ cái) → bị
+#   loại; ký tự ngay trước "D" trong "`D:\...`" là backtick/khoảng trắng (không
+#   phải chữ cái) → khớp bình thường. Vá theo review vòng 1 (báo động giả URL).
 #
-#   Nhánh 2 (neo gốc vault): `(?<![\w/\\])(?:1_Projects|...)\b` — lookbehind
-#   phủ định chặn việc bắt oan một hậu tố của định danh dài hơn đứng ngay
-#   trước nó; `\b` ở CUỐI (không phải literal "/") nghĩa là KHÔNG đòi dấu `/`
-#   theo sau — "1_Projects" đứng trơ trong văn xuôi (không backtick, không
-#   trailing slash) vẫn bị bắt, vì ranh giới \w/không-\w giữa "s" và khoảng
-#   trắng/dấu câu/backtick đã đủ là biên từ. Ngược lại "1_ProjectsData" KHÔNG
-#   bị bắt oan vì "s" và "D" đều là \w — không có biên ở đó.
+#   Nhánh 2 (neo gốc vault): `(?<!\w)(?:1_Projects|...)\b` — lookbehind CHỈ
+#   chặn \w (chữ/số/gạch dưới) đứng ngay trước, KHÔNG chặn `/` hay `\`. Vá
+#   theo review vòng 1 (B-1): bản trước dùng `(?<![\w/\\])` — coi dấu `/`/`\`
+#   đứng trước là lý do KHÔNG bắt, nên `<root>/1_Projects/x`,
+#   `<root>\1_Projects\<project>\IP\` (đúng hình dạng `output_pattern` thật
+#   trong workspace-knstack.md), `./1_Projects/x`, `${root}/1_Projects/x` đều
+#   lọt — đúng dạng người sửa SKILL.md hay chép nhất. `\b` ở CUỐI (không phải
+#   literal "/") nghĩa là KHÔNG đòi dấu `/` theo sau — "1_Projects" đứng trơ
+#   trong văn xuôi vẫn bị bắt. "1_ProjectsData" vẫn KHÔNG bị bắt oan — không
+#   phải nhờ lookbehind (giờ không chặn gì trước ký tự "1"), mà nhờ `\b` ở
+#   CUỐI: "s" và "D" đều là \w nên không có biên từ ở đó, alternative không
+#   khớp được tại vị trí này.
 #
-#   Nhánh 3 (cross-skill): `skills[/\\][A-Za-z0-9_-]+[/\\]` — chấp nhận cả
-#   `skills/helix/` lẫn `skills\helix\`.
+#   Nhánh 3 (cross-skill): `(?<!\w)skills[/\\][A-Za-z0-9_-]+\b` — đối xứng với
+#   nhánh 2 sau review vòng 1: trước dùng `[/\\]` bắt buộc ở CUỐI nên
+#   `skills/helix` (không dấu `/` cuối) lọt trong khi nhánh 2 đã dùng `\b`;
+#   giờ cả hai nhánh cùng dùng `\b` cuối.
 #
 # PHẠM VI — nói rõ để không ai tưởng nhầm nó bắt nhiều hơn ba loại trên:
 #
@@ -768,6 +782,9 @@ PATH_ALLOWLIST = ["_meta/decisions.md", "_meta/learnings.md"]
 #     (`\\server\share`) — repo và vault này chạy Windows với ổ đĩa chữ cái,
 #     chưa có ca thật nào dùng hai dạng kia; nếu xuất hiện, đây là giới hạn đã
 #     biết, không phải lint đã kiểm và cho qua.
+#   - KHÔNG bắt URL (`https://`, `http://`, `ftp://`, ...) làm đường dẫn tuyệt
+#     đối — xem lookbehind nhánh 1 ở trên. Đã kiểm cả hai chiều: URL → xanh,
+#     `D:\`/`D:/` thật → vẫn đỏ.
 #   - KHÔNG bắt một tên `_meta/<khác>.md` bất kỳ đứng TRƠ MỘT MÌNH (không neo
 #     gốc, không tuyệt đối, không cross-skill) — không phải vì nó "được phép"
 #     (nó không có trong PATH_ALLOWLIST), mà vì nó không rơi vào bất kỳ nhánh
@@ -776,10 +793,18 @@ PATH_ALLOWLIST = ["_meta/decisions.md", "_meta/learnings.md"]
 #     Nếu một `_meta/<khác>.md` xuất hiện CẠNH một neo gốc vault (vd
 #     `2_Areas/_meta/khac.md`) thì vẫn ĐỎ — vì nhánh 2 khớp trên chính neo gốc,
 #     không liên quan gì đến allowlist.
+#   - `PATH_ALLOWLIST` được GHIM nguyên giá trị bằng
+#     `test_path_allowlist_is_pinned_to_exactly_two_meta_files` — vá theo
+#     review vòng 1 (B-2): trước đó không có gì chặn việc lặng lẽ nới danh
+#     sách này (vd thêm `"3_Resources/Deep-Content-Analyzer-Outputs/"` để một
+#     file chưa sửa xong vẫn pass) trừ khi chuỗi thêm vào TÌNH CỜ trùng fixture
+#     test. Ghim giá trị chặn đứng MỌI lần nới, bất kể có trùng fixture hay
+#     không.
 FORBIDDEN_PATH_RE = re.compile(
-    r"(?:[A-Za-z]:[\\/][A-Za-z0-9_\\/.-]+"
-    r"|(?<![\w/\\])(?:1_Projects|2_Areas|3_Resources|4_Archives|5_Galaxy)\b"
-    r"|(?<![\w/\\])skills[/\\][A-Za-z0-9_-]+[/\\])"
+    r"(?:(?<![A-Za-z])[A-Za-z]:[\\/][A-Za-z0-9_\\/.-]+"
+    r"|(?<!\w)(?:1_Projects|2_Areas|3_Resources|4_Archives|5_Galaxy)\b"
+    r"|(?<!\w)skills[/\\][A-Za-z0-9_-]+\b)",
+    re.IGNORECASE,
 )
 
 

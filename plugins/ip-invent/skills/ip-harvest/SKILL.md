@@ -32,7 +32,7 @@ Trường workspace nào bằng `none` → chạy **chế độ giảm** và **i
 
 ### Nơi quét
 
-**Quét đúng các nguồn khai ở trường `scan_sources` của profile workspace** — không tự ý quét ngoài đó.
+**Quét đúng các nguồn khai ở trường `scan_sources` của profile workspace.**
 
 | Nguồn | Tìm gì |
 |---|---|

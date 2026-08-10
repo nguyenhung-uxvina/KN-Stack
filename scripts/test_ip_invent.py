@@ -1138,6 +1138,21 @@ def test_path_lint_does_not_false_positive_on_a_longer_identifier():
 # "_meta/learnings.md". Cả hai bên dưới đều KHÔNG được lọt qua nhờ allowlist:
 
 
+def test_path_allowlist_is_pinned_to_exactly_two_meta_files():
+    # CHỐT THẬT cho B-2 (review vòng 1): bất kỳ ai nới PATH_ALLOWLIST — thêm
+    # "_meta/khac.md", "3_Resources/Deep-Content-Analyzer-Outputs/", hay bất
+    # cứ chuỗi nào khác — đều làm test này ĐỎ NGAY, không phụ thuộc việc chuỗi
+    # thêm vào có TÌNH CỜ trùng nội dung fixture của test nào khác hay không.
+    # Trước bản vá này, hai đột biến sau đều sống sót qua cả 96 test:
+    #   PATH_ALLOWLIST += ["_meta/khac.md"]                                  → 96 passed (lẽ ra phải đỏ)
+    #   PATH_ALLOWLIST += ["3_Resources/Deep-Content-Analyzer-Outputs/"]     → 96 passed (lẽ ra phải đỏ)
+    # trong khi hai đột biến khác chỉ tình cờ bị bắt vì trùng fixture có sẵn:
+    #   PATH_ALLOWLIST += ["1_Projects/<proj>/IP/"]                          → 1 failed (bắt được, nhưng vì trùng fixture)
+    #   PATH_ALLOWLIST += ["skills/helix/"]                                  → 1 failed (bắt được, nhưng vì trùng fixture)
+    # Ghim giá trị chặn đứng CẢ BỐN, không phân biệt có trùng fixture hay không.
+    assert lint.PATH_ALLOWLIST == ["_meta/decisions.md", "_meta/learnings.md"]
+
+
 def test_path_lint_allowlist_scrub_does_not_swallow_the_surrounding_root_anchor():
     # "1_Projects/_meta/decisions.md" CHỨA đúng chuỗi allowlist "_meta/decisions.md"
     # làm hậu tố, nhưng vẫn phải ĐỎ vì có neo gốc "1_Projects/" đứng ngay trước.
@@ -1147,14 +1162,15 @@ def test_path_lint_allowlist_scrub_does_not_swallow_the_surrounding_root_anchor(
     assert any("1_Projects" in e for e in errors), errors
 
 
-def test_path_lint_allowlist_does_not_extend_to_other_meta_filenames():
-    # "_meta/khac.md" không nằm trong PATH_ALLOWLIST (chỉ decisions.md/learnings.md
-    # được liệt tên). Đặt cạnh một neo gốc vault để phép kiểm có ý nghĩa — bản
-    # thân "_meta/khac.md" đứng TRƠ MỘT MÌNH vốn dĩ không khớp bất kỳ nhánh nào
-    # của FORBIDDEN_PATH_RE (không tuyệt đối, không neo gốc, không cross-skill),
-    # nên không có gì để "bắt oan" ở đó — đó LÀ hành vi đúng theo phạm vi đã
-    # công bố (xem docstring `lint_paths`), không phải điều cần chứng minh ở
-    # đây. Điều cần chứng minh: allowlist không lan sang tên file _meta khác.
+def test_path_lint_root_anchor_still_flagged_next_to_an_unlisted_meta_filename():
+    # ĐÃ ĐỔI TÊN so với vòng trước (review chỉ ra tên cũ
+    # "…does_not_extend_to_other_meta_filenames" hứa một điều mà thân test
+    # không chứng minh — assertion chỉ canh mỏ neo "2_Areas", không nói được
+    # gì về allowlist). Test này CHỈ chứng minh đúng một điều: một neo gốc
+    # vault vẫn bị bắt cho dù đứng cạnh một tên `_meta/<khác>.md` không nằm
+    # trong PATH_ALLOWLIST — vì nhánh 2 (neo gốc) khớp trên "2_Areas/" độc
+    # lập với có/không allowlist. Bằng chứng "allowlist không bị nới" THẬT SỰ
+    # nằm ở test_path_allowlist_is_pinned_to_exactly_two_meta_files phía trên.
     errors = lint.lint_paths("xem `2_Areas/_meta/khac.md`")
     assert any("2_Areas" in e for e in errors), errors
 
@@ -1168,3 +1184,73 @@ def test_path_lint_bare_other_meta_filename_is_a_declared_scope_limit_not_a_catc
     # trừ hai cái trong allowlist" — chỉ hai loại (1) neo gốc, (2) tuyệt đối,
     # (3) cross-skill/ mới có gì để bắt; bare "_meta/khac.md" không thuộc loại nào.
     assert lint.lint_paths("xem `_meta/khac.md` (không thuộc allowlist, nhưng cũng không tự khớp gì)") == []
+
+
+# ── B-1 (review vòng 1) — neo gốc vault đứng ngay sau "/" hoặc "\" ──────────
+#
+# Bản trước dùng lookbehind `(?<![\w/\\])` — coi dấu `/`/`\` đứng NGAY TRƯỚC
+# tên thư mục là lý do KHÔNG bắt, ngược hoàn toàn logic nhận diện đường dẫn:
+# đây chính là hình dạng phổ biến NHẤT khi một neo gốc đứng sau dấu phân
+# cách đường dẫn khác (`<root>/1_Projects/x`, hay đúng hình dạng
+# `output_pattern` thật trong workspace-knstack.md:
+# `<root>\1_Projects\<project>\IP\`). Vá: lookbehind giờ CHỈ chặn \w.
+
+
+def test_path_lint_flags_root_anchor_right_after_a_placeholder_root():
+    assert any("1_Projects" in e for e in lint.lint_paths("`<root>/1_Projects/x`"))
+    assert any("1_Projects" in e for e in lint.lint_paths(r"`<root>\1_Projects\<project>\IP\`"))
+
+
+def test_path_lint_flags_root_anchor_right_after_dot_slash_or_double_slash():
+    assert any("1_Projects" in e for e in lint.lint_paths("./1_Projects/x"))
+    assert any("1_Projects" in e for e in lint.lint_paths(r".\1_Projects\x"))
+    assert any("1_Projects" in e for e in lint.lint_paths("//1_Projects/x"))
+    assert any("1_Projects" in e for e in lint.lint_paths("${root}/1_Projects/x"))
+
+
+# ── Báo động giả URL (review vòng 1, chưa khai ở vòng trước) ────────────────
+#
+# `[A-Za-z]:[\\/]` không lookbehind sẽ khớp đuôi MỌI URL scheme: "httpS:" —
+# chữ "S" + ":" + "/" trông giống hệt một "ổ đĩa" giả. `ip-invent` bắt buộc
+# mọi đầu ra in "nguồn: <văn bản mới nhất>", và Task 6 sẽ đụng
+# `ip-criteria`/`ip-dossier` — nơi link NOIP/ipvietnam.gov.vn sớm muộn xuất
+# hiện. Vá lookbehind `(?<![A-Za-z])` trước ký tự ổ đĩa; kiểm cả hai chiều.
+
+
+def test_path_lint_does_not_flag_urls_as_absolute_windows_paths():
+    for url in (
+        "https://ipvietnam.gov.vn/tra-cuu",
+        "http://example.com/x",
+        "ftp://host/path",
+    ):
+        assert lint.lint_paths(f"nguồn: {url}") == [], url
+
+
+def test_path_lint_still_flags_real_drive_letters_after_the_url_fix():
+    assert any("D:" in e for e in lint.lint_paths(r"mở `D:\Workshop_X\x.md`"))
+    assert any("D:" in e for e in lint.lint_paths("mở `D:/Workshop_X/x.md`"))
+
+
+# ── Ba lỗ nhỏ còn lại (review vòng 1, mục 5) ─────────────────────────────────
+
+
+def test_path_lint_flags_cross_skill_reference_without_a_trailing_slash():
+    # Đối xứng với neo gốc vault: nhánh cross-skill trước đòi "[/\\]" bắt buộc
+    # ở CUỐI trong khi nhánh neo gốc đã dùng \b — "skills/helix" (không dấu /
+    # cuối) lọt qua. Giờ cả hai nhánh cùng dùng \b cuối.
+    assert any("skills" in e.lower() for e in lint.lint_paths("trỏ sang `skills/helix`"))
+    assert any("skills" in e.lower() for e in lint.lint_paths(r"trỏ sang `skills\helix`"))
+
+
+def test_path_lint_flags_root_anchors_regardless_of_case():
+    # Windows không phân biệt hoa/thường trên đường dẫn.
+    assert any("1_projects" in e.lower() for e in lint.lint_paths("quét `1_projects/x`"))
+    assert any("1_projects" in e.lower() for e in lint.lint_paths("quét `1_PROJECTS/x`"))
+
+
+def test_path_lint_flags_4_archives_and_5_galaxy_root_anchors():
+    # Trước bản vá này KHÔNG có test nào ghim riêng hai thư mục này — review
+    # xác nhận bỏ hẳn "4_Archives" hoặc "5_Galaxy" khỏi FORBIDDEN_PATH_RE vẫn
+    # để cả 96 test xanh.
+    assert any("4_Archives" in e for e in lint.lint_paths("chuyển vào `4_Archives/2026/x.md`"))
+    assert any("5_Galaxy" in e for e in lint.lint_paths("ghi note `5_Galaxy/Note.md`"))
