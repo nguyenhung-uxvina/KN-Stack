@@ -5,6 +5,25 @@ description: "Block B4 của ip-invent — lập hồ sơ. Xuất bộ đơn n�
 
 # ip-dossier — B4: lập hồ sơ
 
+## ⛔ BƯỚC 0′ — đọc workspace TRƯỚC MỌI VIỆC KHÁC
+
+Đọc `../ip-shared/references/active-workspace.md` → lấy tên file profile → đọc profile đó.
+**Đọc không được thì DỪNG**, báo *"không đọc được tầng trỏ workspace"*, **không đoán, không chạy
+tiếp bằng giá trị mặc định**. Một báo cáo trông đầy đủ mà chạy không có workspace là lỗi tệ hơn
+không chạy gì.
+
+Nếu profile khai `surface: cloud` → chạy cổng phân loại trong
+`../ip-shared/references/co-mat-gate.md` **trước khi đụng nội dung ứng viên bất kỳ**.
+
+In ở đầu mọi báo cáo:
+
+```
+Bề mặt: <surface> · Cổng phân loại: <trạng thái> · Căn cứ: <…>
+```
+
+Trường workspace nào bằng `none` → chạy **chế độ giảm** và **in dòng khai báo** (ví dụ
+`1b chạy KHÔNG có TRIZ`). Cấm im lặng bỏ qua rồi vẫn in báo cáo trông đầy đủ.
+
 > Đọc khung claim đã chọn (B3) + routing (B2) + thước đo (B0) từ ledger.
 > **Đầu ra là BẢN NHÁP KỸ THUẬT để giao đại diện sở hữu công nghiệp — KHÔNG phải bản nộp cuối.**
 

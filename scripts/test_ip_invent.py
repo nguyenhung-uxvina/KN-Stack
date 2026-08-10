@@ -3,6 +3,8 @@ import importlib.util
 import sys
 from pathlib import Path
 
+import pytest
+
 _spec = importlib.util.spec_from_file_location(
     "ip_invent_lint", Path(__file__).with_name("ip_invent_lint.py")
 )
@@ -34,6 +36,10 @@ def test_parse_active_workspace_returns_none_when_absent():
 
 def _ref(name: str) -> str:
     return (lint.REF_DIR / name).read_text(encoding="utf-8")
+
+
+def _skill(name: str) -> str:
+    return (lint.SKILLS_ROOT / name / "SKILL.md").read_text(encoding="utf-8")
 
 
 def test_active_workspace_points_at_an_existing_profile():
@@ -736,3 +742,147 @@ def test_profile_lint_flags_a_duplicate_row_even_when_dict_would_hide_it():
     errors = lint.lint_workspace_profile(dirty)
     assert any("hàng trùng" in e for e in errors), errors
     assert errors != []
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# KHỐI "⛔ BƯỚC 0′" TRONG 6 SKILL.MD — ĐÓNG BĂNG NGUYÊN VĂN (không kiểm cụm từ)
+#
+# Task 3 (cổng co-mat-gate.md) đi con đường "kiểm có-mặt-cụm-từ" trước và thua
+# ba vòng liên tiếp trước phủ định, đưa vùng ra ngoài tầm soát, và một ký tự
+# lệch. Task 4 áp thẳng kết luận đó cho khối "Bước 0′": lint không hỏi "các cụm
+# bắt buộc có mặt không", nó hỏi "khối này có xuất hiện ĐÚNG MỘT LẦN, NGUYÊN VĂN
+# byte-identical với STEP0_BLOCK_CANON hay không". Không có khái niệm "cụm bắt
+# buộc" nào ở đây nữa — SKILL_REQUIRED_PHRASES/lint_skill_header của brief gốc
+# bị bỏ có chủ đích (xem docstring lint_skill_block trong ip_invent_lint.py).
+# ═══════════════════════════════════════════════════════════════════════════
+
+
+@pytest.mark.parametrize("name", [
+    "ip-invent", "ip-criteria", "ip-harvest", "ip-screen", "ip-claim", "ip-dossier",
+])
+def test_every_skill_carries_the_stop_latch_block_verbatim(name):
+    assert lint.lint_skill_block(_skill(name)) == []
+
+
+def test_the_six_stop_latch_blocks_are_byte_identical_to_each_other_and_to_canon():
+    texts = {name: _skill(name) for name in lint.SKILL_NAMES}
+    assert lint.lint_blocks_identical(texts) == []
+
+
+def test_step0_block_canon_actually_occurs_in_all_six_files():
+    # Chốt hằng-không-lệch: nếu STEP0_BLOCK_CANON bị chép sai một ký tự khi
+    # dựng hằng, test này đỏ ngay — tách khỏi test lint ở trên để thông điệp
+    # lỗi nói rõ đây là lỗi CHÉP HẰNG, không phải lỗi của skill nào.
+    for name in lint.SKILL_NAMES:
+        norm = lint._normalize_doc(_skill(name))
+        assert norm.count(lint.STEP0_BLOCK_CANON) == 1, (
+            f"STEP0_BLOCK_CANON không xuất hiện đúng 1 lần trong {name}/SKILL.md — "
+            "hằng trong ip_invent_lint.py có thể đã chép sai."
+        )
+
+
+@pytest.mark.parametrize("name", [
+    "ip-invent", "ip-criteria", "ip-harvest", "ip-screen", "ip-claim", "ip-dossier",
+])
+def test_every_cited_shared_reference_actually_exists(name):
+    for ref in lint.cited_refs(_skill(name)):
+        assert (lint.REF_DIR / ref).is_file(), f"{name} trỏ tới file không tồn tại: {ref}"
+
+
+def test_cited_refs_finds_relative_shared_paths():
+    text = "đọc `../ip-shared/references/active-workspace.md` rồi `../ip-shared/references/co-mat-gate.md`"
+    assert lint.cited_refs(text) == ["active-workspace.md", "co-mat-gate.md"]
+
+
+def test_stop_latch_block_lint_normalizes_crlf_and_bom():
+    # Bẫy thật (đã vấp ở Task 3): repo Windows core.autocrlf=true, cùng nội dung
+    # có CRLF trên đĩa và LF trong git blob. Không chuẩn hoá thì lint trôi theo
+    # checkout.
+    lf = _skill("ip-invent")
+    crlf = lf.replace("\n", "\r\n")
+    assert crlf != lf, "file thật phải có ít nhất một dòng để phép kiểm này có nghĩa"
+    assert lint.lint_skill_block(lf) == []
+    assert lint.lint_skill_block(crlf) == lint.lint_skill_block(lf) == []
+    assert lint.lint_skill_block("﻿" + lf) == []
+    assert lint.lint_skill_block("﻿" + crlf) == []
+
+
+def _delete_block(text: str) -> str:
+    return text.replace(lint.STEP0_BLOCK_CANON, "", 1)
+
+
+def _mutate_block(text: str, old: str, new: str) -> str:
+    mutated_block = lint.STEP0_BLOCK_CANON.replace(old, new, 1)
+    assert mutated_block != lint.STEP0_BLOCK_CANON, f"đột biến không khớp: {old!r} không có trong canon"
+    return text.replace(lint.STEP0_BLOCK_CANON, mutated_block, 1)
+
+
+def _duplicate_block(text: str) -> str:
+    return text.replace(
+        lint.STEP0_BLOCK_CANON,
+        lint.STEP0_BLOCK_CANON + "\n\n" + lint.STEP0_BLOCK_CANON,
+        1,
+    )
+
+
+def test_mutation_block_deleted_entirely_is_flagged():
+    original = _skill("ip-criteria")
+    mutated = _delete_block(original)
+    assert mutated != original, "đột biến không khớp được văn bản thật"
+    errors = lint.lint_skill_block(mutated)
+    assert errors, "lint phải bắt khối Bước 0′ bị xoá hẳn"
+    assert any("thiếu khối Bước 0′" in e for e in errors), errors
+
+    texts = {name: _skill(name) for name in lint.SKILL_NAMES}
+    texts["ip-criteria"] = mutated
+    id_errors = lint.lint_blocks_identical(texts)
+    assert any("ip-criteria" in e for e in id_errors), id_errors
+
+
+def test_mutation_one_word_changed_in_one_file_is_flagged_by_both_checks():
+    # 5 file kia GIỮ NGUYÊN — chỉ ip-harvest bị đổi.
+    original = _skill("ip-harvest")
+    mutated = _mutate_block(original, "profile đó.", "profile do.")
+    assert mutated != original, "đột biến không khớp được văn bản thật"
+
+    errors = lint.lint_skill_block(mutated)
+    assert errors, "lint_skill_block phải bắt một chữ bị đổi trong khối"
+
+    texts = {name: _skill(name) for name in lint.SKILL_NAMES}
+    texts["ip-harvest"] = mutated
+    id_errors = lint.lint_blocks_identical(texts)
+    assert any("ip-harvest" in e for e in id_errors), id_errors
+    # 5 skill còn lại không được bị nêu tên — chúng vẫn nguyên vẹn.
+    for other in ("ip-invent", "ip-criteria", "ip-screen", "ip-claim", "ip-dossier"):
+        assert not any(e.startswith(f"{other}:") for e in id_errors), id_errors
+
+
+def test_mutation_block_inserted_twice_in_one_file_is_flagged():
+    original = _skill("ip-screen")
+    mutated = _duplicate_block(original)
+    assert mutated != original, "đột biến không khớp được văn bản thật"
+    errors = lint.lint_skill_block(mutated)
+    assert errors, "lint phải bắt khối Bước 0′ bị chèn 2 lần"
+    assert any("2 lần" in e for e in errors), errors
+
+
+def test_mutation_stop_latch_softened_into_a_default_fallback_is_flagged():
+    original = _skill("ip-claim")
+    mutated = _mutate_block(
+        original,
+        "**Đọc không được thì DỪNG**",
+        "Đọc không được thì dùng giá trị mặc định",
+    )
+    assert mutated != original, "đột biến không khớp được văn bản thật"
+    errors = lint.lint_skill_block(mutated)
+    assert errors, "lint phải bắt chốt DỪNG bị nới lỏng thành 'dùng giá trị mặc định'"
+
+
+def test_mutation_one_extra_space_inside_the_block_is_flagged():
+    # Chứng minh so sánh là BYTE-LEVEL, không phải "gần giống": chỉ thêm 1 dấu
+    # cách vào giữa khối, không đổi từ nào.
+    original = _skill("ip-dossier")
+    mutated = _mutate_block(original, "không chạy gì.", "không chạy  gì.")
+    assert mutated != original, "đột biến không khớp được văn bản thật"
+    errors = lint.lint_skill_block(mutated)
+    assert errors, "lint phải bắt một dấu cách thừa chèn giữa khối"

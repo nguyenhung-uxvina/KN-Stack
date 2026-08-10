@@ -371,3 +371,193 @@ def lint_gate_doc(text: str) -> list[str]:
         f"  Xử — nếu KHÔNG CHỦ ĐÍCH: hoàn nguyên tài liệu về bản đã duyệt "
         f"(`git checkout -- {GATE_DOC_REPO_PATH}`)."
     ]
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# KHỐI "⛔ BƯỚC 0′" — ĐÓNG BĂNG NGUYÊN VĂN, LẶP CHỦ Ý QUA 6 SKILL.MD
+#
+# Kế hoạch gốc (task-4-brief.md) định kiểm khối này bằng "cụm bắt buộc có mặt
+# trong file" (SKILL_REQUIRED_PHRASES + lint_skill_header) — đúng khuôn mà
+# `lint_gate_doc` đã thử ở vòng 1 cho co-mat-gate.md và thua ba vòng liên
+# tiếp: bị phá bằng phủ định trong câu ("**KHÔNG DỪNG.**" vẫn chứa từ khoá
+# "DỪNG"), bằng cách đưa vùng ra ngoài tầm soát (mục "Bước 0" thứ hai, fence
+# hở), rồi bằng đúng một ký tự khi chốt cú pháp được vá. Bài học của vòng 4 ở
+# `lint_gate_doc` là: bỏ hẳn khái niệm "cụm bắt buộc" / "vùng có hiệu lực",
+# đóng băng NGUYÊN VĂN rồi so sánh chính xác. Khối Bước 0′ áp thẳng kết luận
+# đó — không đi lại con đường cụm-từ, dù brief gốc có viết sẵn.
+#
+# KHÁC VỚI `lint_gate_doc`: `lint_gate_doc` băm CẢ FILE co-mat-gate.md (file
+# đó CHỈ chứa nội dung cổng, không có gì khác). Khối Bước 0′ chỉ là MỘT ĐOẠN
+# bên trong một SKILL.md lớn hơn nhiều — phần còn lại của mỗi SKILL.md (mô tả
+# block, bảng nghiệp vụ, COD, Rules, …) KHÔNG thuộc phạm vi đóng băng này và
+# được sửa tự do. Vì vậy phép kiểm ở đây là "khối này có xuất hiện ĐÚNG MỘT
+# LẦN, NGUYÊN VĂN, như một đoạn con của file" — dùng đếm số lần xuất hiện của
+# `STEP0_BLOCK_CANON` như một substring, KHÔNG băm cả file.
+#
+# VÌ SAO TRÙNG LẶP QUA 6 FILE LÀ CỐ Ý, KHÔNG PHẢI MÙI XẤU: Markdown SKILL.md
+# không có cơ chế `include`/`import`; mỗi skill được nạp và chạy độc lập qua
+# junction, và trong Cowork mỗi skill cũng phải tự chứa (không có quyền đọc
+# skill khác lúc runtime). CEO đã chốt giữ nguyên trùng lặp — đổi lại lint
+# phải bắt được SÁU BẢN SAO lệch nhau. `lint_blocks_identical` biến trùng lặp
+# thành một BẤT BIẾN KIỂM ĐƯỢC, không phải một khoản nợ kỹ thuật bị lờ đi.
+# ═══════════════════════════════════════════════════════════════════════════
+
+# Nguyên văn khối "Bước 0′" — chép TỪNG KÝ TỰ từ bản CEO đã duyệt
+# (.superpowers/sdd/2026-08-08-ip-invent-plugin/task-4-brief.md, Bước 4).
+# Đây là NGUỒN CHUẨN DUY NHẤT; sáu SKILL.md mang bản sao byte-identical của nó.
+STEP0_BLOCK_CANON = """## ⛔ BƯỚC 0′ — đọc workspace TRƯỚC MỌI VIỆC KHÁC
+
+Đọc `../ip-shared/references/active-workspace.md` → lấy tên file profile → đọc profile đó.
+**Đọc không được thì DỪNG**, báo *"không đọc được tầng trỏ workspace"*, **không đoán, không chạy
+tiếp bằng giá trị mặc định**. Một báo cáo trông đầy đủ mà chạy không có workspace là lỗi tệ hơn
+không chạy gì.
+
+Nếu profile khai `surface: cloud` → chạy cổng phân loại trong
+`../ip-shared/references/co-mat-gate.md` **trước khi đụng nội dung ứng viên bất kỳ**.
+
+In ở đầu mọi báo cáo:
+
+```
+Bề mặt: <surface> · Cổng phân loại: <trạng thái> · Căn cứ: <…>
+```
+
+Trường workspace nào bằng `none` → chạy **chế độ giảm** và **in dòng khai báo** (ví dụ
+`1b chạy KHÔNG có TRIZ`). Cấm im lặng bỏ qua rồi vẫn in báo cáo trông đầy đủ."""
+
+# Dòng đầu tiên của khối — dùng làm mốc để CHẨN ĐOÁN (dò khối gần giống khi so
+# nguyên văn thất bại). KHÔNG dùng cho phép ĐẠT/KHÔNG ĐẠT — phép đó chỉ đếm số
+# lần STEP0_BLOCK_CANON xuất hiện nguyên văn.
+_STEP0_FIRST_LINE = STEP0_BLOCK_CANON.splitlines()[0]
+
+# Ranh giới "hết khối" dùng cho CHẨN ĐOÁN: heading `##` kế tiếp, hoặc hết file.
+_NEXT_MD_HEADING_RE = re.compile(r"\n##[ \t]")
+
+
+def _extract_step0_candidate(norm_text: str) -> str | None:
+    """Trích đoạn BẮT ĐẦU TỪ dòng tiêu đề Bước 0′ tới trước heading `##` kế
+    tiếp (hoặc hết file). CHỈ dùng để dựng thông điệp CHẨN ĐOÁN khi so nguyên
+    văn thất bại — không quyết định đạt/không đạt. `None` nghĩa là không tìm
+    thấy cả dòng tiêu đề, tức khối đã bị xoá hẳn chứ không phải chỉ sửa.
+    """
+    idx = norm_text.find(_STEP0_FIRST_LINE)
+    if idx == -1:
+        return None
+    m = _NEXT_MD_HEADING_RE.search(norm_text, idx + len(_STEP0_FIRST_LINE))
+    end = m.start() if m else len(norm_text)
+    return norm_text[idx:end].rstrip("\n")
+
+
+def lint_skill_block(text: str) -> list[str]:
+    """Kiểm một SKILL.md mang đúng MỘT bản sao NGUYÊN VĂN của STEP0_BLOCK_CANON.
+
+    PHẠM VI — nói đủ, không hứa quá:
+
+    - Hàm này bắt MỌI thay đổi của khối, kể cả sửa một lỗi chính tả hay thêm
+      một dấu cách. Nó KHÔNG hiểu nghĩa tiếng Việt và KHÔNG phán được một thay
+      đổi là lành tính (sửa chính tả) hay đảo nghĩa (làm "DỪNG" mất hiệu lực).
+      Việc phân định đó thuộc về NGƯỜI DUYỆT, tại thời điểm họ cố ý cập nhật
+      STEP0_BLOCK_CANON — cùng lý lẽ đã dùng cho `lint_gate_doc`.
+    - Hàm này CHỈ đóng băng khối Bước 0′. Phần còn lại của SKILL.md (mô tả
+      block, bảng nghiệp vụ, Output, Gotchas, COD, Rules, …) KHÔNG thuộc phạm
+      vi lint này — sửa tự do, không cần đụng tới hàm này.
+    - Hàm này không kiểm khối có thực sự được model đọc/tuân theo hay không;
+      nó chỉ kiểm văn bản trên đĩa.
+
+    HỆ QUẢ VẬN HÀNH: sửa khối Bước 0′ = sửa BẢY CHỖ CÙNG LÚC, có chủ đích —
+    `STEP0_BLOCK_CANON` trong file này, và nguyên văn khối trong CẢ SÁU
+    SKILL.md. Không còn đường sửa một skill mà lint vẫn xanh.
+    """
+    norm = _normalize_doc(text)
+    n = norm.count(STEP0_BLOCK_CANON)
+
+    if n == 1:
+        return []
+
+    if n >= 2:
+        return [
+            f"khối '⛔ BƯỚC 0′' xuất hiện {n} lần trong SKILL.md này — không rõ khối nào có hiệu lực.\n"
+            f"  Xử: xoá (các) bản thừa, chỉ giữ lại ĐÚNG MỘT bản nguyên văn của "
+            f"STEP0_BLOCK_CANON (scripts/ip_invent_lint.py)."
+        ]
+
+    # n == 0: khối vắng mặt hoặc đã trôi khỏi nguyên văn.
+    candidate = _extract_step0_candidate(norm)
+    if candidate is None:
+        return [
+            f"SKILL.md thiếu khối Bước 0′ ('⛔ BƯỚC 0′') — không tìm thấy dòng tiêu đề {_STEP0_FIRST_LINE!r}.\n"
+            f"  Xử — nếu khối bị xoá nhầm: dán lại nguyên văn STEP0_BLOCK_CANON "
+            f"(scripts/ip_invent_lint.py) ngay sau dòng tiêu đề `# <tên skill> — …`.\n"
+            f"  Xử — nếu cố ý bỏ Bước 0′ khỏi skill này: đó là quyết định CEO có chủ đích, "
+            f"không phải việc của lint — nói rõ lý do trong commit message."
+        ]
+
+    lineno, want_line, got_line = _first_differing_line(candidate, STEP0_BLOCK_CANON)
+    return [
+        f"khối '⛔ BƯỚC 0′' trong SKILL.md đã ĐỔI so với STEP0_BLOCK_CANON (không còn nguyên văn).\n"
+        f"  Khác nhau đầu tiên ở dòng {lineno}:\n"
+        f"    Mong đợi: {_shorten(want_line)!r}\n"
+        f"    Thấy:     {_shorten(got_line)!r}\n"
+        f"  Xử — nếu ĐỔI CÓ CHỦ ĐÍCH: cập nhật STEP0_BLOCK_CANON trong scripts/ip_invent_lint.py "
+        f"VÀ sửa lại đúng nguyên văn khối này ở CẢ SÁU SKILL.md CÙNG LÚC.\n"
+        f"  Xử — nếu KHÔNG CHỦ ĐÍCH: hoàn nguyên khối về đúng nguyên văn STEP0_BLOCK_CANON."
+    ]
+
+
+def lint_blocks_identical(texts: dict[str, str]) -> list[str]:
+    """Chốt R1: sáu bản sao của khối Bước 0′ phải giống hệt nhau — VÀ giống
+    hệt `STEP0_BLOCK_CANON`. `texts` là map {tên skill: nội dung SKILL.md}.
+
+    CÁCH LÀM: so từng file với `STEP0_BLOCK_CANON` (không so file với file
+    trực tiếp) — vì bằng-với-cùng-một-hằng-số kéo theo bằng-nhau-từng-đôi-một
+    (tính bắc cầu), và neo vào MỘT nguồn chuẩn cho thông điệp lỗi rõ ràng hơn
+    "file A khác file B" (không nói được ai đúng ai sai).
+
+    PHẠM VI: giống `lint_skill_block` — chỉ đóng băng khối Bước 0′, không
+    đụng phần còn lại của SKILL.md; không hiểu nghĩa, chỉ so nguyên văn.
+
+    Trả về rỗng nếu cả sáu khớp; ngược lại mỗi lỗi nêu RÕ TÊN SKILL lệch và
+    lệch ở dòng nào (hoặc lệch vì thiếu hẳn / trùng lặp).
+    """
+    errors: list[str] = []
+    for name in sorted(texts):
+        norm = _normalize_doc(texts[name])
+        n = norm.count(STEP0_BLOCK_CANON)
+        if n == 1:
+            continue
+        if n >= 2:
+            errors.append(
+                f"{name}: khối '⛔ BƯỚC 0′' xuất hiện {n} lần — không so được với 5 skill kia "
+                f"cho tới khi xoá bản thừa, chỉ giữ ĐÚNG MỘT bản nguyên văn STEP0_BLOCK_CANON."
+            )
+            continue
+        candidate = _extract_step0_candidate(norm)
+        if candidate is None:
+            errors.append(
+                f"{name}: SKILL.md thiếu khối '⛔ BƯỚC 0′' hoàn toàn — không so được với 5 skill kia. "
+                f"Dán lại nguyên văn STEP0_BLOCK_CANON."
+            )
+            continue
+        lineno, want_line, got_line = _first_differing_line(candidate, STEP0_BLOCK_CANON)
+        errors.append(
+            f"{name}: khối '⛔ BƯỚC 0′' lệch so với STEP0_BLOCK_CANON (và do đó lệch so với 5 "
+            f"skill kia) tại dòng {lineno} — mong đợi {_shorten(want_line)!r}, "
+            f"thấy {_shorten(got_line)!r}. Nếu đổi có chủ đích: sửa STEP0_BLOCK_CANON + "
+            f"CẢ SÁU SKILL.md cùng lúc. Nếu không: hoàn nguyên {name}/SKILL.md."
+        )
+    return errors
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# THAM CHIẾU DÙNG CHUNG ĐƯỢC TRÍCH TỪ MỘT SKILL.MD
+# ═══════════════════════════════════════════════════════════════════════════
+
+_CITED_REF_RE = re.compile(rf"\.\./{SHARED_DIR_NAME}/references/([A-Za-z0-9._-]+\.md)")
+
+
+def cited_refs(text: str) -> list[str]:
+    """Tên file tham chiếu dùng chung mà một SKILL.md trích, theo thứ tự, không lặp."""
+    seen: list[str] = []
+    for name in _CITED_REF_RE.findall(text):
+        if name not in seen:
+            seen.append(name)
+    return seen

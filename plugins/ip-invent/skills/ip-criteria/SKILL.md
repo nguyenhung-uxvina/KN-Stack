@@ -5,6 +5,25 @@ description: "Block B0 của ip-invent — CHẶN. Dựng thước đo 'cái gì
 
 # ip-criteria — B0: thước đo "cái gì được tính"
 
+## ⛔ BƯỚC 0′ — đọc workspace TRƯỚC MỌI VIỆC KHÁC
+
+Đọc `../ip-shared/references/active-workspace.md` → lấy tên file profile → đọc profile đó.
+**Đọc không được thì DỪNG**, báo *"không đọc được tầng trỏ workspace"*, **không đoán, không chạy
+tiếp bằng giá trị mặc định**. Một báo cáo trông đầy đủ mà chạy không có workspace là lỗi tệ hơn
+không chạy gì.
+
+Nếu profile khai `surface: cloud` → chạy cổng phân loại trong
+`../ip-shared/references/co-mat-gate.md` **trước khi đụng nội dung ứng viên bất kỳ**.
+
+In ở đầu mọi báo cáo:
+
+```
+Bề mặt: <surface> · Cổng phân loại: <trạng thái> · Căn cứ: <…>
+```
+
+Trường workspace nào bằng `none` → chạy **chế độ giảm** và **in dòng khai báo** (ví dụ
+`1b chạy KHÔNG có TRIZ`). Cấm im lặng bỏ qua rồi vẫn in báo cáo trông đầy đủ.
+
 > **Đây là block CHẶN.** Không có nó, B2 chấm trục "giá trị chức danh" bằng cảm giác.
 > **Lý do tồn tại (ca thật):** tiền đề *"cần ≥2 bằng sáng chế, đó là đường găng"* đã dẫn sai cả một
 > cụm quyết định của Workshop X suốt 53 ngày — chọn cặp ứng viên thuần theo novelty, bỏ qua việc
