@@ -432,15 +432,14 @@ _STEP0_FIRST_LINE = STEP0_BLOCK_CANON.splitlines()[0]
 # Ranh giới "hết khối" dùng cho CHẨN ĐOÁN: heading `##` kế tiếp, hoặc hết file.
 _NEXT_MD_HEADING_RE = re.compile(r"\n##[ \t]")
 
-# ── NEO VỊ TRÍ (vá vòng 2, R1/Q1) ───────────────────────────────────────────
+# ── NEO VỊ TRÍ (vá vòng 2, R1/Q1 — hậu tố GỠ Ở VÒNG 3, xem dưới) ────────────
 #
 # Vòng 1 chỉ đếm `STEP0_BLOCK_CANON` như một substring bất kỳ đâu trong file —
 # đúng lớp lỗi X14/X16/N11/N12 đã hạ Task 3 ba vòng: bọc khối trong fence
 # (đóng/hở), bọc `<!-- -->`, dời khối xuống cuối file, hay chèn văn xuôi
-# trước/sau khối đều để nguyên văn khối còn đó — `count() == 1` vẫn đúng, nên
-# vòng 1 xanh oan cho cả 10 ca. Vòng 2 thêm NEO VỊ TRÍ: khối không chỉ phải
-# tồn tại đúng 1 lần, nó còn phải BẮT ĐẦU đúng offset ngay sau tiền tố
-# frontmatter+H1, và được THEO NGAY bởi nội dung giới thiệu gốc của skill.
+# trước khối đều để nguyên văn khối còn đó — `count() == 1` vẫn đúng, nên vòng
+# 1 xanh oan. Vòng 2 thêm NEO-ĐẦU: khối không chỉ phải tồn tại đúng 1 lần, nó
+# còn phải BẮT ĐẦU đúng offset ngay sau tiền tố frontmatter+H1.
 #
 # Tiền tố (đo được, giống hệt cho cả 6 file thật): `---\n<frontmatter>\n---\n\n
 # # <tiêu đề H1>\n\n`. Việc bọc khối trong fence/comment, hay dời nó đi nơi
@@ -449,21 +448,23 @@ _NEXT_MD_HEADING_RE = re.compile(r"\n##[ \t]")
 # CHÍNH tiền tố không còn khớp mẫu ở đầu file — cũng bắt được, theo một nhánh
 # riêng (không xác định được neo).
 #
-# Hậu tố (đo được, giống hệt cho cả 6 file thật TẠI THỜI ĐIỂM vá này): khối
-# luôn được nối ngay bởi dòng trống rồi blockquote giới thiệu skill ("\n\n> ").
-# Đây là lớp đột biến DUY NHẤT neo-đầu một mình không bắt được: chèn một câu
-# vô hiệu hoá NGAY SAU khối (không đụng gì trước khối) không làm lệch offset
-# bắt đầu — `count()==1` và neo-đầu đều xanh oan. Hậu tố đóng nốt lỗ đó.
-#
-# GIỚI HẠN THẬT (nói rõ, không giấu): hậu tố "\n\n> " là một bất biến ĐO ĐƯỢC
-# trên 6 SKILL.md hiện tại, không phải định luật vĩnh viễn. Nếu sau này một
-# skill đổi câu mở đầu ngay sau khối sang dạng khác blockquote (vd một heading
-# `##` ngay sau, không còn đoạn giới thiệu dạng `>`), hậu tố này phải cập nhật
-# CÙNG LÚC với SKILL.md đó — cùng tinh thần "sửa nhiều chỗ có chủ đích" đã áp
-# cho STEP0_BLOCK_CANON. Không tự động hoá việc phát hiện "hậu tố hợp lệ là
-# gì" vì đó lại quay về bài toán hiểu-nghĩa mà thiết kế này cố tránh.
+# VÒNG 2 từng thêm một NEO-CUỐI (`_SUFFIX_ANCHOR = "\n\n> "`) để bắt ca "chèn
+# văn xuôi vô hiệu hoá NGAY SAU khối" — ca duy nhất neo-đầu một mình bỏ lọt.
+# VÒNG 3 GỠ neo-cuối đó: người soát chỉ ra nó là CHỐT GIẢ — chuỗi "\n\n> " chỉ
+# 3 ký tự, kẻ tấn công tự viết ra được, nên dùng chính "\n\n> " làm MỒI rồi
+# nối tiếp đòn thật ngay sau (`"\n\n> **LƯU Ý:** ... KHÔNG bắt buộc thi hành."`,
+# hay mồi "\n\n> " rồi mở fence/comment nuốt phần còn lại) — cả bốn biến thể
+# đều XANH qua neo-cuối. Tệ hơn: neo-cuối tạo ĐÚNG MỘT ca đỏ giả trên nội dung
+# HỢP LỆ — đổi đoạn ngay sau khối từ blockquote `>` sang một mục `##` mới (việc
+# Task 5/6 rất có thể làm khi gỡ đường dẫn neo cứng) bị chẩn đoán sai thành
+# "có fence/comment bọc quanh khối". Một chốt vừa không mua được an ninh thật
+# (bẻ được bằng 2 ký tự) vừa tính phí thật ở task sau (đỏ giả) là chốt nên gỡ,
+# không phải chốt nên giữ. Xem THẢO LUẬN GIỚI HẠN trong docstring
+# `lint_skill_block` — "văn xuôi vô hiệu hoá ngay sau khối" quay lại thành một
+# GIỚI HẠN CÓ TUYÊN BỐ, cùng lớp với "vô hiệu hoá ở cuối file" và "vô hiệu hoá
+# trong `description:` frontmatter" — phần TỰ DO của SKILL.md mà lint này cố
+# ý không đóng băng.
 _PREFIX_ANCHOR_RE = re.compile(r"\A---\n.*?\n---\n\n# [^\n]+\n\n", re.DOTALL)
-_SUFFIX_ANCHOR = "\n\n> "
 
 
 def _anchor_offset(norm_text: str) -> int | None:
@@ -476,12 +477,11 @@ def _anchor_offset(norm_text: str) -> int | None:
 
 
 def _position_ok(norm_text: str, block_start: int) -> bool:
-    """Khối có bắt đầu ĐÚNG offset neo và có hậu tố ĐÚNG NGAY SAU không."""
+    """Khối có bắt đầu ĐÚNG offset neo (ngay sau tiền tố frontmatter+H1)
+    không. CHỈ neo-đầu — không còn neo-cuối (gỡ ở vòng 3, xem comment trên).
+    """
     anchor = _anchor_offset(norm_text)
-    if anchor is None or block_start != anchor:
-        return False
-    end = block_start + len(STEP0_BLOCK_CANON)
-    return norm_text[end:end + len(_SUFFIX_ANCHOR)] == _SUFFIX_ANCHOR
+    return anchor is not None and block_start == anchor
 
 
 def _position_error(norm_text: str, block_start: int) -> str:
@@ -500,34 +500,21 @@ def _position_error(norm_text: str, block_start: int) -> str:
             "trước frontmatter."
         )
 
-    if block_start != anchor:
-        if block_start > anchor:
-            between = _shorten(norm_text[anchor:block_start])
-            return (
-                "khối '⛔ BƯỚC 0′' có nội dung nguyên văn đúng NHƯNG KHÔNG bắt đầu ngay sau "
-                "frontmatter + tiêu đề H1 — có nội dung khác chen vào giữa (fence, HTML "
-                "comment, hoặc bị dời sang vị trí khác trong file).\n"
-                f"  Chen vào giữa (offset {anchor}→{block_start}): {between!r}\n"
-                "  Xử: xoá phần chen vào / dời khối về lại đúng chỗ — ngay sau dòng trống "
-                "theo sau tiêu đề H1, không có gì ở giữa."
-            )
+    if block_start > anchor:
+        between = _shorten(norm_text[anchor:block_start])
         return (
-            "khối '⛔ BƯỚC 0′' có nội dung nguyên văn đúng NHƯNG nằm SAI VỊ TRÍ trong file "
-            "— bắt đầu TRƯỚC điểm neo (ngay sau frontmatter + tiêu đề H1), ví dụ bị đặt "
-            "trước cả tiêu đề H1.\n"
-            "  Xử: dời khối về đúng vị trí — ngay sau dòng trống theo sau tiêu đề H1."
+            "khối '⛔ BƯỚC 0′' có nội dung nguyên văn đúng NHƯNG KHÔNG bắt đầu ngay sau "
+            "frontmatter + tiêu đề H1 — có nội dung khác chen vào giữa (fence, HTML "
+            "comment, hoặc bị dời sang vị trí khác trong file).\n"
+            f"  Chen vào giữa (offset {anchor}→{block_start}): {between!r}\n"
+            "  Xử: xoá phần chen vào / dời khối về lại đúng chỗ — ngay sau dòng trống "
+            "theo sau tiêu đề H1, không có gì ở giữa."
         )
-
-    end = block_start + len(STEP0_BLOCK_CANON)
-    got_suffix = norm_text[end:end + len(_SUFFIX_ANCHOR)]
     return (
-        "khối '⛔ BƯỚC 0′' bắt đầu đúng vị trí NHƯNG có nội dung lạ chen vào NGAY SAU khối, "
-        "trước phần giới thiệu skill — dấu hiệu của fence/comment bọc quanh khối, hoặc một "
-        "câu vô hiệu hoá được chèn thêm ngay sau khối.\n"
-        f"  Mong đợi ngay sau khối: {_SUFFIX_ANCHOR!r}\n"
-        f"  Thấy:                   {got_suffix!r}\n"
-        "  Xử: xoá phần chen vào NGAY SAU khối, để khối nối liền mạch với nội dung gốc "
-        "theo sau (không có fence/comment/câu vô hiệu hoá xen giữa)."
+        "khối '⛔ BƯỚC 0′' có nội dung nguyên văn đúng NHƯNG nằm SAI VỊ TRÍ trong file "
+        "— bắt đầu TRƯỚC điểm neo (ngay sau frontmatter + tiêu đề H1), ví dụ bị đặt "
+        "trước cả tiêu đề H1.\n"
+        "  Xử: dời khối về đúng vị trí — ngay sau dòng trống theo sau tiêu đề H1."
     )
 
 
@@ -547,32 +534,48 @@ def _extract_step0_candidate(norm_text: str) -> str | None:
 
 def lint_skill_block(text: str) -> list[str]:
     """Kiểm một SKILL.md mang đúng MỘT bản sao NGUYÊN VĂN của STEP0_BLOCK_CANON,
-    Ở ĐÚNG VỊ TRÍ (ngay sau frontmatter + tiêu đề H1, theo ngay bởi phần giới
-    thiệu gốc của skill).
+    BẮT ĐẦU đúng vị trí (ngay sau frontmatter + tiêu đề H1).
 
-    PHẠM VI — nói đủ, không hứa quá:
+    PHẠM VI — nói đủ, không hứa quá, không hứa thiếu:
 
     - Hàm này bắt MỌI thay đổi NGUYÊN VĂN của khối, kể cả sửa một lỗi chính tả
       hay thêm một dấu cách. Nó KHÔNG hiểu nghĩa tiếng Việt và KHÔNG phán được
       một thay đổi là lành tính (sửa chính tả) hay đảo nghĩa (làm "DỪNG" mất
       hiệu lực). Việc phân định đó thuộc về NGƯỜI DUYỆT, tại thời điểm họ cố ý
       cập nhật STEP0_BLOCK_CANON — cùng lý lẽ đã dùng cho `lint_gate_doc`.
-    - Hàm này CŨNG bắt việc khối bị BỌC hoặc DỜI CHỖ dù nội dung nguyên văn
-      còn nguyên — xem khối "NEO VỊ TRÍ" phía trên hàm này. Đây là vá vòng 2
-      sau khi người soát dựng 10 đột biến (bọc fence đóng/hở, bọc HTML
-      comment, dời cuối file, đặt trước H1, bọc `~~gạch ngang~~`, bọc
-      `<details>`, chèn văn xuôi vô hiệu hoá ngay sau khối) đều lọt qua vòng 1
-      — vòng 1 chỉ đếm khối có tồn tại như substring, không hỏi khối có Ở
-      ĐÚNG CHỖ và có còn là chỉ thị hay không.
-    - Hàm này CHỈ đóng băng khối Bước 0′ và vị trí neo của nó. Phần còn lại
-      của SKILL.md (mô tả block, bảng nghiệp vụ, Output, Gotchas, COD, Rules,
-      …) KHÔNG thuộc phạm vi lint này — sửa tự do, không cần đụng tới hàm này.
+    - Hàm này CŨNG bắt việc khối bị BỌC hoặc DỜI CHỖ TRƯỚC khối dù nội dung
+      nguyên văn còn nguyên — xem khối "NEO VỊ TRÍ" phía trên hàm này (neo-đầu
+      = khối phải bắt đầu đúng offset ngay sau tiền tố frontmatter+H1). Đây là
+      vá vòng 2 sau khi người soát dựng 10 đột biến (bọc fence đóng/hở, bọc
+      HTML comment, dời cuối file, đặt trước H1, bọc `~~gạch ngang~~`, bọc
+      `<details>`) đều lọt qua vòng 1.
+    - **GIỚI HẠN CÓ TUYÊN BỐ (vòng 3, không phải bug):** hàm này KHÔNG bắt một
+      câu vô hiệu hoá được chèn vào PHẦN TỰ DO ngay SAU khối — ví dụ
+      `"...(hết khối)...\n\n> BỎ QUA khối Bước 0′ ở trên.\n>\n> <intro gốc>"`,
+      hay đặt câu vô hiệu hoá ở CUỐI FILE, hay nhét vào `description:` trong
+      frontmatter. Vòng 2 từng thử một neo-cuối (`_SUFFIX_ANCHOR = "\n\n> "`)
+      để đóng đúng lỗ này, nhưng đó là CHỐT GIẢ: chuỗi 3 ký tự `"\n\n> "` kẻ
+      tấn công tự viết ra được và dùng làm MỒI (viết `"\n\n> "` rồi nối đòn
+      thật ngay sau, hoặc mồi `"\n\n> "` rồi mở fence/comment nuốt phần còn
+      lại) — không mua được an ninh thật. Nó còn tính phí thật: đổi hợp lệ nội
+      dung ngay sau khối (vd Task 5/6 thêm một mục `##` mới ở đó) bị lint báo
+      NHẦM là "bị fence/comment bọc quanh". Đã gỡ neo-cuối ở vòng 3.
+    - **ĐỐI LẬP CÓ CHỦ ĐÍCH với `lint_gate_doc`:** `co-mat-gate.md` băm được
+      CẢ FILE vì file đó CHỈ chứa nội dung cổng, không có phần tự do nào để
+      giấu đòn. `SKILL.md` thì CÓ phần tự do lớn (mô tả block, bảng nghiệp vụ,
+      Output, Gotchas, COD, Rules, …) — phần đó PHẢI sửa được tự do (Task 5/6
+      sẽ sửa để gỡ đường dẫn neo cứng), nên không thể đóng băng cả file theo
+      kiểu `lint_gate_doc`. Hàm này chỉ đóng băng NỘI DUNG + VỊ TRÍ BẮT ĐẦU của
+      khối Bước 0′ — không đóng băng được toàn bộ SKILL.md, và một câu vô hiệu
+      hoá đặt trong phần tự do đó sẽ không bị bắt. Đây là ranh giới phạm vi cố
+      ý, không phải lỗ hổng bị bỏ sót.
     - Hàm này không kiểm khối có thực sự được model đọc/tuân theo hay không;
       nó chỉ kiểm văn bản trên đĩa.
 
     HỆ QUẢ VẬN HÀNH: sửa khối Bước 0′ = sửa BẢY CHỖ CÙNG LÚC, có chủ đích —
     `STEP0_BLOCK_CANON` trong file này, và nguyên văn khối trong CẢ SÁU
-    SKILL.md. Không còn đường sửa một skill mà lint vẫn xanh.
+    SKILL.md. Không còn đường sửa một skill mà lint vẫn xanh — TRỪ việc thêm
+    nội dung vào phần tự do ngay sau khối, xem giới hạn ở trên.
     """
     norm = _normalize_doc(text)
     n = norm.count(STEP0_BLOCK_CANON)
@@ -614,19 +617,20 @@ def lint_skill_block(text: str) -> list[str]:
 
 
 def lint_blocks_identical(texts: dict[str, str]) -> list[str]:
-    """Chốt R1: sáu bản sao của khối Bước 0′ phải giống hệt nhau, Ở ĐÚNG VỊ
-    TRÍ — VÀ giống hệt `STEP0_BLOCK_CANON`. `texts` là map {tên skill: nội
-    dung SKILL.md}, PHẢI đủ và đúng sáu tên trong `SKILL_NAMES` — không hơn
-    không kém.
+    """Chốt R1: sáu bản sao của khối Bước 0′ phải giống hệt nhau, BẮT ĐẦU
+    đúng vị trí — VÀ giống hệt `STEP0_BLOCK_CANON`. `texts` là map {tên
+    skill: nội dung SKILL.md}, PHẢI đủ và đúng sáu tên trong `SKILL_NAMES` —
+    không hơn không kém.
 
     CÁCH LÀM (nội dung): so từng file với `STEP0_BLOCK_CANON` (không so file
     với file trực tiếp) — vì bằng-với-cùng-một-hằng-số kéo theo bằng-nhau-
     từng-đôi-một (tính bắc cầu), và neo vào MỘT nguồn chuẩn cho thông điệp lỗi
     rõ ràng hơn "file A khác file B" (không nói được ai đúng ai sai).
 
-    CÁCH LÀM (vị trí, vá vòng 2): dùng lại `_position_ok`/`_position_error`
-    của `lint_skill_block` cho từng file — một khối nội dung đúng nhưng bị
-    bọc/dời chỗ vẫn phải bị nêu tên ở đây, không chỉ ở hàm kiểm-một-file.
+    CÁCH LÀM (vị trí, vá vòng 2, chỉ neo-đầu sau khi gỡ neo-cuối ở vòng 3):
+    dùng lại `_position_ok`/`_position_error` của `lint_skill_block` cho từng
+    file — một khối nội dung đúng nhưng bị bọc/dời chỗ TRƯỚC khối vẫn phải bị
+    nêu tên ở đây, không chỉ ở hàm kiểm-một-file.
 
     CÁCH LÀM (arity, vá vòng 2 — Q2): hàm vòng 1 chỉ lặp qua `sorted(texts)`
     mà không đối chiếu `SKILL_NAMES`, nên `{}`, map thiếu file, hay map chỉ
@@ -635,12 +639,16 @@ def lint_blocks_identical(texts: dict[str, str]) -> list[str]:
     diễn từ độ dài của tham số truyền vào. Kiểm arity TRƯỚC, và tách khỏi kiểm
     nội dung — thiếu/thừa tên là lỗi GỌI HÀM SAI, không phải lỗi của skill nào.
 
-    PHẠM VI: giống `lint_skill_block` — chỉ đóng băng khối Bước 0′ + vị trí
-    của nó, không đụng phần còn lại của SKILL.md; không hiểu nghĩa, chỉ so
-    nguyên văn và vị trí.
+    PHẠM VI: giống `lint_skill_block` — chỉ đóng băng NỘI DUNG + VỊ TRÍ BẮT
+    ĐẦU của khối Bước 0′, không đụng phần còn lại (tự do) của SKILL.md; không
+    hiểu nghĩa. GIỚI HẠN CÓ TUYÊN BỐ giống hệt `lint_skill_block`: một câu vô
+    hiệu hoá chèn vào phần tự do NGAY SAU khối, ở cuối file, hay trong
+    `description:` frontmatter — không hàm nào ở đây bắt được. Xem docstring
+    `lint_skill_block` để biết lý do (đối lập có chủ đích với `lint_gate_doc`,
+    vốn băm được cả file vì không có phần tự do).
 
-    Trả về rỗng nếu cả sáu khớp CẢ nội dung LẪN vị trí; ngược lại mỗi lỗi nêu
-    RÕ TÊN SKILL lệch (hoặc lỗi arity nêu rõ tên thiếu/thừa).
+    Trả về rỗng nếu cả sáu khớp CẢ nội dung LẪN vị trí bắt đầu; ngược lại mỗi
+    lỗi nêu RÕ TÊN SKILL lệch (hoặc lỗi arity nêu rõ tên thiếu/thừa).
     """
     want_names = sorted(SKILL_NAMES)
     got_names = sorted(texts)
