@@ -207,7 +207,7 @@ Thời hạn:
 
 ## Output
 
-Ghi vào `1_Projects/<project>/IP/`:
+Ghi vào `<output_pattern>`:
 - `Don_<ip-type>_<candidate>_<ngày>.md` — bộ đơn nháp
 - `Chung_cu_ap_dung_<candidate>.md` — nếu cần
 - `Xuat_xu_dong_gop_<candidate>.md` — Điều 10a

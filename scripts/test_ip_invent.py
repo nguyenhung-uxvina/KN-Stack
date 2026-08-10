@@ -1091,9 +1091,28 @@ def test_path_lint_allows_workspace_placeholders():
     assert lint.lint_paths("ghi vào `<output_pattern>`; quét `<scan_sources>`") == []
 
 
-def test_ip_invent_and_ip_harvest_have_no_hardcoded_paths():
-    for name in ("ip-invent", "ip-harvest"):
-        assert lint.lint_paths(_skill(name)) == [], f"{name} còn đường dẫn neo cứng"
+@pytest.mark.parametrize("name", [
+    "ip-invent", "ip-criteria", "ip-harvest", "ip-screen", "ip-claim", "ip-dossier",
+])
+def test_no_skill_carries_a_hardcoded_path(name):
+    assert lint.lint_paths(_skill(name)) == []
+
+
+def test_ip_screen_declares_reduced_mode_and_lowers_confidence_when_patent_search_is_none():
+    # Task 6 chốt cốt lõi: patent_search=none KHÔNG được im lặng bỏ qua pre-search
+    # rồi vẫn chấm trục I như thường. ip-screen phải mang cả câu khai báo VÀ vế
+    # "hạ độ tin" — không chỉ một placeholder <patent_search> trơ trọi.
+    text = _skill("ip-screen")
+    assert "<patent_search>" in text
+    assert "pre-search KHÔNG chạy được, trục I chấm thiếu bằng chứng prior art" in text
+    assert "hạ độ tin" in text
+
+
+@pytest.mark.parametrize("name", ["ip-criteria", "ip-claim"])
+def test_ip_criteria_and_ip_claim_were_already_clean_before_task_6(name):
+    # ip-criteria và ip-claim KHÔNG bị Task 6 sửa — test này chứng minh chúng
+    # vốn sạch đường dẫn neo cứng, không phải sạch nhờ một sửa đổi nào ở đây.
+    assert lint.lint_paths(_skill(name)) == []
 
 
 # ── Biến thể cú pháp cho neo gốc vault: có/không backtick, có/không dấu / cuối ──

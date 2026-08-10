@@ -85,7 +85,9 @@ tạo" mỏng → GPHI sống, sáng chế rủi ro.
 > và bài ScienceDirect — không có patent nào, nhưng vẫn đủ giết claim. Tra: Google Scholar, ScienceDirect,
 > Springer, ASME/IEEE, ResearchGate.
 
-Gọi `/research --patents <từng dấu hiệu>`. Dùng lại khuôn phân loại của **QP-02-06 §7.2**:
+Gọi `<patent_search> <từng dấu hiệu>`; `none` → **in dòng khai báo**
+*"pre-search KHÔNG chạy được, trục I chấm thiếu bằng chứng prior art"* và **hạ độ tin** của kết luận
+trục I. Dùng lại khuôn phân loại của **QP-02-06 §7.2**:
 **(A)** expired → tự do dùng · **(B)** active, không bao phủ · **(C)** active, bao phủ một phần →
 claim map · **(D)** active, bao phủ core → blocking. Áp cả **doctrine of equivalents** và
 **prosecution history estoppel** (QP-02-06 §8.4).
@@ -162,7 +164,7 @@ không **và nếu chưa thì cần làm gì để thoả** (đây là chỗ sin
 | **Sáng chế MẬT** | giải pháp thuộc **danh mục bí mật nhà nước** lĩnh vực có tác động QP-AN | Điều 48 (sđ NĐ 100/2026): *"Bộ trưởng Bộ KH&CN quy định chi tiết về đơn đăng ký sáng chế mật và tiếp nhận đơn đăng ký sáng chế mật."* → **không công bố** ⇒ giải được mâu thuẫn "muốn bảo hộ mà không muốn hở cấu hình cho đối thủ" |
 
 > ⚠️ **Đường MẬT có hai câu chưa có đáp án — phải nêu, không được im:**
-> (i) cần **thông tư Bộ KH&CN** quy định chi tiết đơn sáng chế mật (chưa có trong notebook `ip-vn`);
+> (i) cần **thông tư Bộ KH&CN** quy định chi tiết đơn sáng chế mật (chưa có trong notebook `<nlm_notebook>`);
 > (ii) **văn bằng mật có chứng minh được trong hồ sơ chức danh không**, khi nó không công khai?
 > Nếu chưa rõ (ii) thì đường MẬT bảo hộ tốt nhưng có thể **không dùng được cho chức danh** — đúng
 > đánh đổi phải đặt lên bàn CEO.
@@ -247,4 +249,4 @@ không **và nếu chưa thì cần làm gì để thoả** (đây là chỗ sin
 - **Bày cả ba đường A/B/C kèm đánh đổi**, không tự chọn.
 - Nêu rõ hai câu chưa có đáp án của đường MẬT khi đề xuất nó.
 - pre-search ≠ tra cứu chính thức — nói câu này trong mọi đầu ra.
-- Kết quả **MẬT** → `1_Projects/<proj>/IP/`.
+- Kết quả **MẬT** → `<output_pattern>`.
