@@ -1054,3 +1054,117 @@ def test_lint_blocks_identical_flags_a_map_of_only_garbage_names():
     errors = lint.lint_blocks_identical({"khong-ton-tai": _skill("ip-invent")})
     assert errors, "map chỉ toàn tên rác phải đỏ, không được xanh giả"
     assert any("khong-ton-tai" in e for e in errors), errors
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# TASK 5 — `lint_paths`: gỡ đường dẫn neo cứng, đi qua tầng trỏ workspace
+#
+# Ba loại bị cấm: đường dẫn tuyệt đối (Windows), đường dẫn neo ở gốc vault
+# (1_Projects/2_Areas/3_Resources/4_Archives/5_Galaxy), và tham chiếu chéo
+# sang cây skills/ của KN-Stack (dangling khi plugin rời repo). Hai ngoại lệ
+# duy nhất: `_meta/decisions.md` và `_meta/learnings.md` (tương đối trong dự
+# án, resolve từ output_pattern).
+# ═══════════════════════════════════════════════════════════════════════════
+
+
+def test_path_lint_flags_root_anchored_vault_paths():
+    assert any("1_Projects" in e for e in lint.lint_paths("ghi vào `1_Projects/<proj>/IP/`"))
+    assert any("2_Areas" in e for e in lint.lint_paths("quét `2_Areas/HELIX*/`"))
+    assert any("3_Resources" in e for e in lint.lint_paths("xem `3_Resources/abc.md`"))
+
+
+def test_path_lint_flags_absolute_windows_paths():
+    assert any("D:" in e for e in lint.lint_paths(r"mở `D:\Workshop_X\x.md`"))
+
+
+def test_path_lint_flags_cross_skill_references_outside_the_plugin():
+    assert any("skills/" in e for e in lint.lint_paths(
+        "TRIZ: skills/helix/helix-concept-generate/references/triz-40-principles.md"
+    ))
+
+
+def test_path_lint_allows_project_relative_meta_files():
+    assert lint.lint_paths("ghi vào `_meta/decisions.md`; bài học vào `_meta/learnings.md`") == []
+
+
+def test_path_lint_allows_workspace_placeholders():
+    assert lint.lint_paths("ghi vào `<output_pattern>`; quét `<scan_sources>`") == []
+
+
+def test_ip_invent_and_ip_harvest_have_no_hardcoded_paths():
+    for name in ("ip-invent", "ip-harvest"):
+        assert lint.lint_paths(_skill(name)) == [], f"{name} còn đường dẫn neo cứng"
+
+
+# ── Biến thể cú pháp cho neo gốc vault: có/không backtick, có/không dấu / cuối ──
+# Bài học từ Task 3/4: một lint "có mặt chuỗi" luôn thua biến thể cú pháp. Ở đây
+# lint_paths không canh "cụm bắt buộc" mà TÌM cái xấu, nên lớp lỗi khác — nhưng
+# vẫn phải tự hỏi regex có bắt được biến thể hay không, không được giả định.
+
+
+def test_path_lint_flags_root_anchored_path_without_backticks():
+    assert any("2_Areas" in e for e in lint.lint_paths("quét 2_Areas toàn bộ, không backtick"))
+
+
+def test_path_lint_flags_root_anchored_path_without_trailing_slash():
+    # "1_Projects" đứng trơ, không có dấu / theo sau — regex neo gốc dùng \b,
+    # không đòi literal "/" ngay sau tên thư mục, nên vẫn phải bắt được.
+    assert any("1_Projects" in e for e in lint.lint_paths("trong 1_Projects thường có Patent_Draft"))
+
+
+def test_path_lint_flags_absolute_path_with_forward_slashes():
+    # "D:/..." (gạch chéo xuôi) thay vì "D:\..." — Windows chấp nhận cả hai,
+    # người viết SKILL.md không phải lúc nào cũng gõ backslash.
+    assert any("D:" in e for e in lint.lint_paths("mở `D:/Workshop_X/x.md`"))
+
+
+def test_path_lint_flags_cross_skill_reference_with_backslashes():
+    # "skills\helix\..." (gạch chéo ngược) — cùng nội dung, khác cú pháp hệ
+    # điều hành Windows so với "skills/helix/...".
+    assert any("skills" in e for e in lint.lint_paths(
+        r"TRIZ: skills\helix\helix-concept-generate\references\triz-40-principles.md"
+    ))
+
+
+def test_path_lint_does_not_false_positive_on_a_longer_identifier():
+    # "1_ProjectsData" không phải "1_Projects" + biên — \b không khớp giữa "s"
+    # và "D" (cả hai đều \w) nên KHÔNG được bắt oan một định danh dài hơn.
+    assert lint.lint_paths("biến `1_ProjectsData` không phải đường dẫn") == []
+
+
+# ── Test âm tính có răng: allowlist không được nới rộng ─────────────────────
+#
+# PATH_ALLOWLIST chỉ gồm đúng hai chuỗi "_meta/decisions.md" và
+# "_meta/learnings.md". Cả hai bên dưới đều KHÔNG được lọt qua nhờ allowlist:
+
+
+def test_path_lint_allowlist_scrub_does_not_swallow_the_surrounding_root_anchor():
+    # "1_Projects/_meta/decisions.md" CHỨA đúng chuỗi allowlist "_meta/decisions.md"
+    # làm hậu tố, nhưng vẫn phải ĐỎ vì có neo gốc "1_Projects/" đứng ngay trước.
+    # Một cách cài SAI (vd "chuỗi allowlist xuất hiện ở đâu đó → cho qua cả câu")
+    # sẽ để lọt ca này; cách cài ĐÚNG (xoá đúng chuỗi con rồi mới quét) thì không.
+    errors = lint.lint_paths("ghi vào `1_Projects/_meta/decisions.md`")
+    assert any("1_Projects" in e for e in errors), errors
+
+
+def test_path_lint_allowlist_does_not_extend_to_other_meta_filenames():
+    # "_meta/khac.md" không nằm trong PATH_ALLOWLIST (chỉ decisions.md/learnings.md
+    # được liệt tên). Đặt cạnh một neo gốc vault để phép kiểm có ý nghĩa — bản
+    # thân "_meta/khac.md" đứng TRƠ MỘT MÌNH vốn dĩ không khớp bất kỳ nhánh nào
+    # của FORBIDDEN_PATH_RE (không tuyệt đối, không neo gốc, không cross-skill),
+    # nên không có gì để "bắt oan" ở đó — đó LÀ hành vi đúng theo phạm vi đã
+    # công bố (xem docstring `lint_paths`), không phải điều cần chứng minh ở
+    # đây. Điều cần chứng minh: allowlist không lan sang tên file _meta khác.
+    errors = lint.lint_paths("xem `2_Areas/_meta/khac.md`")
+    assert any("2_Areas" in e for e in errors), errors
+
+
+def test_path_lint_bare_other_meta_filename_is_a_declared_scope_limit_not_a_catch():
+    # Đối chứng cho test trên: "_meta/khac.md" đứng MỘT MÌNH (không neo gốc,
+    # không tuyệt đối, không cross-skill) trả về [] — không phải vì nó được
+    # "cho phép" (nó không có trong PATH_ALLOWLIST), mà vì FORBIDDEN_PATH_RE
+    # chỉ có ba nhánh và một tên _meta bất kỳ không rơi vào nhánh nào trong đó.
+    # Ghim hành vi hiện tại để người sau không tưởng nhầm "mọi _meta/* bị bắt
+    # trừ hai cái trong allowlist" — chỉ hai loại (1) neo gốc, (2) tuyệt đối,
+    # (3) cross-skill/ mới có gì để bắt; bare "_meta/khac.md" không thuộc loại nào.
+    assert lint.lint_paths("xem `_meta/khac.md` (không thuộc allowlist, nhưng cũng không tự khớp gì)") == []

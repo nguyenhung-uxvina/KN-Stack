@@ -1,6 +1,6 @@
 ---
 name: ip-harvest
-description: "Block B1 của ip-invent — tìm kiếm ý tưởng có thể nộp đơn. Hai nhánh: 1a THU HOẠCH quét vault (1_Projects, design journal, RE report, _meta/decisions.md) tìm giải pháp kỹ thuật ĐÃ có mà chưa nộp đơn — bao gồm cả sản phẩm đã triển khai; 1b SINH MỚI từ vùng trống patent + TRIZ, chỉ chạy khi 1a không đủ ứng viên sạch. Mỗi ứng viên bắt buộc ghi 4 trường quyết định: trạng thái bộc lộ kèm NGÀY, trạng thái ứng dụng, vai tác giả, và xuất xứ đóng góp người/AI (Điều 10a NĐ 65 sđ NĐ 100/2026). Triggers on: 'ip-harvest', 'thu hoạch ý tưởng sáng chế', 'tìm ý tưởng nộp đơn', 'quét vault tìm sáng chế', 'ứng viên sáng chế', 'whitespace patent', 'sinh ý tưởng TRIZ nộp đơn', 'có gì đáng nộp đơn'."
+description: "Block B1 của ip-invent — tìm kiếm ý tưởng có thể nộp đơn. Hai nhánh: 1a THU HOẠCH quét các nguồn khai trong profile workspace (hồ sơ dự án, design journal, RE report, _meta/decisions.md) tìm giải pháp kỹ thuật ĐÃ có mà chưa nộp đơn — bao gồm cả sản phẩm đã triển khai; 1b SINH MỚI từ vùng trống patent + TRIZ, chỉ chạy khi 1a không đủ ứng viên sạch. Mỗi ứng viên bắt buộc ghi 4 trường quyết định: trạng thái bộc lộ kèm NGÀY, trạng thái ứng dụng, vai tác giả, và xuất xứ đóng góp người/AI (Điều 10a NĐ 65 sđ NĐ 100/2026). Triggers on: 'ip-harvest', 'thu hoạch ý tưởng sáng chế', 'tìm ý tưởng nộp đơn', 'quét vault tìm sáng chế', 'ứng viên sáng chế', 'whitespace patent', 'sinh ý tưởng TRIZ nộp đơn', 'có gì đáng nộp đơn'."
 ---
 
 # ip-harvest — B1: tìm ứng viên nộp đơn
@@ -32,11 +32,12 @@ Trường workspace nào bằng `none` → chạy **chế độ giảm** và **i
 
 ### Nơi quét
 
+**Quét đúng các nguồn khai ở trường `scan_sources` của profile workspace** — không tự ý quét ngoài đó.
+
 | Nguồn | Tìm gì |
 |---|---|
-| `1_Projects/*/` — `_Project_Brief.md`, `Status.md` | giải pháp kỹ thuật đã chốt concept |
-| `1_Projects/*/Patent_Draft_*.md` | ứng viên đã có bản nháp (bỏ qua 1b cho các ca này) |
-| `2_Areas/HELIX*/`, design journal, `helix-design-journal` output | quyết định thiết kế có tính mới |
+| Hồ sơ dự án (brief, status, bản nháp patent đã có) | giải pháp kỹ thuật đã chốt concept; ứng viên đã có bản nháp (bỏ qua 1b cho các ca này) |
+| Khu vực thiết kế + design journal (`helix-design-journal` output) | quyết định thiết kế có tính mới |
 | RE report (`reverse-engineering`, `reverse-mc` output) | chỗ WX **giải khác** đối thủ → hạt novelty |
 | `_meta/decisions.md` | quyết định kỹ thuật có lý do — thường là chỗ có bước tiến sáng tạo |
 | FTO Record (QP-02-06) đã có | prior art đã tra dùng lại được; và chỗ **design-around** thành công thường chính là sáng chế |
@@ -72,11 +73,11 @@ Thiếu bất kỳ trường nào → ứng viên chưa đủ để B2 chấm.
 đo B0. Nếu 1a đã đủ → **bỏ 1b**, báo lý do.
 
 ```
-1. Bản đồ patent quanh chức năng lõi (qua /research --patents)
+1. Bản đồ patent quanh chức năng lõi (qua `<patent_search>`; `none` → bỏ bước này và **in dòng khai báo**)
 2. Tìm vùng trống: chức năng nào chưa ai claim, hoặc ai cũng giải cùng một cách
    → chỗ "tất cả prior art giải SAI BÀI" là vùng trống tốt nhất
-3. TRIZ: skills/helix/helix-concept-generate/references/triz-40-principles.md
-   + triz-sufield-76solutions.md để sinh phương án khác trục
+3. TRIZ: các file ở `<triz_refs>`; `none` → **in dòng khai báo** `1b chạy KHÔNG có TRIZ` và sinh
+   phương án bằng phân tích vùng trống thuần
 4. Lọc: phương án nào (a) giải được bài thật của WX, (b) không rơi vào Điều 59
    (đối tượng không được bảo hộ), (c) chưa bộc lộ
 ```
@@ -149,5 +150,8 @@ CÓ / KHÔNG — lý do: <…>
 - Đọc thước đo B0 trước; không có thì dừng.
 - **Bốn trường bắt buộc** — thiếu là ứng viên chưa xong, không đẩy sang B2.
 - **1b chỉ chạy khi 1a không đủ**, và phải nêu lý do.
-- Kết quả **MẬT** → `1_Projects/<proj>/IP/`, không ra tool ngoài.
+- **`scan_sources: none` KHÔNG phải là "1a chạy xong không thấy gì".** Không quét được ≠ quét xong
+  không có. Gặp `none` thì B1 **dừng**, in dòng khai báo, báo CEO nạp ứng viên tay — **không tự
+  nhảy sang 1b**. 1b chỉ chạy khi 1a *chạy được* và không đủ ứng viên sạch.
+- Kết quả **MẬT** → `<output_pattern>`, không ra tool ngoài.
 - Không tự kết luận ứng viên "mất tính mới" — đó là việc của B2 sau khi tính ngày.

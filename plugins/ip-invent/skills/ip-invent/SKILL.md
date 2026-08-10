@@ -35,12 +35,13 @@ Trường workspace nào bằng `none` → chạy **chế độ giảm** và **i
 ### 1. Cổng bộc lộ
 Giải pháp **chưa khóa priority date** → **CẤM** đăng web, brochure, triển lãm, clip, hội thảo, mạng xã hội.
 Bộc lộ = mất tính mới (novelty **tuyệt đối toàn cầu**, Điều 60 Luật SHTT). Mọi đầu ra của pipeline
-mặc định phân loại **MẬT**, ghi vào `1_Projects/<proj>/IP/`, **không** đẩy ra tool ngoài.
+mặc định phân loại **MẬT**, ghi vào `<output_pattern>` khai trong profile workspace, **không** đẩy ra tool ngoài.
 
 ### 2. Cổng dữ liệu ra ngoài
 **KHÔNG** đưa nội dung giải pháp chưa bộc lộ vào NotebookLM, dịch vụ cloud, hay bất kỳ prompt gửi ra
-ngoài. Nghiên cứu **luật công khai** thì được (notebook `ip-vn`); **nội dung sáng chế thì không**.
-Tương tự: văn bản nội bộ BQP (vd QĐ 431/QĐ-BQP) đọc **local**, không upload.
+ngoài. Nghiên cứu **luật công khai** thì được (notebook `<nlm_notebook>`, bỏ qua nếu `none`);
+**nội dung sáng chế thì không**. Tương tự: văn bản nội bộ BQP (vd QĐ 431/QĐ-BQP) đọc **local**, không upload.
+Chi tiết tách bí-mật-nhà-nước ↔ chưa-bộc-lộ: xem `../ip-shared/references/co-mat-gate.md`.
 
 ### 3. Cổng advisory-only
 Skill này soạn **bản nháp kỹ thuật** để giao đại diện SHTT. Nó **không**:
@@ -122,7 +123,7 @@ PROJECT   : --project <id>  (hoặc --portfolio cho B1 toàn danh mục)
 TARGET    : --target 431 | 12-2025 | ca-hai   (mặc định ca-hai)
 IP-TYPE   : --ip-type sang-che|gphi|kep|mat   (nếu CEO đã có ý định; nếu không → B2 quyết)
 FLAGS     : --from <block> | --only <block>
-OUTPUT    : 1_Projects/<project>/IP/   (mặc định; phân loại MẬT)
+OUTPUT    : <output_pattern>   (từ profile workspace; phân loại MẬT)
 ```
 
 ### Step 2 — Đọc ledger, xác định block kế
@@ -196,8 +197,9 @@ REJECT IF:
 
 ## NLM reference
 
-Notebook `ip-vn` — **chỉ nguồn luật công khai**. Nghiên cứu nền:
-`3_Resources/Deep-Content-Analyzer-Outputs/RESEARCH_ip-sang-che-gphi-chuc-danh_2026-08-06.md`
+Notebook `<nlm_notebook>` — **chỉ nguồn luật công khai**; `none` thì bỏ qua mục này và **in dòng
+khai báo** *"chạy KHÔNG có notebook luật"*. Nghiên cứu nền: file
+`RESEARCH_ip-sang-che-gphi-chuc-danh_2026-08-06.md` trong `<root>` (nếu profile có).
 (Phần A tiêu chí chức danh · Phần B pháp lý IP — **coi là chưa xác nhận, xem Phần D** ·
 Phần C trạng thái CEO · **Phần D NĐ 100/2026 lật quy cách**).
 

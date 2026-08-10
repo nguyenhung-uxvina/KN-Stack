@@ -711,3 +711,89 @@ def cited_refs(text: str) -> list[str]:
         if name not in seen:
             seen.append(name)
     return seen
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# ĐƯỜNG DẪN NEO CỨNG — `lint_paths`
+#
+# Task 2 dựng tầng trỏ workspace (`active-workspace.md` → profile → 7 trường,
+# trong đó có `output_pattern`, `root`, `scan_sources`, `triz_refs`,
+# `patent_search`, `nlm_notebook`). Nếu SKILL.md vẫn viết thẳng
+# `1_Projects/<proj>/IP/` hay `skills/helix/helix-concept-generate/...` thì
+# tầng trỏ đó vô nghĩa — plugin rời khỏi KN-Stack (Cowork) là dangling ngay.
+#
+# Ba loại bị cấm — và CHỈ ba loại này (không suy rộng thêm):
+#   1. Đường dẫn tuyệt đối (ổ đĩa Windows kiểu `D:\...` hoặc `D:/...`).
+#   2. Đường dẫn neo ở GỐC VAULT — năm thư mục PARA/Galaxy cấp 1
+#      (1_Projects, 2_Areas, 3_Resources, 4_Archives, 5_Galaxy).
+#   3. Tham chiếu chéo sang cây `skills/<domain>/` của KN-Stack — dangling khi
+#      plugin đứng một mình (khác `../ip-shared/references/...`, tầng trỏ
+#      NỘI BỘ plugin, không đi qua "skills/").
+#
+# Hai ngoại lệ DUY NHẤT: `_meta/decisions.md` và `_meta/learnings.md` — chúng
+# TƯƠNG ĐỐI TRONG DỰ ÁN, resolve từ `output_pattern` (vd
+# `{output_pattern}/_meta/decisions.md`), không neo gốc vault. Không nới thêm
+# mục nào — nếu một file "cần" allowlist rộng hơn để pass, đó là dấu hiệu file
+# chưa sửa xong, không phải allowlist chưa đủ.
+# ═══════════════════════════════════════════════════════════════════════════
+
+# Xoá đúng hai chuỗi con này trước khi quét — KHÔNG phải "cho qua cả câu chứa
+# chúng". `lint_paths` chỉ text.replace() nguyên văn hai chuỗi, không dùng
+# prefix/regex lỏng — nên "1_Projects/_meta/decisions.md" vẫn ĐỎ vì neo gốc
+# "1_Projects/" đứng trước còn nguyên sau khi xoá phần đuôi allowlist (kiểm
+# bằng test_path_lint_allowlist_scrub_does_not_swallow_the_surrounding_root_anchor).
+PATH_ALLOWLIST = ["_meta/decisions.md", "_meta/learnings.md"]
+
+# CÁCH ĐỌC — ba nhánh nối bằng `|`, đúng ba loại cấm nêu trên:
+#
+#   Nhánh 1 (tuyệt đối): `[A-Za-z]:[\\/]...` — chấp nhận CẢ backslash lẫn
+#   forward slash ngay sau dấu `:`, và char class cho phần còn lại của đường
+#   dẫn cũng chấp nhận cả hai — Windows tự nhận cả `D:\x` lẫn `D:/x`, và người
+#   viết SKILL.md không phải lúc nào cũng gõ backslash.
+#
+#   Nhánh 2 (neo gốc vault): `(?<![\w/\\])(?:1_Projects|...)\b` — lookbehind
+#   phủ định chặn việc bắt oan một hậu tố của định danh dài hơn đứng ngay
+#   trước nó; `\b` ở CUỐI (không phải literal "/") nghĩa là KHÔNG đòi dấu `/`
+#   theo sau — "1_Projects" đứng trơ trong văn xuôi (không backtick, không
+#   trailing slash) vẫn bị bắt, vì ranh giới \w/không-\w giữa "s" và khoảng
+#   trắng/dấu câu/backtick đã đủ là biên từ. Ngược lại "1_ProjectsData" KHÔNG
+#   bị bắt oan vì "s" và "D" đều là \w — không có biên ở đó.
+#
+#   Nhánh 3 (cross-skill): `skills[/\\][A-Za-z0-9_-]+[/\\]` — chấp nhận cả
+#   `skills/helix/` lẫn `skills\helix\`.
+#
+# PHẠM VI — nói rõ để không ai tưởng nhầm nó bắt nhiều hơn ba loại trên:
+#
+#   - KHÔNG bắt đường dẫn Unix tuyệt đối (`/etc/...`, `/mnt/d/...`) hay UNC
+#     (`\\server\share`) — repo và vault này chạy Windows với ổ đĩa chữ cái,
+#     chưa có ca thật nào dùng hai dạng kia; nếu xuất hiện, đây là giới hạn đã
+#     biết, không phải lint đã kiểm và cho qua.
+#   - KHÔNG bắt một tên `_meta/<khác>.md` bất kỳ đứng TRƠ MỘT MÌNH (không neo
+#     gốc, không tuyệt đối, không cross-skill) — không phải vì nó "được phép"
+#     (nó không có trong PATH_ALLOWLIST), mà vì nó không rơi vào bất kỳ nhánh
+#     nào trong ba nhánh trên. Xem
+#     test_path_lint_bare_other_meta_filename_is_a_declared_scope_limit_not_a_catch.
+#     Nếu một `_meta/<khác>.md` xuất hiện CẠNH một neo gốc vault (vd
+#     `2_Areas/_meta/khac.md`) thì vẫn ĐỎ — vì nhánh 2 khớp trên chính neo gốc,
+#     không liên quan gì đến allowlist.
+FORBIDDEN_PATH_RE = re.compile(
+    r"(?:[A-Za-z]:[\\/][A-Za-z0-9_\\/.-]+"
+    r"|(?<![\w/\\])(?:1_Projects|2_Areas|3_Resources|4_Archives|5_Galaxy)\b"
+    r"|(?<![\w/\\])skills[/\\][A-Za-z0-9_-]+[/\\])"
+)
+
+
+def lint_paths(text: str) -> list[str]:
+    """Bắt đường dẫn neo cứng trong một SKILL.md — xem PHẠM VI ở trên
+    `FORBIDDEN_PATH_RE`. Rỗng nghĩa là đạt (mọi đường dẫn đã đi qua tầng trỏ
+    workspace, hoặc nằm trong PATH_ALLOWLIST, hoặc là placeholder `<...>`).
+    """
+    scrubbed = text
+    for allowed in PATH_ALLOWLIST:
+        scrubbed = scrubbed.replace(allowed, "«allowed»")
+    hits: list[str] = []
+    for m in FORBIDDEN_PATH_RE.finditer(scrubbed):
+        hit = m.group(0)
+        if hit not in hits:
+            hits.append(hit)
+    return [f"đường dẫn neo cứng, phải đi qua tầng trỏ: {h!r}" for h in hits]
