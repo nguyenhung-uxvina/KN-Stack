@@ -1,5 +1,6 @@
 """pytest cho linter plugin ip-invent."""
 import importlib.util
+import re
 import sys
 from pathlib import Path
 
@@ -886,3 +887,133 @@ def test_mutation_one_extra_space_inside_the_block_is_flagged():
     assert mutated != original, "đột biến không khớp được văn bản thật"
     errors = lint.lint_skill_block(mutated)
     assert errors, "lint phải bắt một dấu cách thừa chèn giữa khối"
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# VÒNG SỬA 1/5 — Q1 (neo vị trí) + Q2 (arity của lint_blocks_identical)
+#
+# Người soát tự dựng 10 đột biến chống lại lint vòng 1 (chỉ đếm khối tồn tại
+# như substring, không hỏi khối có Ở ĐÚNG CHỖ) — cả 10 LỌT, không một lỗi nào.
+# Vòng 2 thêm neo vị trí (tiền tố frontmatter+H1 + hậu tố blockquote giới
+# thiệu skill); 10 test dưới đây tái dựng đúng 10 ca đó trên file thật.
+# ═══════════════════════════════════════════════════════════════════════════
+
+_FRONTMATTER_ONLY_RE = re.compile(r"\A---\n.*?\n---\n\n", re.DOTALL)
+
+
+def test_skill_names_are_pinned_to_the_six_ip_invent_skills():
+    # Người soát xác nhận chưa có test nào ghim SKILL_NAMES — Q2 không được
+    # chốt gián tiếp qua Task 2 nếu hằng này trôi.
+    assert lint.SKILL_NAMES == [
+        "ip-invent", "ip-criteria", "ip-harvest", "ip-screen", "ip-claim", "ip-dossier",
+    ]
+
+
+def _wrap_block(text: str, before: str, after: str) -> str:
+    mutated = text.replace(lint.STEP0_BLOCK_CANON, before + lint.STEP0_BLOCK_CANON + after, 1)
+    assert mutated != text, "đột biến không khớp được văn bản thật"
+    return mutated
+
+
+@pytest.mark.parametrize("name,before,after", [
+    ("ip-invent", "```\n", "\n```"),           # 1. bọc fence ``` đóng
+    ("ip-criteria", "~~~\n", "\n~~~"),         # 2. bọc fence ~~~ đóng
+    ("ip-harvest", "```text\n", ""),           # 3. fence ```text hở, không đóng
+    ("ip-screen", "~~~\n", ""),                # 4. fence ~~~ hở, không đóng
+    ("ip-claim", "<!--\n", "\n-->"),           # 5. bọc <!-- --> (HTML comment)
+    ("ip-dossier", "~~", "~~"),                # 7 (bảng gốc). bọc ~~gạch ngang~~
+])
+def test_mutation_block_wrapped_or_fenced_is_flagged_as_position_error(name, before, after):
+    original = _skill(name)
+    mutated = _wrap_block(original, before, after)
+    errors = lint.lint_skill_block(mutated)
+    assert errors, f"lint phải bắt khối bị bọc ({before!r} / {after!r}) trong {name}"
+
+
+def test_mutation_block_wrapped_in_details_summary_is_flagged():
+    original = _skill("ip-invent")
+    mutated = _wrap_block(
+        original,
+        "<details><summary>tuỳ chọn</summary>\n\n",
+        "\n\n</details>",
+    )
+    errors = lint.lint_skill_block(mutated)
+    assert errors, "lint phải bắt khối bị bọc trong <details><summary>...</summary>...</details>"
+
+
+def test_mutation_disabling_prose_appended_right_after_block_is_flagged():
+    # Ca DUY NHẤT neo-đầu một mình không bắt được: không đụng gì TRƯỚC khối,
+    # chỉ chèn một câu vô hiệu hoá NGAY SAU — cần neo hậu tố mới bắt được.
+    original = _skill("ip-criteria")
+    mutated = original.replace(
+        lint.STEP0_BLOCK_CANON,
+        lint.STEP0_BLOCK_CANON
+        + "\n\n**LƯU Ý:** khối trên chỉ là ví dụ, KHÔNG bắt buộc thi hành.",
+        1,
+    )
+    assert mutated != original, "đột biến không khớp được văn bản thật"
+    errors = lint.lint_skill_block(mutated)
+    assert errors, "lint phải bắt văn xuôi vô hiệu hoá chèn ngay sau khối"
+
+
+def test_mutation_block_moved_to_end_of_file_is_flagged():
+    original = _skill("ip-harvest")
+    stripped = original.replace(lint.STEP0_BLOCK_CANON, "", 1)
+    assert stripped != original, "đột biến không khớp được văn bản thật"
+    mutated = stripped + "\n\n" + lint.STEP0_BLOCK_CANON
+    errors = lint.lint_skill_block(mutated)
+    assert errors, "lint phải bắt khối bị dời xuống cuối file"
+
+
+def test_mutation_block_placed_before_h1_title_is_flagged():
+    original = _skill("ip-screen")
+    stripped = original.replace(lint.STEP0_BLOCK_CANON, "", 1)
+    assert stripped != original, "đột biến không khớp được văn bản thật"
+    m = _FRONTMATTER_ONLY_RE.match(stripped)
+    assert m, "test giả định file thật có frontmatter chuẩn ở đầu"
+    mutated = (
+        stripped[:m.end()] + lint.STEP0_BLOCK_CANON + "\n\n" + stripped[m.end():]
+    )
+    assert mutated != original, "đột biến không khớp được văn bản thật"
+    errors = lint.lint_skill_block(mutated)
+    assert errors, "lint phải bắt khối bị đặt trước dòng tiêu đề H1"
+
+
+def test_mutation_ten_position_attacks_are_all_flagged_by_lint_blocks_identical_too():
+    # Chốt R1: cùng 10 lớp đột biến ở trên phải bị lint_blocks_identical nêu
+    # đúng TÊN skill lệch — không chỉ lint_skill_block đơn file mới bắt được.
+    texts = {n: _skill(n) for n in lint.SKILL_NAMES}
+    texts["ip-invent"] = _wrap_block(_skill("ip-invent"), "```\n", "\n```")
+    id_errors = lint.lint_blocks_identical(texts)
+    assert any(e.startswith("ip-invent:") for e in id_errors), id_errors
+    for other in ("ip-criteria", "ip-harvest", "ip-screen", "ip-claim", "ip-dossier"):
+        assert not any(e.startswith(f"{other}:") for e in id_errors), id_errors
+
+
+# ── Q2 — lint_blocks_identical không được vacuous-pass khi map thiếu/thừa ──
+
+
+def test_lint_blocks_identical_flags_empty_map():
+    errors = lint.lint_blocks_identical({})
+    assert errors, "map rỗng phải đỏ, không được trả [] (xanh giả)"
+
+
+def test_lint_blocks_identical_flags_five_of_six_skills():
+    texts = {n: _skill(n) for n in lint.SKILL_NAMES if n != "ip-claim"}
+    errors = lint.lint_blocks_identical(texts)
+    assert errors, "thiếu 1/6 skill phải đỏ, không được xanh giả"
+    assert any("ip-claim" in e for e in errors), errors
+
+
+def test_lint_blocks_identical_flags_a_seventh_bogus_skill():
+    texts = {n: _skill(n) for n in lint.SKILL_NAMES}
+    texts["ip-bogus"] = _skill("ip-invent")  # tên ngoài SKILL_NAMES
+    errors = lint.lint_blocks_identical(texts)
+    assert errors, "map có tên thứ 7 ngoài SKILL_NAMES phải đỏ, không được xanh giả"
+    assert any("ip-bogus" in e for e in errors), errors
+
+
+def test_lint_blocks_identical_flags_a_map_of_only_garbage_names():
+    errors = lint.lint_blocks_identical({"khong-ton-tai": _skill("ip-invent")})
+    assert errors, "map chỉ toàn tên rác phải đỏ, không được xanh giả"
+    assert any("khong-ton-tai" in e for e in errors), errors
