@@ -86,6 +86,24 @@ Thiếu bất kỳ trường nào → ứng viên chưa đủ để B2 chấm.
 > + phí duy trì hằng năm + giờ CEO, mà không tạo giá trị bảo hộ. Nếu 1b ra phương án hay, nó phải
 > **quay lại HELIX** làm concept thật, không dừng ở tờ giấy.
 
+## Ứng viên CEO nạp tay — ca `scan_sources: none`
+
+Khi `scan_sources: none` (mặc định trong Cowork), **1a không chạy được** và vì thế **1b cũng vĩnh
+viễn không chạy** — điều kiện của 1b là "1a *chạy được* mà không đủ ứng viên sạch", mà 1a ở đây
+không chạy được lần nào. Đây **không** phải ngõ cụt: đường đi duy nhất là **CEO nạp ứng viên tay**,
+và B1 vẫn giữ nguyên vai cổng chất lượng chứ không thành cái ống dẫn.
+
+- Ứng viên CEO nạp tay **vẫn phải có đủ bốn trường bắt buộc** ở trên (bộc lộ **+ NGÀY** · ứng dụng ·
+  vai tác giả · xuất xứ đóng góp người/AI). Thiếu trường nào → ứng viên **chưa được sang B2**; hỏi
+  lại CEO **đúng trường đó**, tuyệt đối không tự điền hộ, không suy từ tên dự án.
+- Vẫn chạy **Loại sớm Điều 59** cho từng ứng viên nạp tay — CEO nạp không có nghĩa là đã sàng.
+- Bảng ứng viên ghi `nhánh chạy: nạp tay` và **in dòng khai báo**: *"1a KHÔNG chạy được
+  (`scan_sources: none`) — danh sách này do CEO nạp, KHÔNG phải kết quả vét nguồn"*. Đừng để B2 hay
+  CEO tương lai đọc bảng này như một cuộc quét đã hoàn tất.
+- **Không chạy 1b** trong ca này, kể cả khi danh sách nạp tay mỏng. Muốn sinh mới thì chuyển sang môi
+  trường có `scan_sources` thật, hoặc CEO yêu cầu riêng bằng một lượt chạy khác — đừng lặng lẽ lấy
+  1b lấp chỗ 1a bỏ trống, vì như thế là sinh ý tưởng mới trong khi chưa vét cái đang có.
+
 ## Loại sớm — Điều 59 Luật SHTT
 
 Bảy đối tượng **không** được bảo hộ dưới danh nghĩa sáng chế: phát minh/lý thuyết khoa học/phương pháp
@@ -103,7 +121,7 @@ chất sinh học · phương pháp phòng ngừa/chẩn đoán/chữa bệnh.
 ## Output — bảng ứng viên vào ledger
 
 ```markdown
-## B1 — ip-harvest  (nhánh chạy: 1a | 1a+1b)
+## B1 — ip-harvest  (nhánh chạy: 1a | 1a+1b | nạp tay)
 
 | # | Ứng viên | Dự án | Bộc lộ (+ngày) | Ứng dụng | Vai tác giả | Xuất xứ người/AI | Điều 59? | Ghi chú |
 |---|---|---|---|---|---|---|---|---|
@@ -153,5 +171,11 @@ CÓ / KHÔNG — lý do: <…>
 - **`scan_sources: none` KHÔNG phải là "1a chạy xong không thấy gì".** Không quét được ≠ quét xong
   không có. Gặp `none` thì B1 **dừng**, in dòng khai báo, báo CEO nạp ứng viên tay — **không tự
   nhảy sang 1b**. 1b chỉ chạy khi 1a *chạy được* và không đủ ứng viên sạch.
+  **Đây là NGOẠI LỆ CÓ CHỦ ĐÍCH của luật chung** trong khối Bước 0′ ("trường nào `none` → chạy chế độ
+  giảm + in dòng khai báo"), và luật riêng này **đè** luật chung ở đúng trường `scan_sources`. Lý do:
+  với `triz_refs`/`patent_search`, thiếu công cụ chỉ làm **kết luận yếu đi** — vẫn còn cái để chấm.
+  Với `scan_sources` thì **không quét được ≠ quét xong không thấy**: chạy giảm sẽ đẻ ra một bảng ứng
+  viên **rỗng** trông y hệt "đã vét hết vault mà chẳng có gì đáng nộp" — kết luận sai ngược, và là
+  loại sai không ai phát hiện ra. Nên B1 **dừng** chứ không giảm.
 - Kết quả **MẬT** → `<output_pattern>`, không ra tool ngoài.
 - Không tự kết luận ứng viên "mất tính mới" — đó là việc của B2 sau khi tính ngày.

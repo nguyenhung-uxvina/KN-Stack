@@ -1,5 +1,6 @@
 """pytest cho linter plugin ip-invent."""
 import importlib.util
+import json
 import re
 import sys
 from pathlib import Path
@@ -1371,3 +1372,236 @@ def test_readme_states_the_three_non_negotiable_points():
     assert "CHƯA KIỂM CHỨNG" in text
     assert "Junction `ip-shared` là BẮT BUỘC, không phải tuỳ chọn." in normalized
     assert "đổi `active-workspace.md` sang `workspace-cowork.md`" in text
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# ĐỢT SOÁT TOÀN NHÁNH — các chốt còn thiếu
+#
+# Bốn nhóm dưới đây KHÔNG dựng cơ chế lint mới. Chúng ghim NỘI DUNG bằng string
+# match, đúng khuôn của
+# `test_ip_screen_declares_reduced_mode_and_lowers_confidence_when_patent_search_is_none`
+# — vì thứ cần bảo vệ là một CÂU LUẬT trong Markdown, không phải một bất biến
+# cú pháp. Mọi so khớp chạy trên bản đã chuẩn hoá khoảng trắng: các luật này
+# nằm trong đoạn văn xuống dòng tự do, khoá vào vị trí ngắt dòng là tự chuốc
+# lỗi khi ai đó bọc lại lề.
+# ═══════════════════════════════════════════════════════════════════════════
+
+
+def _skill_ws(name: str) -> str:
+    """SKILL.md đã gộp mọi chuỗi khoảng trắng thành một dấu cách."""
+    return re.sub(r"\s+", " ", _skill(name))
+
+
+def _readme_ws() -> str:
+    """README đã gỡ dấu blockquote đầu dòng rồi gộp khoảng trắng.
+
+    Gỡ `>` là bắt buộc chứ không phải tiện tay: nhiều lời cảnh báo của README
+    nằm trong blockquote nhiều dòng, nên một phép chuẩn hoá chỉ gộp khoảng
+    trắng sẽ để lại `>` LỌT VÀO GIỮA CÂU ("nghĩa hẹp của > riêng nó") và mọi
+    assertion vắt qua chỗ ngắt dòng đều đỏ oan — đúng bẫy đã vấp một lần.
+    """
+    text = (lint.PLUGIN_ROOT / "README.md").read_text(encoding="utf-8")
+    unquoted = re.sub(r"(?m)^[ \t]*>[ \t]?", "", text)
+    return re.sub(r"\s+", " ", unquoted)
+
+
+# ── I-4 — luật `scan_sources: none` → DỪNG, trước đây KHÔNG AI CANH ─────────
+#
+# Người soát xoá trọn ba dòng luật đó khỏi ip-harvest/SKILL.md và suite vẫn
+# 125 passed: luật định nghĩa TOÀN BỘ hành vi B1 trong Cowork (nơi
+# scan_sources luôn là none) mà không một test nào ghim. Bất đối xứng lộ rõ vì
+# người anh em của nó — `patent_search: none` ở ip-screen — thì CÓ test.
+
+
+def test_ip_harvest_stops_instead_of_running_reduced_when_scan_sources_is_none():
+    text = _skill_ws("ip-harvest")
+    assert '`scan_sources: none` KHÔNG phải là "1a chạy xong không thấy gì"' in text
+    assert "Không quét được ≠ quét xong không có" in text
+    assert "B1 **dừng**" in text, "mất mệnh lệnh DỪNG thì luật thành lời khuyên"
+    assert "**không tự nhảy sang 1b**" in text
+    assert "báo CEO nạp ứng viên tay" in text
+
+
+def test_ip_harvest_marks_the_scan_sources_stop_as_a_deliberate_exception():
+    # M-1: khối Bước 0′ (đóng băng, KHÔNG được sửa) nói *mọi* trường `none` →
+    # chế độ giảm; luật `scan_sources` nói DỪNG. Luật riêng đè luật chung mà
+    # trước đây hai bên không dẫn chiếu nhau — người đọc gặp mâu thuẫn trần.
+    # Sửa được chỉ ở PHÍA BÊN KIA (luật riêng), vì khối là bất khả xâm phạm.
+    text = _skill_ws("ip-harvest")
+    assert "NGOẠI LỆ CÓ CHỦ ĐÍCH của luật chung" in text
+    assert "trong khối Bước 0′" in text, "ngoại lệ phải nói rõ nó là ngoại lệ CỦA CÁI GÌ"
+
+
+def test_ip_harvest_tells_what_to_do_with_manually_loaded_candidates():
+    # M-2: trong Cowork nhánh 1b vĩnh viễn không chạy được (điều kiện của nó là
+    # "1a *chạy được* và không đủ"), và trước bản vá này không chỗ nào nói phải
+    # làm gì với ứng viên CEO nạp tay — ngõ cụt thật, không phải lỗi suy diễn.
+    text = _skill_ws("ip-harvest")
+    assert "Ứng viên CEO nạp tay" in text
+    assert "vẫn phải có đủ bốn trường bắt buộc" in text
+    assert "chưa được sang B2" in text
+    assert "**Không chạy 1b** trong ca này" in text
+
+
+# ── I-2 — QP-02-06 là phụ thuộc ẩn; nay phải có nhánh chế độ giảm ───────────
+#
+# ip-screen bắt "dùng lại khuôn phân loại của QP-02-06 §7.2" và viện §8.4,
+# ip-harvest liệt FTO Record làm nguồn quét — nhưng QP-02-06 không nằm trong
+# plugin, không phải skill KN-Stack, không phải một trong 7 trường workspace.
+# Khác `<patent_search>`/`<triz_refs>`, chỗ này trước đây KHÔNG có nhánh
+# `none` và KHÔNG bắt in dòng khai báo.
+
+
+def test_ip_screen_declares_reduced_mode_when_qp_02_06_is_out_of_reach():
+    text = _skill_ws("ip-screen")
+    assert "QP-02-06" in text
+    assert "phân loại prior art chạy KHÔNG có QP-02-06 — dùng khuôn rút gọn, độ tin thấp hơn" in text
+    # Khuôn rút gọn phải nêu NGAY TẠI CHỖ — trỏ sang một tài liệu không tồn tại
+    # trong Cowork thì vẫn là cùng cái lỗ.
+    assert "khuôn rút gọn" in text
+    assert "bỏ hẳn §8.4" in text
+    assert "chỉ là sàng thô" in text
+
+
+def test_readme_declares_the_out_of_plugin_dependencies():
+    text = _readme_ws()
+    assert "Phụ thuộc ngoài plugin" in text
+    assert "QP-02-06" in text
+    assert "RESEARCH_ip-sang-che-gphi-chuc-danh_2026-08-06.md" in text
+
+
+# ── I-3 — chỉ thị "(nếu profile có)" không kiểm chứng được ──────────────────
+#
+# Không profile nào khai trường nghiên cứu nền, nên agent không có cách nào
+# biết "profile có" hay không. Thay bằng chỉ thị kiểm chứng được: tìm file,
+# không thấy thì khai rồi chạy tiếp. KHÔNG thêm trường workspace thứ 8 —
+# ba file workspace-*.md bị khoá và WORKSPACE_FIELDS ghim đúng 7 trường
+# (test_workspace_fields_are_the_canonical_seven).
+
+
+def test_ip_invent_research_file_instruction_is_checkable_not_a_phantom_profile_field():
+    text = _skill_ws("ip-invent")
+    assert "(nếu profile có)" not in text, "mệnh đề giả định không kiểm chứng được vẫn còn"
+    assert "RESEARCH_ip-sang-che-gphi-chuc-danh_2026-08-06.md" in text
+    assert "chạy KHÔNG có nghiên cứu nền" in text
+    assert "Không trường workspace nào khai file này" in text
+    # Chốt phòng thủ: cách sửa SAI là đẻ ra trường thứ 8 rồi khai nó ở đây.
+    assert len(lint.WORKSPACE_FIELDS) == 7
+    for field in lint.WORKSPACE_FIELDS:
+        assert f"<{field}>" != "<research_file>"
+    assert "research_file" not in text and "research_refs" not in text
+
+
+# ── I-5 — `.claude-plugin/plugin.json` KHÔNG có một test nào ────────────────
+#
+# Ghi đè thành JSON hỏng → 125 passed. Xoá hẳn file → 125 passed. Đó là file
+# DUY NHẤT biến cây thư mục thành *plugin*: mất nó thì cả import Cowork lẫn
+# marketplace đều chết, mà toàn bộ 125 test vẫn xanh vì chúng chỉ đọc
+# skills/, templates/ và README.md.
+
+MANIFEST_PATH = lint.PLUGIN_ROOT / ".claude-plugin" / "plugin.json"
+MANIFEST_REQUIRED_KEYS = ["name", "description", "version", "author"]
+
+
+def _manifest() -> dict:
+    return json.loads(MANIFEST_PATH.read_text(encoding="utf-8"))
+
+
+def test_plugin_manifest_file_exists():
+    assert MANIFEST_PATH.is_file(), (
+        f"thiếu {MANIFEST_PATH} — không có nó thì plugins/ip-invent/ chỉ là một "
+        "cây thư mục, Cowork và marketplace đều không nhận ra plugin"
+    )
+
+
+def test_plugin_manifest_parses_as_json():
+    try:
+        data = _manifest()
+    except json.JSONDecodeError as exc:  # pragma: no cover - thông điệp cho người sửa
+        pytest.fail(f"{MANIFEST_PATH} không parse được JSON: {exc}")
+    assert isinstance(data, dict), "manifest phải là một object JSON, không phải mảng/chuỗi"
+
+
+@pytest.mark.parametrize("key", MANIFEST_REQUIRED_KEYS)
+def test_plugin_manifest_carries_every_required_key(key):
+    data = _manifest()
+    assert key in data, f"manifest thiếu khoá bắt buộc `{key}`"
+    assert data[key], f"khoá `{key}` rỗng — có mặt suông không đủ"
+
+
+def test_plugin_manifest_name_matches_the_plugin_directory():
+    # Tên trong manifest là thứ Cowork/marketplace dùng để định danh; lệch với
+    # tên thư mục thì junction, README và mọi hướng dẫn import đều trỏ sai.
+    assert _manifest()["name"] == "ip-invent" == lint.PLUGIN_ROOT.name
+
+
+# ── I-1 + các Minor README ──────────────────────────────────────────────────
+#
+# README trước đây mượn nguyên câu "Ba cổng độc lập, phải qua cả ba" của
+# co-mat-gate.md nhưng THAY Điều 14 bằng advisory-only — mà advisory-only là
+# lời từ chối trách nhiệm, không phải cổng để qua. Hệ quả: người đọc cửa
+# trước kết luận Điều 14 không thuộc nhóm bắt buộc, trong khi cổng đó có thật
+# ở ip-dossier. co-mat-gate.md bị đóng băng SHA-256 nên KHÔNG sửa được —
+# toàn bộ bản vá nằm ở phía README.
+
+
+def test_readme_lists_every_real_blocking_gate_including_dieu_14():
+    text = _readme_ws()
+    assert "**Cổng bộc lộ** (Điều 60 Luật SHTT)" in text
+    assert "**Cổng phân loại bí mật nhà nước**" in text
+    assert "**Cổng Điều 10a — tác giả/AI**" in text
+    assert "**Cổng Điều 14 — nộp ra nước ngoài**" in text, (
+        "Điều 14 là cổng chặn thật (ip-dossier) — bỏ nó khỏi danh sách là đúng "
+        "cái sai mà đợt soát bắt được"
+    )
+
+
+def test_readme_does_not_sell_advisory_only_as_a_gate_to_pass():
+    text = _readme_ws()
+    assert "Advisory-only KHÔNG phải một cổng" in text
+    assert "phạm vi trách nhiệm" in text
+    # Không được dựng lại câu "ba cổng" đã gây hiểu nhầm.
+    assert "Ba cổng **độc lập với nhau, phải qua cả ba**" not in text
+    assert "## Ba cổng chặn" not in text
+
+
+def test_readme_explains_why_the_gate_doc_counts_three():
+    # Không được để người đọc tưởng README và co-mat-gate.md mâu thuẫn: tài
+    # liệu cổng đếm "ba" theo nghĩa hẹp của riêng nó (bộc lộ · phân loại ·
+    # Điều 14), không đếm Điều 10a.
+    text = _readme_ws()
+    assert "nghĩa hẹp của riêng nó" in text
+    assert "không mâu thuẫn" in text
+
+
+def test_readme_warns_the_test_suite_does_not_travel_with_the_copy():
+    # M-3: mục Bảo trì đưa lệnh pytest/run-eval.sh nhưng bản copy trong Cowork
+    # không có `scripts/` lẫn `evals/` — nói "nằm ngoài plugin" chưa đủ thẳng.
+    text = _readme_ws()
+    assert "KHÔNG đi kèm bản copy" in text
+    assert "sửa không có lưới an toàn" in text
+
+
+def test_readme_explains_seven_dirs_but_six_skills():
+    # M-4: copy bảy thư mục mà chỉ sáu skill hiện ra (ip-shared không có
+    # SKILL.md) — người import dễ tưởng thiếu và đi "sửa" cho đủ bảy.
+    text = _readme_ws()
+    assert "Bảy thư mục được chép nhưng chỉ sáu skill hiện ra" in text
+    assert "**không có `SKILL.md`**" in text
+
+
+def test_readme_carries_the_two_declared_limits_of_the_lint():
+    # M-5: hai giới hạn ĐÃ TUYÊN BỐ trước nay chỉ sống trong docstring Python
+    # và sổ tiến độ — người dùng Cowork không bao giờ mở `scripts/`.
+    text = _readme_ws()
+    assert "Hai giới hạn đã tuyên bố" in text
+    assert "phần tự do" in text and "`description:` của frontmatter" in text
+    assert "kẻ sửa **cả hai file**" in text
+
+
+def test_readme_warns_that_install_skips_broken_junctions():
+    # setup.sh skip-nếu-tồn-tại: `--install` in "skipped" cho junction HỎNG,
+    # nên máy nâng cấp từ bố cục `skills/ip/` cũ tưởng đã xong.
+    text = _readme_ws()
+    assert "bỏ qua junction đã tồn tại — kể cả junction HỎNG" in text
+    assert "xoá đúng junction đó rồi install lại" in text

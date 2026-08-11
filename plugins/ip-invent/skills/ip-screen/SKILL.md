@@ -92,6 +92,22 @@ trục I. Dùng lại khuôn phân loại của **QP-02-06 §7.2**:
 claim map · **(D)** active, bao phủ core → blocking. Áp cả **doctrine of equivalents** và
 **prosecution history estoppel** (QP-02-06 §8.4).
 
+> ⚠️ **KHÔNG tiếp cận được QP-02-06 → chế độ giảm, và PHẢI KHAI.** QP-02-06 là quy trình FTO **nội
+> bộ**: nó **không** nằm trong plugin, **không** phải skill, **không** phải một trường workspace —
+> trong Cowork nó **không tồn tại**. Mở không được thì **in dòng khai báo**
+> *"phân loại prior art chạy KHÔNG có QP-02-06 — dùng khuôn rút gọn, độ tin thấp hơn"* rồi chạy tiếp
+> bằng đúng **khuôn rút gọn** sau, nêu ngay tại đây để khỏi phải đi tìm:
+> · **(A)** hết hiệu lực / hết hạn duy trì → tự do dùng
+> · **(B)** còn hiệu lực, **không** phủ dấu hiệu nào của khung claim dự kiến
+> · **(C)** còn hiệu lực, phủ **một phần** → lập claim map, ghi rõ **dấu hiệu nào** đụng
+> · **(D)** còn hiệu lực, phủ **dấu hiệu lõi** → blocking, không đi tiếp khi chưa có đại diện SHTT xem.
+>
+> Khuôn rút gọn **bỏ hẳn §8.4** (doctrine of equivalents + prosecution history estoppel): hai thứ đó
+> đọc từ hồ sơ truy tố gốc, không suy ra được từ trang tóm tắt patent. **Hệ quả phải ghi ra:** ở chế
+> độ này kết luận trục I **chỉ là sàng thô** — phạm vi bảo hộ thực tế của prior art có thể **rộng hơn
+> câu chữ claim**, nên một ứng viên chấm 🟢 vẫn có thể đụng. Đưa vào mục **"Khoản chưa xác minh"**
+> và hạ độ tin đúng như ca `<patent_search>: none`.
+
 **Dùng lại FTO Record** nếu dự án đã có — prior art đã tra không tra lại. Nhưng ghi hồ sơ riêng: FTO là
 *tránh claim người khác*, đây là *dựng claim của mình*.
 
@@ -249,4 +265,6 @@ không **và nếu chưa thì cần làm gì để thoả** (đây là chỗ sin
 - **Bày cả ba đường A/B/C kèm đánh đổi**, không tự chọn.
 - Nêu rõ hai câu chưa có đáp án của đường MẬT khi đề xuất nó.
 - pre-search ≠ tra cứu chính thức — nói câu này trong mọi đầu ra.
+- **Không mở được QP-02-06** → in dòng khai báo, dùng **khuôn rút gọn A/B/C/D** nêu tại I.3, bỏ §8.4,
+  hạ độ tin trục I và ghi vào "Khoản chưa xác minh". Không im lặng chấm như thường.
 - Kết quả **MẬT** → `<output_pattern>`.

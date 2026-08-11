@@ -198,10 +198,16 @@ REJECT IF:
 ## NLM reference
 
 Notebook `<nlm_notebook>` — **chỉ nguồn luật công khai**; `none` thì bỏ qua mục này và **in dòng
-khai báo** *"chạy KHÔNG có notebook luật"*. Nghiên cứu nền: file
-`RESEARCH_ip-sang-che-gphi-chuc-danh_2026-08-06.md` trong `<root>` (nếu profile có).
-(Phần A tiêu chí chức danh · Phần B pháp lý IP — **coi là chưa xác nhận, xem Phần D** ·
-Phần C trạng thái CEO · **Phần D NĐ 100/2026 lật quy cách**).
+khai báo** *"chạy KHÔNG có notebook luật"*.
+
+**Nghiên cứu nền — tìm thật, đừng đoán "profile có hay không".** Không trường workspace nào khai file
+này, nên không có cách nào biết được bằng cách đọc profile. Thủ tục: **tìm file
+`RESEARCH_ip-sang-che-gphi-chuc-danh_2026-08-06.md` trong `<root>`**, rồi rẽ theo kết quả tìm:
+
+- **Tìm thấy** → dùng (Phần A tiêu chí chức danh · Phần B pháp lý IP — **coi là chưa xác nhận, xem
+  Phần D** · Phần C trạng thái CEO · **Phần D NĐ 100/2026 lật quy cách**).
+- **Không thấy** → **in dòng khai báo** *"chạy KHÔNG có nghiên cứu nền"* và **chạy tiếp**. Mọi dữ
+  kiện pháp lý phải tra lại từ đầu ở từng block; cấm nhớ hộ nội dung một file chưa mở được.
 
 ## Rules
 
