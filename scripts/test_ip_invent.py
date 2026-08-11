@@ -1115,6 +1115,34 @@ def test_ip_criteria_and_ip_claim_were_already_clean_before_task_6(name):
     assert lint.lint_paths(_skill(name)) == []
 
 
+# ═══════════════════════════════════════════════════════════════════════════
+# VÒNG SỬA 1/5 CHO TASK 6 — `<nlm_notebook>` là chỗ KHÔNG có test nào ghim
+#
+# `lint_paths` chỉ săn ĐƯỜNG DẪN (D:\..., 1_Projects/..., skills/...) — "ip-vn"
+# là TÊN NOTEBOOK, không có hình dạng đường dẫn nào, nên không nhánh nào của
+# FORBIDDEN_PATH_RE với tới nó. Hoàn nguyên `<nlm_notebook>` → `ip-vn` ở
+# `ip-screen` VÀ `ip-invent` sống sót toàn bộ 112 test trước vòng sửa này —
+# đã tự kiểm bằng cách mutate file thật rồi chạy lại suite (xem báo cáo).
+# Đây là PIN NỘI DUNG bằng string match, không phải cơ chế lint mới.
+# ═══════════════════════════════════════════════════════════════════════════
+
+
+def test_ip_screen_pins_nlm_notebook_placeholder_not_the_literal_notebook_name():
+    text = _skill("ip-screen")
+    assert "<nlm_notebook>" in text
+    assert "ip-vn" not in text, "ip-screen đã hoàn nguyên về tên notebook cứng 'ip-vn'"
+
+
+def test_ip_invent_pins_nlm_notebook_placeholder_not_the_literal_notebook_name():
+    # Task 5 đổi `ip-vn` → `<nlm_notebook>` ở HAI chỗ trong ip-invent/SKILL.md
+    # (rào cứng #2 và mục `## NLM reference`) — không test nào ghim việc này
+    # trước vòng sửa hiện tại; tự kiểm xác nhận hoàn nguyên cả hai chỗ vẫn xanh
+    # 112/112, nên ghim luôn theo cùng khuôn với ip-screen.
+    text = _skill("ip-invent")
+    assert text.count("<nlm_notebook>") == 2
+    assert "ip-vn" not in text, "ip-invent đã hoàn nguyên về tên notebook cứng 'ip-vn'"
+
+
 # ── Biến thể cú pháp cho neo gốc vault: có/không backtick, có/không dấu / cuối ──
 # Bài học từ Task 3/4: một lint "có mặt chuỗi" luôn thua biến thể cú pháp. Ở đây
 # lint_paths không canh "cụm bắt buộc" mà TÌM cái xấu, nên lớp lỗi khác — nhưng
