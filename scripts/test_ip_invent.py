@@ -1301,3 +1301,73 @@ def test_path_lint_flags_4_archives_and_5_galaxy_root_anchors():
     # để cả 96 test xanh.
     assert any("4_Archives" in e for e in lint.lint_paths("chuyển vào `4_Archives/2026/x.md`"))
     assert any("5_Galaxy" in e for e in lint.lint_paths("ghi note `5_Galaxy/Note.md`"))
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# TASK 7 — KHUÔN LEDGER (`templates/_pipeline_state.md`) + README.md
+#
+# Khác với `lint_gate_doc`/`lint_skill_block`: `_pipeline_state.md` là KHUÔN
+# để người dùng CHÉP RA rồi điền — không phải tài liệu đóng băng. Đóng băng
+# nó (SHA-256 cả file hay so nguyên văn) là sai bản chất: khuôn phải sửa được
+# tự do (điền ngày, tick checkbox, ghi kết quả) mà vẫn còn đủ 5 hàng block và
+# 5 cờ ràng buộc. Nên `lint_ledger_template` chỉ kiểm CÓ-MẶT — nó phát hiện
+# THIẾU (xoá mất một hàng/cờ), KHÔNG phát hiện đảo nghĩa hay nội dung khuôn bị
+# viết lại thành một câu khác nhưng vẫn chứa đúng chuỗi con. Đây là phạm vi cố
+# ý, hẹp hơn hẳn `lint_gate_doc`/`lint_skill_block` — xem docstring
+# `lint_ledger_template`.
+# ═══════════════════════════════════════════════════════════════════════════
+
+
+def test_ledger_template_carries_all_five_blocks_and_the_gate_flag():
+    text = (lint.PLUGIN_ROOT / "templates" / "_pipeline_state.md").read_text(encoding="utf-8")
+    assert lint.lint_ledger_template(text) == []
+
+
+def test_ledger_lint_flags_a_missing_block_row():
+    dirty = "\n".join(r for r in lint.LEDGER_ROWS if r != "B3 ip-claim")
+    assert any("B3" in e for e in lint.lint_ledger_template(dirty))
+
+
+@pytest.mark.parametrize("flag", lint.LEDGER_FLAGS)
+def test_ledger_lint_flags_a_missing_constraint_flag(flag):
+    # Xoá HẾT (không chỉ một) lần xuất hiện của cờ, không phân biệt hoa/thường
+    # — "Cổng phân loại" xuất hiện cả ở dòng "Bề mặt: … · Cổng phân loại: …"
+    # LẪN ở mục Cờ ràng buộc; nếu chỉ xoá một chỗ, chỗ kia vẫn cứu lint xanh
+    # oan (đột biến không đỏ được — test trang trí).
+    text = (lint.PLUGIN_ROOT / "templates" / "_pipeline_state.md").read_text(encoding="utf-8")
+    dirty = re.sub(re.escape(flag), "", text, flags=re.IGNORECASE)
+    assert flag.lower() not in dirty.lower(), "đột biến chưa xoá hết — test tự nó chưa đỏ được"
+    errors = lint.lint_ledger_template(dirty)
+    assert any(flag in e for e in errors), (flag, errors)
+
+
+def test_ledger_template_carries_the_reduced_mode_disclosure_section():
+    # Mục "Chế độ giảm đã khai" tồn tại để trường workspace = none không biến
+    # mất khỏi hồ sơ — không nằm trong LEDGER_ROWS/LEDGER_FLAGS nên cần chốt
+    # riêng, không phải hệ quả tự động của hai lint ở trên.
+    text = (lint.PLUGIN_ROOT / "templates" / "_pipeline_state.md").read_text(encoding="utf-8")
+    assert "## Chế độ giảm đã khai" in text
+
+
+def test_readme_marks_cowork_import_as_unverified():
+    text = (lint.PLUGIN_ROOT / "README.md").read_text(encoding="utf-8")
+    assert "CHƯA KIỂM CHỨNG" in text
+
+
+def test_readme_and_skills_agree_on_the_shared_dir_name():
+    text = (lint.PLUGIN_ROOT / "README.md").read_text(encoding="utf-8")
+    assert lint.SHARED_DIR_NAME in text
+    assert "_shared" not in text.replace(lint.SHARED_DIR_NAME, "")
+
+
+def test_readme_states_the_three_non_negotiable_points():
+    # Ba điểm brief nêu là "không được nhân nhượng":
+    #   1. Import vào Cowork mang cảnh báo CHƯA KIỂM CHỨNG (đã có test riêng
+    #      ở trên — lặp lại ở đây để cả ba điểm sống chung một chỗ, dễ đọc).
+    #   2. Junction thứ 7 (ip-shared) là BẮT BUỘC.
+    #   3. Sau khi import phải đổi active-workspace.md sang workspace-cowork.md.
+    text = (lint.PLUGIN_ROOT / "README.md").read_text(encoding="utf-8")
+    normalized = re.sub(r"\s+", " ", text)
+    assert "CHƯA KIỂM CHỨNG" in text
+    assert "Junction `ip-shared` là BẮT BUỘC, không phải tuỳ chọn." in normalized
+    assert "đổi `active-workspace.md` sang `workspace-cowork.md`" in text

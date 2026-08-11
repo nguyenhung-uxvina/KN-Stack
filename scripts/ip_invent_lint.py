@@ -822,3 +822,54 @@ def lint_paths(text: str) -> list[str]:
         if hit not in hits:
             hits.append(hit)
     return [f"đường dẫn neo cứng, phải đi qua tầng trỏ: {h!r}" for h in hits]
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# TASK 7 — KHUÔN LEDGER `templates/_pipeline_state.md`
+#
+# `_pipeline_state.md` KHÁC BẢN CHẤT với `co-mat-gate.md` / khối Bước 0′: nó
+# là một KHUÔN (template) mà mỗi dự án chép ra rồi ĐIỀN — ngày tháng, tick
+# checkbox, kết quả từng block. Đóng băng nó bằng SHA-256 cả file hay so
+# nguyên văn (kiểu `lint_gate_doc`/`lint_skill_block`) là sai bản chất: một
+# ledger đã điền xong không còn giống bản khuôn rỗng ở bất kỳ ký tự nào ngoài
+# khung. Cái cần bất biến không phải "nguyên văn", mà là KHUNG — 5 hàng block
+# và 5 cờ ràng buộc không bị xoá mất khi ai đó "dọn" file hay copy thiếu.
+#
+# Vì vậy `lint_ledger_template` quay lại đúng khuôn "có-mặt-chuỗi" mà
+# `lint_gate_doc` đã BỎ (xem docstring `lint_gate_doc`) — và ở đây điều đó là
+# ĐÚNG lựa chọn, không phải lặp lại sai lầm cũ: khuôn đó thua ba vòng vì kẻ
+# tấn công cố tình che một khối ĐANG CÓ HIỆU LỰC RÀNG BUỘC (cổng an ninh) mà
+# vẫn giữ chuỗi khoá để lint xanh oan. Ledger không có "kẻ tấn công" theo
+# nghĩa đó — rủi ro thật là người dùng vô ý xoá một hàng khi sửa tay, không
+# phải ai đó cố ý đảo nghĩa để qua mặt lint.
+
+LEDGER_ROWS = [
+    "B0 ip-criteria", "B1 ip-harvest", "B2 ip-screen",
+    "B3 ip-claim", "B4 ip-dossier",
+]
+
+# Cờ ràng buộc bắt buộc có trong ledger — mỗi cờ là một cổng chặn thật.
+LEDGER_FLAGS = ["Bộc lộ", "Điều 10a", "Điều 14", "thẩm định nhanh", "Cổng phân loại"]
+
+
+def lint_ledger_template(text: str) -> list[str]:
+    """Kiểm khuôn ledger mang đủ 5 hàng block và 5 cờ ràng buộc.
+
+    PHẠM VI — nói đủ, không hứa quá:
+
+    - Hàm này chỉ kiểm CÓ-MẶT (substring `in text` cho hàng block, so
+      không-phân-biệt-hoa-thường cho cờ). Nó phát hiện THIẾU — một hàng hay
+      một cờ bị xoá khỏi khuôn (vô tình khi sửa tay, hay cố ý rút gọn).
+    - Hàm này KHÔNG phát hiện đảo nghĩa (vd đổi "Bộc lộ" thành "KHÔNG Bộc
+      lộ" vẫn chứa chuỗi con "Bộc lộ" nên vẫn xanh) và KHÔNG phát hiện nội
+      dung khuôn bị viết lại miễn còn giữ đúng các chuỗi khoá này (vd xoá
+      sạch cột "Kết quả chính" hay đổi thứ tự cột trong bảng — bảng vẫn chứa
+      "B0 ip-criteria" nên vẫn xanh). Đây LÀ giới hạn cố ý, không phải chỗ
+      quên vá: ledger là khuôn để điền, không phải tài liệu đóng băng, nên
+      không áp phép so-nguyên-văn/so-hash của `lint_gate_doc`/
+      `lint_skill_block` vào đây — điều đó sẽ làm khuôn không sửa được, sai
+      bản chất của một template.
+    """
+    errors = [f"ledger thiếu hàng: {r!r}" for r in LEDGER_ROWS if r not in text]
+    errors += [f"ledger thiếu cờ: {f!r}" for f in LEDGER_FLAGS if f.lower() not in text.lower()]
+    return errors
