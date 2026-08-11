@@ -7,7 +7,7 @@
 
 ```
 KN-Stack/
-├── skills/           ← 252 skills organized by domain (14 domains)
+├── skills/           ← 252 skills organized by domain (15 domains)
 │   ├── bridge/       (10) — Operations skills
 │   ├── forge/        (15) — Product strategy skills (+ forge-fabrication mega-skill: 6-block manufacturing pipeline F0-F5
 │   │                       — closes R&D → production loop via Handoff_to_Fabrication.md from helix-detail-finalize;
@@ -26,15 +26,17 @@ KN-Stack/
 │   ├── system/       (16) — System design tools (gate0-3, decide, cld)
 │   └── tana/         (9)  — Tana integration (THỊNH workflow capture: tana-thu/hoa/ich/nho/hanh, tana-session, tana-weekly)
 ├── plugins/          ← plugin tự chứa, copy-anywhere (setup.sh --install junction cả hai)
-│   ├── ip-invent/    — Sở hữu trí tuệ TẤN CÔNG: orchestrator + 5 block
-│   │                   (ip-criteria/harvest/screen/claim/dossier) + ip-shared/references.
-│   │                   Cặp đối xứng của QP-02-06 FTO — FTO tránh claim người khác, plugin này
-│   │                   dựng claim của mình. B0 ip-criteria là CHẶN: dựng thước đo "cái gì được
-│   │                   tính" (QĐ 431/QĐ-BQP ↔ QĐ 12/2025/QĐ-TTg) TRƯỚC khi rà ứng viên. Luật nền
-│   │                   đổi rất nhanh (NĐ 65/2023 → 15/2026 → 33/2026 → 100/2026) nên mọi đầu ra
-│   │                   có quy cách PHẢI in ngày kiểm chuỗi sửa đổi.
-│   │                   Chạy được cả trong Cowork qua tầng trỏ workspace + cổng phân loại.
-│   └── leo-ai/       — MCP leo-bridge + 4 skill LEO
+│   └── ip-invent/    — Sở hữu trí tuệ TẤN CÔNG: orchestrator + 5 block
+│                       (ip-criteria/harvest/screen/claim/dossier) + ip-shared/references +
+│                       templates/ (khuôn ledger _pipeline_state.md).
+│                       Cặp đối xứng của QP-02-06 FTO — FTO tránh claim người khác, plugin này
+│                       dựng claim của mình. B0 ip-criteria là CHẶN: dựng thước đo "cái gì được
+│                       tính" (QĐ 431/QĐ-BQP ↔ QĐ 12/2025/QĐ-TTg) TRƯỚC khi rà ứng viên. Luật nền
+│                       đổi rất nhanh (NĐ 65/2023 → 15/2026 → 33/2026 → 100/2026) nên mọi đầu ra
+│                       có quy cách PHẢI in ngày kiểm chuỗi sửa đổi.
+│                       Thiết kế để chạy được cả trong Cowork qua tầng trỏ workspace + cổng phân
+│                       loại — chưa live-run xác nhận (setup.sh --verify/--status và /ip-criteria
+│                       thật đang treo, xem CHANGELOG [1.9.0]).
 ├── scripts/          ← Python scripts codified from skills (Naval code leverage)
 │   └── _codify_ledger.md  (append-only registry of markdown→Python conversions)
 ├── hooks/            ← 3 hook scripts (SessionStart, UserPromptSubmit, Stop)
@@ -43,7 +45,7 @@ KN-Stack/
 └── docs/             ← Skill architecture docs (BRIDGE, FORGE, HELIX) + SYSTEM_OVERVIEW.md (current-state map)
 ```
 
-> Skill counts above are maintained manually — verify with `bash setup.sh --status` (or `find skills -name SKILL.md | wc -l`) before citing them.
+> Skill counts above are maintained manually — verify with `bash setup.sh --status` (or `find skills -name SKILL.md | wc -l`) before citing them. `plugins/` trên nhánh này chỉ có `ip-invent/` — `plugins/leo-ai/` (MCP leo-bridge + 4 skill LEO) tồn tại trên các nhánh khác chưa merge (`feature/leo-ai-plugin` và vài nhánh khác), không có trên cây này.
 
 ## Adding/Editing Skills
 

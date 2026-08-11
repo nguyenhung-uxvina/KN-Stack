@@ -5,8 +5,11 @@
 
 ### Added
 - **Plugin `ip-invent`** — 6 skill IP dời từ `skills/ip/` sang `plugins/ip-invent/skills/`,
-  một nguồn chuẩn duy nhất, không `build.sh`. Chạy được cả trong Claude Code (7 junction) lẫn
-  Cowork (cây plugin nguyên vẹn).
+  một nguồn chuẩn duy nhất, không `build.sh`. Thiết kế để chạy được cả trong Claude Code
+  (7 junction) lẫn Cowork (cây plugin nguyên vẹn) — cơ chế có lint gác (`scripts/test_ip_invent.py`,
+  125 test) nhưng chưa live-run xác nhận ở cả hai bề mặt: `setup.sh --verify`/`--status` và
+  `/ip-criteria` thật vẫn đang treo (junction toàn cục bị chiếm bởi phiên khác, xem "Việc còn
+  treo" ở task-8-report.md).
 - **Tầng trỏ workspace** `ip-shared/references/active-workspace.md` + 3 profile
   (`knstack` local · `cowork` cloud · `template`). Đổi môi trường = sửa một dòng, không đụng
   `SKILL.md` nào.
@@ -24,11 +27,16 @@
   B1 dừng và báo CEO thay vì tự nhảy sang 1b.
 
 ### Changed
-- `setup.sh` lấy bản plugin-aware từ `feature/fluency-4d-plugin` (commit `d2bd393`)
-  — biết đi vào `plugins/*/skills/*/` và junction cả thư mục tham chiếu dùng chung.
+- `setup.sh` lấy bản plugin-aware từ nhánh `feature/fluency-4d-plugin`, đỉnh nhánh tại thời điểm
+  Task 1 chạy là commit `d2bd393` ("CLAUDE.md: sửa mô tả plugins + thêm quy ước tên thư mục dùng
+  chung" — chỉ chạm `CLAUDE.md`); phần khiến `setup.sh` **plugin-aware** thật sự (đi vào
+  `plugins/*/skills/*/`, junction cả thư mục tham chiếu dùng chung, `lint_skills()` gác SKILL.md)
+  do commit **`5d29fff`** ("fluency-4d: setup.sh biết plugins/ + lint_skills gác SKILL.md") đưa
+  vào, nằm dưới `d2bd393` trong cùng nhánh. Ghi cả hai để người sau truy đúng commit.
 - `CLAUDE.md` — gỡ domain `ip/` khỏi cây `skills/` (đã dời sang `plugins/ip-invent/`), thêm mục
-  `plugins/` mới; `15 domains` → `14 domains`; skill count → 252 (`skills/` only, không tính
-  plugin).
+  `plugins/` mới; skill count → 252, **giữ nguyên `15 domains`** (đếm thật `ls -1 skills/ | wc -l`
+  = 15 — domain `ip/` đã không còn nằm trên đĩa từ trước Task 8, nên gỡ dòng mô tả nó khỏi tài
+  liệu không đổi số domain thực tế).
 - VERSION 1.7.0 → **1.9.0**.
 
 ## [1.7.0] - 2026-08-06
