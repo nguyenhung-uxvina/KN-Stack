@@ -1,5 +1,36 @@
 # Changelog
 
+## [1.9.0] - 2026-08-11
+> Bỏ qua 1.8.0 — số đó đã bị nhánh `feature/helix-cad-workbook` dùng (commit `0d49c94`, "Eval helix-cad-workbook 9/9 + ledger + bump v1.8.0"). Nhánh này lấy 1.9.0 để không có hai định nghĩa cho cùng một version; nhánh nào merge sau vẫn phải giải conflict VERSION/CHANGELOG bằng tay.
+
+### Added
+- **Plugin `ip-invent`** — 6 skill IP dời từ `skills/ip/` sang `plugins/ip-invent/skills/`,
+  một nguồn chuẩn duy nhất, không `build.sh`. Chạy được cả trong Claude Code (7 junction) lẫn
+  Cowork (cây plugin nguyên vẹn).
+- **Tầng trỏ workspace** `ip-shared/references/active-workspace.md` + 3 profile
+  (`knstack` local · `cowork` cloud · `template`). Đổi môi trường = sửa một dòng, không đụng
+  `SKILL.md` nào.
+- **Cổng phân loại** `co-mat-gate.md` — kích hoạt khi `surface: cloud`. Tách bí-mật-nhà-nước
+  (cấm tuyệt đối) khỏi chưa-bộc-lộ-nhưng-không-MẬT (Điều 60.2 cho phép bộc lộ có nghĩa vụ bảo
+  mật). Mặc định "chưa rõ" = coi như thuộc = DỪNG.
+- `scripts/ip_invent_lint.py` + `scripts/test_ip_invent.py` — lint tham chiếu, đường dẫn, chốt.
+- `evals/ip-invent.json` v1.2: IP-WORKSPACE + IP-COMAT, `total_required` 14 → 16.
+
+### Fixed
+- Ba tham chiếu dangling sẵn trong `skills/ip/` khi rời KN-Stack: TRIZ trỏ sang
+  `skills/helix/…`, `/research --patents`, và file RESEARCH trong `3_Resources/`. Cả ba giờ là
+  trường workspace; `none` thì block chạy chế độ giảm và **phải in dòng khai báo**.
+- `ip-harvest`: `scan_sources: none` không còn bị hiểu nhầm là "1a chạy xong không thấy gì" —
+  B1 dừng và báo CEO thay vì tự nhảy sang 1b.
+
+### Changed
+- `setup.sh` lấy bản plugin-aware từ `feature/fluency-4d-plugin` (commit `d2bd393`)
+  — biết đi vào `plugins/*/skills/*/` và junction cả thư mục tham chiếu dùng chung.
+- `CLAUDE.md` — gỡ domain `ip/` khỏi cây `skills/` (đã dời sang `plugins/ip-invent/`), thêm mục
+  `plugins/` mới; `15 domains` → `14 domains`; skill count → 252 (`skills/` only, không tính
+  plugin).
+- VERSION 1.7.0 → **1.9.0**.
+
 ## [1.7.0] - 2026-08-06
 > Bỏ qua 1.6.0 — số đó đã bị nhánh `feature/fluency-4d-dmir` dùng cho một thay đổi khác. Nhánh này lấy 1.7.0 để không có hai định nghĩa cho cùng một version; nhánh nào merge sau vẫn phải giải conflict VERSION/CHANGELOG bằng tay.
 

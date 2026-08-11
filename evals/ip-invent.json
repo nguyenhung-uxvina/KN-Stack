@@ -1,11 +1,11 @@
 {
   "skill": "ip-invent",
-  "version": "1.1",
-  "description": "Static assertions for ip-invent — offensive-IP orchestrator (ý tưởng → hồ sơ nộp đơn) commanding 5 ip-* blocks, distinct from and complementary to QP-02-06 FTO. Must preserve: B0-criteria-before-screening gate, disclosure gate, egress gate (no unpublished invention content to cloud), advisory-only stance, mandatory amendment-chain verification with printed date, 4-way routing including secret patents, fast-examination claim cap, Điều 14 foreign-filing security gate, Điều 10a AI-authorship gate, and one-block-per-turn ledger discipline. v1.1: all cross-document [\\s\\S]* windows bounded after a mutation test proved IP-DISCLOSE was a keyword gate — an inverted disclosure gate still passed because scattered tokens elsewhere satisfied the unbounded match.",
+  "version": "1.2",
+  "description": "Static assertions for ip-invent — offensive-IP orchestrator (ý tưởng → hồ sơ nộp đơn) commanding 5 ip-* blocks, distinct from and complementary to QP-02-06 FTO. Must preserve: B0-criteria-before-screening gate, disclosure gate, egress gate (no unpublished invention content to cloud), advisory-only stance, mandatory amendment-chain verification with printed date, 4-way routing including secret patents, fast-examination claim cap, Điều 14 foreign-filing security gate, Điều 10a AI-authorship gate, and one-block-per-turn ledger discipline. v1.1: all cross-document [\\s\\S]* windows bounded after a mutation test proved IP-DISCLOSE was a keyword gate — an inverted disclosure gate still passed because scattered tokens elsewhere satisfied the unbounded match. v1.2: thêm IP-WORKSPACE + IP-COMAT sau khi đóng gói thành plugin — tầng trỏ workspace và cổng phân loại bí mật nhà nước là hai cơ chế mới, không có assertion thì chúng có thể bị gỡ mà eval vẫn xanh.",
   "mode": "static",
   "test_input": "lập hồ sơ sáng chế cho một cơ cấu cơ khí chưa bộc lộ, nhắm cả hai đích chức danh, cân nhắc nộp kép và khả năng nộp ra nước ngoài",
-  "total_required": 14,
-  "passing_score": 15,
+  "total_required": 16,
+  "passing_score": 17,
   "assertions": [
     {
       "id": "IP-BLOCKS",
@@ -111,6 +111,20 @@
       "check": "forbids collapsing the protectability axis and the credential-value axis into one averaged score",
       "regex": "Không bình quân hai trục",
       "required": false
+    },
+    {
+      "id": "IP-WORKSPACE",
+      "name": "reads_pointer_layer_or_stops",
+      "check": "orchestrator đọc tầng trỏ workspace TRƯỚC mọi việc khác và DỪNG nếu đọc không được — đảo thành 'đọc không được thì dùng mặc định' phải fail",
+      "regex": "\\.\\./ip-shared/references/active-workspace\\.md[\\s\\S]{0,400}Đọc không được thì DỪNG",
+      "required": true
+    },
+    {
+      "id": "IP-COMAT",
+      "name": "cloud_surface_triggers_classification_gate",
+      "check": "surface cloud kích hoạt cổng phân loại trước khi đụng nội dung ứng viên",
+      "regex": "surface[^\\n]{0,40}cloud[\\s\\S]{0,300}co-mat-gate\\.md[\\s\\S]{0,300}trước khi đụng nội dung",
+      "required": true
     }
   ]
 }

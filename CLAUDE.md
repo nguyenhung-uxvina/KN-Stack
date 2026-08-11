@@ -7,7 +7,7 @@
 
 ```
 KN-Stack/
-├── skills/           ← 249 skills organized by domain (15 domains)
+├── skills/           ← 252 skills organized by domain (14 domains)
 │   ├── bridge/       (10) — Operations skills
 │   ├── forge/        (15) — Product strategy skills (+ forge-fabrication mega-skill: 6-block manufacturing pipeline F0-F5
 │   │                       — closes R&D → production loop via Handoff_to_Fabrication.md from helix-detail-finalize;
@@ -16,12 +16,6 @@ KN-Stack/
 │   ├── galaxy/       (12) — Knowledge management (+ skill-to-public, codify, mentor-board — Naval outbound + code + mentor leverage)
 │   ├── mentors/      (58, dynamic) — Per-mentor advisor skills (add more via /mentor-board --add <leader>); orchestrator at galaxy/mentor-board/
 │   ├── book/         (23) — Book pipelines: codebase-to-book (9-phase, book-* blocks), book-to-codebase (btc-* blocks), book-to-skill, notebook-to-book
-│   ├── ip/           (6)  — Sở hữu trí tuệ TẤN CÔNG: ip-invent orchestrator + 5 block
-│   │                       (ip-criteria/harvest/screen/claim/dossier). Cặp đối xứng của QP-02-06 FTO
-│   │                       — FTO tránh claim người khác, ip/ dựng claim của mình. B0 ip-criteria là
-│   │                       CHẶN: dựng thước đo "cái gì được tính" (QĐ 431/QĐ-BQP ↔ QĐ 12/2025/QĐ-TTg)
-│   │                       TRƯỚC khi rà ứng viên. Luật nền đổi rất nhanh (NĐ 65/2023 → 15/2026 →
-│   │                       33/2026 → 100/2026) nên mọi đầu ra có quy cách PHẢI in ngày kiểm chuỗi sửa đổi.
 │   ├── erp/          (6)  — ERPNext integration
 │   ├── extract/      (7)  — Content extraction (social, chat, yt-extract/yt-learn/yt-search)
 │   ├── learn/        (3)  — Learning methodology
@@ -31,6 +25,16 @@ KN-Stack/
 │   ├── session/      (5)  — Session management (catchup, checkpoint)
 │   ├── system/       (16) — System design tools (gate0-3, decide, cld)
 │   └── tana/         (9)  — Tana integration (THỊNH workflow capture: tana-thu/hoa/ich/nho/hanh, tana-session, tana-weekly)
+├── plugins/          ← plugin tự chứa, copy-anywhere (setup.sh --install junction cả hai)
+│   ├── ip-invent/    — Sở hữu trí tuệ TẤN CÔNG: orchestrator + 5 block
+│   │                   (ip-criteria/harvest/screen/claim/dossier) + ip-shared/references.
+│   │                   Cặp đối xứng của QP-02-06 FTO — FTO tránh claim người khác, plugin này
+│   │                   dựng claim của mình. B0 ip-criteria là CHẶN: dựng thước đo "cái gì được
+│   │                   tính" (QĐ 431/QĐ-BQP ↔ QĐ 12/2025/QĐ-TTg) TRƯỚC khi rà ứng viên. Luật nền
+│   │                   đổi rất nhanh (NĐ 65/2023 → 15/2026 → 33/2026 → 100/2026) nên mọi đầu ra
+│   │                   có quy cách PHẢI in ngày kiểm chuỗi sửa đổi.
+│   │                   Chạy được cả trong Cowork qua tầng trỏ workspace + cổng phân loại.
+│   └── leo-ai/       — MCP leo-bridge + 4 skill LEO
 ├── scripts/          ← Python scripts codified from skills (Naval code leverage)
 │   └── _codify_ledger.md  (append-only registry of markdown→Python conversions)
 ├── hooks/            ← 3 hook scripts (SessionStart, UserPromptSubmit, Stop)
@@ -89,6 +93,7 @@ bash evals/run-eval.sh helix-task-clarify --improve
 
 - Spec format: `evals/<skill-name>.json` with `mode: "runtime"` (pipes test_input to `claude -p`) or `mode: "static"` (audits SKILL.md directly — use for orchestrator/multi-block pipeline skills that can't produce full deliverables in one shot).
 - When adding a significant skill (orchestrator, mega-skill, gate), add an eval spec alongside it.
+- Plugin có lint riêng ngoài plugin: `python -m pytest scripts/test_ip_invent.py -v`
 
 ## Git Conventions
 

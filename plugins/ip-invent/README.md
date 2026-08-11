@@ -98,7 +98,7 @@ thì `../ip-shared/references/` không tồn tại — nhưng chốt Bước 0�
 **DỪNG** thay vì chạy tiếp âm thầm.
 
     bash setup.sh --install    # tạo junction còn thiếu
-    bash setup.sh --verify     # kỳ vọng: 7 plugin skill dirs verified
+    bash setup.sh --verify     # kỳ vọng: cả 7 thư mục của ip-invent (6 skill + ip-shared) verified
 
 ⚠️ `bash setup.sh --unlink` gỡ **cả bảy** junction cùng các skill khác. Sau `--unlink` chạy lại
 `--install`; đừng dựng tay từng cái rồi quên `ip-shared`.
@@ -111,6 +111,9 @@ Sau mỗi lần sửa bất kỳ file nào trong `skills/ip-shared/references/` 
     bash evals/run-eval.sh ip-invent
     bash evals/run-eval.sh ip-screen
 
-Bộ test nằm ngoài plugin (ở `scripts/`) vì plugin phải thuần Markdown + JSON. Nó kiểm: bảy trường
-workspace đủ và đúng thứ tự · mọi `../ip-shared/references/*.md` được trích tồn tại thật · cả sáu
-`SKILL.md` mang chốt Bước 0′ · không `SKILL.md` nào còn đường dẫn neo cứng.
+Bộ test nằm ngoài plugin (ở `scripts/`) vì plugin phải thuần Markdown + JSON. Nó kiểm, gồm: bảy
+trường workspace đủ và đúng thứ tự · mọi `../ip-shared/references/*.md` được trích tồn tại thật ·
+cả sáu `SKILL.md` mang chốt Bước 0′ · không `SKILL.md` nào còn đường dẫn neo cứng · **SHA-256 đóng
+băng toàn văn `co-mat-gate.md`** (`GATE_DOC_SHA256` trong `ip_invent_lint.py` — đổi một ký tự
+trong file cũng làm lint đỏ) · **`lint_blocks_identical`** — khối Bước 0′ của cả sáu `SKILL.md`
+phải byte-identical với nhau và với `STEP0_BLOCK_CANON`, bắt được bản sao lệch dù chỉ một ký tự.
