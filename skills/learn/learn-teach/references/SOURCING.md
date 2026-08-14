@@ -147,11 +147,20 @@ NLM **bịa ngày tháng, bịa số, và đếm sai thực thể** ngay cả kh
 
 Đối chiếu bằng cách mở thẳng nguồn gốc (`source_get_content`, WebFetch, hoặc đọc file). **Không** đối chiếu bằng cách hỏi lại NLM "có chắc không" — mô hình sẽ vui vẻ xác nhận đúng cái nó vừa bịa. Kiểm chứng phải đến từ bên ngoài hệ thống vừa sinh ra khẳng định đó.
 
-### Số trích dẫn của NLM không đáng tin — đoạn trích thì đáng
+### Metadata xuất xứ của NLM không đáng tin — đoạn trích thì đáng
 
-Các marker `[1] [2] [3]` trong câu trả lời của NLM **lệch so với bảng nguồn kèm theo**: marker trỏ sang một source, còn đoạn trích thực sự lại thuộc source khác. Đoạn trích nguyên văn và tên nguồn NLM ghi trong phần trả lời thì đúng.
+Hai kiểu hỏng đã gặp thật, cả hai đều ở phần **metadata**, không phải ở nội dung:
 
-Luật: **tin đoạn trích và tên nguồn, không tin con số.** Khi cần biết chính xác một khẳng định đến từ đâu, tìm đoạn trích đó trong bảng `references` theo nội dung, đừng tra theo số.
+1. **Marker lệch.** Các số `[1] [2] [3]` trong câu trả lời trỏ sang source khác với source thực sự chứa đoạn trích đó.
+2. **Bảng xuất xứ thiếu hẳn.** `sources_used`, `citations` và `references` có thể **bỏ sót nguyên một nguồn** mà NLM vừa trả lời dựa trên đó — câu trả lời trích đúng nguyên văn từ một PDF, trong khi PDF đó không hề xuất hiện trong `sources_used`.
+
+Kiểu hỏng thứ hai nguy hiểm vì nó **trông hệt như bịa đặt**: trích dẫn chi tiết, có cả ngày tháng cụ thể, mà không gì chống lưng. Phản xạ "không có trong references → chắc là bịa" sẽ khiến bạn vứt đi tri thức đúng.
+
+Luật:
+
+- **Tin đoạn trích và tên nguồn, không tin con số marker.** Tra theo nội dung, đừng tra theo số.
+- **Thiếu xuất xứ không phải bằng chứng bịa đặt — nó là lệnh đi kiểm.** Đừng vứt, cũng đừng tin.
+- **`source_get_content` là trọng tài rẻ nhất.** Nó trả về nguyên văn thô đã index của một nguồn, không qua xử lý AI. Khi nghi ngờ một đoạn trích, lấy nội dung nguồn ra và tìm chuỗi đó. Đây là cách phân xử dứt điểm giữa "NLM bịa" và "NLM ghi thiếu metadata", và nó rẻ hơn nhiều so với query lại.
 
 ### Khi hai công cụ kiểm chứng đá nhau
 
