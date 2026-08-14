@@ -60,8 +60,31 @@ print(e.get('mode', 'runtime'))
 " 2>/dev/null || echo "runtime")
 
 if [ "$EVAL_MODE" = "static" ]; then
-  echo "[1/3] Static audit (reading SKILL.md, no subprocess)..."
-  OUTPUT="$SKILL_CONTENT"
+  # Opt-in per spec: "include_references": true also audits references/*.md.
+  # Opt-in on purpose — turning this on globally would let a keyword in any
+  # reference file satisfy an assertion written against SKILL.md, silently
+  # weakening every existing static eval.
+  INCLUDE_REFS=$(python -c "
+import json
+e = json.load(open('$EVALS_FILE', encoding='utf-8'))
+print('yes' if e.get('include_references') else 'no')
+" 2>/dev/null || echo "no")
+
+  if [ "$INCLUDE_REFS" = "yes" ]; then
+    REF_DIR="$(dirname "$SKILL_FILE")/references"
+    if [ -d "$REF_DIR" ]; then
+      REF_COUNT=$(find "$REF_DIR" -maxdepth 1 -name '*.md' | wc -l)
+      echo "[1/3] Static audit (SKILL.md + $REF_COUNT reference file(s), no subprocess)..."
+      OUTPUT="$SKILL_CONTENT
+$(cat "$REF_DIR"/*.md 2>/dev/null)"
+    else
+      echo "[1/3] Static audit (SKILL.md — include_references set but no references/ dir)..."
+      OUTPUT="$SKILL_CONTENT"
+    fi
+  else
+    echo "[1/3] Static audit (reading SKILL.md, no subprocess)..."
+    OUTPUT="$SKILL_CONTENT"
+  fi
 else
   echo "[1/3] Running skill via claude -p..."
   TEST_INPUT=$(python -c "
