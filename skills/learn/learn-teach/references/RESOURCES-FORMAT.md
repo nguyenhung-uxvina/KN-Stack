@@ -11,6 +11,7 @@ File này là **đầu ra của pha S0** trong [SOURCING.md](./SOURCING.md) — 
 
 **Notebook NLM:** `learn-{slug}` — `{notebook-id}`
 **Cập nhật nguồn lần cuối:** {YYYY-MM-DD}
+**Trọng tài độ tươi:** [{nguồn sống của nhà sản xuất}]({url}) — phân xử mọi câu hỏi "hiện tại đúng là gì"
 
 Hạng: tin cậy **S/A/B/C** (chuẩn · thẩm quyền · chuyên nghiệp · cộng đồng)
 × sư phạm **E1/E2/E3** (giảng được · tra được · mồi được).
@@ -25,6 +26,8 @@ Hạng: tin cậy **S/A/B/C** (chuẩn · thẩm quyền · chuyên nghiệp · 
   Đánh giá dựa trên bằng chứng về các mốc khối lượng. Dùng cho: mục tiêu số set hàng tuần theo nhóm cơ.
 - [Meta-analysis: Schoenfeld et al., _J Sports Sci_ 2017](https://example.com) — **S · E2**
   Số liệu gốc về quan hệ khối lượng–phì đại. Dùng cho: chốt mọi con số trích từ hai nguồn trên.
+- [Trang hướng dẫn chính thức của {nhà sản xuất}](https://example.com) — **A · E1** ⏱ kiểm 2026-08-14
+  Mang sự thật dễ trôi (gói, nền tảng, giới hạn). Đánh dấu ⏱ + ngày kiểm; hết hạn thì không được trích số.
 
 ## Trí Tuệ Thực Tiễn (Cộng Đồng)
 
@@ -44,6 +47,8 @@ Hạng: tin cậy **S/A/B/C** (chuẩn · thẩm quyền · chuyên nghiệp · 
 
 - **Chỉ đáng tin cao.** Ưu tiên nguồn gốc, chuyên gia được công nhận, công trình được đánh giá ngang hàng và cộng đồng có kiểm duyệt mạnh. Nếu một tài nguyên là marketing được mặc áo giáo dục, hãy bỏ qua.
 - **Chấm đủ hai trục cho mọi mục.** Tin cậy (S/A/B/C) và sư phạm (E1/E2/E3) là hai câu hỏi khác nhau: "tin được không" và "dạy được không". Chấm thiếu một trục là lỗi thường gặp nhất — một chuẩn Tier S có thể hoàn toàn không dạy được cho người mới. Chấm E bằng cách mở nguồn ra đọc, đừng đoán từ tên miền. Chi tiết ở [SOURCING.md](./SOURCING.md).
+- **Đánh dấu ⏱ + ngày kiểm cho nguồn mang sự thật dễ trôi** (gói, giá, nền tảng, giới hạn số, các bước thao tác). Hai trục chấm nguồn, không chấm việc nguồn còn đúng hay không — một nguồn `A · E1` vẫn có thể đang nói sai hiện trạng. Nguồn không có ngày kiểm thì không được trích số, ngày tháng hay thao tác.
+- **Ghi phần `## Đã Loại Bỏ` khi cắt nguồn vì đã cũ**, kèm một dòng nói nó sai chỗ nào so với hiện tại. Không có phần này thì vòng S0 sau sẽ tìm lại đúng những nguồn đó và đưa vào lần nữa.
 - **Nhóm theo vùng kiến thức của mission**, không phải theo loại nguồn. Mỗi vùng phải có ≥1 nguồn **E1** và ≥1 nguồn **S/A** — thiếu thì ghi vào `## Khoảng Trống`, đừng lặng lẽ dạy qua.
 - **Chú thích mọi mục.** Một link trơ sẽ vô dụng sau ba tháng. Thêm một dòng: nó bao quát gì và khi nào cần dùng đến.
 - **Nhóm theo Kiến Thức / Trí Tuệ Thực Tiễn.** Phản ánh triết lý trong [SKILL.md](../SKILL.md). Một tài nguyên chỉ xuất hiện trong một nhóm là ổn.
