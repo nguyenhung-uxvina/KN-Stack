@@ -1,0 +1,96 @@
+{
+  "skill": "learn-teach",
+  "version": "1.0",
+  "description": "Binary assertions for learn-teach — stateful learning workspace whose lessons are grounded through a gated sourcing protocol. Audits SKILL.md + references/ because the sourcing contract lives in references/SOURCING.md.",
+  "mode": "static",
+  "include_references": true,
+  "test_input": "Tôi muốn học Claude Cowork để đưa nó tới 25 nhân sự phi kỹ thuật của xưởng",
+  "total_required": 12,
+  "passing_score": 11,
+  "assertions": [
+    {
+      "id": "LT-S0-BEFORE-LESSON",
+      "name": "sourcing_phase_precedes_first_lesson",
+      "check": "phase S0 runs after MISSION is set and BEFORE the first lesson is written — no 'write a rough lesson now, add sources later' escape hatch",
+      "regex": "S0[\\s\\S]{0,400}(trước khi viết bài học đầu tiên|trước bài học đầu)|trước bài học đầu tiên[\\s\\S]{0,200}S0",
+      "required": true
+    },
+    {
+      "id": "LT-SOURCE-GATE",
+      "name": "source_approval_gate_blocks",
+      "check": "a source-approval gate stops the run and requires the user to confirm before ANY lesson is written; the gate is never skipped even when tooling is missing",
+      "regex": "Không viết bài học nào trước khi qua cổng|Cổng duyệt nguồn không bao giờ được bỏ",
+      "required": true
+    },
+    {
+      "id": "LT-TWO-AXES",
+      "name": "trust_axis_times_pedagogy_axis",
+      "check": "every source is rated on TWO independent axes: trust S/A/B/C reused from the research pipeline, and pedagogy E1/E2/E3 which is specific to teaching",
+      "regex": "E1[\\s\\S]{0,120}E2[\\s\\S]{0,120}E3|(giảng được|gi\\u1ea3ng \\u0111\\u01b0\\u1ee3c)[\\s\\S]{0,200}(tra được)[\\s\\S]{0,200}(mồi được)",
+      "required": true
+    },
+    {
+      "id": "LT-TIER-NOT-TEACHING",
+      "name": "high_tier_is_not_good_teaching",
+      "check": "explicitly warns that a high-trust source can be a terrible teaching source, so importing the research tier system alone produces accurate lessons nobody can learn from",
+      "regex": "Tier cao không có nghĩa dạy tốt|tier cao.{0,40}không.{0,40}dạy tốt|chính xác và không ai học nổi",
+      "required": true
+    },
+    {
+      "id": "LT-NO-TIER-S-HUNT",
+      "name": "tier_s_absent_for_product_topics",
+      "check": "for tool/product topics Tier S does not exist and the vendor plays the role of S — stops the agent burning a search round hunting standards for a new product",
+      "regex": "Tier S không tồn tại|đừng đi săn[\\s\\S]{0,200}(nhà sản xuất|vendor)|nhà sản xuất chính là nguồn gốc",
+      "required": true
+    },
+    {
+      "id": "LT-FRESHNESS",
+      "name": "durable_vs_volatile_facts",
+      "check": "separates durable facts (concepts, why a thing exists) from volatile facts (plans, pricing, platforms, limits, UI steps); volatile facts come only from the vendor's living source regardless of tier",
+      "regex": "(sự thật bền|Sự thật bền)[\\s\\S]{0,400}(dễ trôi)|dễ trôi[\\s\\S]{0,300}(chỉ được lấy từ nguồn sống|nguồn sống của chính nhà sản xuất)",
+      "required": true
+    },
+    {
+      "id": "LT-FRESHNESS-ARBITER",
+      "name": "freshness_arbiter_named_at_s0",
+      "check": "S0 must name a single living source that settles 'what is true right now', recorded in RESOURCES.md and winning any conflict about volatile facts",
+      "regex": "trọng tài độ tươi|tr\\u1ecdng t\\u00e0i \\u0111\\u1ed9 t\\u01b0\\u01a1i",
+      "required": true
+    },
+    {
+      "id": "LT-GROUNDING-VERBATIM",
+      "name": "query_demands_verbatim_not_summary",
+      "check": "before writing a lesson the agent queries the workspace notebook demanding VERBATIM quotes rather than a summary, and writes from those quotes instead of model memory",
+      "regex": "(trích dẫn nguyên văn|TRÍCH DẪN NGUYÊN VĂN)[\\s\\S]{0,300}(không yêu cầu tóm tắt|thay vì tóm tắt|không.{0,30}tóm tắt)",
+      "required": true
+    },
+    {
+      "id": "LT-EMPTY-IS-GAP",
+      "name": "empty_result_is_gap_not_license",
+      "check": "an empty or unciteable notebook result is a source gap, explicitly NOT permission to write the section from parametric memory",
+      "regex": "khoảng trống, không phải giấy phép|không phải giấy phép để tự bịa|không phải giấy phép tự viết",
+      "required": true
+    },
+    {
+      "id": "LT-REVERSE-VERIFY",
+      "name": "numbers_dates_counts_verified_externally",
+      "check": "numbers, dates and entity counts must be checked against the origin source, and NOT by asking the generating model to confirm itself",
+      "regex": "(con số|Con số)[\\s\\S]{0,200}(ngày tháng)[\\s\\S]{0,200}(đếm|phép đếm)[\\s\\S]{0,600}(hỏi lại NLM|có chắc không|từ bên ngoài|đến từ bên ngoài)",
+      "required": true
+    },
+    {
+      "id": "LT-PROVENANCE-NOT-PROOF",
+      "name": "missing_provenance_triggers_check",
+      "check": "missing citation metadata is an order to verify rather than proof of fabrication; raw source content is the cheap tiebreaker between 'fabricated' and 'metadata omitted'",
+      "regex": "Thiếu xuất xứ không phải bằng chứng bịa đặt|phân xử dứt điểm giữa \"NLM bịa\"",
+      "required": true
+    },
+    {
+      "id": "LT-PRIMARY-SOURCE-PAIR",
+      "name": "primary_source_trusted_and_teachable",
+      "check": "each lesson's headline source must be S/A on trust AND E1 on pedagogy; when no single source is both, introduce a PAIR and state each one's role",
+      "regex": "(S hoặc A|S/A)[\\s\\S]{0,120}E1[\\s\\S]{0,400}(một cặp|giới thiệu cặp)",
+      "required": true
+    }
+  ]
+}
