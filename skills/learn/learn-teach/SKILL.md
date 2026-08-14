@@ -5,9 +5,13 @@ description: >-
   thư mục hiện tại thành learning workspace có trạng thái (MISSION.md,
   RESOURCES.md, lessons/*.html, reference/*.html, learning-records/*.md,
   assets/, NOTES.md), sinh bài học HTML tương tác giàu diagram/SVG/calculator,
-  quiz trắc nghiệm + 3-5 câu hỏi tự luận, theo vùng phát triển gần nhất. Triggers
-  on: "learn-teach", "dạy tôi", "teach me", "tôi muốn học", "learning workspace",
-  "tạo bài học", "lesson", "học kỹ năng mới", "khóa tự học", "mission học tập".
+  quiz trắc nghiệm + 3-5 câu hỏi tự luận, theo vùng phát triển gần nhất. Bài học
+  được grounded bắt buộc: pha S0 gọi /research khám phá nguồn đa kênh, chấm hai
+  trục tin cậy S/A/B/C × sư phạm E1/E2/E3, cổng duyệt nguồn, notebook NLM thường
+  trực, trích dẫn nguyên văn thay vì viết từ trí nhớ. Triggers on: "learn-teach",
+  "dạy tôi", "teach me", "tôi muốn học", "learning workspace", "tạo bài học",
+  "lesson", "học kỹ năng mới", "khóa tự học", "mission học tập", "nguồn cho bài
+  học", "grounding bài học".
 disable-model-invocation: true
 argument-hint: "Bạn muốn học gì?"
 ---
@@ -20,7 +24,7 @@ Coi thư mục hiện tại là workspace học tập. Trạng thái học tập
 
 - `MISSION.md`: Tài liệu ghi lại _lý do_ người dùng quan tâm đến chủ đề. Dùng để định hướng mọi bài dạy. Dùng định dạng trong [MISSION-FORMAT.md](./references/MISSION-FORMAT.md).
 - `./reference/*.html`: Thư mục tài liệu tham khảo. Đây là kiến thức được nén lại từ các bài học — cheat sheet, thuật toán tham khảo, cú pháp, bảng từ vựng. Là đơn vị kiến thức thô. Nên là tài liệu đẹp, in ra được, thiết kế để tra cứu nhanh.
-- `RESOURCES.md`: Danh sách tài nguyên để làm căn cứ cho việc dạy. Dùng định dạng trong [RESOURCES-FORMAT.md](./references/RESOURCES-FORMAT.md).
+- `RESOURCES.md`: Danh sách tài nguyên để làm căn cứ cho việc dạy, mỗi nguồn có hạng tin cậy + hạng sư phạm, kèm id notebook NLM của workspace. Dùng định dạng trong [RESOURCES-FORMAT.md](./references/RESOURCES-FORMAT.md). Cách đi tìm và thẩm định nguồn: [SOURCING.md](./references/SOURCING.md).
 - `./learning-records/*.md`: Thư mục nhật ký học tập, ghi lại những gì người dùng đã học. Tương tự ADR trong phát triển phần mềm — ghi lại những bài học không hiển nhiên và insight quan trọng có thể cần xem lại sau, hoặc định hướng các phiên tiếp theo. Dùng để xác định vùng phát triển gần nhất. Đặt tên theo dạng `0001-<ten-gach-ngang>.md`, số tăng dần. Dùng định dạng trong [LEARNING-RECORD-FORMAT.md](./references/LEARNING-RECORD-FORMAT.md).
 - `./lessons/*.html`: Thư mục bài học. Một **bài học** là một file HTML độc lập, dạy một thứ duy nhất được định phạm vi chặt chẽ, gắn với mission. Đây là đơn vị dạy học chính trong workspace.
 - `./assets/*`: **Component** tái sử dụng được chia sẻ giữa các bài học. Xem [Assets](#assets).
@@ -35,6 +39,10 @@ Coi thư mục hiện tại là workspace học tập. Trạng thái học tập
 - **Trí tuệ thực tiễn**, đến từ việc tương tác với người học và người làm thực tế khác
 
 Trước khi `RESOURCES.md` được điền đầy đủ, ưu tiên tìm các tài nguyên chất lượng cao giúp người dùng thu thập kiến thức. Không bao giờ tin vào kiến thức tham số của bản thân.
+
+Câu trên là ràng buộc cứng, không phải lời khuyên. Nó được thực thi bằng [Giao Thức Nguồn Cấp](./references/SOURCING.md): pha **S0** chạy ngay sau khi mission chốt và **trước bài học đầu tiên** — rút truy vấn từ mission, gọi `/research` để khám phá nguồn đa kênh, chấm mỗi nguồn trên hai trục (tin cậy S/A/B/C × sư phạm E1/E2/E3), dựng notebook NLM thường trực cho workspace, rồi **dừng ở cổng duyệt nguồn** để người dùng xác nhận. Không viết bài học nào trước khi qua cổng.
+
+Đọc SOURCING.md trước khi làm bất cứ việc gì trong một workspace mới.
 
 Một số chủ đề cần nhiều kỹ năng hơn kiến thức. Học vật lý lý thuyết nghiêng về kiến thức. Yoga nghiêng về kỹ năng.
 
@@ -63,7 +71,7 @@ Nếu có thể, mở file bài học cho người dùng bằng lệnh CLI.
 
 Mỗi bài học nên dẫn link HTML đến các bài học và tài liệu tham khảo khác.
 
-Mỗi bài học nên giới thiệu một nguồn tài liệu chính để người dùng đọc hoặc xem. Đó phải là tài nguyên chất lượng và đáng tin nhất bạn tìm được về chủ đề đó.
+Mỗi bài học nên giới thiệu một nguồn tài liệu chính để người dùng đọc hoặc xem. Đó phải là tài nguyên chất lượng và đáng tin nhất bạn tìm được về chủ đề đó — cụ thể: **Tier S hoặc A về tin cậy, và E1 về sư phạm**. Khi không có nguồn nào đạt cả hai (rất thường gặp), giới thiệu một cặp và nói rõ vai trò từng cái: một nguồn để hiểu, một nguồn để chốt số. Xem [SOURCING.md](./references/SOURCING.md).
 
 Mỗi bài học nên có lời nhắc để người dùng hỏi thêm với agent. Agent là giáo viên của họ và có thể giúp với bất cứ điều gì chưa rõ.
 
@@ -86,8 +94,9 @@ Khi thiết kế bài học mới:
 
 ### Checklist bắt buộc sau mỗi bài học
 
-Sau khi tạo bài học, **phải** hoàn thành đủ 4 bước này trước khi báo xong:
+Sau khi tạo bài học, **phải** hoàn thành đủ 6 bước này trước khi báo xong:
 
+0. **Xác nhận bài học được grounded từ nguồn** — mọi khẳng định sự thật không hiển nhiên có link tới nguồn trong `RESOURCES.md` kèm hạng (`— Tier A · E1`); mọi **con số, ngày tháng và phép đếm** đã được đối chiếu với nguồn gốc chứ không chỉ lấy từ NLM (xem [Kiểm Chứng Ngược](./references/SOURCING.md#kiểm-chứng-ngược)). Nếu có phần nào viết từ trí nhớ vì không tìm được nguồn, gỡ nó ra hoặc đánh dấu rõ là khoảng trống — không để lẫn vào phần có nguồn.
 1. **Xác nhận đã tối đa hoá yếu tố trực quan/tương tác** (xem [Trực Quan Hóa & Tương Tác](#trực-quan-hóa--tương-tác)) — rà lại TỪNG mục trong bài, không chỉ tổng thể. Nếu một mục có thể vẽ hoặc cho bấm thử mà hiện chỉ có chữ, bổ sung thêm trước khi coi là xong. Chỉ chấp nhận mục thuần văn bản khi đã cân nhắc và thực sự không có gì để trực quan hóa.
 2. **Xác nhận có 3–5 câu hỏi tự luận về bản chất kiến thức** (xem [Câu Hỏi Bản Chất](#câu-hỏi-bản-chất-tự-luận)) — không phải trắc nghiệm, đặt sau quiz.
 3. **Tạo hoặc cập nhật tài liệu tham khảo** (`./reference/`) — nén kiến thức của bài vừa dạy thành cheat sheet tra cứu nhanh. Nếu reference cho chủ đề này đã có, cập nhật thêm vào. Nếu chưa có, tạo mới.
@@ -95,6 +104,8 @@ Sau khi tạo bài học, **phải** hoàn thành đủ 4 bước này trước 
 5. **Mở file bài học** trong trình duyệt bằng lệnh CLI.
 
 Không được bỏ qua bước 3. Reference không tự tạo — nó phải được tạo chủ động cùng lúc với bài học.
+
+Không được bỏ qua bước 0. Một bài học đẹp, đầy widget tương tác, dạy sai một con số thì tệ hơn không có bài học nào — người học sẽ tin nó và xây tiếp lên trên.
 
 ## Assets
 
@@ -128,11 +139,13 @@ Người dùng có thể chỉ định chính xác thứ họ muốn học. Nế
 
 Bài học nên được thiết kế xung quanh một kỹ năng người dùng sẽ học. Kiến thức trong bài học chỉ cần đủ để tiếp thu kỹ năng đó. Dạy kiến thức trước, sau đó để người dùng luyện kỹ năng qua vòng lặp phản hồi tương tác.
 
-Kiến thức nên được thu thập từ các nguồn đáng tin. Dùng `RESOURCES.md` để theo dõi chúng. Bài học nên trích dẫn nhiều — link đến tài nguyên bên ngoài để xác nhận mọi khẳng định. Điều này tăng độ tin cậy của bài học.
+Kiến thức nên được thu thập từ các nguồn đáng tin. Dùng `RESOURCES.md` để theo dõi chúng. Bài học nên trích dẫn nhiều — link đến tài nguyên bên ngoài để xác nhận mọi khẳng định. Điều này tăng độ tin cậy của bài học. Ghi hạng ngay cạnh link (`— Tier A · E1`) để người học tự hiệu chỉnh niềm tin vào từng khẳng định.
+
+Kiến thức đưa vào bài học phải đến từ **vòng grounding**, không từ trí nhớ của bạn: trước khi viết bài, query notebook NLM của workspace cho từng khái niệm và yêu cầu **trích dẫn nguyên văn** thay vì tóm tắt, rồi viết bài từ trích dẫn thu được. Nếu notebook không trả về gì cho một khái niệm, đó là khoảng trống nguồn — quay lại pha S0 cho khái niệm đó, hoặc nói thẳng với người dùng. Không được tự lấp bằng kiến thức tham số. Toàn bộ vòng này ở [SOURCING.md](./references/SOURCING.md).
 
 Khi thu thập kiến thức, độ khó là kẻ thù. Nó ăn mất bộ nhớ làm việc cần cho việc hiểu bài.
 
-Mỗi khái niệm hoặc công thức nên đi kèm **nhiều ví dụ cụ thể, dễ hiểu** — số thực tế tính tay được, không chỉ nêu công thức tổng quát một lần rồi chuyển tiếp. Một ví dụ số thường làm rõ hơn nhiều câu chữ trừu tượng; vài ví dụ nối tiếp nhau (số khác nhau, dần phức tạp hơn hoặc soi từ góc khác) giúp người học tự kiểm chứng công thức đúng ở nhiều trường hợp, không chỉ tin suông. Khi giải thích lại một phần người dùng thấy khó, ưu tiên đưa ví dụ số mới thay vì diễn giải lại cùng một ý bằng lời khác.
+Mỗi khái niệm hoặc công thức nên đi kèm **nhiều ví dụ cụ thể, dễ hiểu** — số thực tế tính tay được, không chỉ nêu công thức tổng quát một lần rồi chuyển tiếp. Ví dụ số phải tự kiểm lại được: người học sẽ bấm máy tính theo, và một ví dụ số sai làm mất niềm tin vào cả bài học chứ không riêng đoạn đó. Một ví dụ số thường làm rõ hơn nhiều câu chữ trừu tượng; vài ví dụ nối tiếp nhau (số khác nhau, dần phức tạp hơn hoặc soi từ góc khác) giúp người học tự kiểm chứng công thức đúng ở nhiều trường hợp, không chỉ tin suông. Khi giải thích lại một phần người dùng thấy khó, ưu tiên đưa ví dụ số mới thay vì diễn giải lại cùng một ý bằng lời khác.
 
 ## Kỹ Năng
 
