@@ -510,10 +510,20 @@ For each surviving concept, evaluate:
    | B       | 72%     | 180                         | +8% (over target)   | 16              | ⚠️               |
 
 2. **CEO selects based on DQM + risk balance** (not just technical score).
-3. **IRL (Innovation Readiness Level):** Score 1-5 per concept based on ICDM criteria:
-   - Technology maturity, market understanding, manufacturing capability, team competence, IP/regulatory.
+3. **Readiness input comes from RTA, not a separate scale.** ICDM already carries concept readiness
+   through the Knowledge Gap analysis in BD: KG count and severity → number of development cycles
+   needed → TTM and risk index per concept. Read those off `{{prefix}}RTA_Knowledge_Gaps.md`.
+   Do not introduce a second readiness score here — it double-counts RTA and disagrees with it.
 
-**Additional output:** `{{prefix}}ICDM_Final_Selection.md` (DQM comparison + IRL scores)
+> **Provenance note — do not re-add "IRL".** Earlier versions of this section scored concepts on an
+> "IRL (Innovation Readiness Level), 1-5, based on ICDM criteria". Verified 2026-08-15 against the
+> full ICDM corpus (Hari & Weiss 1996-2015, 15 sources): **no ICDM source mentions IRL.** The term
+> belongs to the KTH Innovation Readiness Level model — six readiness dimensions scored over nine
+> levels — which is an unrelated framework, and the 1-5 scale matched neither. Removed as a
+> misattribution. If a readiness scale is genuinely wanted here, add it under its own name and cite
+> KTH; do not present it as ICDM.
+
+**Additional output:** `{{prefix}}ICDM_Final_Selection.md` (DQM comparison + CEO rationale)
 
 ### ICDM Data Bus Extension
 
@@ -524,7 +534,7 @@ When `--icdm` is active, these additional files are created:
 | `{{prefix}}ICDM_Input_Checklist.md` | B0 | EQFD inputs, WTP, CSR, Group A/B verification |
 | `{{prefix}}ICDM_CSR_Evaluation.md` | BC | CSR functions, DQM scores, CDTC cost models |
 | `{{prefix}}RTA_Knowledge_Gaps.md` | BD | Knowledge gaps, gap closing plans, TTM per concept |
-| `{{prefix}}ICDM_Final_Selection.md` | BE | DQM comparison table, IRL scores, CEO rationale |
+| `{{prefix}}ICDM_Final_Selection.md` | BE | DQM comparison table, RTA readiness read-off, CEO rationale |
 
 Each block-skill checks for `--icdm` in pipeline state and loads ICDM methodology from this section.
 
