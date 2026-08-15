@@ -1,5 +1,13 @@
 # Changelog
 
+## [Unreleased]
+### Fixed
+- **Gỡ `IRL (Innovation Readiness Level)` khỏi phần mở rộng ICDM ở ba skill** — quy sai xuất xứ. `helix-concept-generate` (block BE + bảng data bus), `helix-task-clarify` (block BE), `helix-p2-select` (ICDM Extension) đều chấm "IRL 1-5 theo tiêu chí ICDM". Kiểm 2026-08-15 với **toàn bộ 15 nguồn ICDM toàn văn** (Hari & Weiss 1996–2015, notebook `8416e6f8`): **không nguồn ICDM nào nhắc tới IRL**. Nó là mô hình của **KTH** — sáu trục trưởng thành chấm theo chín mức; năm trục ghi trong skill khớp gần hết sáu trục KTH (thiếu funding), tức KTH bị nhớ nhầm địa chỉ rồi dán nhãn ICDM. Loại lỗi này khó bắt hơn bịa đặt thuần tuý vì nội dung nghe hợp lý và **đúng ở nơi khác**.
+  - **Thay bằng RTA, không bằng thang mới.** ICDM vốn đã mang readiness qua Knowledge Gap → số vòng thiết kế → TTM (bước 8, block BD). Thang thứ hai là đếm trùng và sẽ mâu thuẫn với RTA khi hai bên lệch nhau.
+  - **Mỗi chỗ để lại một provenance note** ghi rõ đã kiểm gì, ngày nào, vì sao gỡ, và "muốn thang readiness thì thêm dưới tên KTH và trích KTH". Không có ghi chú đó thì lần sau ai đọc "ICDM cần chấm readiness" sẽ thêm lại đúng cái vừa gỡ — chính là cách nó lọt vào lần đầu.
+  - **KHÔNG đụng `EQFD`** — cũng từng bị nghi trong cùng vòng rà, nhưng đã xác minh là **đúng**: Weiss & Hari, *Procedia CIRP* 36 (2015) 254–260 dùng `EQFD` / "Enriched QFD" làm tên chính thức cho công cụ làm rõ nhiệm vụ của ICDM, có hẳn §2 mang tên đó. Grep ban đầu ra 0 kết quả chỉ vì bài dùng nó chưa có trong kho — **phép grep đo bộ nguồn đang cầm, không đo văn liệu**.
+  - Không bump VERSION: không thêm/bớt skill, không đổi domain. Xếp vào `[Unreleased]` thay vì tự phát số hiệu, vì nhánh này chạy song song với nhánh đã bump 1.7.0.
+
 ## [1.6.0] - 2026-08-14
 ### Added
 - **`learn-teach`** (learn/) — workspace học tập **có trạng thái** cho một chủ đề qua nhiều phiên: `MISSION.md` (lý do học — la bàn cho mọi quyết định dạy), `RESOURCES.md`, `lessons/*.html` (bài học độc lập, phong cách Tufte), `reference/*.html` (cheat sheet nén, in được), `learning-records/*.md` (ADR cho việc học → xác định vùng phát triển gần nhất), `assets/` (component tái sử dụng), `NOTES.md`. Nguyên tắc sư phạm mã hoá trong skill: **độ bền lưu trữ > độ trôi chảy**; mặc định mọi bài là diagram/SVG/calculator/tương tác chứ không phải văn bản thuần; mỗi bài kết bằng quiz trắc nghiệm (mọi phương án cân số từ) **+ 3–5 câu hỏi tự luận**; checklist 6 bước bắt buộc sau mỗi bài. Đặt tên `learn-teach` để không đè `/teach` sẵn có ở ops/ (nhật ký quyết định CEO — chức năng hoàn toàn khác). `disable-model-invocation: true`.
