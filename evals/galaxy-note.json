@@ -1,0 +1,75 @@
+{
+  "skill": "galaxy-note",
+  "version": "1.0",
+  "description": "Binary assertions for /galaxy-note permanent note creation static structure check",
+  "mode": "static",
+  "test_input": "create a Galaxy note for the insight that AI must not be delegated judgment calls",
+  "assertions": [
+    {
+      "id": "GN-1",
+      "name": "atomic_concept",
+      "check": "each note is exactly one atomic concept",
+      "regex": "atomic concept|Atomic|exactly 1 concept|1 concept per note|Extract Atomic",
+      "required": true
+    },
+    {
+      "id": "GN-2",
+      "name": "min_two_wikilinks",
+      "check": "requires at least 2 wikilinks, target 3+",
+      "regex": "at least 2 wikilink|>= 2 wikilink|Minimum 2 total wikilinks|2 wikilinks|cross-cluster link",
+      "required": true
+    },
+    {
+      "id": "GN-3",
+      "name": "cluster_assignment",
+      "check": "assigns the note to one of 8 clusters with a hub note",
+      "regex": "8 clusters|Cluster|Hub Note|cluster assignment|one of 8",
+      "required": true
+    },
+    {
+      "id": "GN-4",
+      "name": "frontmatter",
+      "check": "uses frontmatter with type permanent-note and tags",
+      "regex": "frontmatter|type: permanent-note|permanent-note|created:.*updated:|tags:",
+      "required": true
+    },
+    {
+      "id": "GN-5",
+      "name": "zettelkasten",
+      "check": "follows Zettelkasten principles for 5_Galaxy",
+      "regex": "Zettelkasten|5_Galaxy|permanent note|IPARAG Galaxy",
+      "required": true
+    },
+    {
+      "id": "GN-6",
+      "name": "ceo_approval_before_create",
+      "check": "always proposes draft for CEO approval before creating the file",
+      "regex": "NEVER auto-create|present.*draft|CEO approval|Create this note|Present Draft for Approval",
+      "required": true
+    },
+    {
+      "id": "GN-7",
+      "name": "galaxy_worthy_questions",
+      "check": "verifies note is Galaxy-worthy via qualifying questions",
+      "regex": "Galaxy-worthy|3 qualifying questions|qualifying question|change how I design|warn against",
+      "required": true
+    },
+    {
+      "id": "GN-8",
+      "name": "note_structure",
+      "check": "uses the standard note section structure",
+      "regex": "Y Tuong Cot Loi|Giai Thich Chi Tiet|Tai Sao Dieu Nay Quan Trong|Lien Ket|Nguon Goc",
+      "required": false
+    },
+    {
+      "id": "GN-9",
+      "name": "vietnamese_diacritics",
+      "check": "title and content use Vietnamese with diacritics",
+      "regex": "Vietnamese with diacritics|diacritical mark|proper diacritic",
+      "required": false
+    }
+  ],
+  "passing_score": 7,
+  "total_required": 7,
+  "total_optional": 2
+}

@@ -1,0 +1,75 @@
+{
+  "skill": "forge-shift",
+  "version": "1.0",
+  "description": "Binary assertions for /forge-shift static structure check",
+  "mode": "static",
+  "test_input": "run SHIFT assessment for VN-USV-SS-001 ballast control sub-function — should it use AI instead of hardware?",
+  "assertions": [
+    {
+      "id": "SH-1",
+      "name": "shift_checklist",
+      "check": "skill runs the SHIFT checklist with named dimensions",
+      "regex": "SHIFT SCORECARD|SHIFT Checklist|SHIFT dimension|SHIFT ASSESSMENT",
+      "required": true
+    },
+    {
+      "id": "SH-2",
+      "name": "five_dimensions",
+      "check": "SHIFT dimensions are spelled out (Substitutable/Hybrid/Improvement/Fallback/Training)",
+      "regex": "SUBSTITUTABLE|HYBRID|IMPROVEMENT TRAJECTORY|FALLBACK FEASIBLE|TRAINING DATA",
+      "required": true
+    },
+    {
+      "id": "SH-3",
+      "name": "ach_principle",
+      "check": "references the ACH (AI-Compensates-Hardware) principle",
+      "regex": "ACH|AI-Compensates-Hardware|AI.*replace.*hardware|commodity sensor",
+      "required": true
+    },
+    {
+      "id": "SH-4",
+      "name": "go_nogo_recommendation",
+      "check": "produces GO / CONDITIONAL GO / NO-GO recommendation",
+      "regex": "GO / CONDITIONAL GO / NO-GO|CONDITIONAL GO|NO-GO|RECOMMENDATION: GO",
+      "required": true
+    },
+    {
+      "id": "SH-5",
+      "name": "fallback_levels",
+      "check": "fallback feasibility scored by level 0-3",
+      "regex": "Level 0|Level 1|Level 2|Level 3|Graceful degradation|Redundant path",
+      "required": true
+    },
+    {
+      "id": "SH-6",
+      "name": "outcome_aligned",
+      "check": "O dimension ties to forge-job-map opportunity data",
+      "regex": "OUTCOME-ALIGNED|forge-job-map|Opportunity Landscape|underserved outcome|opportunity score",
+      "required": true
+    },
+    {
+      "id": "SH-7",
+      "name": "ceo_decision_core",
+      "check": "GO/NO-GO is a non-delegable CEO Core decision",
+      "regex": "CEO Decision|Non-Delegable|non.?delegable|Core \\(C\\)|WAIT for CEO|CEO decides",
+      "required": true
+    },
+    {
+      "id": "SH-8",
+      "name": "ach_economics",
+      "check": "includes ACH economics quick-check linking to forge-cost",
+      "regex": "ACH Economics|forge-cost|Unit cost|defense pricing|capability premium",
+      "required": false
+    },
+    {
+      "id": "SH-9",
+      "name": "ach_boundary_rule",
+      "check": "applies the ACH boundary rule (information vs physical forces)",
+      "regex": "ACH Boundary Rule|INFORMATION|PHYSICAL FORCES|physical → NO-GO|recoil|buoyancy",
+      "required": false
+    }
+  ],
+  "passing_score": 7,
+  "total_required": 7,
+  "total_optional": 2
+}
