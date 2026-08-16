@@ -7,7 +7,7 @@
 
 ```
 KN-Stack/
-├── skills/           ← 252 skills organized by domain (15 domains)
+├── skills/           ← 254 skills organized by domain (15 domains)
 │   ├── bridge/       (10) — Operations skills
 │   ├── forge/        (16) — Product strategy skills (+ forge-fabrication mega-skill: 6-block manufacturing pipeline F0-F5
 │   │                       — closes R&D → production loop via Handoff_to_Fabrication.md from helix-detail-finalize;
@@ -18,10 +18,10 @@ KN-Stack/
 │   ├── book/         (23) — Book pipelines: codebase-to-book (9-phase, book-* blocks), book-to-codebase (btc-* blocks), book-to-skill, notebook-to-book
 │   ├── erp/          (6)  — ERPNext integration
 │   ├── extract/      (7)  — Content extraction (social, chat, yt-extract/yt-learn/yt-search)
-│   ├── learn/        (3)  — Learning methodology
+│   ├── learn/        (4)  — Learning methodology
 │   ├── guard/        (7)  — Guard rails (analyst-trap, ratio-check)
 │   ├── design/       (8)  — Specialized tools only (odi, opt, wp, verify, reverse-engineering, reverse-mc, sdmodel, helm-aluminum-boat) — 11 overlapping skills merged into helix/forge on 2026-05-11
-│   ├── ops/          (15) — CEO operations (portfolio, sprint, weekly-3)
+│   ├── ops/          (16) — CEO operations (portfolio, sprint, weekly-3)
 │   ├── session/      (5)  — Session management (catchup, checkpoint)
 │   ├── system/       (16) — System design tools (gate0-3, decide, cld)
 │   └── tana/         (9)  — Tana integration (THỊNH workflow capture: tana-thu/hoa/ich/nho/hanh, tana-session, tana-weekly)
