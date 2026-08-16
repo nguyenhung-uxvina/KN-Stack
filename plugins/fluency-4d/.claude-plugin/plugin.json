@@ -1,0 +1,8 @@
+{
+  "name": "fluency-4d",
+  "description": "Huấn luyện viên AI Fluency tại chỗ theo khung 4D (Delegation, Description, Discernment, Diligence). Chấm 12 ô năng lực trên phiên làm việc thật, ghi sổ điểm, kê thí nghiệm hành vi. Ba lối vào: preflight trước khi giao việc, review cuối phiên, weekly tổng hợp xu hướng.",
+  "version": "0.1.0",
+  "author": {
+    "name": "Workshop X"
+  }
+}
