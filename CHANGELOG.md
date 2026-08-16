@@ -10,7 +10,7 @@
   - **Nhãn quadrantChart bị cắt cụt** khi nhãn dài hơn bề ngang ô — tăng khổ ảnh không cứu được vì mermaid dựng loại này theo khổ cố định. Cấu hình `quadrantLabelFontSize`/`chartWidth` đã hiệu chỉnh, nhúng thẳng trong script.
   - **An ninh:** dựng sơ đồ offline tuyệt đối, không kroki.io/mermaid.ink. Tài liệu nội bộ không rời máy — ràng buộc cứng, không làm cờ.
   - Cấu hình mermaid + CSS **nhúng trong script** rồi ghi ra thư mục tạm lúc chạy, không để thành file cạnh skill: đường dẫn tương đối ra ngoài thư mục skill đứt dưới junction Windows (đúng lỗi đã dính ở plugin `fluency-4d`).
-- `scripts/md_to_epub.py` (315 dòng) + `scripts/test_md_to_epub.py` (23 phép thử, tự sinh fixture, không cần mạng) — mục codify đầu tiên trong `_codify_ledger.md`, **chờ CEO ký**.
+- `scripts/md_to_epub.py` (315 dòng) + `scripts/test_md_to_epub.py` (23 phép thử, tự sinh fixture, không cần mạng) — mục codify đầu tiên trong `_codify_ledger.md`, **CEO ký 2026-08-16**.
 
 ## [1.7.0] - 2026-08-14
 ### Added
