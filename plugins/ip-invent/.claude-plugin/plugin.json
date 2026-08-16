@@ -1,0 +1,8 @@
+{
+  "name": "ip-invent",
+  "description": "Pipeline sở hữu trí tuệ TẤN CÔNG — từ ý tưởng đến bộ đơn nộp Cục SHTT, sáu skill: ip-invent orchestrator chỉ huy ip-criteria (thước đo chức danh) → ip-harvest (tìm ứng viên) → ip-screen (rà hai trục + routing sáng chế/GPHI/nộp kép/MẬT) → ip-claim (khung claim) → ip-dossier (bộ đơn + handoff đại diện SHTT). Advisory-only, không thay đại diện sở hữu công nghiệp. Có cổng bộc lộ, cổng phân loại bí mật nhà nước, cổng Điều 14 nộp nước ngoài, cổng Điều 10a tác giả-AI.",
+  "version": "0.1.0",
+  "author": {
+    "name": "Workshop X"
+  }
+}

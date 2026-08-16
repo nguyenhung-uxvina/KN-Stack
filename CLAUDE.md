@@ -7,12 +7,12 @@
 
 ```
 KN-Stack/
-├── skills/           ← 249 skills organized by domain (15 domains)
+├── skills/           ← 252 skills organized by domain (15 domains)
 │   ├── bridge/       (10) — Operations skills
-│   ├── forge/        (15) — Product strategy skills (+ forge-fabrication mega-skill: 6-block manufacturing pipeline F0-F5
+│   ├── forge/        (16) — Product strategy skills (+ forge-fabrication mega-skill: 6-block manufacturing pipeline F0-F5
 │   │                       — closes R&D → production loop via Handoff_to_Fabrication.md from helix-detail-finalize;
 │   │                       + forge-proposal-khcn for KHCN proposal drafting)
-│   ├── helix/        (55) — Design execution pipeline (Pahl-Beitz phases — P1/P2/P3/P4 all 6-block mega-skill pipelines; CAD chain: helix-cad-bridge code→CAD, helix-cad-ingest CAD→info, helix-cad-validate design-rule Computational Sensor+Gate, helix-cad-roundtrip orchestrates across P1-P4 with human-draw import, helix-cad-nest geometry→cut-plan/nesting, helix-cad-to-fab drawing-folder→fab bundle; Spec-to-CAD: helix-spec-to-cad SDD orchestrator + 6 helix-s2c-* blocks — spec-kit methodology as disciplined Flow-B front-end)
+│   ├── helix/        (57) — Design execution pipeline (Pahl-Beitz phases — P1/P2/P3/P4 all 6-block mega-skill pipelines; CAD chain: helix-cad-bridge code→CAD, helix-cad-ingest CAD→info, helix-cad-validate design-rule Computational Sensor+Gate, helix-cad-roundtrip orchestrates across P1-P4 with human-draw import, helix-cad-nest geometry→cut-plan/nesting, helix-cad-to-fab drawing-folder→fab bundle; Spec-to-CAD: helix-spec-to-cad SDD orchestrator + 6 helix-s2c-* blocks — spec-kit methodology as disciplined Flow-B front-end)
 │   ├── galaxy/       (12) — Knowledge management (+ skill-to-public, codify, mentor-board — Naval outbound + code + mentor leverage)
 │   ├── mentors/      (58, dynamic) — Per-mentor advisor skills (add more via /mentor-board --add <leader>); orchestrator at galaxy/mentor-board/
 │   ├── book/         (23) — Book pipelines: codebase-to-book (9-phase, book-* blocks), book-to-codebase (btc-* blocks), book-to-skill, notebook-to-book
@@ -25,6 +25,18 @@ KN-Stack/
 │   ├── session/      (5)  — Session management (catchup, checkpoint)
 │   ├── system/       (16) — System design tools (gate0-3, decide, cld)
 │   └── tana/         (9)  — Tana integration (THỊNH workflow capture: tana-thu/hoa/ich/nho/hanh, tana-session, tana-weekly)
+├── plugins/          ← plugin tự chứa, copy-anywhere (setup.sh --install junction cả hai)
+│   └── ip-invent/    — Sở hữu trí tuệ TẤN CÔNG: orchestrator + 5 block
+│                       (ip-criteria/harvest/screen/claim/dossier) + ip-shared/references +
+│                       templates/ (khuôn ledger _pipeline_state.md).
+│                       Cặp đối xứng của QP-02-06 FTO — FTO tránh claim người khác, plugin này
+│                       dựng claim của mình. B0 ip-criteria là CHẶN: dựng thước đo "cái gì được
+│                       tính" (QĐ 431/QĐ-BQP ↔ QĐ 12/2025/QĐ-TTg) TRƯỚC khi rà ứng viên. Luật nền
+│                       đổi rất nhanh (NĐ 65/2023 → 15/2026 → 33/2026 → 100/2026) nên mọi đầu ra
+│                       có quy cách PHẢI in ngày kiểm chuỗi sửa đổi.
+│                       Thiết kế để chạy được cả trong Cowork qua tầng trỏ workspace + cổng phân
+│                       loại — chưa live-run xác nhận (setup.sh --verify/--status và /ip-criteria
+│                       thật đang treo, xem CHANGELOG [1.9.0]).
 ├── scripts/          ← Python scripts codified from skills (Naval code leverage)
 │   └── _codify_ledger.md  (append-only registry of markdown→Python conversions)
 ├── hooks/            ← 3 hook scripts (SessionStart, UserPromptSubmit, Stop)
@@ -33,7 +45,7 @@ KN-Stack/
 └── docs/             ← Skill architecture docs (BRIDGE, FORGE, HELIX) + SYSTEM_OVERVIEW.md (current-state map)
 ```
 
-> Skill counts above are maintained manually — verify with `bash setup.sh --status` (or `find skills -name SKILL.md | wc -l`) before citing them.
+> Skill counts above are maintained manually — verify with `bash setup.sh --status` (or `find skills -name SKILL.md | wc -l`) before citing them. `plugins/` trên nhánh này chỉ có `ip-invent/` — `plugins/leo-ai/` (MCP leo-bridge + 4 skill LEO) tồn tại trên các nhánh khác chưa merge (`feature/leo-ai-plugin` và vài nhánh khác), không có trên cây này.
 
 ## Adding/Editing Skills
 
@@ -83,6 +95,7 @@ bash evals/run-eval.sh helix-task-clarify --improve
 
 - Spec format: `evals/<skill-name>.json` with `mode: "runtime"` (pipes test_input to `claude -p`) or `mode: "static"` (audits SKILL.md directly — use for orchestrator/multi-block pipeline skills that can't produce full deliverables in one shot).
 - When adding a significant skill (orchestrator, mega-skill, gate), add an eval spec alongside it.
+- Plugin có lint riêng ngoài plugin: `python -m pytest scripts/test_ip_invent.py -v`
 
 ## Git Conventions
 
