@@ -1,0 +1,42 @@
+{
+  "skill": "leo-bridge",
+  "mode": "static",
+  "description": "Audit leo-bridge SKILL.md + mcp/leo-bridge server cho harness contract: gate MAT deterministic hard-block, propose-only, template source-of-truth, transport hybrid, traceability.",
+  "checks": [
+    {
+      "id": "frontmatter-valid",
+      "desc": "Frontmatter name == directory, description co 'Triggers on:' VI + EN.",
+      "assert": "name: leo-bridge present; description includes 'Triggers on:' with Vietnamese and English trigger phrases."
+    },
+    {
+      "id": "gate-deterministic-hard-block",
+      "desc": "Gate MAT la denylist regex, khong LLM, khong override; chay 2 lan (classify + send).",
+      "assert": "gate.py uses re + yaml only (no LLM/network import); leo_send re-runs gate.classify and returns BLOCKED for MAT with no bypass parameter; SKILL states gate chay 2 lan, khong co override."
+    },
+    {
+      "id": "no-network",
+      "desc": "Server 100% local; ApiTransport chi la stub.",
+      "assert": "no requests/httpx/urllib network call in leo_bridge/ or server.py; ApiTransport.send/receive raise NotImplementedError; no browser automation (playwright/selenium) anywhere."
+    },
+    {
+      "id": "propose-only",
+      "desc": "Khong ghi dich khi thieu confirm; UNVERIFIED bi chan vao parts_master.",
+      "assert": "router.write_route raises RouteBlockedError when confirm falsy; BOM_TARGETS blocked while any checklist item UNVERIFIED; SKILL marks confirm=true as Core (C)."
+    },
+    {
+      "id": "template-source-of-truth",
+      "desc": "Template parse runtime tu leo-assist, khong copy; format doi -> fail loudly.",
+      "assert": "templates.py reads skills/helix/leo-assist/references/leo-mode-templates.md at runtime; TemplateFormatError raised when expected modes missing; no template text duplicated in mcp/leo-bridge."
+    },
+    {
+      "id": "verify-checklist-default-unverified",
+      "desc": "Moi so lieu/part tu Leo mac dinh UNVERIFIED; khong cite -> flag do.",
+      "assert": "parsers._build_checklist marks every number/part UNVERIFIED; missing citations adds explicit warning item; SKILL marks verify cite as Core (C)."
+    },
+    {
+      "id": "traceability",
+      "desc": "Moi exchange co ID + ledger JSONL append-only day du prompt/result/verify/route.",
+      "assert": "Ledger.append writes JSONL with exchange_id/event/ts; leo_send, leo_ingest, leo_route all append events; ledger dir gitignored."
+    }
+  ]
+}

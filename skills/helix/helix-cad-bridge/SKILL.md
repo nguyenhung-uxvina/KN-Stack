@@ -108,6 +108,7 @@ CEO `no` → revise params/script, regenerate. AI never self-approves.
 | helix-p3-bom | Extract part list + volumes from model |
 | helix-p4-drawing | 3D source for 2D drawing generation (ISO 128/TCVN) |
 | forge-fabrication | STEP handoff F0→F5, closing R&D→production loop |
+| helix-s2c-implement | Spec-to-CAD BD: spec-driven part generation — Parametric Intent pre-filled from approved S2C spec/plan |
 
 ## Output
 Save to `1_Projects/{{project}}/Phase{{N}}-.../cad/`:

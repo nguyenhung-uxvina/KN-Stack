@@ -1,0 +1,74 @@
+{
+  "skill": "forge-pulse",
+  "version": "1.0",
+  "description": "Binary assertions for /forge-pulse Last30Days-to-IPARAG ingestion skill",
+  "mode": "static",
+  "test_input": "forge pulse ai-agent-harness --nlm harness-engineering",
+  "total_required": 9,
+  "passing_score": 8,
+  "assertions": [
+    {
+      "id": "FP-LOCATE",
+      "name": "raw_file_location",
+      "check": "skill reads raw files from the Last30Days memory dir, handles comparison multi-file runs",
+      "regex": "Documents/Last30Days|raw.*\\.md|per-entity|comparison run",
+      "required": true
+    },
+    {
+      "id": "FP-INBOX",
+      "name": "inbox_capture",
+      "check": "creates a 0_Inbox capture note with mandatory why-context and PARA frontmatter",
+      "regex": "0_Inbox.*pulse|why.?context|Why-context|vì sao",
+      "required": true
+    },
+    {
+      "id": "FP-GALAXY-PROPOSE",
+      "name": "galaxy_propose_only",
+      "check": "Galaxy candidates are propose-only, never auto-created",
+      "regex": "PROPOSE ONLY|propose.?only|KHÔNG tự tạo|chờ CEO duyệt",
+      "required": true
+    },
+    {
+      "id": "FP-ATOMIC",
+      "name": "atomic_principle",
+      "check": "one concept per Galaxy candidate, evergreen test excludes news-only items",
+      "regex": "atomic|1 khái niệm|>1 khái niệm|sống lâu",
+      "required": true
+    },
+    {
+      "id": "FP-WIKILINKS",
+      "name": "wikilink_minimum",
+      "check": "each candidate proposes at least 2 wikilinks",
+      "regex": "≥2 wikilink|2 wikilink|\\[\\[A\\]\\], \\[\\[B\\]\\]",
+      "required": true
+    },
+    {
+      "id": "FP-ROUTE",
+      "name": "harvest_routing",
+      "check": "routes insights to forge-market-intel and/or mentor-board with COD labels",
+      "regex": "forge-market-intel|mentor-board|COD|\\[O\\]|\\[C\\]",
+      "required": true
+    },
+    {
+      "id": "FP-NLM",
+      "name": "notebooklm_push",
+      "check": "optional NotebookLM push via notebooklm-mcp source_add",
+      "regex": "notebooklm|source_add|--nlm",
+      "required": true
+    },
+    {
+      "id": "FP-CITATION",
+      "name": "citation_integrity",
+      "check": "claims keep briefing citations, none fabricated",
+      "regex": "citation|nguồn|per @handle|không.*tự chế",
+      "required": true
+    },
+    {
+      "id": "FP-VAULT-PATH",
+      "name": "correct_vault_path",
+      "check": "uses D:\\Workshop_X vault path, not stale E:\\ paths",
+      "regex": "D:\\\\Workshop_X|D:\\\\\\\\Workshop_X",
+      "required": true
+    }
+  ]
+}

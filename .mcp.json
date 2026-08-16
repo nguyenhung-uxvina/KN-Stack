@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "leo-bridge": {
+      "command": "python",
+      "args": ["mcp/leo-bridge/server.py"]
+    }
+  }
+}

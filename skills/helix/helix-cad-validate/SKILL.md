@@ -88,7 +88,7 @@ Giữ BƯỚC 1 tối thiểu. CHỈ thêm khi gặp trigger thật:
 |----|----|----|
 | Agent doom-loop (sửa 1 lỗi > N lần) | LoopDetection middleware | Computational |
 | `design_rules.json` phình > ~10k token, agent bỏ sót luật | compaction / sub-agent RAG tra ISO | kiến trúc |
-| Cần chấm phi-cấu-trúc (thủy động khoang phao) | LLM-as-judge có rubric | **Inferential** |
+| Cần chấm phi-cấu-trúc (thủy động khoang phao) | LLM-as-judge có rubric → ✅ [[helix-design-review]] (BƯỚC 2, propose-only) | **Inferential** |
 | Sửa contract → lo phá thiết kế cũ | eval harness Capability/Regression, **pass^k** | Computational |
 
 ## Integration Map
@@ -97,6 +97,7 @@ Giữ BƯỚC 1 tối thiểu. CHỈ thêm khi gặp trigger thật:
 | helix-cad-ingest (`cad_extract.json`) | → | **SENSOR+GATE** | → | forge-fabrication (chỉ khi PASS + ký) |
 | helix-cad-bridge (mass-props) | → | | → | helix-p3-integrate (ICD freeze chỉ khi PASS) |
 | design_rules.json (kỹ sư định danh) | → | (yardstick, read-only) | | helix-p4-inspection (kế thừa luật→plan đo) |
+| helix-s2c-validate (Spec-to-CAD BE — contract compiled từ CAD Constitution ở s2c-preflight) | → | (delegator) | → | Spec-to-CAD close-out |
 
 ## Gotchas
 - **BOM thickness = MED confidence** (BOM rows không mang confidence field). Đặt `plate_thickness_mm.min_confidence: "MED"` nếu chấp nhận nguồn BOM/nesting; để `"HIGH"` thì buộc có dimension đã-certify.
