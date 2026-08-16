@@ -89,4 +89,15 @@ bash evals/run-eval.sh helix-task-clarify --improve
 - Feature branches: `feature/<domain>-<description>`
 - Commit format: `[DOMAIN] Brief description` (e.g., `[HELIX] Add helix-p2-firmup block skill`)
 - Tag releases: `v1.0.0`, `v1.1.0`, etc.
-- Bump `VERSION` and add a `CHANGELOG.md` entry whenever skills are added/removed or domains change.
+
+### `VERSION` and `CHANGELOG.md` belong to the MERGE, not the branch
+
+**Feature branches must NOT touch `VERSION` or `CHANGELOG.md`.** Whoever merges bumps the version and writes the changelog entry, on the integration branch, at merge time.
+
+Why: with many feature branches open at once, both files are edited by every branch at the same spot — the top of the changelog, the single line of `VERSION`. Measured on 2026-08-16 across 14 open PRs: **12 conflicted on `CHANGELOG.md`**, and every branch claimed a version number that a different branch had already shipped. A branch that leaves both files alone inherits the integration branch's values cleanly, and its number is automatically correct.
+
+Renumbering does not fix this. Each merge invalidates the next branch's number, so the work never ends.
+
+What to do instead:
+- Put the changelog text in the **PR description**, under a `## CHANGELOG` heading. The merger pastes it into `CHANGELOG.md` and picks the version number then — that is the only moment the correct number is knowable.
+- Treat any other append-at-the-end registry (`scripts/_codify_ledger.md`) the same way: one row per merge, added by the merger, not carried on the branch.
