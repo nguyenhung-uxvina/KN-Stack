@@ -1,12 +1,12 @@
 {
   "skill": "learn-teach",
   "version": "1.0",
-  "description": "Binary assertions for learn-teach — stateful learning workspace whose lessons are grounded through a gated sourcing protocol. Audits SKILL.md + references/ because the sourcing contract lives in references/SOURCING.md.",
+  "description": "Binary assertions for learn-teach — stateful learning workspace with a gated sourcing protocol and a retrieval return-path. Audits SKILL.md + references/ because the sourcing and retrieval contracts live in references/SOURCING.md and references/RETRIEVAL.md.",
   "mode": "static",
   "include_references": true,
   "test_input": "Tôi muốn học Claude Cowork để đưa nó tới 25 nhân sự phi kỹ thuật của xưởng",
-  "total_required": 12,
-  "passing_score": 11,
+  "total_required": 21,
+  "passing_score": 20,
   "assertions": [
     {
       "id": "LT-S0-BEFORE-LESSON",
@@ -90,6 +90,69 @@
       "name": "primary_source_trusted_and_teachable",
       "check": "each lesson's headline source must be S/A on trust AND E1 on pedagogy; when no single source is both, introduce a PAIR and state each one's role",
       "regex": "(S hoặc A|S/A)[\\s\\S]{0,120}E1[\\s\\S]{0,400}(một cặp|giới thiệu cặp)",
+      "required": true
+    },
+    {
+      "id": "LT-FLUENCY-NOT-PROOF",
+      "name": "in_lesson_quiz_measures_fluency_only",
+      "check": "names its own trap: the end-of-lesson quiz sits at peak fluency and is a teaching tool, never evidence of learning; only cold delayed retrieval measures storage",
+      "regex": "công cụ dạy\\*\\*, buộc xử lý sâu|không bao giờ là bằng chứng đã học|Kiểm tra ngay sau khi dạy đo độ trôi chảy, không đo độ bền lưu trữ",
+      "required": true
+    },
+    {
+      "id": "LT-SESSION-OPENS-COLD",
+      "name": "session_opens_with_cold_retrieval",
+      "check": "every session opens by cold-testing due items BEFORE teaching anything new — no reopening the lesson, no summary first, no hints",
+      "regex": "Mọi phiên `/learn-teach` bắt đầu bằng hồi tưởng các mục đến hạn, trước khi dạy bất cứ thứ gì mới|hỏi nguội các mục đến hạn",
+      "required": true
+    },
+    {
+      "id": "LT-PREDICT-THEN-TEST",
+      "name": "confidence_predicted_before_answering",
+      "check": "learner states expected recall BEFORE answering; the gap between predicted and actual is the measurable illusion of mastery",
+      "regex": "đoán mức nhớ trước khi trả lời|bắt đoán trước|Khoảng lệch giữa \\*\\*đoán\\*\\* và \\*\\*thực\\*\\*",
+      "required": true
+    },
+    {
+      "id": "LT-CONFIDENT-WRONG",
+      "name": "confident_wrong_reteach_differently",
+      "check": "confident-but-wrong is the highest priority and must be retaught with a DIFFERENT representation, never by repeating the same wording",
+      "regex": "cách biểu diễn khác\\*\\*[\\s\\S]{0,160}(không lặp lại|tuyệt đối không lặp)|dạy lại bằng \\*\\*cách biểu diễn khác\\*\\*, không lặp lại đúng lời cũ",
+      "required": true
+    },
+    {
+      "id": "LT-LEDGER-IS-TRUTH",
+      "name": "html_review_page_is_derived_only",
+      "check": "the retrieval ledger is the single source of truth; the HTML review page is derived, read-only, never authoritative, and says so on its face",
+      "regex": "KHÔNG được ghi vào sổ|thà không có trang còn hơn có trang nói dối",
+      "required": true
+    },
+    {
+      "id": "LT-EINSTELLUNG",
+      "name": "names_the_misleading_prior_intuition",
+      "check": "each lesson names up front the prior intuition that will mislead; the trap is stronger for learners expert in an adjacent field, and gets its own retrieval item",
+      "regex": "Einstellung[\\s\\S]{0,400}(mạnh hơn ở người|bẫy dành riêng cho người có kinh nghiệm)|gỡ một mẫu đang chạy tự động",
+      "required": true
+    },
+    {
+      "id": "LT-NO-SUMMARY",
+      "name": "no_recap_section_in_lesson",
+      "check": "forbids a lesson-recap section because restating is not recalling; if wanted, learner writes their own first and only then sees yours",
+      "regex": "Không viết mục \"Tóm tắt bài học\"|Nhắc lại ≠ nhớ lại|Nhắc lại không phải nhớ lại",
+      "required": true
+    },
+    {
+      "id": "LT-ONE-LESSON-PER-SESSION",
+      "name": "diffuse_mode_pacing",
+      "check": "default one lesson per session and stop deliberately — consolidation happens away from the material, so cramming costs both lessons",
+      "regex": "Mặc định một bài học mỗi phiên|kể cả khi người học còn hào hứng",
+      "required": true
+    },
+    {
+      "id": "LT-ZPD-FROM-RETENTION",
+      "name": "zpd_read_from_retention_not_coverage",
+      "check": "zone of proximal development is read from what was RETAINED (the ledger) before what was taught (the records) — different things after two weeks",
+      "regex": "cái gì thật sự còn lại, chứ không phải cái gì đã được dạy|nền còn lún thì đừng xây tiếp",
       "required": true
     }
   ]

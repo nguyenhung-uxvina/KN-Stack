@@ -8,10 +8,13 @@ description: >-
   quiz trắc nghiệm + 3-5 câu hỏi tự luận, theo vùng phát triển gần nhất. Bài học
   được grounded bắt buộc: pha S0 gọi /research khám phá nguồn đa kênh, chấm hai
   trục tin cậy S/A/B/C × sư phạm E1/E2/E3, cổng duyệt nguồn, notebook NLM thường
-  trực, trích dẫn nguyên văn thay vì viết từ trí nhớ. Triggers on: "learn-teach",
-  "dạy tôi", "teach me", "tôi muốn học", "learning workspace", "tạo bài học",
-  "lesson", "học kỹ năng mới", "khóa tự học", "mission học tập", "nguồn cho bài
-  học", "grounding bài học".
+  trực, trích dẫn nguyên văn thay vì viết từ trí nhớ. Có đường quay lại: sổ hồi
+  tưởng RETRIEVAL.md, cổng mở phiên hỏi nguội các mục đến hạn, hiệu chỉnh
+  đoán-trước-rồi-thử để bắt ảo giác thành thạo, thang giãn cách và nhịp một bài
+  mỗi phiên. Triggers on: "learn-teach", "dạy tôi", "teach me", "tôi muốn học",
+  "learning workspace", "tạo bài học", "lesson", "học kỹ năng mới", "khóa tự
+  học", "mission học tập", "nguồn cho bài học", "grounding bài học", "ôn tập",
+  "hồi tưởng", "đến hạn ôn", "spaced repetition", "học lại".
 disable-model-invocation: true
 argument-hint: "Bạn muốn học gì?"
 ---
@@ -28,6 +31,8 @@ Coi thư mục hiện tại là workspace học tập. Trạng thái học tập
 - `./learning-records/*.md`: Thư mục nhật ký học tập, ghi lại những gì người dùng đã học. Tương tự ADR trong phát triển phần mềm — ghi lại những bài học không hiển nhiên và insight quan trọng có thể cần xem lại sau, hoặc định hướng các phiên tiếp theo. Dùng để xác định vùng phát triển gần nhất. Đặt tên theo dạng `0001-<ten-gach-ngang>.md`, số tăng dần. Dùng định dạng trong [LEARNING-RECORD-FORMAT.md](./references/LEARNING-RECORD-FORMAT.md).
 - `./lessons/*.html`: Thư mục bài học. Một **bài học** là một file HTML độc lập, dạy một thứ duy nhất được định phạm vi chặt chẽ, gắn với mission. Đây là đơn vị dạy học chính trong workspace.
 - `./assets/*`: **Component** tái sử dụng được chia sẻ giữa các bài học. Xem [Assets](#assets).
+- `RETRIEVAL.md`: **Sổ hồi tưởng** — nguồn sự thật duy nhất về việc gì đã nhớ, gì đến hạn ôn, và hiệu chỉnh của người học lệch bao nhiêu. Mọi phiên mở đầu bằng file này. Dùng định dạng và giao thức trong [RETRIEVAL.md](./references/RETRIEVAL.md).
+- `./review/index.html`: Trang ôn tập **thuần dẫn xuất**, sinh lại từ sổ hồi tưởng để người dùng tự ôn khi không mở agent. Chỉ đọc, không bao giờ là nguồn sự thật.
 - `NOTES.md`: Bảng nháp để ghi lại sở thích của người dùng hoặc ghi chú làm việc.
 
 ## Triết Lý
@@ -44,6 +49,16 @@ Câu trên là ràng buộc cứng, không phải lời khuyên. Nó được th
 
 Đọc SOURCING.md trước khi làm bất cứ việc gì trong một workspace mới.
 
+## Mọi Phiên Mở Đầu Bằng Hồi Tưởng
+
+Trước khi dạy bất cứ thứ gì mới, đọc `RETRIEVAL.md` và **hỏi nguội các mục đến hạn** — không mở lại bài học, không tóm tắt trước, không gợi ý. Với mỗi mục, bắt người học **đoán mức nhớ trước khi trả lời** (chắc/vừa/thấp), rồi mới nghe câu trả lời. Khoảng lệch giữa đoán và thực là ảo giác thành thạo đo được bằng số, và là tín hiệu tốt nhất để chọn dạy gì tiếp theo — tốt hơn hẳn việc hỏi người học thấy phần nào khó.
+
+Ô nguy hiểm nhất là **chắc mà sai**: người học không tự phát hiện được, vì chính cảm giác chắc chắn đang lừa họ. Gặp ô này thì dạy lại bằng **cách biểu diễn khác**, không lặp lại đúng lời cũ.
+
+Toàn bộ giao thức — thang giãn cách, cách chấm, xen kẽ, nhịp tập trung/khuếch tán, danh sách ảo giác cần tránh sinh ra — ở [Đường Quay Lại](./references/RETRIEVAL.md).
+
+**Mặc định một bài học mỗi phiên.** Dạy xong thì dừng, kể cả khi người học còn hào hứng — nhất là khi còn hào hứng. Việc củng cố diễn ra sau khi họ đóng máy, và giá trị của phiên sau đến từ cổng hồi tưởng ở đầu phiên; nhồi hết vào một phiên là tự cắt mất cả hai.
+
 Một số chủ đề cần nhiều kỹ năng hơn kiến thức. Học vật lý lý thuyết nghiêng về kiến thức. Yoga nghiêng về kỹ năng.
 
 ### Độ Trôi Chảy vs Độ Bền Lưu Trữ
@@ -58,6 +73,8 @@ Cần phân biệt hai loại học:
 - Dùng thực hành hồi tưởng (recall từ trí nhớ)
 - Giãn cách (phân phối luyện tập theo thời gian)
 - Xen kẽ (trộn các chủ đề liên quan trong luyện kỹ năng)
+
+**Ba thứ trên đòi hỏi quay lại, nên chúng không sống trong bài học — chúng sống trong [Đường Quay Lại](./references/RETRIEVAL.md).** Quiz và câu tự luận ở cuối bài nằm đúng khoảnh khắc độ trôi chảy cao nhất: nội dung còn trong bộ nhớ làm việc, đáp án còn cách vài dòng phía trên. Chúng là **công cụ dạy**, buộc xử lý sâu ngay lúc học — nhưng **không bao giờ là bằng chứng đã học**. Phép đo duy nhất đáng tin là hồi tưởng nguội ở phiên sau, không mở lại bài. Đừng lẫn hai thứ.
 
 ## Bài Học
 
@@ -74,6 +91,10 @@ Mỗi bài học nên dẫn link HTML đến các bài học và tài liệu tha
 Mỗi bài học nên giới thiệu một nguồn tài liệu chính để người dùng đọc hoặc xem. Đó phải là tài nguyên chất lượng và đáng tin nhất bạn tìm được về chủ đề đó — cụ thể: **Tier S hoặc A về tin cậy, và E1 về sư phạm**. Khi không có nguồn nào đạt cả hai (rất thường gặp), giới thiệu một cặp và nói rõ vai trò từng cái: một nguồn để hiểu, một nguồn để chốt số. Xem [SOURCING.md](./references/SOURCING.md).
 
 Mỗi bài học nên có lời nhắc để người dùng hỏi thêm với agent. Agent là giáo viên của họ và có thể giúp với bất cứ điều gì chưa rõ.
+
+**Mỗi bài học phải gọi tên trực giác cũ sẽ dẫn sai — ngay từ đầu bài.** Kiến thức có sẵn không chỉ giúp, nó còn chặn: một mẫu đã thành thục ở lĩnh vực gần sẽ tự động kích hoạt và bịt mất lối nghĩ đúng (Einstellung). Bẫy này mạnh hơn ở người *giỏi* lĩnh vực gần, không phải ở người mới. Đọc `MISSION.md` và `learning-records/` để biết người học mang sẵn chuyên môn gì, rồi tự hỏi: *nếu họ áp thẳng mẫu quen vào đây, họ sai ở đâu?* Viết chỗ sai đó ra trước khi dạy cách đúng. Với người học đã thạo một lĩnh vực gần, đây thường là phần giá trị nhất của cả bài — chỗ khó của họ không phải thiếu thông tin, mà là gỡ một mẫu đang chạy tự động.
+
+**Không viết mục "Tóm tắt bài học".** Nhắc lại không phải nhớ lại, và một bản tóm tắt đọc xuôi tai tạo đúng cảm giác đã nắm được mà không tạo trí nhớ nào. Nếu muốn có tóm tắt, đặt một ô nhập trống bảo người học tự viết trước, rồi mới hiện bản của bạn để đối chiếu. Danh sách đầy đủ những gì skill không được tự sinh ra ở [Đường Quay Lại](./references/RETRIEVAL.md).
 
 ## Trực Quan Hóa & Tương Tác
 
@@ -94,18 +115,22 @@ Khi thiết kế bài học mới:
 
 ### Checklist bắt buộc sau mỗi bài học
 
-Sau khi tạo bài học, **phải** hoàn thành đủ 6 bước này trước khi báo xong:
+Sau khi tạo bài học, **phải** hoàn thành đủ 8 bước này trước khi báo xong:
 
 0. **Xác nhận bài học được grounded từ nguồn** — mọi khẳng định sự thật không hiển nhiên có link tới nguồn trong `RESOURCES.md` kèm hạng (`— Tier A · E1`); mọi **con số, ngày tháng và phép đếm** đã được đối chiếu với nguồn gốc chứ không chỉ lấy từ NLM (xem [Kiểm Chứng Ngược](./references/SOURCING.md#kiểm-chứng-ngược)); mọi **sự thật dễ trôi** — gói, giá, nền tảng, giới hạn, các bước thao tác — lấy từ nguồn sống của nhà sản xuất chứ không từ báo chí hay video, dù chúng được chấm hạng cao (xem [Độ Tươi](./references/SOURCING.md#độ-tươi--thứ-hai-trục-không-bắt-được)). Nếu có phần nào viết từ trí nhớ vì không tìm được nguồn, gỡ nó ra hoặc đánh dấu rõ là khoảng trống — không để lẫn vào phần có nguồn.
 1. **Xác nhận đã tối đa hoá yếu tố trực quan/tương tác** (xem [Trực Quan Hóa & Tương Tác](#trực-quan-hóa--tương-tác)) — rà lại TỪNG mục trong bài, không chỉ tổng thể. Nếu một mục có thể vẽ hoặc cho bấm thử mà hiện chỉ có chữ, bổ sung thêm trước khi coi là xong. Chỉ chấp nhận mục thuần văn bản khi đã cân nhắc và thực sự không có gì để trực quan hóa.
 2. **Xác nhận có 3–5 câu hỏi tự luận về bản chất kiến thức** (xem [Câu Hỏi Bản Chất](#câu-hỏi-bản-chất-tự-luận)) — không phải trắc nghiệm, đặt sau quiz.
 3. **Tạo hoặc cập nhật tài liệu tham khảo** (`./reference/`) — nén kiến thức của bài vừa dạy thành cheat sheet tra cứu nhanh. Nếu reference cho chủ đề này đã có, cập nhật thêm vào. Nếu chưa có, tạo mới.
 4. **Ghi learning record** (`./learning-records/`) — ghi lại những gì người dùng đã học và hướng bài tiếp theo.
-5. **Mở file bài học** trong trình duyệt bằng lệnh CLI.
+5. **Rút 3–6 mục hồi tưởng vào `RETRIEVAL.md`** — mỗi mục là một **câu hỏi**, không phải một chủ đề, và phải **chịu lực**: quên nó thì phần còn lại của bài sụp. Ưu tiên dạng *vì sao* và *khác nhau ở cơ chế nào* hơn dạng *là gì* — câu "là gì" chỉ kiểm tra nhận ra. Bắt buộc có riêng một mục cho trực giác cũ dẫn sai đã nêu ở đầu bài; nó sẽ quay lại nên cần kiểm nhiều lần hơn. Đặt bậc 1, đến hạn sau 1 ngày.
+6. **Sinh lại `review/index.html`** từ sổ hồi tưởng, kèm dòng cảnh báo trang là bản dẫn xuất và kết quả tự ôn ở đó không ghi vào sổ. Sinh lại không được thì thà không có trang còn hơn có trang nói dối.
+7. **Mở file bài học** trong trình duyệt bằng lệnh CLI, rồi **dừng phiên** — nói thẳng với người học rằng dừng ở đây là một phần của phương pháp, không phải phép lịch sự.
 
 Không được bỏ qua bước 3. Reference không tự tạo — nó phải được tạo chủ động cùng lúc với bài học.
 
 Không được bỏ qua bước 0. Một bài học đẹp, đầy widget tương tác, dạy sai một con số thì tệ hơn không có bài học nào — người học sẽ tin nó và xây tiếp lên trên.
+
+Không được bỏ qua bước 5. Bài học không vào sổ hồi tưởng là bài học sẽ không bao giờ được quay lại, và mọi thứ viết trong mục Triết Lý về giãn cách với hồi tưởng trở thành trang trí.
 
 ## Assets
 
@@ -131,6 +156,7 @@ Mỗi bài học, người dùng phải luôn cảm thấy đang được thách
 
 Người dùng có thể chỉ định chính xác thứ họ muốn học. Nếu không, xác định vùng phát triển gần nhất bằng cách:
 
+- **Đọc `RETRIEVAL.md` trước** — nó cho biết cái gì thật sự còn lại, chứ không phải cái gì đã được dạy. Hai thứ này rất khác nhau sau hai tuần. Mục nào ở ô *chắc mà sai* thì dạy lại trước khi dạy thứ mới; nền còn lún thì đừng xây tiếp lên trên.
 - Đọc `learning-records` của họ
 - Xác định điều phù hợp nhất để dạy dựa trên mission
 - Dạy thứ liên quan nhất nằm trong vùng phát triển gần nhất của họ

@@ -1,5 +1,26 @@
 # Changelog
 
+## [1.7.0] - 2026-08-14
+### Added
+- **`learn-teach` — đường quay lại (`references/RETRIEVAL.md`).** Áp meta-learning (Learning How to Learn) và sửa một **mâu thuẫn nội tại** của skill: phần Triết Lý cảnh báo độ trôi chảy tạo ảo giác thành thạo, rồi đặt toàn bộ quiz + câu tự luận ở **cuối chính bài học vừa dạy** — đúng khoảnh khắc độ trôi chảy cao nhất, đáp án còn cách vài dòng. Nay nói thẳng: quiz cuối bài là **công cụ dạy**, không bao giờ là bằng chứng đã học; phép đo duy nhất đáng tin là hồi tưởng nguội ở phiên sau.
+  - **`RETRIEVAL.md`** — sổ hồi tưởng, nguồn sự thật duy nhất: mỗi mục có câu hỏi, mức đoán, kết quả thực, bậc giãn cách, ngày đến hạn tuyệt đối. 3–6 mục/bài, mục phải **chịu lực** (quên nó thì phần còn lại sụp), ưu tiên dạng *vì sao* hơn *là gì*.
+  - **Cổng mở phiên** — mọi phiên bắt đầu bằng hồi tưởng **nguội** các mục đến hạn trước khi dạy thứ mới: không mở lại bài, không tóm tắt trước, không gợi ý. Bỏ qua được nhưng phải ghi lại; bỏ ba lần liên tiếp là tín hiệu phải nêu thẳng với người học.
+  - **Hiệu chỉnh đoán-trước-rồi-thử** — bắt đoán mức nhớ TRƯỚC khi trả lời. Ô **chắc mà sai** là ảo giác thành thạo, ưu tiên cao nhất, và phải dạy lại bằng **cách biểu diễn khác** chứ không lặp lời cũ. Ô **thấp mà đúng** thì đừng dạy lại — chỉ cần gặp thêm để dựng lòng tin.
+  - **Thang giãn cách** 1·3·7·16·35 ngày; trượt thì **lùi hai bậc** chứ không về 0 (mục từng lên bậc 4 rồi trượt vẫn khác mục chưa từng nhớ được).
+  - **Trang ôn `review/index.html`** — thuần dẫn xuất, chỉ đọc, in ngày sinh trang và tự khai *"kết quả tự ôn ở đây không ghi vào sổ"*. Chống lệch trạng thái bằng cách không bao giờ cho trang có thẩm quyền.
+  - **Einstellung** — mỗi bài phải gọi tên trực giác cũ sẽ dẫn sai, ngay từ đầu bài; bẫy này mạnh hơn ở người *giỏi* lĩnh vực gần. Bắt buộc có riêng một mục hồi tưởng cho nó.
+  - **Nhịp tập trung/khuếch tán** — mặc định một bài học mỗi phiên, dừng có chủ đích kể cả khi người học còn hào hứng.
+  - **Danh sách ảo giác thành thạo skill không được tự sinh ra** — đọc lại, tô đậm, trắc nghiệm đơn thuần, xem lời giải trước khi thử, và **bản tóm tắt cuối bài** (nay bị cấm: nhắc lại không phải nhớ lại).
+  - Vùng phát triển gần nhất nay đọc từ `RETRIEVAL.md` **trước** `learning-records/` — cái còn nhớ khác hẳn cái đã dạy sau hai tuần.
+  - Nối vào `/learn-practice` cho lịch xen kẽ nhiều tuần thay vì chép lại luật của nó.
+- `evals/learn-teach.json` 12 → **21 assertion** (9 check mới cho đường quay lại).
+
+### Changed
+- Checklist sau mỗi bài học 6 → **8 bước**: thêm rút mục hồi tưởng vào sổ, sinh lại trang ôn, và dừng phiên có chủ đích.
+
+### Fixed
+- Workspace Cowork thật (`3_Resources/Courses/claude-cowork`) nay có `RETRIEVAL.md` 5 mục + `review/index.html`, gồm một mục Einstellung và một mục buộc suy ngược cơ chế từ chi phí hạn mức.
+
 ## [1.6.0] - 2026-08-14
 ### Added
 - **`learn-teach`** (learn/) — workspace học tập **có trạng thái** cho một chủ đề qua nhiều phiên: `MISSION.md` (lý do học — la bàn cho mọi quyết định dạy), `RESOURCES.md`, `lessons/*.html` (bài học độc lập, phong cách Tufte), `reference/*.html` (cheat sheet nén, in được), `learning-records/*.md` (ADR cho việc học → xác định vùng phát triển gần nhất), `assets/` (component tái sử dụng), `NOTES.md`. Nguyên tắc sư phạm mã hoá trong skill: **độ bền lưu trữ > độ trôi chảy**; mặc định mọi bài là diagram/SVG/calculator/tương tác chứ không phải văn bản thuần; mỗi bài kết bằng quiz trắc nghiệm (mọi phương án cân số từ) **+ 3–5 câu hỏi tự luận**; checklist 6 bước bắt buộc sau mỗi bài. Đặt tên `learn-teach` để không đè `/teach` sẵn có ở ops/ (nhật ký quyết định CEO — chức năng hoàn toàn khác). `disable-model-invocation: true`.
