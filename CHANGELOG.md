@@ -4,7 +4,7 @@
 ### Added
 - `plugins/leo-ai/` — portable Claude Code plugin bundling the LEO AI toolkit (leo-assist, leo-prompt, leo-bridge skills + mentor-getleo-ai + leo-bridge MCP server). Copy-anywhere; `build.sh` regenerates from canonical sources. `server.py` gains `LEO_BRIDGE_LEDGER_DIR` env override.
 
-## [1.8.0] - 2026-07-13
+## [1.9.0] - 2026-07-13
 ### Added
 - NEW skill `helix/helix-cad-workbook` — tầng dữ liệu Excel giữa ingest và fab: {PROJECT}_FAB-DB.xlsx
   (PARTS/BOM schema ERPNext/DINH_MUC/DU_TOAN công thức sống/QC_DIMS/CHECKLIST) + WX-MASTER-DATA.xlsx
