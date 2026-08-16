@@ -286,6 +286,47 @@ def test_sample_table_is_valid():
     assert lint.validate_experiments(lint.parse_experiments(EXP_DOC)) == []
 
 
+def _superseded_row(**over):
+    row = {"id": "EXP-001", "cell": "dil.transparency",
+           "if_then": "Khi tôi đẩy một PR ra ngoài, tôi ghi một dòng nêu phần AI đã tham gia.",
+           "streak": 1, "breaks": 1, "status": "SUPERSEDED",
+           "opened": "2026-08-01", "closed": "2026-08-02"}
+    row.update(over)
+    return row
+
+
+def test_superseded_is_a_valid_status():
+    assert lint.validate_experiments([_superseded_row()]) == []
+
+
+def test_superseded_requires_close_date():
+    assert any("ngày đóng" in e for e in lint.validate_experiments([_superseded_row(closed="")]))
+
+
+def test_superseded_rejected_when_it_should_be_passed():
+    errs = lint.validate_experiments([_superseded_row(streak=3)])
+    assert any("SUPERSEDED" in e for e in errs), errs
+
+
+def test_superseded_rejected_when_it_should_be_failed():
+    errs = lint.validate_experiments([_superseded_row(breaks=3)])
+    assert any("SUPERSEDED" in e for e in errs), errs
+
+
+def test_superseded_does_not_block_a_new_open_row():
+    """Đóng sớm rồi mở cái mới không được tính là vi phạm WIP=1."""
+    rows = [_superseded_row(),
+            {"id": "EXP-002", "cell": "des.performance",
+             "if_then": "Khi phiên có quyết định lớn, tôi giao vai phản biện đích danh.",
+             "streak": 0, "breaks": 0, "status": "OPEN", "opened": "2026-08-02", "closed": ""}]
+    assert lint.validate_experiments(rows) == []
+
+
+def test_superseded_row_absorbs_no_further_sessions():
+    """Phiên sau khi đã đóng sớm thuộc thí nghiệm KẾ TIẾP, không nới streak bản ghi cũ."""
+    assert lint.apply_session(_superseded_row(), held=True) == _superseded_row()
+
+
 def test_wip_one_enforced():
     rows = [
         {"id": "EXP-001", "cell": "des.product", "if_then": "Khi giao task, tôi nêu tiêu chí xong.",

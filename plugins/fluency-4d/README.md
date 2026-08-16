@@ -7,7 +7,7 @@ Delegation · Description · Discernment · Diligence — ngay trên các phiên
 
 Ba skill chấm/huấn luyện một khung 12 ô năng lực chung (`del.problem`, `del.platform`, `del.task`,
 `des.product`, `des.process`, `des.performance`, `dis.product`, `dis.process`, `dis.performance`,
-`dil.creation`, `dil.transparency`, `dil.deployment`), cộng năm file tham chiếu dùng chung ở
+`dil.creation`, `dil.transparency`, `dil.deployment`), cộng tám file tham chiếu dùng chung ở
 `skills/fluency-4d-shared/references/`:
 
 - `active-profile.md` — **tầng trỏ**: nêu tên profile đang bật. Ba `SKILL.md` đọc file này rồi mới mở profile; không skill nào còn gọi tên profile trực tiếp.
@@ -17,7 +17,7 @@ Ba skill chấm/huấn luyện một khung 12 ô năng lực chung (`del.problem
 - `improvement-playbook.md` — menu cách cải tiến cho từng ô (cách làm · dấu hiệu đã ăn · bẫy · phần CEO phải tự chốt). Trung lập ngành. `fluency-4d-weekly` **chọn dòng** từ đây, bị cấm tự nghĩ ra cách mới.
 - `profile-workshop-x.md` — tín hiệu, cờ đỏ, ví dụ ngành, và cách cải tiến tại chỗ cho từng ô — lớp hiệu chỉnh riêng Workshop X.
 - `ledger-schema.md` — schema một dòng sổ điểm (`sessions.jsonl`).
-- `experiment-protocol.md` — luật thí nghiệm hành vi (WIP=1, dạng nếu–thì, streak/đứt).
+- `experiment-protocol.md` — luật thí nghiệm hành vi (WIP=1, dạng nếu–thì, streak/đứt), **cộng phần chỉ `fluency-4d-weekly` dùng**: Bảng 1 (DMIR đọc ô nào ghi ra cái gì), Bảng 2 (bản đồ ô kéo ô, 18 cạnh), Bảng 3 (tầng đòn bẩy Meadows theo ô + luật leo tầng), và Luật bước R. Ba bảng là **hằng số** — weekly chọn dòng, chỉ CEO sửa.
 
 ### Ba lối vào — khi nào dùng cái nào
 
@@ -25,7 +25,19 @@ Ba skill chấm/huấn luyện một khung 12 ô năng lực chung (`del.problem
 |---|---|---|
 | **`fluency-4d-preflight`** | TRƯỚC khi giao một việc lớn cho AI | Không ghi sổ điểm — đây là cổng chặn (Delegation + Description), không phải phép đo. Trả về phiếu giao việc đã viết lại. |
 | **`fluency-4d-review`** | NGAY SAU một phiên làm việc vừa xong | Chấm 12 ô kèm bằng chứng trích dẫn, nghiệm thu/kê thí nghiệm hành vi, append 1 dòng vào `sessions.jsonl` + cập nhật `experiments.md`. |
-| **`fluency-4d-weekly`** | Cuối tuần, tổng hợp xu hướng | Đọc `sessions.jsonl` 7 ngày, phát hiện ô đang tụt bằng ngưỡng số, in bảng gợi ý cải tiến gom theo 4 D (chép từ playbook), kê ứng viên thí nghiệm kèm số — **để trống câu nếu–thì cho CEO tự viết**. Chốt 1 D ưu tiên, ghi `weekly/<năm>-W<tuần>.md`. |
+| **`fluency-4d-weekly`** | Cuối tuần, tổng hợp xu hướng + một vòng DMIR | Đọc `sessions.jsonl` 7 ngày, phát hiện ô đang tụt bằng ngưỡng số, rồi chạy bốn bước: **D** chốt ô *ràng buộc* (ô thượng nguồn theo Bảng 2 — thường KHÔNG phải ô thấp nhất), **M** chép bản đồ ô-kéo-ô + tầng đòn bẩy, **I** kê ứng viên thí nghiệm nhắm ràng buộc (WIP=1 vẫn thắng; lệch ô thì in cờ), **R** nghiệm thu vòng trước bằng số và chất vấn cạnh đã đặt cược. Bảng gợi ý vẫn chép từ playbook, câu nếu–thì vẫn **để trống cho CEO tự viết**. Chốt 1 D ưu tiên, ghi `weekly/<năm>-W<tuần>.md`. |
+
+**Vì sao ràng buộc khác ô thấp nhất.** Ô tụt sâu nhất thường là *triệu chứng* của một ô thượng
+nguồn còn hỏng: không nêu tiêu chí thì không có thước để soi, nên `dis.*` tụt vì `des.*` chưa
+làm xong việc của nó. Nhắm ô thấp nhất là chữa triệu chứng. Bản đồ quyết định ô nào thượng
+nguồn là **Bảng 2 viết sẵn và CEO duyệt sẵn**, không phải thứ AI suy ra từ sổ lúc chạy — vài
+chục điểm nguyên một tuần không đủ cho bất kỳ tương quan nào, và một bản đồ dựng lúc chạy sẽ
+luôn dựng thành cái biện minh cho ô vừa chọn.
+
+**DMIR ở đây đã bị cắt gọn có chủ ý.** Không có mô hình System Dynamics, không có menu 8 system
+archetype, không có bước exploit/subordinate/elevate của TOC, không có thách thức paradigm
+L1–L2, và chỉ dùng 4 trong 12 tầng đòn bẩy Meadows. Lý do và điều kiện khôi phục ghi ngay
+trong `experiment-protocol.md` dưới Bảng 1.
 
 **Vì sao weekly không tự viết câu thí nghiệm.** Coach tự kê bài tập cho chính hành vi mà nó vừa
 chấm thì nó đang chấm bài của mình, và sẽ nghiêng về ô dễ ghi streak. Nên ranh giới đặt ở đây:

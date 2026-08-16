@@ -283,7 +283,12 @@ def validate_ledger_line(obj: dict) -> list[str]:
 # Experiment protocol: parser + WIP=1 validator + streak state machine
 STREAK_TO_PASS = 3
 BREAKS_TO_FAIL = 3
-_STATUSES = {"OPEN", "PASSED", "FAILED"}
+# SUPERSEDED = đóng sớm vì ràng buộc tuần đổi sang ô khác — KHÔNG phải PASSED, KHÔNG phải
+# FAILED. Thiếu trạng thái này thì một thí nghiệm bị bỏ giữa chừng chỉ có hai đường ghi sổ,
+# cả hai đều nói dối: PASSED trong khi chưa giữ đủ 3 phiên, hoặc FAILED trong khi chưa đứt 3
+# lần. Lịch sử sai kiểu đó không tự lộ ra — nó chỉ làm hỏng mọi suy luận về sau.
+_STATUSES = {"OPEN", "PASSED", "FAILED", "SUPERSEDED"}
+_CLOSED_STATUSES = {"PASSED", "FAILED", "SUPERSEDED"}
 _EXP_COLS = ["id", "cell", "if_then", "streak", "breaks", "status", "opened", "closed"]
 
 
@@ -331,7 +336,16 @@ def validate_experiments(rows: list[dict]) -> list[str]:
             errors.append(f"{r['id']}: PASSED phải có streak = {STREAK_TO_PASS}, gặp {r['streak']}")
         if r["status"] == "FAILED" and r["breaks"] != BREAKS_TO_FAIL:
             errors.append(f"{r['id']}: FAILED phải có đứt = {BREAKS_TO_FAIL}, gặp {r['breaks']}")
-        if r["status"] in {"PASSED", "FAILED"} and not r["closed"].strip():
+        # SUPERSEDED chỉ hợp lệ khi thí nghiệm CHƯA tự kết thúc được. Đủ streak hoặc đủ đứt
+        # thì nó đã là PASSED/FAILED — dán SUPERSEDED lên đó là xoá mất một kết quả thật.
+        if r["status"] == "SUPERSEDED" and (
+            r["streak"] >= STREAK_TO_PASS or r["breaks"] >= BREAKS_TO_FAIL
+        ):
+            errors.append(
+                f"{r['id']}: SUPERSEDED phải có streak < {STREAK_TO_PASS} và đứt < {BREAKS_TO_FAIL}, "
+                f"gặp streak={r['streak']} đứt={r['breaks']} (đây là PASSED/FAILED, không phải đóng sớm)"
+            )
+        if r["status"] in _CLOSED_STATUSES and not r["closed"].strip():
             errors.append(f"{r['id']}: đã đóng nhưng thiếu ngày đóng")
     return errors
 
@@ -429,7 +443,7 @@ def apply_session(row: dict, held: bool) -> dict:
     """Áp kết quả một phiên lên thí nghiệm. Trả bản ghi MỚI."""
     out = dict(row)
     if row["status"] != "OPEN":
-        # Thí nghiệm đã đóng (PASSED/FAILED) — phiên sau thuộc thí nghiệm KẾ TIẾP,
+        # Thí nghiệm đã đóng (PASSED/FAILED/SUPERSEDED) — phiên sau thuộc thí nghiệm KẾ TIẾP,
         # không được nới thêm streak/breaks trên bản ghi đã kết thúc.
         return out
     if held:
