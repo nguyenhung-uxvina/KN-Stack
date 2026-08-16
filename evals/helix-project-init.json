@@ -1,0 +1,75 @@
+{
+  "skill": "helix-project-init",
+  "version": "1.0",
+  "description": "Binary assertions for /helix-project-init Phase 0 setup static structure check",
+  "mode": "static",
+  "test_input": "init new HELIX project for a maritime target drone — set up Phase 0 charter and ICD",
+  "assertions": [
+    {
+      "id": "PI-1",
+      "name": "project_charter",
+      "check": "generates a project charter",
+      "regex": "PROJECT CHARTER|project charter|Charter",
+      "required": true
+    },
+    {
+      "id": "PI-2",
+      "name": "triple_helix_timeline",
+      "check": "lays out Triple Helix domains (mechanical/electrical/AI) timeline",
+      "regex": "Triple Helix|Co \\(Mechanical\\)|Dien \\(Electrical\\)|AI/Software|DOMAINS INVOLVED|Clock Speed",
+      "required": true
+    },
+    {
+      "id": "PI-3",
+      "name": "icd_v0_skeleton",
+      "check": "generates an ICD v0 skeleton with interface register",
+      "regex": "ICD v0|ICD_v0|INTERFACE REGISTER|Interface Control Document|IF-001",
+      "required": true
+    },
+    {
+      "id": "PI-4",
+      "name": "tier_classification",
+      "check": "classifies project tier (1/2/3)",
+      "regex": "Tier 1|Tier 2|Tier 3|Tier classification|TIER:",
+      "required": true
+    },
+    {
+      "id": "PI-5",
+      "name": "milestones_gates",
+      "check": "sets up gate milestones G0-G4",
+      "regex": "MILESTONES|G0|G1|G2|G3|G4|Gate.*Target Date",
+      "required": true
+    },
+    {
+      "id": "PI-6",
+      "name": "physical_gate_30d",
+      "check": "Tier 1 must have a physical gate within 30 days",
+      "regex": "PHYSICAL GATE|physical gate within 30|30 days|physical gate <=30d",
+      "required": true
+    },
+    {
+      "id": "PI-7",
+      "name": "sync_calendar",
+      "check": "generates a cross-domain sync calendar",
+      "regex": "SYNC CALENDAR|SYNC POINTS|sync calendar|S0|S1|S2",
+      "required": true
+    },
+    {
+      "id": "PI-8",
+      "name": "ceo_review_before_create",
+      "check": "presents charter for CEO review before creating files",
+      "regex": "present.*for review|BEFORE creating files|Core \\(C\\)|CEO decides|present charter",
+      "required": false
+    },
+    {
+      "id": "PI-9",
+      "name": "naming_convention",
+      "check": "applies Workshop X project ID naming convention",
+      "regex": "VN-\\[CATEGORY\\]|naming convention|Project ID|VN-AST-MSL",
+      "required": false
+    }
+  ],
+  "passing_score": 7,
+  "total_required": 7,
+  "total_optional": 2
+}

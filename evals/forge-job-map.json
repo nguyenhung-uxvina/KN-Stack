@@ -1,0 +1,82 @@
+{
+  "skill": "forge-job-map",
+  "version": "1.0",
+  "description": "Binary assertions for /forge-job-map static structure check",
+  "mode": "static",
+  "test_input": "job map for V-SMASH — what do operators hire it to do, desired outcomes and opportunity landscape",
+  "assertions": [
+    {
+      "id": "JM-1",
+      "name": "jtbd_job_statement",
+      "check": "defines the job-to-be-done with verb + object + context",
+      "regex": "JOB STATEMENT|job-to-be-done|JTBD|Action verb.*object.*context|The job is NOT the product",
+      "required": true
+    },
+    {
+      "id": "JM-2",
+      "name": "eight_step_job_map",
+      "check": "builds the universal 8-step job map",
+      "regex": "8-Step Job Map|8.?step|DEFINE|LOCATE|PREPARE|CONFIRM|EXECUTE|MONITOR|MODIFY|CONCLUDE",
+      "required": true
+    },
+    {
+      "id": "JM-3",
+      "name": "desired_outcomes",
+      "check": "generates desired outcome statements in minimize/maximize format",
+      "regex": "Desired Outcome|DESIRED OUTCOMES|OUTCOME STATEMENT|Minimize|Maximize",
+      "required": true
+    },
+    {
+      "id": "JM-4",
+      "name": "odi_framework",
+      "check": "references ODI / Outcome-Driven Innovation and Importance x Satisfaction",
+      "regex": "ODI|Outcome-Driven|Importance.*Satisfaction|Ulwick|Importance × Satisfaction",
+      "required": true
+    },
+    {
+      "id": "JM-5",
+      "name": "opportunity_algorithm",
+      "check": "runs the Opportunity Algorithm / opportunity score",
+      "regex": "OPPORTUNITY SCORE|Opportunity Algorithm|Importance \\+ max|Opp Score",
+      "required": true
+    },
+    {
+      "id": "JM-6",
+      "name": "underserved_overserved",
+      "check": "classifies outcomes underserved / served / overserved",
+      "regex": "UNDERSERVED|OVERSERVED|HIGHLY UNDERSERVED|top 15|bottom 15",
+      "required": true
+    },
+    {
+      "id": "JM-7",
+      "name": "strategy_recommendation",
+      "check": "produces a strategy type recommendation",
+      "regex": "STRATEGY RECOMMENDATION|Differentiated|Dominant|Discrete|Disruptive",
+      "required": true
+    },
+    {
+      "id": "JM-8",
+      "name": "ceo_selection_core",
+      "check": "job definition and strategy selection are CEO Core",
+      "regex": "Core — CEO|CEO conducts|CEO decides|chọn strategy|Core \\(C\\)|interview OPERATORS",
+      "required": true
+    },
+    {
+      "id": "JM-9",
+      "name": "hoq_design_parameters",
+      "check": "optional HOQ design parameter weights export for HELIX Phase 2",
+      "regex": "HOQ|House of Quality|Design Parameter|VDI 2225|correlation roof",
+      "required": false
+    },
+    {
+      "id": "JM-10",
+      "name": "buyer_not_user",
+      "check": "applies the buyer != user defense gotcha",
+      "regex": "Buyer ≠ User|Buyer.*User|procurement officer|operators, not buyers",
+      "required": false
+    }
+  ],
+  "passing_score": 8,
+  "total_required": 8,
+  "total_optional": 2
+}

@@ -1,0 +1,75 @@
+{
+  "skill": "bridge-judgment",
+  "version": "1.0",
+  "description": "Binary assertions for /bridge-judgment decision support static structure check",
+  "mode": "static",
+  "test_input": "help me decide between material A and material B for the hull — structure the trade-off",
+  "assertions": [
+    {
+      "id": "BJ-1",
+      "name": "never_recommends",
+      "check": "structures decisions but never recommends — CEO decides",
+      "regex": "NEVER recommend|Never Decision Replacement|NEVER say|You decide|does NOT replace human judgment",
+      "required": true
+    },
+    {
+      "id": "BJ-2",
+      "name": "options",
+      "check": "presents options with evidence for/against",
+      "regex": "Options|Option A|Evidence For|Evidence Against",
+      "required": true
+    },
+    {
+      "id": "BJ-3",
+      "name": "evidence_risks_unknowns",
+      "check": "structures evidence, risks, and unknowns",
+      "regex": "Risk Assessment|What We Don't Know|unknown|Risk.*Likelihood.*Impact|uncertainty",
+      "required": true
+    },
+    {
+      "id": "BJ-4",
+      "name": "decision_package",
+      "check": "produces a decision package",
+      "regex": "Decision Package|decision package|Present Decision Package",
+      "required": true
+    },
+    {
+      "id": "BJ-5",
+      "name": "decision_type",
+      "check": "identifies decision type (technical/strategic/resource/risk)",
+      "regex": "Technical|Strategic|Resource|Risk|decision type",
+      "required": true
+    },
+    {
+      "id": "BJ-6",
+      "name": "ceo_decides_core",
+      "check": "the decision itself is CEO Core",
+      "regex": "CEO Decides|CEO decides|Core \\(C\\)|CEO reviews|judgment.*Core",
+      "required": true
+    },
+    {
+      "id": "BJ-7",
+      "name": "reversibility",
+      "check": "assesses reversibility of the decision",
+      "regex": "Reversibility|reversal|undo this|Can we undo",
+      "required": true
+    },
+    {
+      "id": "BJ-8",
+      "name": "shifting_the_burden",
+      "check": "warns delegating judgment activates Shifting the Burden / atrophy",
+      "regex": "Shifting the Burden|atroph|Judgment stock|degrades",
+      "required": false
+    },
+    {
+      "id": "BJ-9",
+      "name": "documents_tracks",
+      "check": "documents decision and tracks quality over time",
+      "regex": "Document and Track|decision log|KB Layer 3|Decision Quality|review trigger",
+      "required": false
+    }
+  ],
+  "passing_score": 7,
+  "total_required": 7,
+  "total_optional": 2
+}

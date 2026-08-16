@@ -1,0 +1,75 @@
+{
+  "skill": "forge-portfolio",
+  "version": "1.0",
+  "description": "Binary assertions for /forge-portfolio static structure check",
+  "mode": "static",
+  "test_input": "forge portfolio dashboard — FORGE score per product and ACH pipeline status",
+  "assertions": [
+    {
+      "id": "PF-1",
+      "name": "forge_score",
+      "check": "computes a FORGE SCORE per product across 5 dimensions",
+      "regex": "FORGE SCORE|FORGE score|score 5 FORGE dimension|/25",
+      "required": true
+    },
+    {
+      "id": "PF-2",
+      "name": "five_dimensions",
+      "check": "scores Fallback/Validate/Reuse/Ground-truth/Edge-cost dimensions",
+      "regex": "Fallback|Validate|Reuse|Ground.?truth|Edge.?cost|F — |O — |R — |G — |E — ",
+      "required": true
+    },
+    {
+      "id": "PF-3",
+      "name": "portfolio_dashboard",
+      "check": "generates the portfolio dashboard / matrix",
+      "regex": "FORGE PORTFOLIO DASHBOARD|PORTFOLIO MATRIX|portfolio dashboard|Portfolio Average",
+      "required": true
+    },
+    {
+      "id": "PF-4",
+      "name": "ach_pipeline",
+      "check": "shows the ACH pipeline by stage",
+      "regex": "ACH PIPELINE|Scouting|SHIFT assessed|Validating|Library|Evolving",
+      "required": true
+    },
+    {
+      "id": "PF-5",
+      "name": "score_bands",
+      "check": "maps score to bands RAW ORE/HEATING/FORGING/TEMPERED",
+      "regex": "RAW ORE|HEATING|FORGING|TEMPERED|Bands",
+      "required": true
+    },
+    {
+      "id": "PF-6",
+      "name": "tier_health",
+      "check": "runs tier health check (Tier 1/2/3)",
+      "regex": "TIER HEALTH|Tier 1|Tier 2|Tier 3|physical gate",
+      "required": true
+    },
+    {
+      "id": "PF-7",
+      "name": "alerts_decisions",
+      "check": "produces RED/YELLOW alerts and decisions needed",
+      "regex": "\\[RED\\]|\\[YELLOW\\]|ALERTS|DECISIONS NEEDED",
+      "required": true
+    },
+    {
+      "id": "PF-8",
+      "name": "model_library_status",
+      "check": "reports model library status / transfers",
+      "regex": "MODEL LIBRARY|Total models|Transfers this quarter|Library utilization",
+      "required": false
+    },
+    {
+      "id": "PF-9",
+      "name": "ceo_validated_score",
+      "check": "FORGE SCORE is AI-proposed, CEO-validated",
+      "regex": "AI-proposed, CEO-validated|CEO decides|Core \\(C\\)|CEO judgment|CEO-validated",
+      "required": false
+    }
+  ],
+  "passing_score": 7,
+  "total_required": 7,
+  "total_optional": 2
+}
