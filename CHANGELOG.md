@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.8.0] - 2026-08-16
+### Added
+- **`ops/md-to-epub` — chuyển Markdown sang EPUB, dựng sơ đồ mermaid offline.** Sinh ra từ một ca thật: chuyển cuốn *Từ Không Đến Một Trong Thế Giới Nguyên Tử* (1,8 MB · 19 chương · 42 sơ đồ) và phát hiện pandoc trần **không** đủ dùng cho tài liệu Xưởng. Bốn lỗ hổng, mỗi lỗ nay có một chặng trong script:
+  - **Sơ đồ mermaid ra chữ trần.** Pandoc không dựng mermaid; trình đọc EPUB không chạy JavaScript. Bản đầu ship ra **0 ảnh, 42 khối mã nguồn**. Nay tách khối, dựng bằng `mmdc` thành PNG, nhúng lại.
+  - **Frontmatter IPARAG làm chết pandoc.** `tags: [#type/book]` — dấu `#` mở comment YAML giữa flow sequence nên chuỗi không đóng. Nay tự bóc frontmatter, vớt `title`/`author` bằng trình đọc chịu lỗi, không phụ thuộc thư viện YAML.
+  - **Chú thích HTML ẩn lọt vào bản xuất.** EPUB là zip chứa HTML — 118 chú thích biên tập của cuốn sách đi thẳng vào tệp, ai giải nén đều đọc được. Nay **đếm và báo số**; mặc định GIỮ, muốn gỡ phải gõ `--strip-comments` (tự sửa nội dung tài liệu nguy hiểm hơn là để người ta thấy con số rồi tự quyết).
+  - **Không ai kiểm bản dựng.** Nay mở lại EPUB như zip, đối chiếu số ảnh với số thẻ `<img>`, đếm tham chiếu gãy và mermaid còn sót; sai thì thoát khác 0.
+  - **Nhãn quadrantChart bị cắt cụt** khi nhãn dài hơn bề ngang ô — tăng khổ ảnh không cứu được vì mermaid dựng loại này theo khổ cố định. Cấu hình `quadrantLabelFontSize`/`chartWidth` đã hiệu chỉnh, nhúng thẳng trong script.
+  - **An ninh:** dựng sơ đồ offline tuyệt đối, không kroki.io/mermaid.ink. Tài liệu nội bộ không rời máy — ràng buộc cứng, không làm cờ.
+  - Cấu hình mermaid + CSS **nhúng trong script** rồi ghi ra thư mục tạm lúc chạy, không để thành file cạnh skill: đường dẫn tương đối ra ngoài thư mục skill đứt dưới junction Windows (đúng lỗi đã dính ở plugin `fluency-4d`).
+- `scripts/md_to_epub.py` (315 dòng) + `scripts/test_md_to_epub.py` (23 phép thử, tự sinh fixture, không cần mạng) — mục codify đầu tiên trong `_codify_ledger.md`, **chờ CEO ký**.
+
 ## [1.7.0] - 2026-08-14
 ### Added
 - **`learn-teach` — đường quay lại (`references/RETRIEVAL.md`).** Áp meta-learning (Learning How to Learn) và sửa một **mâu thuẫn nội tại** của skill: phần Triết Lý cảnh báo độ trôi chảy tạo ảo giác thành thạo, rồi đặt toàn bộ quiz + câu tự luận ở **cuối chính bài học vừa dạy** — đúng khoảnh khắc độ trôi chảy cao nhất, đáp án còn cách vài dòng. Nay nói thẳng: quiz cuối bài là **công cụ dạy**, không bao giờ là bằng chứng đã học; phép đo duy nhất đáng tin là hồi tưởng nguội ở phiên sau.
