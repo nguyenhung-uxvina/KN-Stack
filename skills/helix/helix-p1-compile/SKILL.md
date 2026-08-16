@@ -195,6 +195,8 @@ Save to `1_Projects/{{project}}/Phase1-Task/`:
 
 Update `Status.md` → Phase 1 complete, ready for Gate 1.
 
+> 💡 Cần bản xuất bản (PNG/PDF cho báo cáo/trình duyệt)? Gợi ý: `/wx-diagram <type> {{project}}` — KHÔNG tự chạy, chỉ gợi ý.
+
 ## CEO Checkpoint (FINAL)
 
 ```

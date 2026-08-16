@@ -35,3 +35,5 @@ BLOCKER: Any subsystem with TRL <5 and no prototype test plan -> FAIL.
 BLOCKER: Cost overrun >20% of target with no mitigation plan -> CONDITIONAL at best.
 BLOCKER: Local content <50% -> FAIL for Vietnamese defense programs.
 FLAG: Physical prototype not yet built -> note as risk. dP/dt = 0 is a warning.
+
+After the gate decision is recorded, render a one-page publication gate pack via `/wx-diagram gate-pack {{project}}` (draw.io engine; degrades to .drawio XML if CLI missing) and attach it next to the gate review file.

@@ -305,6 +305,10 @@ Runs P02 + PLAUSIBLE on current phase artifacts without A-items, H-items, or sco
 
 **NLM Reference:** `Research: VDI 2221 Systematic Design (1986→2019)` (27 sources, notebook `f6e2b21f`)
 
+## Publication gate pack (wx-diagram — AUTO)
+
+Sau khi có gate decision, xuất 1 trang gate pack: `/wx-diagram gate-pack {{project}}` — dashboard scores + traffic light + decision (PASS/CONDITIONAL/FAIL), style `wx-default`. Đính vào file gate review. Degrade gracefully nếu thiếu CLI.
+
 ## Rules
 
 - NEVER auto-pass a gate — human judgment items require CEO input

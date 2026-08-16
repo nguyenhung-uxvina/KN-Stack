@@ -200,6 +200,15 @@ Date: {{today}}  Version: v1.0  Workshop verdict: GIA CONG DUOC
 - First Article plan reviewed?
 - Contract reference / customer for F5 invoice?
 
+## Publication diagrams (wx-diagram — AUTO)
+
+Trước khi đóng gói handoff, xuất bản vẽ sơ đồ qua `/wx-diagram` (engine draw.io, xem bảng quyết định trong skill đó):
+
+1. `/wx-diagram block-diagram {{project}}` — assembly/block diagram cho fab bundle.
+2. Lưu vào `1_Projects/{{project}}/Phase4-Detail/diagrams/`, liệt kê 2 file (.drawio + .drawio.png) vào mục Files của handoff.
+
+Nếu draw.io CLI chưa cài → wx-diagram tự degrade (chỉ sinh .drawio XML) — vẫn đính kèm, KHÔNG chặn handoff.
+
 ## Next Command
 ```
 /forge-fabrication --product {{product}} --qty {{N}} --helix-handoff {{this_path}}

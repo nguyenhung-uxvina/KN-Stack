@@ -101,6 +101,8 @@ When user starts a HELIX task (clarify, concept, embody, detail):
 - HELIX: design journals, sync summaries, quality gate results
 - BRIDGE: signal-extract outputs, cross-learn sessions
 
+> 💡 Cần bản xuất bản (PNG/PDF cho báo cáo/trình duyệt)? Gợi ý: `/wx-diagram <type> Knowledge Base` — KHÔNG tự chạy, chỉ gợi ý.
+
 ## Metrics
 
 | Metric | Current | Target 6M |

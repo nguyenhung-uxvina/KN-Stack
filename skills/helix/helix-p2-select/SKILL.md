@@ -180,6 +180,8 @@ Save to `1_Projects/{{project}}/Phase2-Concept/`:
 
 Update `Status.md` → Phase 2 complete, ready for Gate 2.
 
+> 💡 Cần bản xuất bản (PNG/PDF cho báo cáo/trình duyệt)? Gợi ý: `/wx-diagram <type> {{project}}` — KHÔNG tự chạy, chỉ gợi ý.
+
 ## CEO Checkpoint (FINAL)
 
 ```

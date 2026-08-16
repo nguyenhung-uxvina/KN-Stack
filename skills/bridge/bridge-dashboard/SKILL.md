@@ -145,6 +145,8 @@ Based on the bottleneck identified, recommend exactly ONE action for the week:
 - Must address the binding constraint
 - Must be completable within the week
 
+> 💡 Cần bản xuất bản (PNG/PDF cho báo cáo/trình duyệt)? Gợi ý: `/wx-diagram <type> CEO Dashboard` — KHÔNG tự chạy, chỉ gợi ý.
+
 ## Data Sources
 
 | Metric | Primary Source | Fallback |

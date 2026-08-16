@@ -36,3 +36,5 @@ CRITICAL: This is a NEVER-AUTOMATE decision. Present scores and WAIT.
 BLOCKER: Quantification <60% -> FAIL regardless of other scores.
 BLOCKER: Any unresolved D-requirement conflict -> CONDITIONAL at best.
 FLAG: Missing stakeholder interviews -> note as risk, don't auto-reject.
+
+After the gate decision is recorded, render a one-page publication gate pack via `/wx-diagram gate-pack {{project}}` (draw.io engine; degrades to .drawio XML if CLI missing) and attach it next to the gate review file.
