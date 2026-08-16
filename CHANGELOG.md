@@ -1,9 +1,5 @@
 # Changelog
 
-## [Unreleased]
-### Added
-- `plugins/leo-ai/` — portable Claude Code plugin bundling the LEO AI toolkit (leo-assist, leo-prompt, leo-bridge skills + mentor-getleo-ai + leo-bridge MCP server). Copy-anywhere; `build.sh` regenerates from canonical sources. `server.py` gains `LEO_BRIDGE_LEDGER_DIR` env override.
-
 ## [1.5.0] - 2026-07-05
 ### Added
 - **`helix-design-review`** (helix/) — **BƯỚC 2 của lộ trình validator** (đã chốt trong harness-engineering DEBATE 2026-06-25, line 43 "chấm yếu tố phi cấu trúc → LLM-as-judge có rubric → Inferential"; trigger nay đã tới). Là **Inferential Sensor — PROPOSE ONLY**, cặp đôi với `helix-cad-validate` (Computational gate CỨNG). Chấm cái LUẬT KHÔNG mã hóa nổi: design-intent smells (đặt tên lệch, BOM-vs-mô-hình, revision mồ côi, code title-block dán nhầm), yếu tố phi cấu trúc cần phán đoán (thủy động khoang phao, khả lắp, DFM mềm), mâu thuẫn chéo tài liệu (note vẽ vs dim vs ICD vs requirements). **Bất biến kỷ luật:** không bao giờ là gate cứng / không block freeze-handoff (đó là việc Computational); không sửa geometry-of-record hay design_rules.json; mọi finding có confidence bắt buộc, LOW không trình như chắc chắn; MẬT/HẠN-CHẾ → model LOCAL air-gapped (không egress cloud); kỹ sư định danh định đoạt accept/reject/defer. **Improvement Engine (fix-it-once):** finding lặp lại được xác nhận → kỹ sư NÂNG thành luật Computational trong contract → gate tất định hấp thu dần. Chạy SAU cad-validate PASS, TRƯỚC chữ ký kỹ sư / freeze ICD. Ships `references/review-rubric.template.md` (Guide có phiên bản, kỹ sư sở hữu) + findings schema. Static eval 9/9. `helix-cad-validate` "When to add next tier" cập nhật trỏ BƯỚC 2 đã build. Skill count 251 → 252. VERSION 1.4.0 → 1.5.0.
