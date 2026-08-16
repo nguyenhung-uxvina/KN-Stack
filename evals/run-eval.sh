@@ -60,10 +60,37 @@ print(e.get('mode', 'runtime'))
 " 2>/dev/null || echo "runtime")
 
 if [ "$EVAL_MODE" = "static" ]; then
-  echo "[1/3] Static audit (reading SKILL.md + companion files, no subprocess)..."
-  OUTPUT="$SKILL_CONTENT"
+  # Two independent widenings of the static audit, kept separate on purpose:
+  #   (A) include_references  -> references/*.md          [opt-in]
+  #   (B) files: [...]        -> named companion files    [opt-in]
+  #       plus top-level *.py next to SKILL.md            [automatic]
   SKILL_DIR_PATH=$(dirname "$SKILL_FILE")
-  # spec-declared extra files (relative to skill dir)
+  OUTPUT="$SKILL_CONTENT"
+  AUDIT_PARTS="SKILL.md"
+
+  # (A) Opt-in per spec: "include_references": true also audits references/*.md.
+  # Opt-in on purpose — turning this on globally would let a keyword in any
+  # reference file satisfy an assertion written against SKILL.md, silently
+  # weakening every existing static eval.
+  INCLUDE_REFS=$(python -c "
+import json
+e = json.load(open('$EVALS_FILE', encoding='utf-8'))
+print('yes' if e.get('include_references') else 'no')
+" 2>/dev/null || echo "no")
+
+  if [ "$INCLUDE_REFS" = "yes" ]; then
+    REF_DIR="$SKILL_DIR_PATH/references"
+    if [ -d "$REF_DIR" ]; then
+      REF_COUNT=$(find "$REF_DIR" -maxdepth 1 -name '*.md' | wc -l)
+      OUTPUT="$OUTPUT
+$(cat "$REF_DIR"/*.md 2>/dev/null)"
+      AUDIT_PARTS="$AUDIT_PARTS + $REF_COUNT reference file(s)"
+    else
+      AUDIT_PARTS="$AUDIT_PARTS (include_references set but no references/ dir)"
+    fi
+  fi
+
+  # (B) spec-declared extra files (relative to skill dir)
   EXTRA_FILES=$(python -c "
 import json
 e = json.load(open('$EVALS_FILE', encoding='utf-8'))
@@ -74,6 +101,7 @@ print('\n'.join(e.get('files', [])))
     [ -f "$f" ] && EXTRA_FILES="$EXTRA_FILES
 $(basename "$f")"
   done
+  EXTRA_COUNT=0
   while IFS= read -r rel; do
     [ -z "$rel" ] && continue
     if [ -f "$SKILL_DIR_PATH/$rel" ]; then
@@ -81,8 +109,12 @@ $(basename "$f")"
 
 ===== FILE: $rel =====
 $(cat "$SKILL_DIR_PATH/$rel")"
+      EXTRA_COUNT=$((EXTRA_COUNT + 1))
     fi
   done <<< "$(echo "$EXTRA_FILES" | awk '!seen[$0]++')"
+  [ "$EXTRA_COUNT" -gt 0 ] && AUDIT_PARTS="$AUDIT_PARTS + $EXTRA_COUNT companion file(s)"
+
+  echo "[1/3] Static audit ($AUDIT_PARTS, no subprocess)..."
 else
   echo "[1/3] Running skill via claude -p..."
   TEST_INPUT=$(python -c "

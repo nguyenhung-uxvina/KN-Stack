@@ -1,5 +1,57 @@
 # Changelog
 
+## [1.8.0] - 2026-08-16
+### Added
+- **`ops/md-to-epub` — chuyển Markdown sang EPUB, dựng sơ đồ mermaid offline.** Sinh ra từ một ca thật: chuyển cuốn *Từ Không Đến Một Trong Thế Giới Nguyên Tử* (1,8 MB · 19 chương · 42 sơ đồ) và phát hiện pandoc trần **không** đủ dùng cho tài liệu Xưởng. Bốn lỗ hổng, mỗi lỗ nay có một chặng trong script:
+  - **Sơ đồ mermaid ra chữ trần.** Pandoc không dựng mermaid; trình đọc EPUB không chạy JavaScript. Bản đầu ship ra **0 ảnh, 42 khối mã nguồn**. Nay tách khối, dựng bằng `mmdc` thành PNG, nhúng lại.
+  - **Frontmatter IPARAG làm chết pandoc.** `tags: [#type/book]` — dấu `#` mở comment YAML giữa flow sequence nên chuỗi không đóng. Nay tự bóc frontmatter, vớt `title`/`author` bằng trình đọc chịu lỗi, không phụ thuộc thư viện YAML.
+  - **Chú thích HTML ẩn lọt vào bản xuất.** EPUB là zip chứa HTML — 118 chú thích biên tập của cuốn sách đi thẳng vào tệp, ai giải nén đều đọc được. Nay **đếm và báo số**; mặc định GIỮ, muốn gỡ phải gõ `--strip-comments` (tự sửa nội dung tài liệu nguy hiểm hơn là để người ta thấy con số rồi tự quyết).
+  - **Không ai kiểm bản dựng.** Nay mở lại EPUB như zip, đối chiếu số ảnh với số thẻ `<img>`, đếm tham chiếu gãy và mermaid còn sót; sai thì thoát khác 0.
+  - **Nhãn quadrantChart bị cắt cụt** khi nhãn dài hơn bề ngang ô — tăng khổ ảnh không cứu được vì mermaid dựng loại này theo khổ cố định. Cấu hình `quadrantLabelFontSize`/`chartWidth` đã hiệu chỉnh, nhúng thẳng trong script.
+  - **An ninh:** dựng sơ đồ offline tuyệt đối, không kroki.io/mermaid.ink. Tài liệu nội bộ không rời máy — ràng buộc cứng, không làm cờ.
+  - Cấu hình mermaid + CSS **nhúng trong script** rồi ghi ra thư mục tạm lúc chạy, không để thành file cạnh skill: đường dẫn tương đối ra ngoài thư mục skill đứt dưới junction Windows (đúng lỗi đã dính ở plugin `fluency-4d`).
+- `scripts/md_to_epub.py` (315 dòng) + `scripts/test_md_to_epub.py` (23 phép thử, tự sinh fixture, không cần mạng) — mục codify đầu tiên trong `_codify_ledger.md`, **CEO ký 2026-08-16**.
+
+## [1.7.0] - 2026-08-14
+### Added
+- **`learn-teach` — đường quay lại (`references/RETRIEVAL.md`).** Áp meta-learning (Learning How to Learn) và sửa một **mâu thuẫn nội tại** của skill: phần Triết Lý cảnh báo độ trôi chảy tạo ảo giác thành thạo, rồi đặt toàn bộ quiz + câu tự luận ở **cuối chính bài học vừa dạy** — đúng khoảnh khắc độ trôi chảy cao nhất, đáp án còn cách vài dòng. Nay nói thẳng: quiz cuối bài là **công cụ dạy**, không bao giờ là bằng chứng đã học; phép đo duy nhất đáng tin là hồi tưởng nguội ở phiên sau.
+  - **`RETRIEVAL.md`** — sổ hồi tưởng, nguồn sự thật duy nhất: mỗi mục có câu hỏi, mức đoán, kết quả thực, bậc giãn cách, ngày đến hạn tuyệt đối. 3–6 mục/bài, mục phải **chịu lực** (quên nó thì phần còn lại sụp), ưu tiên dạng *vì sao* hơn *là gì*.
+  - **Cổng mở phiên** — mọi phiên bắt đầu bằng hồi tưởng **nguội** các mục đến hạn trước khi dạy thứ mới: không mở lại bài, không tóm tắt trước, không gợi ý. Bỏ qua được nhưng phải ghi lại; bỏ ba lần liên tiếp là tín hiệu phải nêu thẳng với người học.
+  - **Hiệu chỉnh đoán-trước-rồi-thử** — bắt đoán mức nhớ TRƯỚC khi trả lời. Ô **chắc mà sai** là ảo giác thành thạo, ưu tiên cao nhất, và phải dạy lại bằng **cách biểu diễn khác** chứ không lặp lời cũ. Ô **thấp mà đúng** thì đừng dạy lại — chỉ cần gặp thêm để dựng lòng tin.
+  - **Thang giãn cách** 1·3·7·16·35 ngày; trượt thì **lùi hai bậc** chứ không về 0 (mục từng lên bậc 4 rồi trượt vẫn khác mục chưa từng nhớ được).
+  - **Trang ôn `review/index.html`** — thuần dẫn xuất, chỉ đọc, in ngày sinh trang và tự khai *"kết quả tự ôn ở đây không ghi vào sổ"*. Chống lệch trạng thái bằng cách không bao giờ cho trang có thẩm quyền.
+  - **Einstellung** — mỗi bài phải gọi tên trực giác cũ sẽ dẫn sai, ngay từ đầu bài; bẫy này mạnh hơn ở người *giỏi* lĩnh vực gần. Bắt buộc có riêng một mục hồi tưởng cho nó.
+  - **Nhịp tập trung/khuếch tán** — mặc định một bài học mỗi phiên, dừng có chủ đích kể cả khi người học còn hào hứng.
+  - **Danh sách ảo giác thành thạo skill không được tự sinh ra** — đọc lại, tô đậm, trắc nghiệm đơn thuần, xem lời giải trước khi thử, và **bản tóm tắt cuối bài** (nay bị cấm: nhắc lại không phải nhớ lại).
+  - Vùng phát triển gần nhất nay đọc từ `RETRIEVAL.md` **trước** `learning-records/` — cái còn nhớ khác hẳn cái đã dạy sau hai tuần.
+  - Nối vào `/learn-practice` cho lịch xen kẽ nhiều tuần thay vì chép lại luật của nó.
+- `evals/learn-teach.json` 12 → **21 assertion** (9 check mới cho đường quay lại).
+
+### Changed
+- Checklist sau mỗi bài học 6 → **8 bước**: thêm rút mục hồi tưởng vào sổ, sinh lại trang ôn, và dừng phiên có chủ đích.
+
+### Fixed
+- Workspace Cowork thật (`3_Resources/Courses/claude-cowork`) nay có `RETRIEVAL.md` 5 mục + `review/index.html`, gồm một mục Einstellung và một mục buộc suy ngược cơ chế từ chi phí hạn mức.
+
+## [1.6.0] - 2026-08-14
+### Added
+- **`learn-teach`** (learn/) — workspace học tập **có trạng thái** cho một chủ đề qua nhiều phiên: `MISSION.md` (lý do học — la bàn cho mọi quyết định dạy), `RESOURCES.md`, `lessons/*.html` (bài học độc lập, phong cách Tufte), `reference/*.html` (cheat sheet nén, in được), `learning-records/*.md` (ADR cho việc học → xác định vùng phát triển gần nhất), `assets/` (component tái sử dụng), `NOTES.md`. Nguyên tắc sư phạm mã hoá trong skill: **độ bền lưu trữ > độ trôi chảy**; mặc định mọi bài là diagram/SVG/calculator/tương tác chứ không phải văn bản thuần; mỗi bài kết bằng quiz trắc nghiệm (mọi phương án cân số từ) **+ 3–5 câu hỏi tự luận**; checklist 6 bước bắt buộc sau mỗi bài. Đặt tên `learn-teach` để không đè `/teach` sẵn có ở ops/ (nhật ký quyết định CEO — chức năng hoàn toàn khác). `disable-model-invocation: true`.
+- **Tầng nguồn cấp (`references/SOURCING.md`)** — biến chỉ thị "tìm tài nguyên chất lượng cao" thành quy trình có cổng và tiêu chí trượt. **Hai trục chấm nguồn**: tin cậy S/A/B/C (tái dùng `/research`, KHÔNG chép luật — đọc qua Skill tool `research:references:source-tiers`) × **sư phạm E1/E2/E3** (mới, riêng dạy học: giảng được / tra được / mồi được), kèm cảnh báo *tier cao ≠ dạy tốt*. **Pha S0** chạy sau MISSION và trước bài học đầu: rút truy vấn → `/research` theo vùng → gán trục E → chấm phủ (mỗi vùng ≥1 E1 + ≥1 S/A) → **CỔNG DUYỆT NGUỒN** (dừng, không viết bài nào trước khi qua) → `RESOURCES.md`. Notebook NLM thường trực 1/workspace. **Vòng grounding**: query đòi trích dẫn nguyên văn, viết từ trích dẫn chứ không từ trí nhớ; notebook trả rỗng = khoảng trống, không phải giấy phép tự viết. **Kiểm chứng ngược** bắt buộc cho số/ngày tháng/phép đếm, đối chiếu từ ngoài. Thang giảm cấp khi thiếu Exa/research/NLM — cổng duyệt nguồn không bao giờ bỏ.
+- **`evals/learn-teach.json`** (static, 12 checks, `include_references: true`). Đã kiểm bằng **đột biến ngữ nghĩa**: xoá luật chặn của cổng ở cả SKILL.md lẫn SOURCING.md và đảo luật xuất xứ NLM → eval FAIL đúng 2 assertion; rải chính các từ khoá nghi ngờ khắp file **không** hồi sinh được chúng → không phải cổng từ khoá.
+
+### Changed
+- **`evals/run-eval.sh`** — static mode nhận cờ **opt-in** `"include_references": true` để audit cả `references/*.md`, không chỉ SKILL.md. Opt-in có chủ đích: bật toàn cục sẽ cho một từ khoá trong file reference bất kỳ thoả mãn assertion viết cho SKILL.md, âm thầm làm yếu mọi eval static đang có. Ba eval static hiện hành (helix-design-review 9/9, forge-fabrication 13/13, codebase-to-book 11/11) xác nhận không đổi.
+
+### Fixed
+- Sáu lỗ hổng của tầng nguồn cấp, lộ ra khi **chạy thật** trên chủ đề Claude Cowork (22 nguồn, bài học 01 + cheat sheet + 2 learning record):
+  - **Độ tươi** — hai trục chấm NGUỒN, không nói gì về việc nguồn còn đúng không. Chỗ cắt đúng không phải cũ/mới mà là **loại sự thật**: bền (khái niệm, vì sao tồn tại) vs dễ trôi (gói, giá, nền tảng, giới hạn số, thao tác). Cùng một nguồn vừa quý vừa độc. Sự thật dễ trôi CHỈ lấy từ nguồn sống của nhà sản xuất bất kể tier; S0 phải chỉ ra **trọng tài độ tươi**; ghi ngày kiểm.
+  - **Tier S không tồn tại cho chủ đề công cụ/sản phẩm** — vendor đóng vai S, đừng đốt một vòng tìm kiếm vô vọng.
+  - **Metadata xuất xứ NLM** — hai kiểu hỏng: marker `[n]` lệch; và `sources_used`/`references` **bỏ sót nguyên một nguồn** mà NLM vừa trả lời dựa trên đó (trích đúng nguyên văn, có ngày cụ thể, không gì chống lưng — trông hệt bịa đặt). Luật: thiếu xuất xứ là **lệnh đi kiểm**, không phải kết luận; `source_get_content` là trọng tài rẻ nhất.
+  - **Hai công cụ kiểm chứng đá nhau** — thứ tự phân xử: đọc thẳng trang > trọng tài độ tươi > tóm tắt máy tìm kiếm; không phân xử được thì KHÔNG dạy con số đó.
+  - **Mission chưa xác nhận** — soạn bản tạm có cảnh báo rồi đem duyệt CÙNG bảng nguồn ở cổng, thay vì chặn cứng.
+  - **`nlm source add`** — URL phải sau cờ `-u`/`-y`, và không trộn `-u` với `-y` trong một lệnh.
+- `learn-teach` checklist ghi "đủ 4 bước" nhưng liệt kê 5 (lỗi có sẵn từ tài liệu nguồn) → nay 6 bước, thêm bước 0 kiểm trích dẫn + đối chiếu số + độ tươi.
+
 ## [1.5.0] - 2026-07-05
 ### Added
 - **`helix-design-review`** (helix/) — **BƯỚC 2 của lộ trình validator** (đã chốt trong harness-engineering DEBATE 2026-06-25, line 43 "chấm yếu tố phi cấu trúc → LLM-as-judge có rubric → Inferential"; trigger nay đã tới). Là **Inferential Sensor — PROPOSE ONLY**, cặp đôi với `helix-cad-validate` (Computational gate CỨNG). Chấm cái LUẬT KHÔNG mã hóa nổi: design-intent smells (đặt tên lệch, BOM-vs-mô-hình, revision mồ côi, code title-block dán nhầm), yếu tố phi cấu trúc cần phán đoán (thủy động khoang phao, khả lắp, DFM mềm), mâu thuẫn chéo tài liệu (note vẽ vs dim vs ICD vs requirements). **Bất biến kỷ luật:** không bao giờ là gate cứng / không block freeze-handoff (đó là việc Computational); không sửa geometry-of-record hay design_rules.json; mọi finding có confidence bắt buộc, LOW không trình như chắc chắn; MẬT/HẠN-CHẾ → model LOCAL air-gapped (không egress cloud); kỹ sư định danh định đoạt accept/reject/defer. **Improvement Engine (fix-it-once):** finding lặp lại được xác nhận → kỹ sư NÂNG thành luật Computational trong contract → gate tất định hấp thu dần. Chạy SAU cad-validate PASS, TRƯỚC chữ ký kỹ sư / freeze ICD. Ships `references/review-rubric.template.md` (Guide có phiên bản, kỹ sư sở hữu) + findings schema. Static eval 9/9. `helix-cad-validate` "When to add next tier" cập nhật trỏ BƯỚC 2 đã build. Skill count 251 → 252. VERSION 1.4.0 → 1.5.0.
