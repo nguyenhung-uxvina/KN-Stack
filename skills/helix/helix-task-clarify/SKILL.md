@@ -415,7 +415,13 @@ Replace standard requirements generation with EQFD process:
   - Group B criteria (for Phase 2 final evaluation)
   - CSR functions per criterion
   - DQM (Design Quality Measurement) framework ready for Phase 2
-- **IRL (Innovation Readiness Level):** Score 1-5 on: technology maturity, market understanding, manufacturing capability, team competence, IP/regulatory.
+
+> **Provenance note — do not re-add "IRL".** This block previously scored an "IRL (Innovation
+> Readiness Level) 1-5". Verified 2026-08-15 against the full ICDM corpus (Hari & Weiss 1996-2015,
+> 15 sources): **no ICDM source mentions IRL.** It belongs to the KTH Innovation Readiness Level
+> model — an unrelated framework, six dimensions over nine levels. Removed as a misattribution.
+> Readiness in ICDM is carried by RTA (Knowledge Gap → development cycles → TTM) in Phase 2 BD,
+> not by a scale set here in Phase 1.
 
 **Additional outputs:** `{{prefix}}ICDM_Evaluation_Criteria.md`, `{{prefix}}CSR_Functions.md`
 

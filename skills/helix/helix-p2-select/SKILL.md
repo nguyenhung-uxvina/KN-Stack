@@ -167,9 +167,13 @@ Log session decisions:
 
 ### ICDM Extension (if --icdm active)
 
-- IRL (Innovation Readiness Level) score per concept
+- RTA readiness read-off per concept (Knowledge Gaps → development cycles → TTM), from `RTA_Knowledge_Gaps.md`
 - ICDM compliance summary
 - Innovation pathway recommendation
+
+> **Provenance note — do not re-add "IRL".** This list previously carried an "IRL (Innovation
+> Readiness Level) score per concept". Verified 2026-08-15 against the full ICDM corpus: **no ICDM
+> source mentions IRL** — it is the KTH model, an unrelated framework. Removed as a misattribution.
 
 ## Output
 
