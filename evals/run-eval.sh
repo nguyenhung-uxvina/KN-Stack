@@ -158,10 +158,18 @@ print()
 for r in results:
     print(r)
 print()
-if score_pct == 100:
+req_pass = sum(1 for a in evals[\"assertions\"] if a.get(\"required\") and re.search(a.get(\"regex\",\"\"), output, re.IGNORECASE))
+req_total = evals[\"total_required\"]
+# 'required' phai la RANG BUOC, khong phai nhan trang tri.
+# Truoc 2026-08-23 dong nay chi so passed >= passing_score, nen mot spec co the
+# FAIL 4 assertion required ma van bao PASS. Do dung lop loi ma cong Data Bus
+# duoc dung ra de chan: he thong NOI 'required' ma khong co gi BAT BUOC dieu do.
+if req_pass < req_total:
+    print(f'RESULT: FAIL — thieu {req_total - req_pass} assertion REQUIRED ({req_pass}/{req_total})')
+elif score_pct == 100:
     print('RESULT: PERFECT - no improvement needed')
 elif passed >= evals.get('passing_score', 4):
-    print(f'RESULT: PASS ({passed} >= {evals.get(\"passing_score\", 4)} passing threshold)')
+    print(f'RESULT: PASS ({passed} >= {evals.get(\"passing_score\", 4)} passing threshold, required {req_pass}/{req_total})')
 else:
     print(f'RESULT: FAIL ({passed} < {evals.get(\"passing_score\", 4)} passing threshold)')
 
