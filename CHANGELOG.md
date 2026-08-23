@@ -1,5 +1,36 @@
 # Changelog
 
+## [1.9.0] - 2026-08-16
+
+### Added
+- **Năng lực sở hữu trí tuệ TẤN CÔNG**, đóng gói thành **plugin `ip-invent`** (`plugins/ip-invent/`) — cặp đối xứng của `QP-02-06 FTO`: FTO = *tránh claim người khác*; đây = *dựng claim của mình*. Orchestrator thin-commander chỉ huy 5 block một-block-một-lượt, ledger `_pipeline_state.md` là kênh duy nhất giữa các block.
+  - **`ip-criteria` (B0, CHẶN)** — dựng thước đo *"cái gì được tính"* TRƯỚC khi rà ứng viên. Bảng đối chiếu **QĐ 431/QĐ-BQP** (01 văn bằng, 05 năm) ↔ **QĐ 12/2025/QĐ-TTg** (02 văn bằng, 07 năm), và **có nghĩa vụ nói thẳng khi đường ngắn nhất KHÔNG phải patent**.
+  - **`ip-harvest` (B1)** — thu hoạch trước, sinh mới sau; 4 trường bắt buộc mỗi ứng viên: bộc lộ **kèm NGÀY** · ứng dụng · vai tác giả · **xuất xứ đóng góp người/AI**.
+  - **`ip-screen` (B2)** — hai trục (khả năng bảo hộ × giá trị chức danh) và **cấm bình quân** vì hai trục nghịch nhau; cửa 12 tháng Điều 60.3 tính từ ngày thật; routing 4 đường gồm **sáng chế MẬT**.
+  - **`ip-claim` (B3)** — 2–3 khung claim khác trục, đếm điểm độc lập đối chiếu trần thẩm định nhanh (≤10 YCBH, ≤02 độc lập).
+  - **`ip-dossier` (B4)** — bộ đơn theo Phụ lục I hiện hành + chứng cứ đã được áp dụng + bản ghi Điều 10a + gói câu hỏi giao đại diện SHTT.
+- **Tầng trỏ workspace** `ip-shared/references/active-workspace.md` + 3 profile (`knstack` local · `cowork` cloud · `template`), 7 trường. Đổi môi trường = **sửa một dòng**, không đụng `SKILL.md` nào. Trường nào `none` thì block chạy **chế độ giảm và phải in dòng khai báo** — cấm im lặng bỏ qua rồi vẫn in báo cáo trông đầy đủ.
+- **Cổng phân loại** `co-mat-gate.md` — kích hoạt khi `surface: cloud`. Tách **bí mật nhà nước** (cấm tuyệt đối ra dịch vụ ngoài) khỏi **chưa bộc lộ nhưng không MẬT** (Điều 60.2 cho phép bộc lộ có nghĩa vụ bảo mật). Mặc định *"chưa rõ"* = coi như thuộc = **DỪNG**, nên bấm bừa không mở được cổng.
+- `scripts/ip_invent_lint.py` + `scripts/test_ip_invent.py` — **145 test** gác 4 cơ chế: đóng băng SHA-256 cả file `co-mat-gate.md` · khối "Bước 0′" byte-identical 6 file + neo vị trí · tầng trỏ 7 trường · `lint_paths` chặn đường dẫn neo cứng.
+- `evals/ip-invent.json` v1.2 (17 assertion / 16 required) và `evals/ip-screen.json` (15 / 13).
+
+### Discovered
+- **NĐ 100/2026/NĐ-CP** (hiệu lực 01/4/2026) bãi bỏ Điều 16–28, 30–32, 43–47, 108 của NĐ 65/2023 và thay toàn bộ Phụ lục I, II. Nhiều trang hướng dẫn còn dẫn neo cũ → sinh ra quy tắc **in ngày kiểm chuỗi sửa đổi** cho mọi đầu ra có quy cách.
+- **Điều 14a — thẩm định nội dung nhanh**: trần ≤10 điểm YCBH / ≤02 điểm độc lập; **đơn tách bị loại** → muốn về trần phải tách ngay từ đầu.
+- **Điều 10a — sáng chế có sử dụng AI**: quyền chỉ xác lập nếu **con người có đóng góp đáng kể**. Cả hai văn bản chức danh đều neo vào tư cách tác giả → rủi ro *có bằng mà không dùng được cho chức danh*.
+
+### Changed
+- `CLAUDE.md` — thêm mục `plugins/`; skill count → 252; vá số theo domain cho khớp `setup.sh --status` (forge 15→16, helix 55→57 — trước đó 15 domain cộng lại ra 249 trong khi tổng ghi 252).
+- `setup.sh` lấy bản plugin-aware từ `feature/fluency-4d-plugin`; phần khiến nó đi vào `plugins/*/skills/*/` và junction cả thư mục tham chiếu dùng chung do commit `5d29fff` đưa vào.
+
+### Verified
+Chạy thật qua junction trước khi merge, không phải suy luận: `setup.sh --verify` → 7/7 plugin skill dirs · `run-eval.sh ip-invent` → 17/17 (required 16/16) · `run-eval.sh ip-screen` → 15/15 (required 13/13) · chạy thật `/ip-criteria --target 431` xác nhận đường dẫn tương đối `../ip-shared/references/…` **resolve đúng dưới junction** (rủi ro số 1 của thiết kế) và in đúng dòng `Bề mặt: local · Cổng phân loại: KHÔNG kích hoạt (surface ≠ cloud)`.
+
+### Known limits
+- Import vào **Cowork chưa kiểm chứng** — hai cách trong README chép theo khuôn `fluency-4d`, chưa lần nào chạy thật.
+- Lint chỉ chạy qua pytest, **chưa nối vào CI/hook**.
+- Lint neo được **vị trí và nội dung nguyên văn** của khối Bước 0′, nhưng **không đóng băng phần tự do** của `SKILL.md`: câu vô hiệu hoá đặt ở cuối file hay trong `description:` sẽ không bị bắt. Phần **văn xuôi** của `co-mat-gate.md` cũng không có neo.
+
 ## [1.8.0] - 2026-08-16
 ### Added
 - **`ops/md-to-epub` — chuyển Markdown sang EPUB, dựng sơ đồ mermaid offline.** Sinh ra từ một ca thật: chuyển cuốn *Từ Không Đến Một Trong Thế Giới Nguyên Tử* (1,8 MB · 19 chương · 42 sơ đồ) và phát hiện pandoc trần **không** đủ dùng cho tài liệu Xưởng. Bốn lỗ hổng, mỗi lỗ nay có một chặng trong script:

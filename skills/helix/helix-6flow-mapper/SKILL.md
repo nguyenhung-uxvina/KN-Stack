@@ -1,11 +1,13 @@
 ---
 name: helix-6flow-mapper
-description: Generate and refine the 6-flow function structure extending Pahl-Beitz 3-flow with Data, Computation, and Trust flows. This skill should be used when the user asks for "function structure", "6-flow", "cấu trúc chức năng", "energy material signal", "6 flow mapping", or needs to decompose a product into sub-functions with domain assignment. Workshop X's unique advantage over traditional 3-flow methodology.
+description: Generate and refine the 6-flow function structure — Pahl-Beitz Energy/Material/Signal, with the Signal flow split out into Data and Computation for separate tracing, plus a Trust flow carrying the veto record (who overrode which machine decision, when, on what evidence — the book already specifies the human-intervention path itself in section 7.3.3). This skill should be used when the user asks for "function structure", "6-flow", "cấu trúc chức năng", "energy material signal", "6 flow mapping", or needs to decompose a product into sub-functions with domain assignment. A tracing convention for AI-embedded products, not a claim that Pahl-Beitz omitted data or computation.
 ---
 
 # Helix 6-Flow Mapper — Extended Function Structure for ACH Products
 
-Map product functions using Workshop X's 6-flow extension of Pahl-Beitz. Traditional 3-flow (Energy/Material/Signal) misses the digital-physical boundary. Adding Data, Computation, and Trust flows reveals ACH opportunities and forces human oversight into the design.
+Map product functions using Workshop X's 6-flow convention. Pahl-Beitz uses three flows — Energy, Material, Signal — and its Signal flow **already covers** data, databases and microprocessor processing. This skill splits that Signal flow into three separately-traced lanes (Signal / Data / Computation) and adds a fourth concern, Trust, so that AI-embedded products get one lane per failure mode instead of one lane for all three.
+
+**The split is a tracing convention, not a gap in the source.** See "Honest provenance" below before repeating any novelty claim.
 
 ## When to Use
 
@@ -17,16 +19,36 @@ Map product functions using Workshop X's 6-flow extension of Pahl-Beitz. Traditi
 
 ## The 6 Flows
 
-| # | Flow | Traditional? | What It Carries | Why It Matters |
-|---|------|-------------|----------------|----------------|
-| E | Energy | Yes | Power, force, heat, motion | Physical actuation and power budget |
-| M | Material | Yes | Parts, fluids, consumables | Physical logistics and maintenance |
-| S | Signal | Yes | Analog sensor output, commands | Traditional instrumentation boundary |
-| D | Data | NEW | Digital packets, stored records | Different reliability requirements than Signal |
-| C | Computation | NEW | AI inference, algorithm output | Reveals WHERE ACH operates = competitive moat |
-| T | Trust | NEW | Human approval, override authority | FORCES design to include oversight points |
+| # | Flow | Status vs Pahl-Beitz | What It Carries | Why We Trace It Separately |
+|---|------|---------------------|----------------|----------------------------|
+| E | Energy | in the book | Power, force, heat, motion | Physical actuation and power budget |
+| M | Material | in the book | Parts, fluids, consumables | Physical logistics and maintenance |
+| S | Signal | in the book | Analog sensor output, commands | Instrumentation boundary |
+| D | Data | **split out of Signal** (p.30, p.175) | Digital packets, stored records | Different reliability and integrity requirements than an analog signal |
+| C | Computation | **split out of Signal** (p.179, p.449) | AI inference, algorithm output | Shows WHERE ACH operates; inference fails differently from transmission |
+| T | Trust | **narrow** — the book specifies the human-intervention path in §7.3.3, pp.247–267; what is added here is the **veto record** | The audit record of a human overriding a machine *decision*: who, when, on which packet, and what the system showed them | Only sensor for "wrong inference on a correct packet" — the one failure mode that leaves no trace in any lower lane |
 
-**Key insight:** Signal flow ends at the ADC. Data flow begins. Computation flow transforms Data into decisions. Trust flow ensures a human can override those decisions.
+**How to use the split:** trace a lane per failure mode. A corrupted packet (D), a wrong inference on a correct packet (C), and an operator who cannot intervene (T) are three different faults with three different countermeasures. Pahl-Beitz would call all three "signal" faults. Splitting them is what this skill buys you.
+
+## Honest provenance — read before claiming novelty
+
+Verified against the 3rd English edition PDF, 2026-08-20; **row 4 corrected 2026-08-21** after
+§7.3.3 was actually read. The first version of this table was written having opened **two** pages;
+the correction came from opening **twenty-one**.
+
+| Claim you might be tempted to make | What the book actually says |
+|---|---|
+| "P&B has no Data flow" | p.30 lists flows as *"Signals: magnitude, display, control impulse, **data, information** …"* |
+| "P&B stops at the ADC" | p.175: *"Storing signals (e.g. in **databases**)"*; p.179: *"…to **process signals using microprocessors**"* |
+| "P&B ignores computation" | p.449: *"These data are then **transferred to a computer system for processing**"* |
+| "Human override is our idea" | 🔴 **§7.3.3, pp.247–267 is a full specification**, not a remark: eight named requirements, a worked numeric example (*"a warning could be given at 1.05 pnormal and shutdown initiated at 1.1"*, p.256), sizing against **operator reaction time** (p.257), self-monitoring (p.257), **no automatic restart** after a protective system trips (p.261), and testability *"without having to create a situation with real danger"* + documented results (pp.261–262). p.449 is a passing remark; it is not where the book handles this. |
+| "Three flows was arbitrary" | p.29 grounds them in Weizsäcker's energy / matter / information — and names **time** as a fourth fundamental quantity, which this skill does *not* add |
+
+**What is genuinely ours:** treating these as *separately traced lanes with their own failure modes*, and the **veto record** as a machine-readable artefact. **AI inference** as a distinct failure mode — wrong output from correct input — is genuinely outside a 2007 text; the book's protective systems watch *process variables*, not *decisions*.
+
+**What is not ours:** the observation that digital data and computation belong in a function structure (p.30) — **and the human-intervention path itself, which §7.3.3 specifies in more operational detail than this skill does.** Before adding an oversight requirement here, check pp.247–267 first; it is probably already there, better stated.
+
+⚠️ This table exists because the earlier version of this skill claimed a "unique advantage over traditional 3-flow methodology" and asserted "Signal flow ends at the ADC" — both false as descriptions of the source. A skill description routes AI behaviour; a false premise in it propagates. If you want to restore a novelty claim, **measure it first**: run 3-flow and 6-flow side by side on one real product and count the faults each catches.
 
 ## Workflow
 
