@@ -315,6 +315,10 @@ Suggested follow-up:
 
 All files trong `{{output_dir}}/`:
 
+> ⛔ **Bảng này được THI HÀNH bằng `scripts/databus_check.py`, không phải bằng thiện chí.**
+> Chạy nó trước mỗi checkpoint; mã thoát != 0 thì cấm trình checkpoint. Hiện vật nhỏ hơn 400 byte bị
+> tính là **không có** — chặn kiểu "tạo file cho có".
+
 | File / Folder | Written By | Read By | Content |
 |------|-----------|---------|---------|
 | `_pipeline_state.md` | Orchestrator | All blocks | Progress, ledger, CEO decisions |
@@ -326,9 +330,11 @@ All files trong `{{output_dir}}/`:
 | `Phase5-Reviews/Review_Ch{{N}}-{{M}}.md` | P5 (2-3 subagents) | Orchestrator | Per-review-agent feedback |
 | `Phase5-Review.md` | P5 (orchestrator merge) | P6 | Consolidated, prioritized feedback |
 | `Phase6-Revised/Ch{{NN}}_{{slug}}_v2.md` | P6 | P7 | Revised chapters |
+| `Phase6-Revise.md` | P6 (nếu sửa TẠI CHỖ) | P7, CEO | **Bắt buộc khi không sinh `Phase6-Revised/`** — danh sách thay đổi đo bằng máy + phạm vi đối chiếu được đến đâu |
 | `Phase7-Audit-Log.md` | P7 | P8 | Verbatim matches replaced + IP ratings + research sources |
+| `Phase7-<DoiNgoai>/` | P7 (nếu sách có nhãn `[NỘI BỘ]`) | P8 | Bản đối ngoại **sinh bằng máy**, kèm phép đếm rò rỉ = 0 |
 | `book.md` | P7 (compile) | P8 | Final compiled book — CEO signed |
-| `Phase8-Notebook-Manifest.md` | P8 | P9, CEO | NLM notebook ID + URL + source list |
+| `Phase8-Notebook-Manifest.md` | P8 | P9, CEO | NLM notebook ID + URL + source list. **Phải ghi rõ tải bản NÀO** (đối ngoại, không bao giờ bản nội bộ) + kết quả tiền kiểm rò rỉ |
 | `Phase9-CEO-Insights.md` | P9 | CEO | 5-lens insights + action items |
 
 ## `--deep` Integration with `/research`
@@ -396,6 +402,35 @@ Xem `references/phase-prompts.md` cho exact query templates.
 - **Pipeline state file is source of truth** — always read before any action
 - **Each block-skill is independently runnable** — CEO có thể `/book-write <slug>` alone
 - **Data bus contract is sacred** — block outputs dùng exact filenames trong Data Bus table
+- **⛔ CỔNG DATA BUS — không có hiện vật thì KHÔNG được báo xong.** Trước mỗi CEO checkpoint, chạy:
+  ```bash
+  python skills/book/codebase-to-book/scripts/databus_check.py <output_dir> --phase P5
+  ```
+  **Mã thoát != 0 ⇒ CẤM trình checkpoint.** Làm ra hiện vật trước.
+  Áp cho **mọi** pha, và đặc biệt cho **P5 · P6 · P8** — ba pha dễ bị làm "tại chỗ" rồi báo xong.
+
+  > 🔴 **Vì sao có luật này.** Bảng Data Bus đã đặc tả `Phase5-Review.md`, `Phase6-Revised/`,
+  > `Phase8-Notebook-Manifest.md` **từ đầu**. Lần chạy thật `pahl-beitz-tap2` (18 chương, 186k từ,
+  > 2026-08-23) vẫn báo *"P5 ✅ · P6 ✅ · P8 ✅"* mà **không có file nào trong ba**: rà soát và hiệu
+  > chỉnh được làm **tại chỗ** trên Phase4, phát hiện chỉ ghi vào `_pipeline_state.md`. CEO hỏi
+  > *"không thấy thư mục Phase6?"* mới lộ.
+  >
+  > **Đặc tả tồn tại ≠ đặc tả được thi hành.** Cổng này biến đặc tả thành một lệnh.
+
+- **Hiệu chỉnh tại chỗ thì PHẢI để lại danh sách thay đổi.** Nếu P6 sửa thẳng trên bản P4 thay vì
+  sinh `Phase6-Revised/`, thì bắt buộc có `Phase6-Revise.md` chứa **diff đo bằng máy** so với ảnh
+  chụp trước hiệu chỉnh. Không có ảnh chụp ⇒ nói thẳng là **không đối chiếu được**, đừng bỏ trống.
+
+- **⛔ Sao lưu theo mốc phải có TÊN KHÁC NHAU — kèm GIỜ, không chỉ ngày.**
+  ```bash
+  cp -r <nguon>/. "<dich>_$(date +%Y-%m-%d_%H%M)/"
+  ```
+  `cp -r` vào **cùng một đích** không phải sao lưu — nó là **đồng bộ**, và đồng bộ thì huỷ trạng thái
+  cũ. Cùng lần chạy trên, tám mốc công việc bị ghi đè thành một; bản sao lưu mang tên `_2026-08-21`
+  thật ra giữ trạng thái ngày 22, mtime còn **muộn hơn bản gốc**. Một bản sao lưu mang nhãn sai
+  **tệ hơn không có sao lưu** — không có thì biết mình không có điểm quay lui; có nhãn sai thì **tin**
+  là có, và chỉ phát hiện khi cần dùng.
+
 - **Pseudocode rule from P4 onwards** — NEVER verbatim source code trong chapters. P7 audit catches nhưng prevention tốt hơn detection.
 - **P2 thesis và P3 outline là CEO Core** — AI proposes, CEO approves. Nếu CEO reject thesis → re-run P2 with feedback.
 - **P7 IP sign-off là CEO Core** — AI flags potential issues nhưng CEO ra quyết định SAFE/REVIEW/SENSITIVE final.
