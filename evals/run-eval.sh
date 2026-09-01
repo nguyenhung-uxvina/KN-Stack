@@ -11,21 +11,35 @@ set -euo pipefail
 export NO_COLOR=1
 export PYTHONIOENCODING=utf-8
 
-SKILL_NAME="${1:?Usage: run-eval.sh <skill-name> [--improve] [--model MODEL]}"
+SKILL_NAME="${1:?Usage: run-eval.sh <skill-name> [--improve] [--accuracy] [--model MODEL]}"
 IMPROVE=""
 MODEL_FLAG=""
+ACCURACY=""
 
 # Parse arguments
 shift
 while [ $# -gt 0 ]; do
   case "$1" in
     --improve) IMPROVE="--improve" ;;
+    --accuracy) ACCURACY="1" ;;
     --model) MODEL_FLAG="--model $2"; shift ;;
     *) ;;
   esac
   shift
 done
 VAULT_ROOT="$(git rev-parse --show-toplevel)"
+
+# Accuracy mode: delegate to the Python harness (runs the real extraction on a
+# known-truth fixture and grades against a golden Q&A set). No SKILL.md needed.
+ACC_FILE="$VAULT_ROOT/evals/${SKILL_NAME}.accuracy.json"
+if [ -n "$ACCURACY" ] || { [ -z "$IMPROVE" ] && [ ! -f "$VAULT_ROOT/evals/${SKILL_NAME}.json" ] && [ -f "$ACC_FILE" ]; }; then
+  if [ ! -f "$ACC_FILE" ]; then
+    echo "ERROR: Accuracy spec not found: $ACC_FILE"
+    exit 1
+  fi
+  exec python "$VAULT_ROOT/evals/accuracy-eval.py" "$ACC_FILE"
+fi
+
 EVALS_FILE="$VAULT_ROOT/evals/${SKILL_NAME}.json"
 SKILL_DIR="$HOME/.claude/commands"
 SKILL_FILE=""

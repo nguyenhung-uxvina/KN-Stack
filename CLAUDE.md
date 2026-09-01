@@ -82,6 +82,7 @@ bash evals/run-eval.sh helix-task-clarify --improve
 ```
 
 - Spec format: `evals/<skill-name>.json` with `mode: "runtime"` (pipes test_input to `claude -p`) or `mode: "static"` (audits SKILL.md directly — use for orchestrator/multi-block pipeline skills that can't produce full deliverables in one shot).
+- **Accuracy mode** (extraction skills): `evals/<skill-name>.accuracy.json` graded by `evals/accuracy-eval.py` — runs the real pipeline (e.g. `ingest.py`) on a known-truth fixture and scores extracted values against a golden Q&A set (query resolver + optional provenance/`min_confidence` check). Run with `bash evals/run-eval.sh <skill> --accuracy`. Fixture ground truth is self-generated (`evals/fixtures/gen_fixture_dxf.py`) so no answer is fabricated; author a real Q&A set via `evals/fixtures/GOLDEN_QA_TEMPLATE.md`. Exit 0 = accuracy ≥ threshold + all required pass.
 - When adding a significant skill (orchestrator, mega-skill, gate), add an eval spec alongside it.
 
 ## Git Conventions
