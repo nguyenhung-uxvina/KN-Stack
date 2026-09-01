@@ -1,0 +1,8 @@
+{
+  "meta": { "part_id": "MR-PARTIAL", "product": "MR-TEST", "classification": "THƯỜNG" },
+  "conflicts": [],
+  "bom": [
+    { "item": "hull-plate", "code": "HP1", "qty": 25, "material": "5083", "thickness_mm": 5, "area_m2": 3.0 },
+    { "item": "deck-plate", "code": "HP2", "qty": 1, "material": "5083", "thickness_mm": 5 }
+  ]
+}

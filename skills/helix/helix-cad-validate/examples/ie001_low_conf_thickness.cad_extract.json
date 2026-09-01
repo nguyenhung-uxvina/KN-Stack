@@ -1,0 +1,21 @@
+{
+  "meta": {
+    "part_id": "IE-001",
+    "product": "EXAMPLE",
+    "name": "confidence fail-safe lock (thickness LOW conf must FAIL)",
+    "material": "5083",
+    "classification": "THƯỜNG"
+  },
+  "dimensions": [
+    { "param": "độ dày tấm đáy", "value": 6.0, "unit": "mm", "confidence": "LOW", "source": "ocr" }
+  ],
+  "tolerances": [],
+  "holes": [
+    { "dia": 8.0, "count": 2, "positions": [[0, 0], [0, 30]], "depth_mm": 24.0, "source": "dxf", "confidence": "HIGH" }
+  ],
+  "bom": [
+    { "code": "IE-001", "item": "1", "name": "demo plate", "material": "5083" }
+  ],
+  "conflicts": [],
+  "process_notes": []
+}

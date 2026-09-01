@@ -24,6 +24,16 @@
       "severity": "critical"
     },
     "mass_kg": { "max": 1800, "required": false, "severity": "major" },
+    "mass_reconciliation": {
+      "reference_kg": 1650,
+      "tolerance_pct": 5.0,
+      "part_tolerance_pct": 3.0,
+      "scope": "assembly",
+      "required": false,
+      "require_complete": true,
+      "severity": "critical",
+      "notes": "PLACEHOLDER lightship — kỹ sư định danh PHẢI thay bằng ước tính naval-architect thật; required:false tới khi có bottom-up (mass_props.bottom_up_kg hoặc BOM có area_m2)."
+    },
     "safety_factor": { "min": 1.5, "required": true, "severity": "critical" },
     "tolerance_mm": { "max": 2.0, "min_confidence": "MED", "severity": "major" },
     "mandatory_components": {
@@ -41,6 +51,16 @@
       "required": ["MLC70"],
       "forbidden": ["MLC85"],
       "severity": "critical"
-    }
+    },
+    "bom_master": {
+      "master_csv": "masters/parts_master.VSN-1500.csv",
+      "required": true,
+      "ignore_codes": ["GT.00.00.00"],
+      "enabled": true,
+      "severity": "critical"
+    },
+    "min_hole_dia_mm": { "min": 6.0, "required": false, "severity": "major" },
+    "hole_spacing_mm": { "min": 20.0, "severity": "major" },
+    "hole_depth_ratio": { "max_ratio": 6.0, "required": false, "severity": "major" }
   }
 }

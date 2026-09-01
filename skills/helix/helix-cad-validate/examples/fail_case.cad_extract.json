@@ -1,0 +1,19 @@
+{
+  "meta": {
+    "part_id": "EX-FAIL-001",
+    "product": "EXAMPLE",
+    "name": "demo plate (FAIL — DFM)",
+    "material": "5083",
+    "classification": "THƯỜNG"
+  },
+  "dimensions": [],
+  "tolerances": [],
+  "holes": [
+    { "dia": 3.0, "count": 2, "positions": [[0, 0], [0, 8]], "depth_mm": 30.0, "source": "dxf", "confidence": "HIGH" }
+  ],
+  "bom": [
+    { "code": "EX-FAIL-001", "item": "1", "name": "demo plate", "material": "5083", "thickness_mm": 6.0 }
+  ],
+  "conflicts": [],
+  "process_notes": []
+}

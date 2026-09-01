@@ -9,11 +9,13 @@ allowed-tools: ["Read", "Write", "Edit", "Bash", "Grep", "Glob"]
 > **Role:** Cross-phase **Computational Sensor + Gate** for the DESIGN phase. Sits AFTER geometry
 > exists ([[helix-cad-bridge]] code-CAD or [[helix-cad-ingest]] extract) and BEFORE
 > [[forge-fabrication]] handoff / ICD freeze ([[helix-p3-integrate]]).
-> **Backend:** pure-stdlib Python (`validate.py`) — runs LOCAL, offline, air-gapped. No LLM, no network.
+> **Backend:** pure-stdlib Python (`validate.py` v2.0) — runs LOCAL, offline, air-gapped. No LLM, no network.
 > **Interface in:** `cad_extract.json` (+ optional mass-props json) + `design_rules.json` contract.
-> **Interface out:** `cad_validate_report.json` (machine, gate signal) + `.md` (CEO/engineer readable) + exit code.
+> **Interface out:** `cad_validate_report.json` = **receipt tất định (provenance-signed)** + `.md` (CEO/engineer readable) + exit code.
 > **Lineage:** BƯỚC 1 of the validator roadmap from the harness-engineering DEBATE (2026-06-25); see
 > `D:/Workshop_X/2_Areas/CEO-Self/Mentor-Consultations/20260625-debate-vsn1500-validator-architecture.md`.
+> **Sản phẩm:** Computational spine của **"Assay"** AI Design-Review Gate. Phần Inferential (KAN DFM /
+> VLM 2D-3D / LLM-judge) là PROPOSE-ONLY, thuộc [[helix-design-review]] — xem `references/assay-architecture.md`.
 
 ## Why this exists (the harness gap it closes)
 helix-cad-bridge + helix-cad-ingest already PRODUCE structured JSON. What was missing is the
@@ -38,7 +40,24 @@ AGENTS.md/context TRƯỚC khi agent vẽ) and the SENSOR's yardstick. Schema + 
 
 Rule keys (mỗi cái tùy chọn): `materials` · `plate_thickness_mm` · `mass_kg` · `safety_factor`
 · `tolerance_mm` · `mandatory_components` · `weld_standard` · `load_class` · `conflicts_block`
-· `confidence_gate`. Severity `critical`/`major` — **mọi FAIL đóng gate**.
+· `bom_master` · `confidence_gate` · `mass_reconciliation` · **DFM tất định:** `min_hole_dia_mm` ·
+`hole_spacing_mm` · `hole_depth_ratio` (opt-in, cần depth 3D). Severity `critical`/`major` — **mọi FAIL đóng gate**.
+
+**`mass_reconciliation` (Sanity-Check vật lý — Δ-C)**: đối chiếu khối lượng **bottom-up** (Σ tôn+outfit
+từ `mass_props.bottom_up_kg`, hoặc tính từ BOM có `area_m2`+`thickness_mm`+vật liệu) ↔ **lightship estimate**
+(`reference_kg`, kỹ sư khai) trong dung sai % (`scope:"assembly"` ±5% / `"part"` ±3%, CEO chốt 2026-07-17).
+Lệch = dấu hiệu sai-trích-xuất/thiếu-part/vật-liệu-sai — neo bằng vật lý, không "đo theo tỷ lệ thước".
+Gate **không bịa** diện tích: BOM thiếu dữ liệu → `require_complete` cho FAIL (fail-safe).
+
+## Bản đồ kiến trúc 5-bước (Assay)
+Spec 5-bước ánh xạ vào cặp validator — **hard-gate CHỈ tất định; KAN/VLM/LLM-judge là đề xuất, KHÔNG chặn**
+(nguyên tắc [[Sensor-Not-Generator Law]]: AI làm Sensor, không làm Actor). Chi tiết: `references/assay-architecture.md`.
+
+| Bước spec | Loại | Nơi thực thi |
+|----|----|----|
+| 1 Trích xuất hình học tất định (STEP/AAG/mesh/tool-collision) | Computational | **skill này** — nay + DFM lỗ tất định; engine STEP/GPU nặng = server air-gapped (HOÃN) |
+| 2 KAN DFM · 3 VLM 2D-3D · 4 LLM-judge | **Inferential (propose-only)** | → [[helix-design-review]] (BƯỚC 2) |
+| 5 Military HITL + provenance sign | Shared HITL | kỹ sư định danh ký (Step 6) + khối `provenance` trong receipt |
 
 ## Backend
 ```
@@ -89,7 +108,9 @@ Giữ BƯỚC 1 tối thiểu. CHỈ thêm khi gặp trigger thật:
 | Agent doom-loop (sửa 1 lỗi > N lần) | LoopDetection middleware | Computational |
 | `design_rules.json` phình > ~10k token, agent bỏ sót luật | compaction / sub-agent RAG tra ISO | kiến trúc |
 | Cần chấm phi-cấu-trúc (thủy động khoang phao) | LLM-as-judge có rubric → ✅ [[helix-design-review]] (BƯỚC 2, propose-only) | **Inferential** |
-| Sửa contract → lo phá thiết kế cũ | eval harness Capability/Regression, **pass^k** | Computational |
+| Sửa contract → lo phá thiết kế cũ | eval harness Capability/Regression, **pass^k** (seed ở `examples/`) | Computational |
+| Có STEP thật + cần AAG/mesh/tool-collision | engine geometry nặng (OpenCASCADE B-Rep, GPU BVH) — server air-gapped | kiến trúc |
+| Luật DFM tất định không đủ tinh (bề mặt/fillet phức tạp) | KAN DFM + SHAP → helix-design-review (propose-only) | **Inferential** |
 
 ## Integration Map
 | Producer | → | helix-cad-validate | → | Consumer |
@@ -105,11 +126,15 @@ Giữ BƯỚC 1 tối thiểu. CHỈ thêm khi gặp trigger thật:
 - **Windows UTF-8**: chạy với `PYTHONUTF8=1` để tránh cp1252 crash khi report tiếng Việt (file luôn ghi UTF-8).
 - **Fail-safe nhiểu nhầm là "khó tính"**: thiếu dữ liệu cho rule `required` → FAIL là CHỦ Ý (an toàn khí tài), không phải bug. Cấp dữ liệu hoặc hạ `required:false` có chủ đích.
 - **Mandatory components dò bằng text** (tên BOM/notes). Dùng list synonym (vd `["junction plate","tấm liên kết"]`) để bắt cả tiếng Việt/Anh.
+- **`mass_reconciliation` là check cấp CỤM, không phải cấp part**: đối chiếu tổng bottom-up ↔ lightship chỉ có nghĩa khi extract mang **toàn bộ** part (aggregate) hoặc có `mass_props.bottom_up_kg` đã cộng đủ. Chạy trên 1 part lẻ với `require_complete:true` sẽ FAIL đúng (tổng thiếu) — đó là fail-safe, không phải bug. Muốn dùng: trỏ vào extract tổng-hợp hoặc cấp bottom-up đã tính từ `helix-cad-bridge`.
+- **`reference_kg` placeholder**: ví dụ VSN-1500 để `required:false` + số lightship PLACEHOLDER — kỹ sư định danh PHẢI thay bằng ước tính naval-architect thật trước khi bật gate sản xuất (giống `plate_thickness_mm` pilot).
 
 ## Output
 Per-part vào `1_Projects/{{project}}/.../cad/validated/`:
-- `{{part_id}}.cad_validate_report.json` (gate signal, machine)
-- `{{part_id}}.cad_validate_report.md` (engineer-readable + sign-off block)
+- `{{part_id}}.cad_validate_report.json` (gate signal + **receipt tất định**, machine) — mang khối
+  `provenance` `{tool_version, linter_sha256, contract_sha256, python_version, validated_at}` = dấu
+  vết truy nguyên cho cổng HITL (Bước 5): kỹ sư ký biết CHÍNH XÁC phiên bản linter + contract nào đã chấm.
+- `{{part_id}}.cad_validate_report.md` (engineer-readable + sign-off block + dòng provenance)
 
 ## CEO/Engineer Checkpoint
 ```

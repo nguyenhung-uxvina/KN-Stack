@@ -1,0 +1,19 @@
+{
+  "meta": {
+    "part_id": "EX-PASS-001",
+    "product": "EXAMPLE",
+    "name": "demo plate (PASS)",
+    "material": "5083",
+    "classification": "THƯỜNG"
+  },
+  "dimensions": [],
+  "tolerances": [],
+  "holes": [
+    { "dia": 8.0, "count": 2, "positions": [[0, 0], [0, 30]], "depth_mm": 24.0, "source": "dxf", "confidence": "HIGH" }
+  ],
+  "bom": [
+    { "code": "EX-PASS-001", "item": "1", "name": "demo plate", "material": "5083", "thickness_mm": 6.0 }
+  ],
+  "conflicts": [],
+  "process_notes": []
+}

@@ -27,6 +27,7 @@
 | `materials` | Whitelist/blacklist vật liệu | `allowed[]`, `forbidden[]`, `required` (bool), `severity` |
 | `plate_thickness_mm` | Độ dày tấm tối thiểu | `min`, `required`, `min_confidence` (LOW/MED/HIGH), `severity` |
 | `mass_kg` | Khối lượng tối đa | `max`, `required`, `severity` |
+| `mass_reconciliation` | Đối chiếu khối lượng bottom-up ↔ lightship estimate (Sanity-Check vật lý cho tàu) | `reference_kg`, `tolerance_pct` (5.0), `part_tolerance_pct` (3.0), `scope` (`assembly`\|`part`), `required`, `require_complete`, `densities_kg_m3{}`, `severity` |
 | `safety_factor` | Hệ số an toàn tối thiểu | `min`, `required`, `severity` |
 | `tolerance_mm` | Dung sai tuyệt đối tối đa | `max`, `min_confidence`, `severity` |
 | `mandatory_components` | Thành phần bắt buộc hiện diện | `items[]` (string hoặc list synonym), `severity` |
@@ -34,11 +35,28 @@
 | `load_class` | Hạng tải phải có / cấm | `required[]`, `forbidden[]`, `severity` |
 | `conflicts_block` | Chặn nếu extract còn CONFLICT | `enabled` (bool), `severity` |
 | `bom_master` | Đối chiếu mã chi tiết với parts_master authoritative (đóng "BOM=0") | `master_csv` (đường dẫn CSV từ authoritative_bom.py), `required`, `ignore_codes[]` (mã gốc cụm bỏ qua), `enabled`, `severity` |
+| `min_hole_dia_mm` | DFM: đường kính lỗ tối thiểu khoan được (dao nhỏ nhất) | `min`, `required`, `severity` — chấm trên `holes[].dia` (2D) |
+| `hole_spacing_mm` | DFM: khoảng cách tâm-tâm 2 lỗ tối thiểu (chống rách) | `min`, `severity` — chấm trên `holes[].positions` (2D) |
+| `hole_depth_ratio` | DFM: tỉ lệ chiều-sâu:đường-kính lỗ tối đa (lỗ sâu quá tỉ lệ dao) | `max_ratio`, `required`, `severity` — **opt-in**, cần `holes[].depth_mm` (3D/STEP) |
 | `confidence_gate` | Ngưỡng tin cậy mặc định cho rule critical | `min_for_critical` (HIGH) |
 
 ### `bom_master` chi tiết (2 check con)
 - **`bom_present`** — fail-safe: thiếu/không đọc được `master_csv` → FAIL (BOM=0 không thể chứng nhận).
 - **`bom_reconciled`** — mã `meta.code_in_dxf`/`part_id` của extract phải có trong master; mã gốc cụm (vd `GT.00.00.00`) khai trong `ignore_codes` để bỏ qua. *Lưu ý:* phát hiện **stale-code theo TÊN** (tên khớp mã khác) chỉ chạy khi tên extract sạch — tên DXF garble (unicode escape) thì để `check_bom.py` chấm trên tài liệu QTCN (tên sạch). Nguồn sự thật = CSV kỹ sư ký, KHÔNG phải title-block.
+
+### `mass_reconciliation` chi tiết (Sanity-Check vật lý — Δ-C, phương pháp Fairley cho tàu)
+Neo bằng **vật lý**, không "đo theo tỷ lệ thước": tổng khối lượng bottom-up phải khớp ước tính
+lightship của naval-architect trong dung sai %. Lệch = dấu hiệu **sai trích xuất / thiếu part /
+vật liệu-độ-dày sai** — bắt được lỗi mà không rule đơn lẻ nào bắt.
+- **Nguồn bottom-up (thứ tự ưu tiên):** `mass_props.bottom_up_kg` (helix-cad-bridge/aggregate tính từ
+  hình học — tin cậy nhất) → nếu không có, tính từ BOM: `Σ qty × area_m2 × (thickness_mm/1000) × ρ(material)`.
+  validate.py **không bịa** diện tích tấm extract không có: BOM thiếu `area_m2`/`thickness_mm`/vật-liệu-lạ
+  → `require_complete:true` (mặc định) cho **FAIL** (tổng thiếu ≠ tin cậy).
+- **Dung sai:** `scope:"assembly"` dùng `tolerance_pct` (mặc định **±5%**); `scope:"part"` dùng
+  `part_tolerance_pct` (mặc định **±3%**, cho part tới hạn). CEO chốt 2 ngưỡng này 2026-07-17.
+- **reference_kg** do **kỹ sư định danh** khai (ước tính lightship). Thiếu reference / thiếu bottom-up khi
+  `required:true` → FAIL (fail-safe). `ρ` mặc định tra bảng nội bộ (nhôm 5083=2660, 6082=2700, thép=7850…);
+  ghi đè per-contract qua `densities_kg_m3`.
 
 ## Severity
 - `critical` / `major` → mọi FAIL đều **đóng gate** (exit 2). `severity` chỉ để phân loại báo cáo.
@@ -53,3 +71,28 @@ chứng nhận → FAIL "uncertified".
 Chạy với `--approved-hash <sha256>`: nếu file contract không khớp hash kỹ sư đã duyệt → FAIL
 `contract_integrity`. Ngăn agent lặng lẽ sửa luật để gate xanh. Lấy hash:
 `python -c "import hashlib;print(hashlib.sha256(open('design_rules.json','rb').read()).hexdigest())"`
+
+## DFM tất định (v2.0 — Bước 1 hình học)
+Ba luật DFM chạy bằng số học thuần trên `holes[]` của `cad_extract.json` (không ML) — `observed`/
+`expected`/`fix_hint` đóng vai "SHAP" giải thích được:
+- **`min_hole_dia_mm`** — lỗ nhỏ hơn dao khoan nhỏ nhất khả dụng → FAIL. Chấm trên `holes[].dia`. Chạy trên 2D.
+- **`hole_spacing_mm`** — khoảng cách tâm-tâm 2 lỗ gần nhất < `min` → rách vật liệu khi khoan/chấn → FAIL.
+  Chấm trên `holes[].positions`. Cần ≥2 tọa độ, nếu không → SKIP.
+- **`hole_depth_ratio`** — `depth/dia > max_ratio` (điển hình 6×) → dao dễ gãy → FAIL. **Opt-in**: cần
+  `holes[].depth_mm` (chỉ có khi trích xuất 3D/STEP). Thiếu depth → SKIP (hoặc FAIL nếu `required:true`).
+  Cái tinh vi hơn (fillet/bề mặt phức tạp) → nhường KAN DFM ở [[helix-design-review]] (Inferential, propose-only).
+
+## Provenance / Receipt (output — Bước 5 audit HITL)
+Mỗi lần chấm, `cad_validate_report.json` mang khối `provenance` = biên bản kiểm tra kỹ thuật số truy
+nguyên được (helix-receipt):
+```jsonc
+"provenance": {
+  "tool": "helix-cad-validate", "tool_version": "2.0",
+  "linter_sha256": "<sha256 của chính validate.py>",  // luật-code nào đã chấm
+  "contract_sha256": "<sha256 design_rules.json>",     // luật nào đã chấm
+  "contract_approved_hash_ok": true,
+  "python_version": "3.x", "validated_at": "<UTC ISO>",
+  "extract_source": "<file>", "mass_props_source": "<file|null>"
+}
+```
+Cổng HITL (kỹ sư định danh) dùng khối này để truy ngược đúng phiên bản công cụ + contract đã tạo verdict.

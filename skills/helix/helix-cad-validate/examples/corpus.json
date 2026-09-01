@@ -1,0 +1,40 @@
+{
+  "meta": {
+    "tool": "helix-cad-validate",
+    "note": "Fixed eval corpus. regression tier = must stay 100% (Improvement Engine locks). capability tier = hill to climb. Hermetic rules — no external CSV. Add one PASS+one FAIL fixture per new rule; graduate every fixed bug into a regression case.",
+    "validator": "../validate.py"
+  },
+  "cases": [
+    { "id": "EX-PASS-001", "tier": "regression", "extract": "pass_case.cad_extract.json",
+      "rules": "design_rules.example.json", "expect": "PASS",
+      "note": "Ø8 hole, spacing 30, depth:dia 3.0× — all DFM pass, material+thickness ok." },
+    { "id": "EX-FAIL-001", "tier": "regression", "extract": "fail_case.cad_extract.json",
+      "rules": "design_rules.example.json", "expect": "FAIL",
+      "note": "Ø3<6 · spacing 8<20 · depth:dia 10×>6 — three DFM fails." },
+    { "id": "IE-001-confidence-failsafe", "tier": "regression", "extract": "ie001_low_conf_thickness.cad_extract.json",
+      "rules": "design_rules.example.json", "expect": "FAIL",
+      "origin": "Improvement-Engine #M4-001",
+      "note": "Khóa fail-safe: độ dày chỉ có ở dimension LOW-confidence (OCR), min_confidence=MED → phải FAIL 'uncertified'. Chống ai đó nới confidence gate làm lọt giá trị chưa chứng nhận." },
+
+    { "id": "MR-PASS-massprops", "tier": "regression", "extract": "mr_pass.cad_extract.json",
+      "rules": "mr_rules.json", "mass_props": "mr_pass.mass_props.json", "expect": "PASS",
+      "origin": "Δ-C mass_reconciliation (Fairley Sanity-Check, CEO 2026-07-17)",
+      "note": "Bottom-up 1020 vs lightship 1000 = 2% <= ±5% assembly → PASS." },
+    { "id": "MR-FAIL-drift", "tier": "regression", "extract": "mr_pass.cad_extract.json",
+      "rules": "mr_rules.json", "mass_props": "mr_fail.mass_props.json", "expect": "FAIL",
+      "origin": "Δ-C mass_reconciliation",
+      "note": "Bottom-up 1150 vs 1000 = 15% > ±5% → FAIL. Bắt sai-trích-xuất/thiếu-part/vật-liệu-sai." },
+    { "id": "MR-PASS-bom-compute", "tier": "regression", "extract": "mr_bom.cad_extract.json",
+      "rules": "mr_rules.json", "expect": "PASS",
+      "origin": "Δ-C mass_reconciliation",
+      "note": "Tính từ BOM: 25 × 3.0m² × 5mm × ρ(5083=2660) = 997.5 kg vs 1000 → 0.25% PASS." },
+    { "id": "MR-FAIL-partial-bom", "tier": "regression", "extract": "mr_partial.cad_extract.json",
+      "rules": "mr_rules.json", "expect": "FAIL",
+      "origin": "Δ-C mass_reconciliation",
+      "note": "require_complete: HP2 thiếu area_m2 → tổng bottom-up thiếu → FAIL. Chống đối chiếu trên tổng khuyết." },
+    { "id": "MR-FAIL-failsafe", "tier": "regression", "extract": "mr_failsafe.cad_extract.json",
+      "rules": "mr_rules.json", "expect": "FAIL",
+      "origin": "Δ-C mass_reconciliation",
+      "note": "Fail-safe: không mass_props, BOM rỗng, required:true → FAIL (không SKIP)." }
+  ]
+}
