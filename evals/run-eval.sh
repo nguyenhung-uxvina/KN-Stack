@@ -60,7 +60,15 @@ print(e.get('mode', 'runtime'))
 " 2>/dev/null || echo "runtime")
 
 if [ "$EVAL_MODE" = "static" ]; then
-  # Opt-in per spec: "include_references": true also audits references/*.md.
+  # Two independent widenings of the static audit, kept separate on purpose:
+  #   (A) include_references  -> references/*.md          [opt-in]
+  #   (B) files: [...]        -> named companion files    [opt-in]
+  #       plus top-level *.py next to SKILL.md            [automatic]
+  SKILL_DIR_PATH=$(dirname "$SKILL_FILE")
+  OUTPUT="$SKILL_CONTENT"
+  AUDIT_PARTS="SKILL.md"
+
+  # (A) Opt-in per spec: "include_references": true also audits references/*.md.
   # Opt-in on purpose — turning this on globally would let a keyword in any
   # reference file satisfy an assertion written against SKILL.md, silently
   # weakening every existing static eval.
@@ -71,20 +79,42 @@ print('yes' if e.get('include_references') else 'no')
 " 2>/dev/null || echo "no")
 
   if [ "$INCLUDE_REFS" = "yes" ]; then
-    REF_DIR="$(dirname "$SKILL_FILE")/references"
+    REF_DIR="$SKILL_DIR_PATH/references"
     if [ -d "$REF_DIR" ]; then
       REF_COUNT=$(find "$REF_DIR" -maxdepth 1 -name '*.md' | wc -l)
-      echo "[1/3] Static audit (SKILL.md + $REF_COUNT reference file(s), no subprocess)..."
-      OUTPUT="$SKILL_CONTENT
+      OUTPUT="$OUTPUT
 $(cat "$REF_DIR"/*.md 2>/dev/null)"
+      AUDIT_PARTS="$AUDIT_PARTS + $REF_COUNT reference file(s)"
     else
-      echo "[1/3] Static audit (SKILL.md — include_references set but no references/ dir)..."
-      OUTPUT="$SKILL_CONTENT"
+      AUDIT_PARTS="$AUDIT_PARTS (include_references set but no references/ dir)"
     fi
-  else
-    echo "[1/3] Static audit (reading SKILL.md, no subprocess)..."
-    OUTPUT="$SKILL_CONTENT"
   fi
+
+  # (B) spec-declared extra files (relative to skill dir)
+  EXTRA_FILES=$(python -c "
+import json
+e = json.load(open('$EVALS_FILE', encoding='utf-8'))
+print('\n'.join(e.get('files', [])))
+" 2>/dev/null || echo "")
+  # top-level .py files in the skill dir (validators live next to SKILL.md)
+  for f in "$SKILL_DIR_PATH"/*.py; do
+    [ -f "$f" ] && EXTRA_FILES="$EXTRA_FILES
+$(basename "$f")"
+  done
+  EXTRA_COUNT=0
+  while IFS= read -r rel; do
+    [ -z "$rel" ] && continue
+    if [ -f "$SKILL_DIR_PATH/$rel" ]; then
+      OUTPUT="$OUTPUT
+
+===== FILE: $rel =====
+$(cat "$SKILL_DIR_PATH/$rel")"
+      EXTRA_COUNT=$((EXTRA_COUNT + 1))
+    fi
+  done <<< "$(echo "$EXTRA_FILES" | awk '!seen[$0]++')"
+  [ "$EXTRA_COUNT" -gt 0 ] && AUDIT_PARTS="$AUDIT_PARTS + $EXTRA_COUNT companion file(s)"
+
+  echo "[1/3] Static audit ($AUDIT_PARTS, no subprocess)..."
 else
   echo "[1/3] Running skill via claude -p..."
   TEST_INPUT=$(python -c "
@@ -112,6 +142,108 @@ WORD_COUNT=$(echo "$OUTPUT" | wc -w)
 echo "Output: $WORD_COUNT words"
 echo ""
 
+HAS_CHECKS=$(python -c "
+import json
+e = json.load(open('$EVALS_FILE', encoding='utf-8'))
+print('yes' if 'checks' in e else 'no')
+" 2>/dev/null || echo "no")
+
+if [ "$HAS_CHECKS" = "yes" ]; then
+  echo "[2/3] Grading checks (regex deterministic + LLM-judge for prose asserts)..."
+  EVAL_TMP=$(mktemp -d)
+  printf '%s' "$OUTPUT" > "$EVAL_TMP/output.txt"
+
+  # Pass 1: deterministic regex checks; collect prose checks for the judge
+  python - "$EVALS_FILE" "$EVAL_TMP" <<'PYEOF'
+import json, re, sys
+spec = json.load(open(sys.argv[1], encoding='utf-8'))
+tmp = sys.argv[2]
+output = open(tmp + '/output.txt', encoding='utf-8', errors='replace').read()
+det, judge = {}, []
+for c in spec['checks']:
+    if 'regex' in c:
+        det[c['id']] = 'PASS' if re.search(c['regex'], output, re.IGNORECASE) else 'FAIL'
+    else:
+        judge.append({'id': c['id'], 'desc': c['desc'], 'assert': c['assert']})
+json.dump(det, open(tmp + '/det.json', 'w'))
+json.dump(judge, open(tmp + '/judge_checks.json', 'w'))
+PYEOF
+
+  # Pass 2: single LLM-judge call for prose checks (skipped when none)
+  JUDGE_COUNT=$(python -c "import json,sys;print(len(json.load(open(sys.argv[1]))))" "$EVAL_TMP/judge_checks.json")
+  if [ "$JUDGE_COUNT" -gt 0 ]; then
+    {
+      echo "You are a strict auditor. Below is the content under audit, then a JSON list of checks."
+      echo "For EACH check decide PASS or FAIL based ONLY on the content. Be literal: if the asserted"
+      echo "element is absent, FAIL. Output ONLY a JSON array (no prose, no code fences):"
+      echo '[{"id": "...", "verdict": "PASS|FAIL", "reason": "<=20 words"}]'
+      echo ""
+      echo "===== CONTENT UNDER AUDIT ====="
+      cat "$EVAL_TMP/output.txt"
+      echo ""
+      echo "===== CHECKS ====="
+      cat "$EVAL_TMP/judge_checks.json"
+    } > "$EVAL_TMP/judge_prompt.txt"
+    timeout 300 claude -p $MODEL_FLAG --output-format text < "$EVAL_TMP/judge_prompt.txt" \
+      > "$EVAL_TMP/judge_raw.txt" 2>/dev/null || echo "[]" > "$EVAL_TMP/judge_raw.txt"
+  else
+    echo "[]" > "$EVAL_TMP/judge_raw.txt"
+  fi
+
+  # Pass 3: merge + score
+  SCORE=$(python - "$EVALS_FILE" "$EVAL_TMP" <<'PYEOF'
+import json, re, sys
+spec = json.load(open(sys.argv[1], encoding='utf-8'))
+tmp = sys.argv[2]
+det = json.load(open(tmp + '/det.json'))
+raw = open(tmp + '/judge_raw.txt', encoding='utf-8', errors='replace').read()
+m = re.search(r'\[.*\]', raw, re.DOTALL)
+judged = {}
+if m:
+    try:
+        judged = {v['id']: (v.get('verdict', 'FAIL'), v.get('reason', '')) for v in json.loads(m.group(0))}
+    except Exception:
+        pass
+passed = failed = 0
+lines, fails = [], []
+for c in spec['checks']:
+    cid = c['id']
+    if cid in det:
+        status, how, reason = det[cid], 'regex', ''
+    elif cid in judged:
+        status, how = judged[cid][0], 'judge'
+        reason = judged[cid][1]
+    else:
+        status, how, reason = 'FAIL', 'judge', 'no verdict returned (fail-safe)'
+    if status == 'PASS':
+        passed += 1
+    else:
+        failed += 1
+        fails.append(f"  - {cid}: {c['assert']}" + (f" [{reason}]" if reason else ''))
+    req = '*' if c.get('required') else ' '
+    lines.append(f"  {cid} [{status}]({how}){req} {c['desc']}")
+total = len(spec['checks'])
+threshold = spec.get('passing_score', total)
+print(f'Score: {passed}/{total} ({passed/total*100:.0f}%)')
+print()
+print('\n'.join(lines))
+print()
+if passed == total:
+    print('RESULT: PERFECT - no improvement needed')
+elif passed >= threshold:
+    print(f'RESULT: PASS ({passed} >= {threshold} passing threshold)')
+else:
+    print(f'RESULT: FAIL ({passed} < {threshold} passing threshold)')
+if fails:
+    print()
+    print('FAILED ASSERTIONS:')
+    print('\n'.join(fails))
+PYEOF
+)
+  rm -rf "$EVAL_TMP"
+  echo "$SCORE"
+  echo ""
+else
 # Step 2: Check assertions via Python
 echo "[2/3] Checking assertions..."
 SCORE=$(python -c "
@@ -180,6 +312,7 @@ if failed > 0:
 
 echo "$SCORE"
 echo ""
+fi
 
 # Step 3: If --improve, ask Claude to fix the skill
 if [ "$IMPROVE" = "--improve" ]; then

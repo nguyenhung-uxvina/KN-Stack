@@ -142,6 +142,13 @@ APPLICABLE STANDARDS — {{project_id}}
 NOTE: AI lists candidates. CEO CONFIRMS which standards apply. AI NEVER fabricates TCVN numbers.
 ```
 
+**RESEARCH HOOK (standards):** Before presenting candidates to CEO, query the `std`
+topic notebook if registered (`/topic-notebook --query std "applicable standards for
+<product class>"`) — cited hits pre-fill the table, and CEO only supplies the gaps.
+If `std` is not yet built or returns NOT FOUND, offer a T2 brief via `/helix-research`
+(`type: standards`, `risk_if_wrong: HIGH` — defense citations must be tier S/A).
+CEO confirmation of applicability remains Core; this hook only reduces the blank-page load.
+
 ### Step 0.5: Scope Boundaries
 
 ```

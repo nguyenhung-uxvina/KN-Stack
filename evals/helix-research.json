@@ -1,0 +1,16 @@
+{
+  "skill": "helix-research",
+  "mode": "static",
+  "description": "Static audit: helix-research honors the dispatcher contract (3 tiers, COD gates, fail-safe, citations).",
+  "checks": [
+    {"id": "frontmatter-valid", "desc": "name matches directory; description has Triggers on with VI+EN", "assert": "frontmatter name + bilingual triggers", "regex": "name: helix-research[\\s\\S]*Triggers on:[\\s\\S]*nghiên cứu", "required": true},
+    {"id": "three-tiers", "desc": "router defines T1 LOOKUP, T2 SPRINT, T3 DEEP", "assert": "all three tiers present", "regex": "T1 LOOKUP[\\s\\S]*T2 SPRINT[\\s\\S]*T3 DEEP", "required": true},
+    {"id": "cod-gate", "desc": "T2/T3 require CEO confirmation", "assert": "CEO confirms before T2/T3 launch", "regex": "CEO confirms? (before|\\+)", "required": true},
+    {"id": "high-risk-tier", "desc": "risk_if_wrong HIGH forces S/A sources", "assert": "HIGH risk => tier S/A", "regex": "risk_if_wrong[\\s\\S]*HIGH[\\s\\S]*S/A", "required": true},
+    {"id": "fail-safe-notfound", "desc": "mandatory NOT FOUND section, no model-memory fill", "assert": "NOT FOUND mandatory + no silent memory answers", "regex": "NOT FOUND[\\s\\S]*(model memory|mô hình)", "required": true},
+    {"id": "citation-per-claim", "desc": "citations are per-claim", "assert": "per-claim citation rule", "regex": "per-claim|each claim", "required": true},
+    {"id": "judgment-routing", "desc": "judgment questions route to mentor-board not search", "assert": "mentor-board routing rule", "regex": "mentor-board[\\s\\S]*(judgment|Retrieval)", "required": true},
+    {"id": "pipeline-safe", "desc": "no block-order change, ONE BLOCK PER TURN preserved", "assert": "pipeline safety rule", "regex": "ONE BLOCK PER TURN", "required": true}
+  ],
+  "passing_score": 8
+}

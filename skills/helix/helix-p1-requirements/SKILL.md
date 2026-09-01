@@ -112,6 +112,12 @@ Check forge-library for requirements from similar WX products:
 - BB-01 (if acoustic/detection), VN-AST (if marine), VN-CUAV-SIM (if sim), etc.
 - Mark reused requirements as `[REUSE: {{source_product}}]`
 
+**RESEARCH HOOK (prior art):** After the forge-library pass, if similar-product coverage is
+thin (<3 comparable products), offer a Research Brief via `/helix-research`
+(`type: prior-art`, `phase: P1`, `source_block: helix-p1-requirements`). Requirements
+imported from a Research Response MUST carry the response's citation in their source
+column — uncited imports are not allowed.
+
 ### Step A3b: Seed from Ingested CAD (optional — if a drawing pair exists)
 
 If a customer-supplied or RE PDF+DXF/DWG pair exists, run [[helix-cad-ingest]] and seed the **Geometry / Forces / Material** requirement categories from its `cad_extract.json` critical-dim rows (Param|Value|Tol|Source|Confidence). This grounds requirements in a real measured part rather than assumptions. Carry the Source pointer into the `Source` column. CEO confirms LOW-confidence values before they become requirement targets.
