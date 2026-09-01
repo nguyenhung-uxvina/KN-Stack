@@ -7,12 +7,12 @@
 
 ```
 KN-Stack/
-├── skills/           ← 249 skills organized by domain (15 domains)
+├── skills/           ← 256 skills organized by domain (15 domains)
 │   ├── bridge/       (10) — Operations skills
 │   ├── forge/        (15) — Product strategy skills (+ forge-fabrication mega-skill: 6-block manufacturing pipeline F0-F5
 │   │                       — closes R&D → production loop via Handoff_to_Fabrication.md from helix-detail-finalize;
 │   │                       + forge-proposal-khcn for KHCN proposal drafting)
-│   ├── helix/        (55) — Design execution pipeline (Pahl-Beitz phases — P1/P2/P3/P4 all 6-block mega-skill pipelines; CAD chain: helix-cad-bridge code→CAD, helix-cad-ingest CAD→info, helix-cad-validate design-rule Computational Sensor+Gate, helix-cad-roundtrip orchestrates across P1-P4 with human-draw import, helix-cad-nest geometry→cut-plan/nesting, helix-cad-to-fab drawing-folder→fab bundle; Spec-to-CAD: helix-spec-to-cad SDD orchestrator + 6 helix-s2c-* blocks — spec-kit methodology as disciplined Flow-B front-end)
+│   ├── helix/        (59) — Design execution pipeline (Pahl-Beitz phases — P1/P2/P3/P4 all 6-block mega-skill pipelines; CAD chain: helix-cad-bridge code→CAD, helix-cad-ingest CAD→info, helix-cad-validate design-rule Computational Sensor+Gate, helix-cad-roundtrip orchestrates across P1-P4 with human-draw import, helix-cad-nest geometry→cut-plan/nesting, helix-cad-to-fab drawing-folder→fab bundle; Spec-to-CAD: helix-spec-to-cad SDD orchestrator + 6 helix-s2c-* blocks — spec-kit methodology as disciplined Flow-B front-end; helix-cad-workbook tầng dữ liệu Excel FAB-DB.xlsx + gate đủ-thông-số param_sufficiency)
 │   ├── galaxy/       (12) — Knowledge management (+ skill-to-public, codify, mentor-board — Naval outbound + code + mentor leverage)
 │   ├── mentors/      (58, dynamic) — Per-mentor advisor skills (add more via /mentor-board --add <leader>); orchestrator at galaxy/mentor-board/
 │   ├── book/         (23) — Book pipelines: codebase-to-book (9-phase, book-* blocks), book-to-codebase (btc-* blocks), book-to-skill, notebook-to-book
@@ -20,7 +20,7 @@ KN-Stack/
 │   ├── extract/      (7)  — Content extraction (social, chat, yt-extract/yt-learn/yt-search)
 │   ├── learn/        (3)  — Learning methodology
 │   ├── guard/        (7)  — Guard rails (analyst-trap, ratio-check)
-│   ├── design/       (8)  — Specialized tools only (odi, opt, wp, verify, reverse-engineering, reverse-mc, sdmodel, helm-aluminum-boat) — 11 overlapping skills merged into helix/forge on 2026-05-11
+│   ├── design/       (9)  — Specialized tools only (odi, opt, wp, verify, reverse-engineering, reverse-mc, sdmodel, helm-aluminum-boat + wx-diagram: tầng xuất bản sơ đồ draw.io — engine junction, không vendor) — 11 overlapping skills merged into helix/forge on 2026-05-11
 │   ├── ops/          (15) — CEO operations (portfolio, sprint, weekly-3)
 │   ├── session/      (5)  — Session management (catchup, checkpoint)
 │   ├── system/       (16) — System design tools (gate0-3, decide, cld)

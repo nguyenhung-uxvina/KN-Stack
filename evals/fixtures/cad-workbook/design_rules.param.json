@@ -1,0 +1,13 @@
+{
+  "meta": {"product": "FIXTURE", "rev": "A", "contract_version": "1.0.0",
+           "classification": "THƯỜNG", "engineer_of_record": "fixture",
+           "notes": "Fixture cho rule param_sufficiency"},
+  "rules": {
+    "param_sufficiency": {
+      "requirements_json": "skills/helix/helix-cad-workbook/references/param_requirements.json",
+      "required_outputs": ["QTCN", "BOM", "DU_TOAN"],
+      "master_bom_csv": "evals/fixtures/cad-workbook/MASTER_BOM.csv",
+      "severity": "critical"
+    }
+  }
+}

@@ -38,6 +38,7 @@
 | `min_hole_dia_mm` | DFM: đường kính lỗ tối thiểu khoan được (dao nhỏ nhất) | `min`, `required`, `severity` — chấm trên `holes[].dia` (2D) |
 | `hole_spacing_mm` | DFM: khoảng cách tâm-tâm 2 lỗ tối thiểu (chống rách) | `min`, `severity` — chấm trên `holes[].positions` (2D) |
 | `hole_depth_ratio` | DFM: tỉ lệ chiều-sâu:đường-kính lỗ tối đa (lỗ sâu quá tỉ lệ dao) | `max_ratio`, `required`, `severity` — **opt-in**, cần `holes[].depth_mm` (3D/STEP) |
+| `param_sufficiency` | Đủ thông số cho 5 đầu ra hạ nguồn (QTCN/định mức/sổ tay QC/BOM/dự toán) theo ma trận param_requirements.json của [[helix-cad-workbook]] | `requirements_json` (path), `required_outputs[]`, `master_bom_csv` (optional — qty/process fallback), `severity` — param `critical` thiếu = FAIL, `warning` = WARN không gate |
 | `confidence_gate` | Ngưỡng tin cậy mặc định cho rule critical | `min_for_critical` (HIGH) |
 
 ### `bom_master` chi tiết (2 check con)
@@ -61,6 +62,7 @@ vật liệu-độ-dày sai** — bắt được lỗi mà không rule đơn l�
 ## Severity
 - `critical` / `major` → mọi FAIL đều **đóng gate** (exit 2). `severity` chỉ để phân loại báo cáo.
 - Rule không khai = không kiểm. **Fail-safe:** rule `required:true` mà thiếu dữ liệu → FAIL (không SKIP).
+- **WARN** (mới, v2.1): không gate — dùng cho thông số phụ (tolerances/surface/holes) trong param_sufficiency.
 
 ## Confidence gate (chống "đọc sai" lọt cổng)
 `cad_extract.json` gắn `confidence` (HIGH/MED/LOW) cho mỗi giá trị (helix-cad-ingest). Rule critical

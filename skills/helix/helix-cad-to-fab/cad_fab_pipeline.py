@@ -31,6 +31,8 @@ from collections import defaultdict
 HERE = os.path.dirname(os.path.abspath(__file__))
 INGEST = os.path.join(HERE, "..", "helix-cad-ingest", "ingest.py")
 AGGREGATE = os.path.join(HERE, "..", "helix-cad-ingest", "aggregate.py")
+WORKBOOK = os.path.join(HERE, "..", "helix-cad-workbook", "fab_workbook.py")
+DEFAULT_MASTER = r"D:\Workshop_X\3_Resources\Master-Data\WX-MASTER-DATA.xlsx"
 
 
 def run(cmd):
@@ -123,12 +125,29 @@ def step_report(folder, out, n_extracts, agg_summary, pl_rows, pdf):
         "`python ../helix-cad-nest/nest_estimate.py --parts parts.csv --out nest`.",
         "4. **Quy trình công nghệ (TCVN)**: forge-fabrication F0 + template 11 mục → QUY_TRINH_CONG_NGHE.md → "
         "`python md_to_docx.py QUY_TRINH_CONG_NGHE.md`.",
-        "5. **CEO chốt** cờ §11 + classification, ký phát hành.",
+        "5. **Kiểm CHECKLIST** trong {PROJECT}_FAB-DB.xlsx — ô đỏ THIẾU phải xử lý trước handoff "
+        "(gate param_sufficiency của helix-cad-validate sẽ chặn).",
+        "6. **CEO chốt** cờ §11 + classification, ký phát hành.",
     ]
     p = os.path.join(out, "PIPELINE_REPORT.md")
     with open(p, "w", encoding="utf-8") as f:
         f.write("\n".join(lines) + "\n")
     return p
+
+
+def step_workbook(out, project, master):
+    """Sinh {PROJECT}_FAB-DB.xlsx (helix-cad-workbook). Skip có hướng dẫn nếu thiếu master —
+    KHÔNG bịa đơn giá (fail-safe)."""
+    if not os.path.isfile(WORKBOOK):
+        print(f"  [workbook] không thấy fab_workbook.py ({WORKBOOK}) — skip")
+        return None
+    if not master or not os.path.isfile(master):
+        print(f"  [workbook] KHÔNG thấy master data: {master}")
+        print(f"  → tạo seed: python \"{WORKBOOK}\" --init-master \"{master}\" (kỹ sư duyệt giá trước khi dùng)")
+        return None
+    r = run([sys.executable, WORKBOOK, out, "--master", master, "--project", project])
+    print(r.stdout.strip()[-600:] or r.stderr.strip()[-600:])
+    return os.path.join(out, "..", f"{project}_FAB-DB.xlsx")
 
 
 def main():
@@ -137,21 +156,28 @@ def main():
     ap.add_argument("--classification", default="MẬT")
     ap.add_argument("--out", default=None)
     ap.add_argument("--prefer", choices=["dwg", "dxf"], default="dwg")
+    ap.add_argument("--master", default=DEFAULT_MASTER, help="WX-MASTER-DATA.xlsx (đơn giá/hao hụt/định mức)")
+    ap.add_argument("--project", default=None, help="mã dự án cho tên FAB-DB.xlsx (mặc định tên folder)")
+    ap.add_argument("--no-workbook", action="store_true")
     a = ap.parse_args()
     folder = a.folder
     out = a.out or os.path.join(folder, "ingested")
     os.makedirs(out, exist_ok=True)
     print(f"=== CAD→FAB PIPELINE === {folder}\nclassification: {a.classification} · out: {out}\n")
-    print("[1/4] ingest (DWG/DXF → cad_extract)")
+    print("[1/5] ingest (DWG/DXF → cad_extract)")
     n = step_ingest(folder, out, a.classification, a.prefer)
-    print("\n[2/4] aggregate (→ MASTER_BOM + CRITICAL_DIMS)")
+    print("\n[2/5] aggregate (→ MASTER_BOM + CRITICAL_DIMS)")
     agg = step_aggregate(out)
-    print("\n[3/4] PDF parts-list extract")
+    print("\n[3/5] PDF parts-list extract")
     pl, pdf = step_pdf(folder, out)
-    print("\n[4/4] report")
+    print("\n[4/5] report")
     rp = step_report(folder, out, n, agg, pl, pdf)
+    wbk = None
+    if not a.no_workbook:
+        print("\n[5/5] workbook (→ {PROJECT}_FAB-DB.xlsx: PARTS/BOM/DINH_MUC/DU_TOAN/QC_DIMS/CHECKLIST)")
+        wbk = step_workbook(out, a.project or os.path.basename(os.path.abspath(folder)), a.master)
     print(f"\n✅ DONE → {out}\n   PIPELINE_REPORT.md · MASTER_BOM.* · CRITICAL_DIMS.md · "
-          f"PDF_PARTSLIST.csv · PDF_RAW.txt · {n} cad_extract")
+          f"PDF_PARTSLIST.csv · PDF_RAW.txt · {n} cad_extract" + (" · FAB-DB.xlsx" if wbk else ""))
     print("   Next: AI/CEO finalize (xem PIPELINE_REPORT.md §⏭️).")
 
 

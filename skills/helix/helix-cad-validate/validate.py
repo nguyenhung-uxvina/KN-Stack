@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-helix-cad-validate / validate.py v2.0 — Deterministic design-rule validator (Computational Sensor + Gate).
+helix-cad-validate / validate.py v2.1 — Deterministic design-rule validator (Computational Sensor + Gate).
 
 BƯỚC 1 of the harness-engineering validator (per mentor-harness-engineering-council DEBATE 2026-06-25):
 the thin, deterministic, CPU-only gate for the DESIGN phase. NO LLM, NO network — 100% local,
@@ -36,6 +36,7 @@ import hashlib
 import io
 import json
 import os
+import re
 import sys
 from datetime import datetime, timezone
 
@@ -221,6 +222,58 @@ def _holes(extract):
         out.append({"dia": dia, "depth": depth, "positions": pos,
                     "conf": h.get("confidence", "LOW"), "source": h.get("source") or f"hole:Ø{h.get('dia')}"})
     return out
+
+
+def _bom_csv_row(path, extract):
+    """MASTER_BOM.csv row khớp part (qty/process fallback cho param_sufficiency). None nếu không có."""
+    if not path or not os.path.isfile(path):
+        return None
+    try:
+        with io.open(path, encoding="utf-8-sig", newline="") as f:
+            rows = list(csv.DictReader(f))
+    except OSError:
+        return None
+    meta = extract.get("meta", {}) or {}
+    code = _norm(meta.get("code_in_dxf") or meta.get("part_id"))
+    for r in rows:
+        if _norm(r.get("code_in_dxf")) == code:
+            return r
+    return None
+
+
+def _param_value(extract, bomrow, name):
+    """Trích (value, confidence) của thông số theo param_requirements — stdlib mirror
+    của fab_workbook.resolve_param (giữ đồng bộ khi sửa: cả hai đọc CHUNG param_requirements.json)."""
+    meta = extract.get("meta", {}) or {}
+    ebom = (extract.get("bom") or [{}])[0]
+    if name == "part_id":
+        return meta.get("part_id") or meta.get("code_in_dxf") or ebom.get("code"), "HIGH"
+    if name == "material":
+        return meta.get("material") or ebom.get("material"), "MED"
+    if name == "thickness_mm":
+        if ebom.get("thickness_mm") is not None:
+            return ebom["thickness_mm"], "MED"
+        rows = _thickness_rows(extract)
+        return (rows[0][0], rows[0][1]) if rows else (None, "LOW")
+    if name == "mass_kg":
+        return meta.get("mass_kg"), ("MED" if meta.get("mass_kg") is not None else "LOW")
+    if name == "qty":
+        q = (bomrow or {}).get("qty") or ebom.get("qty")
+        return (q if q not in ("", None) else None), "MED"
+    if name == "process":
+        p = (bomrow or {}).get("process") or meta.get("process") or ebom.get("process")
+        return (p if p not in ("", None) else None), "MED"
+    if name == "tolerances":
+        return (extract.get("tolerances") or None), "MED"
+    if name == "surface_finish":
+        if extract.get("surface_finish"):
+            return extract["surface_finish"], "MED"
+        notes = " ".join(extract.get("process_notes", []) or [])
+        m = re.search(r"Ra\s*[\d.,]+", notes, re.I)
+        return (m.group(0) if m else None), "MED"
+    if name == "holes":
+        return (extract.get("holes") or None), "MED"
+    return None, "LOW"
 
 
 def run_checks(extract, rules, mass_props):
@@ -567,6 +620,51 @@ def run_checks(extract, rules, mass_props):
                     r.add("hole_depth_ratio", "PASS", sev, f"{ratio:.1f}×", f"<= {rmax}×",
                           "Tỉ lệ sâu:đường-kính đạt.", source=h["source"])
 
+    # 12. Param sufficiency — đủ thông số cho các đầu ra bắt buộc (QTCN/BOM/DU_TOAN...).
+    #     Ma trận = param_requirements.json (helix-cad-workbook). critical thiếu → FAIL (gate đóng);
+    #     warning thiếu → WARN (không gate — tấm không lỗ là hợp lệ). Fail-safe: thiếu ma trận → FAIL.
+    ps = rs.get("param_sufficiency")
+    if ps:
+        sev = ps.get("severity", "critical")
+        req_path = ps.get("requirements_json")
+        required_outputs = {str(o).upper() for o in ps.get("required_outputs", [])}
+        reqs = None
+        if req_path and os.path.isfile(req_path):
+            try:
+                reqs = _load(req_path)
+            except (OSError, json.JSONDecodeError):
+                reqs = None
+        if reqs is None:
+            r.add("param_sufficiency", "FAIL", sev, "(no requirements)",
+                  req_path or "param_requirements.json",
+                  "Thiếu/không đọc được param_requirements.json — không thể chấm đủ thông số (fail-safe).",
+                  fix="Trỏ requirements_json tới skills/helix/helix-cad-workbook/references/param_requirements.json.",
+                  source="param_sufficiency.requirements_json")
+        else:
+            bomrow = _bom_csv_row(ps.get("master_bom_csv"), extract)
+            for pname, pcfg in (reqs.get("params") or {}).items():
+                hit = [o for o in pcfg.get("required_for", []) if str(o).upper() in required_outputs]
+                if not hit:
+                    continue
+                val, conf = _param_value(extract, bomrow, pname)
+                crit = pcfg.get("severity", "critical") == "critical"
+                if val in (None, "", []):
+                    r.add("param_sufficiency", "FAIL" if crit else "WARN", sev,
+                          f"{pname}=(none)", f"present for {hit}",
+                          f"Thiếu thông số '{pname}' cho đầu ra {hit}.",
+                          fix=f"Bổ sung '{pname}' vào bản vẽ/BOM rồi re-ingest "
+                              f"(hoặc MASTER_BOM.csv cho qty/process).",
+                          source="param_requirements")
+                elif pcfg.get("min_confidence") and not _conf_ok(conf, pcfg["min_confidence"]):
+                    r.add("param_sufficiency", "FAIL" if crit else "WARN", sev,
+                          f"{pname} (conf={conf})", f"conf >= {pcfg['min_confidence']}",
+                          f"'{pname}' độ tin cậy {conf} < {pcfg['min_confidence']} — chưa chứng nhận.",
+                          fix="CEO/kỹ sư xác nhận giá trị hoặc re-ingest nguồn tốt hơn.",
+                          source="param_requirements")
+                else:
+                    r.add("param_sufficiency", "PASS", sev, pname, f"for {hit}",
+                          f"Đủ '{pname}'.", source="param_requirements")
+
     return r
 
 
@@ -648,7 +746,7 @@ def main(argv=None):
     # Truy vết ngược: kỹ sư ký biết CHÍNH XÁC phiên bản công cụ + luật nào đã chấm.
     provenance = {
         "tool": "helix-cad-validate",
-        "tool_version": "2.0",
+        "tool_version": "2.1",
         "linter_sha256": _sha256(os.path.abspath(__file__)),
         "contract_sha256": contract_hash,
         "contract_approved_hash_ok": approved_ok,
@@ -659,7 +757,7 @@ def main(argv=None):
     }
     out_json = {
         "tool": "helix-cad-validate",
-        "version": "2.0",
+        "version": "2.1",
         "validated_at": validated_at,
         "part_id": extract.get("meta", {}).get("part_id"),
         "product": extract.get("meta", {}).get("product"),

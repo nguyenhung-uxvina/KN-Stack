@@ -1,0 +1,18 @@
+{
+  "version": "1.0",
+  "meta": {
+    "note": "Ma trận thông số bắt buộc per đầu ra (spec 2026-07-13). Chỉ kỹ sư định danh sửa; bump version khi đổi.",
+    "outputs": ["QTCN", "DINH_MUC", "SO_TAY_QC", "BOM", "DU_TOAN"]
+  },
+  "params": {
+    "part_id":        {"severity": "critical", "required_for": ["QTCN", "DINH_MUC", "SO_TAY_QC", "BOM", "DU_TOAN"]},
+    "material":       {"severity": "critical", "required_for": ["QTCN", "DINH_MUC", "BOM", "DU_TOAN"], "must_match_master": true},
+    "thickness_mm":   {"severity": "critical", "required_for": ["QTCN", "DINH_MUC", "BOM", "DU_TOAN"]},
+    "mass_kg":        {"severity": "critical", "required_for": ["DINH_MUC", "DU_TOAN"], "min_confidence": "MED"},
+    "qty":            {"severity": "critical", "required_for": ["QTCN", "DINH_MUC", "BOM", "DU_TOAN"]},
+    "process":        {"severity": "critical", "required_for": ["QTCN", "DINH_MUC", "SO_TAY_QC", "DU_TOAN"]},
+    "tolerances":     {"severity": "warning",  "required_for": ["QTCN", "SO_TAY_QC"]},
+    "surface_finish": {"severity": "warning",  "required_for": ["QTCN", "SO_TAY_QC"]},
+    "holes":          {"severity": "warning",  "required_for": ["QTCN", "SO_TAY_QC"]}
+  }
+}

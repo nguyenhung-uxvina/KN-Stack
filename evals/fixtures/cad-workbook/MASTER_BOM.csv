@@ -1,0 +1,4 @@
+idx,name,qty,material,process,key_dims_mm,holes,code_in_dxf,conflicts
+1,tấm đế,2,SS400,laser+chấn,"420x300x6","2xØ8",P-001,
+2,vách ngăn,4,5083,laser,"300x200x4","",P-002,
+3,gân tăng cứng,6,,laser,"250x40x6","",P-003,
