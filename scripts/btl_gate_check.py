@@ -26,11 +26,30 @@ BRIEF_KEYS = ("van_de_that", "du_doan_1", "du_doan_2", "du_doan_3", "dreyfus_tru
 
 # ---------------------------------------------------------------- đọc tệp
 
+class UnreadableFile(Exception):
+    """Tệp tồn tại nhưng không giải mã được (không phải UTF-8)."""
+
+    def __init__(self, path):
+        super().__init__(str(path))
+        self.path = path
+
+
+class VaultUnresolvable(Exception):
+    """`<LEARN-dir>` quá nông để suy ra `--vault` bằng `parents[1]`."""
+
+    def __init__(self, learn_dir):
+        super().__init__(str(learn_dir))
+        self.learn_dir = learn_dir
+
+
 def read(path) -> str:
     # utf-8-sig: strip a UTF-8 BOM if present (PowerShell Out-File default on
     # this host writes one) — plain utf-8 would leave "﻿---" as the first
     # bytes and parse_frontmatter would silently return {} for the whole file.
-    return Path(path).read_text(encoding="utf-8-sig")
+    try:
+        return Path(path).read_text(encoding="utf-8-sig")
+    except UnicodeDecodeError as e:
+        raise UnreadableFile(path) from e
 
 
 def parse_frontmatter(text: str) -> dict:
@@ -94,6 +113,26 @@ def table_rows(text: str) -> list:
     return rows
 
 
+def table_rows_with_header(text: str):
+    """Như table_rows nhưng trả thêm dòng tiêu đề (để tra cột theo tên,
+    ví dụ cột "Số đo" trong Run_Log.md) thay vì âm thầm bỏ nó đi."""
+    header, rows, last_was_row = None, [], False
+    for line in text.splitlines():
+        s = line.strip()
+        if not s.startswith("|"):
+            last_was_row = False
+            continue
+        cells = [c.strip() for c in s.strip("|").split("|")]
+        if any(cells) and all(re.fullmatch(r":?-{3,}:?", c) for c in cells if c):
+            if last_was_row and rows:
+                header = rows.pop()  # dòng ngay trên vạch phân cách là tiêu đề
+            last_was_row = False
+            continue
+        rows.append(cells)
+        last_was_row = True
+    return header, rows
+
+
 def slugify(name: str) -> str:
     s = name.replace("đ", "d").replace("Đ", "D")
     s = unicodedata.normalize("NFKD", s)
@@ -132,7 +171,13 @@ class Ctx:
     @classmethod
     def from_args(cls, a):
         learn = Path(a.learn_dir).resolve()
-        vault = Path(a.vault).resolve() if a.vault else learn.parents[1]
+        if a.vault:
+            vault = Path(a.vault).resolve()
+        else:
+            try:
+                vault = learn.parents[1]
+            except IndexError:
+                raise VaultUnresolvable(learn)
         return cls(
             learn, vault,
             a.books_root or vault / "3_Resources" / "Books",
@@ -257,6 +302,10 @@ def check_L2(ctx: Ctx) -> list:
         items = json.loads(read(ctx.nlm_list))
     except json.JSONDecodeError as e:
         return [f"L2: {ctx.nlm_list} không phải JSON hợp lệ — {e}"]
+    if not isinstance(items, list):
+        return [f"L2: {ctx.nlm_list} phải là mảng JSON các nguồn, đang là {type(items).__name__}"]
+    if not all(isinstance(i, dict) for i in items):
+        return [f"L2: {ctx.nlm_list} có phần tử không phải object nguồn"]
 
     # Detect duplicate titles
     title_counts = {}
@@ -280,15 +329,23 @@ def check_L2(ctx: Ctx) -> list:
         if item.get("status") != 2:
             errs.append(f"L2: nguồn '{f.name}' chưa sẵn sàng (status={item.get('status')})")
             continue
-        cpath = ctx.nlm_content_dir / f"{item['id']}.json" if ctx.nlm_content_dir else None
+        item_id = item.get("id")
+        if not item_id:
+            errs.append(f"L2: nguồn '{f.name}' thiếu 'id' trên notebook")
+            continue
+        cpath = ctx.nlm_content_dir / f"{item_id}.json" if ctx.nlm_content_dir else None
         if not cpath or not cpath.exists():
-            errs.append(f"L2: thiếu nội dung đã tải cho '{f.name}' (nlm source content {item['id']} -j)")
+            errs.append(f"L2: thiếu nội dung đã tải cho '{f.name}' (nlm source content {item_id} -j)")
             continue
         try:
-            got = json.loads(read(cpath)).get("char_count", 0)
+            content = json.loads(read(cpath))
         except json.JSONDecodeError as e:
             errs.append(f"L2: {cpath.name} không phải JSON hợp lệ — {e}")
             continue
+        if not isinstance(content, dict):
+            errs.append(f"L2: {cpath.name} phải là object JSON, đang là {type(content).__name__}")
+            continue
+        got = content.get("char_count", 0)
         need = len(read(f)) * 0.5
         if got < need:
             errs.append(f"L2: nguồn '{f.name}' chỉ {got} ký tự < 50% tệp gốc ({len(read(f))}) — nghi trang chặn bot")
@@ -318,11 +375,15 @@ CYCLE_KEYS = {
 }
 
 
+HTML_COMMENT = re.compile(r"<!--.*?-->", re.S)
+
+
 def check_L3(ctx: Ctx) -> list:
     p = ctx.books_root / ctx.slug / "Claims.md"
     if not p.exists():
         return ["L3: thiếu Claims.md"]
-    rows = table_rows(read(p))
+    text = read(p)
+    rows = table_rows(text)
     if not rows:
         return ["L3: Claims.md không có luận điểm nào"]
     errs = []
@@ -335,11 +396,22 @@ def check_L3(ctx: Ctx) -> list:
             errs.append(f"L3: luận điểm {num} có nhãn '{label}' — chỉ nhận {sorted(CLAIM_LABELS)}")
         if source in EMPTY_CELL or where in EMPTY_CELL:
             errs.append(f"L3: luận điểm {num} thiếu nguồn hoặc vị trí (dấu ✅ không phải trích dẫn)")
+    approval = HTML_COMMENT.sub("", section_starting(text, "CEO duyệt nguồn")).strip()
+    if not approval:
+        errs.append("L3: Claims.md thiếu hoặc để trống mục '## CEO duyệt nguồn' — "
+                     "CEO phải ghi bằng lời đã xem và đồng ý danh sách nguồn trước khi nạp vào notebook mở rộng")
     return errs
+
+
+MULTILINE_LIST_HINT = re.compile(r"^framework_ung_vien:[ \t]*\r?\n((?:[ \t]*-[ \t]+.+\r?\n?)+)", re.M)
 
 
 def check_L4(ctx: Ctx) -> list:
     if not ctx.frameworks:
+        state_text = read(ctx.state_path) if ctx.state_path.exists() else ""
+        if MULTILINE_LIST_HINT.search(state_text):
+            return ["L4: framework_ung_vien đang ghi theo dạng danh sách nhiều dòng ('- item') — "
+                    "trình đọc ở đây chỉ nhận dạng inline một dòng '[a, b]', đổi sang dạng đó"]
         return ["L4: framework_ung_vien trong _pipeline_state.md đang rỗng — CEO chọn sau L1"]
     errs = []
     for fw in ctx.frameworks:
@@ -376,10 +448,19 @@ def check_L4(ctx: Ctx) -> list:
 
 def check_L5(ctx: Ctx) -> list:
     errs = []
-    if not gate_passed(ctx, "L4"):
+    # Cổng chỉ có dấu PASS cũ (stamp) không đủ — pha có thể đã trở nên trượt
+    # sau khi được đóng dấu (ví dụ CEO thêm framework mới vào
+    # framework_ung_vien sau khi L4 đã qua). Re-chạy L4/L3 thật để bắt trường
+    # hợp đó, không chỉ tin dòng "PASS" cũ trong _pipeline_state.md.
+    if gate_passed(ctx, "L4"):
+        errs += [f"L5: L4 đã có dấu PASS nhưng nay lại trượt — {e}" for e in check_L4(ctx)]
+    else:
         errs.append("L5: cổng Feynman L4 chưa qua")
-    if not ctx.state.get("quick") and not gate_passed(ctx, "L3"):
-        errs.append("L5: L3 (Claims) chưa qua — hoặc đặt quick: true và chấp nhận nhãn CHƯA KIỂM")
+    if not ctx.state.get("quick"):
+        if gate_passed(ctx, "L3"):
+            errs += [f"L5: L3 đã có dấu PASS nhưng nay lại trượt — {e}" for e in check_L3(ctx)]
+        else:
+            errs.append("L5: L3 (Claims) chưa qua — hoặc đặt quick: true và chấp nhận nhãn CHƯA KIỂM")
     p = ctx.learn_dir / "Experiment_Card.md"
     if not p.exists():
         return errs + ["L5: thiếu Experiment_Card.md"]
@@ -428,10 +509,14 @@ def check_L7(ctx: Ctx) -> list:
             if line.strip():
                 try:
                     obj = json.loads(line)
-                    if obj.get("slug") == ctx.slug:
-                        rows.append(obj)
                 except json.JSONDecodeError as e:
                     errs.append(f"L7: cycles.jsonl dòng {lineno} không phải JSON hợp lệ — {e}")
+                    continue
+                if not isinstance(obj, dict):
+                    errs.append(f"L7: cycles.jsonl dòng {lineno} không phải object")
+                    continue
+                if obj.get("slug") == ctx.slug:
+                    rows.append(obj)
     if not rows:
         return errs + [f"L7: cycles.jsonl chưa có dòng cho slug '{ctx.slug}'"]
     row = rows[-1]
@@ -452,9 +537,28 @@ def check_L7(ctx: Ctx) -> list:
     for k in ("dreyfus_before", "dreyfus_after"):
         if is_int(row.get(k)) and not 1 <= row[k] <= 5:
             errs.append(f"L7: {k} phải 1–5")
-    if row.get("applied") is True and not gate_passed(ctx, "L5"):
-        errs.append("L7: applied=true nhưng thẻ thí nghiệm L5 chưa qua cổng — ghi applied=false")
+    if row.get("applied") is True:
+        if not gate_passed(ctx, "L5"):
+            errs.append("L7: applied=true nhưng thẻ thí nghiệm L5 chưa qua cổng — ghi applied=false")
+        else:
+            errs += _check_run_log_measured(ctx)
     return errs
+
+
+def _check_run_log_measured(ctx: Ctx) -> list:
+    """applied=true đòi ≥1 dòng Run_Log.md có số đo thật ở cột 'Số đo'
+    (không chỉ khai applied trong meta mà không có hiện vật đo được)."""
+    run_log = ctx.learn_dir / "Run_Log.md"
+    if not run_log.exists():
+        return ["L7: applied=true nhưng thiếu Run_Log.md"]
+    header, rows = table_rows_with_header(read(run_log))
+    if not header or "Số đo" not in header:
+        return ["L7: Run_Log.md thiếu cột 'Số đo'"]
+    idx = header.index("Số đo")
+    has_measure = any(len(r) > idx and r[idx].strip() and r[idx].strip() not in EMPTY_CELL for r in rows)
+    if not has_measure:
+        return ["L7: applied=true nhưng Run_Log.md chưa có dòng nào có số đo ở cột 'Số đo'"]
+    return []
 
 
 CHECKS = {"L0": check_L0, "L1": check_L1, "L2": check_L2, "L3": check_L3, "L4": check_L4,
@@ -478,15 +582,33 @@ def parse_args(argv):
 
 
 def main(argv=None) -> int:
+    # Host này có thể chạy với stdout/stderr cp1252 khi bị pipe (ví dụ từ Git
+    # Bash) — mọi dòng FAIL tiếng Việt sẽ ném UnicodeEncodeError giữa print()
+    # nếu không ép UTF-8 ở đây trước khi in bất cứ gì.
+    for s in (sys.stdout, sys.stderr):
+        if hasattr(s, "reconfigure"):
+            s.reconfigure(encoding="utf-8", errors="replace")
     a = parse_args(sys.argv[1:] if argv is None else argv)
     if a.phase not in CHECKS:
         print(f"Pha không hợp lệ: {a.phase}. Dùng một trong: {', '.join(sorted(CHECKS))}")
         return 2
-    ctx = Ctx.from_args(a)
-    if not ctx.slug:
+    try:
+        ctx = Ctx.from_args(a)
+    except VaultUnresolvable as e:
+        print(f"Không suy ra được --vault từ '{e.learn_dir}' (đường dẫn quá nông) — truyền --vault tường minh")
+        return 2
+    try:
+        has_slug = bool(ctx.slug)
+    except UnreadableFile as e:
+        print(f"{e.path} không đọc được — lưu lại bằng UTF-8")
+        return 2
+    if not has_slug:
         print(f"Thiếu {ctx.state_path} hoặc thiếu trường slug")
         return 2
-    errs = CHECKS[a.phase](ctx)
+    try:
+        errs = CHECKS[a.phase](ctx)
+    except UnreadableFile as e:
+        errs = [f"{a.phase}: {e.path} không đọc được — lưu lại bằng UTF-8"]
     for e in errs:
         print("FAIL " + e)
     if errs:

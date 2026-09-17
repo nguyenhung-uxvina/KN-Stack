@@ -6,6 +6,9 @@ nhưng là trang chặn bot, câu trả lời Feynman do AI điền...).
 """
 import importlib.util
 import json
+import os
+import subprocess
+import sys
 import textwrap
 from pathlib import Path
 from types import SimpleNamespace
@@ -106,6 +109,63 @@ def test_unknown_phase_is_usage_error(env):
 def test_missing_state_is_usage_error(env):
     (env.learn / "_pipeline_state.md").unlink()
     assert run(env, "L0") == 2
+
+
+# ---------- C1: cp1252 stdout on Windows (Git Bash pipe) ----------
+
+def _run_cli_cp1252(env, *extra):
+    """Chạy CLI thật (subprocess, không import) với PYTHONIOENCODING=cp1252
+    và PYTHONUTF8 KHÔNG đặt — mô phỏng đúng host bị lỗi thật."""
+    script = HERE / "btl_gate_check.py"
+    child_env = dict(os.environ)
+    child_env["PYTHONIOENCODING"] = "cp1252"
+    child_env.pop("PYTHONUTF8", None)
+    argv = [sys.executable, str(script), str(env.learn), *extra,
+            "--skills-root", str(env.skills), "--books-root", str(env.books),
+            "--meta-dir", str(env.meta)]
+    return subprocess.run(argv, capture_output=True, text=True, encoding="utf-8", env=child_env)
+
+
+def test_cli_cp1252_stdout_failing_l0_no_crash(env):
+    w(env.learn / "_Project_Brief.md", GOOD_BRIEF.replace(
+        "van_de_that: Định giá pilot VN-TGT-F khi biên gộp ở mức 10 bộ gần bằng 0", "van_de_that:"))
+    proc = _run_cli_cp1252(env, "L0")
+    assert proc.returncode == 1
+    assert "FAIL" in proc.stdout
+    assert "Traceback" not in proc.stderr
+
+
+def test_cli_cp1252_stdout_missing_state_exits_2(env):
+    (env.learn / "_pipeline_state.md").unlink()
+    proc = _run_cli_cp1252(env, "L0")
+    assert proc.returncode == 2
+    assert "Traceback" not in proc.stderr
+
+
+# ---------- I2: tệp không phải UTF-8 (UnicodeDecodeError) ----------
+
+def test_state_file_non_utf8_exits_2(env, capsys):
+    (env.learn / "_pipeline_state.md").write_bytes(b"---\nslug: demo\n---\n\xff\xfe kh\xf4ng UTF-8")
+    assert run(env, "L0") == 2
+    assert "UTF-8" in capsys.readouterr().out
+
+
+def test_L0_non_utf8_project_brief_fails_not_crashes(env, capsys):
+    w(env.learn / "_Project_Brief.md", GOOD_BRIEF)  # valid first, then corrupt bytes
+    (env.learn / "_Project_Brief.md").write_bytes(b"---\nvan_de_that: x\n---\n\xff\xfe kh\xf4ng UTF-8")
+    assert run(env, "L0") == 1
+    out = capsys.readouterr().out
+    assert "UTF-8" in out
+    assert "Traceback" not in out
+
+
+# ---------- M12: LEARN-dir quá nông để suy vault bằng parents[1] ----------
+
+def test_shallow_learn_dir_exits_2_asks_for_vault(env, capsys):
+    argv = ["D:/LEARN-shallow-test-btl", "L0",
+            "--skills-root", str(env.skills), "--books-root", str(env.books), "--meta-dir", str(env.meta)]
+    assert gc.main(argv) == 2
+    assert "--vault" in capsys.readouterr().out
 
 
 # ---------- L0 ----------
@@ -356,14 +416,76 @@ def test_L2_fails_duplicate_titles(env, capsys):
     assert "ch01.md" in out and ("trùng" in out or "nhiều" in out or "duplicate" in out.lower())
 
 
+# ---------- I2: list.json/content json có hình dạng sai (không phải mảng/object) ----------
+
+def test_L2_fails_list_json_is_null(env, capsys):
+    src = env.books / "demo" / "_source"
+    w(src / "ch01.md", "x" * 100)
+    lst = w(env.tmp / "nlm" / "list.json", "null")
+    argv = [str(env.learn), "L2", "--skills-root", str(env.skills), "--books-root", str(env.books),
+            "--meta-dir", str(env.meta), "--nlm-list", str(lst),
+            "--nlm-content-dir", str(env.tmp / "nlm" / "content")]
+    assert gc.main(argv) == 1
+    out = capsys.readouterr().out
+    assert "mảng" in out
+    assert "Traceback" not in out
+
+
+def test_L2_fails_list_json_elements_not_objects(env, capsys):
+    src = env.books / "demo" / "_source"
+    w(src / "ch01.md", "x" * 100)
+    lst = w(env.tmp / "nlm" / "list.json", json.dumps([1]))
+    argv = [str(env.learn), "L2", "--skills-root", str(env.skills), "--books-root", str(env.books),
+            "--meta-dir", str(env.meta), "--nlm-list", str(lst),
+            "--nlm-content-dir", str(env.tmp / "nlm" / "content")]
+    assert gc.main(argv) == 1
+    out = capsys.readouterr().out
+    assert "không phải object" in out
+    assert "Traceback" not in out
+
+
+def test_L2_fails_item_without_id(env, capsys):
+    src = env.books / "demo" / "_source"
+    w(src / "ch01.md", "x" * 100)
+    items = [{"title": "ch01.md", "type": "generated_text", "url": None, "status": 2}]  # no "id"
+    lst = w(env.tmp / "nlm" / "list.json", json.dumps(items))
+    argv = [str(env.learn), "L2", "--skills-root", str(env.skills), "--books-root", str(env.books),
+            "--meta-dir", str(env.meta), "--nlm-list", str(lst),
+            "--nlm-content-dir", str(env.tmp / "nlm" / "content")]
+    assert gc.main(argv) == 1
+    out = capsys.readouterr().out
+    assert "'id'" in out or "thiếu" in out
+    assert "Traceback" not in out
+
+
+def test_L2_fails_content_json_is_list(env, capsys):
+    src = env.books / "demo" / "_source"
+    w(src / "ch01.md", "x" * 100)
+    items = [{"id": "id0", "title": "ch01.md", "type": "generated_text", "url": None, "status": 2}]
+    lst = w(env.tmp / "nlm" / "list.json", json.dumps(items))
+    cdir = env.tmp / "nlm" / "content"
+    w(cdir / "id0.json", json.dumps([]))
+    argv = [str(env.learn), "L2", "--skills-root", str(env.skills), "--books-root", str(env.books),
+            "--meta-dir", str(env.meta), "--nlm-list", str(lst), "--nlm-content-dir", str(cdir)]
+    assert gc.main(argv) == 1
+    out = capsys.readouterr().out
+    assert "object JSON" in out
+    assert "Traceback" not in out
+
+
 # ---------- L3 ----------
 
-def make_claims(env, row="| 1 | Trích lợi nhuận trước khi chi | SUPPORTED | Michalowicz 2014 | tr.19 |"):
+CEO_APPROVAL = "CEO đã xem và đồng ý danh sách nguồn trước khi nạp lên notebook btl-demo-mo-rong."
+
+
+def make_claims(env, row="| 1 | Trích lợi nhuận trước khi chi | SUPPORTED | Michalowicz 2014 | tr.19 |",
+                 ceo_approval=CEO_APPROVAL):
+    section = f"\n## CEO duyệt nguồn\n{ceo_approval}\n" if ceo_approval is not None else ""
     w(env.books / "demo" / "Claims.md", f"""
         | # | Luận điểm | Nhãn | Nguồn | Vị trí |
         |---|---|---|---|---|
         {row}
-        """)
+        """ + section)
 
 
 def test_L3_pass(env):
@@ -379,6 +501,34 @@ def test_L3_pass(env):
 ])
 def test_L3_fails_bad_row(env, row):
     make_claims(env, row)
+    assert run(env, "L3") == 1
+
+
+# ---------- L3: I8(a) mục "## CEO duyệt nguồn" bắt buộc có nội dung ----------
+
+def test_L3_fails_missing_ceo_duyet_section(env, capsys):
+    make_claims(env, ceo_approval=None)
+    assert run(env, "L3") == 1
+    assert "CEO duyệt nguồn" in capsys.readouterr().out
+
+
+def test_L3_fails_ceo_duyet_section_only_html_comment(env, capsys):
+    # Đúng như khuôn templates/claims.md để trống: chỉ có HTML comment hướng
+    # dẫn CEO — chưa phải CEO thật sự ghi bằng lời.
+    make_claims(env, ceo_approval="<!-- CEO ghi bằng lời đã xem và đồng ý danh sách nguồn -->")
+    assert run(env, "L3") == 1
+    assert "CEO duyệt nguồn" in capsys.readouterr().out
+
+
+def test_L3_pass_with_ceo_duyet_section_after_comment(env):
+    make_claims(env, ceo_approval="<!-- hướng dẫn -->\nCEO đã xem và đồng ý danh sách nguồn.")
+    assert run(env, "L3") == 0
+
+
+def test_L3_blank_template_still_fails(env):
+    """templates/claims.md để trống (không dòng luận điểm nào) vẫn phải trượt."""
+    tpl = HERE.parent / "skills" / "book" / "book-to-learn" / "references" / "templates" / "claims.md"
+    w(env.books / "demo" / "Claims.md", tpl.read_text(encoding="utf-8"))
     assert run(env, "L3") == 1
 
 
@@ -438,6 +588,22 @@ def test_L4_fails_rubric_level(env):
 def test_L4_fails_without_candidates(env):
     w(env.learn / "_pipeline_state.md", "---\nslug: demo\nframework_ung_vien: []\n---\n")
     assert run(env, "L4") == 1
+
+
+# ---------- M9: framework_ung_vien ghi dạng danh sách nhiều dòng ----------
+
+def test_L4_fails_multiline_list_hints_inline_form(env, capsys):
+    w(env.learn / "_pipeline_state.md",
+      "---\nslug: demo\nframework_ung_vien:\n- Small Plates\n- RIFA\n---\n")
+    assert run(env, "L4") == 1
+    out = capsys.readouterr().out
+    assert "[a, b]" in out and "inline" in out
+
+
+def test_L4_fails_truly_empty_candidates_keeps_original_message(env, capsys):
+    w(env.learn / "_pipeline_state.md", "---\nslug: demo\nframework_ung_vien: []\n---\n")
+    assert run(env, "L4") == 1
+    assert "đang rỗng" in capsys.readouterr().out
 
 
 def test_L4_fails_missing_framework_key(env, capsys):
@@ -531,8 +697,16 @@ def pass_gates(env, *phases):
             state_text(env).rstrip("\n") + f"\n- {ph}: PASS 2026-09-18T09:00\n", encoding="utf-8")
 
 
-def test_L5_pass(env):
+def make_L5_ready(env):
+    """L4/L3 đã có dấu PASS *và* thật sự vẫn qua nếu re-chạy (I3) —
+    feynman + Claims.md hợp lệ đi kèm dấu PASS."""
+    make_feynman(env)
+    make_claims(env)
     pass_gates(env, "L3", "L4")
+
+
+def test_L5_pass(env):
+    make_L5_ready(env)
     w(env.learn / "Experiment_Card.md", GOOD_CARD)
     assert run(env, "L5") == 0
 
@@ -547,7 +721,7 @@ def test_L5_pass(env):
     ("nguoi_chiu_trach_nhiem: CEO", "nguoi_chiu_trach_nhiem:"),
 ])
 def test_L5_fails_bad_card(env, old, new):
-    pass_gates(env, "L3", "L4")
+    make_L5_ready(env)
     w(env.learn / "Experiment_Card.md", GOOD_CARD.replace(old, new))
     assert run(env, "L5") == 1
 
@@ -561,9 +735,39 @@ def test_L5_fails_without_feynman_gate(env, capsys):
 
 def test_L5_quick_skips_claims_but_not_feynman(env):
     w(env.learn / "_pipeline_state.md", "---\nslug: demo\nframework_ung_vien: [Small Plates]\nquick: true\n---\n")
+    make_feynman(env)
     pass_gates(env, "L4")
     w(env.learn / "Experiment_Card.md", GOOD_CARD)
     assert run(env, "L5") == 0
+
+
+# ---------- I3: cổng L5 phải re-chạy L4/L3 thật, không chỉ tin dấu PASS cũ ----------
+
+def test_L5_fails_when_L4_stamp_stale_after_new_framework(env, capsys):
+    """L4 PASS thật (chỉ có Small Plates), rồi CEO thêm framework mới vào
+    framework_ung_vien mà chưa có Feynman cho nó — dấu PASS cũ của L4 không
+    còn phản ánh đúng thực tế, L5 phải bắt được và trượt."""
+    make_L5_ready(env)
+    assert "- L4: PASS " in state_text(env)  # L4 thật sự PASS trước khi bị làm cũ
+    w(env.learn / "_pipeline_state.md",
+      state_text(env).replace("framework_ung_vien: [Small Plates]",
+                               "framework_ung_vien: [Small Plates, RIFA]"))
+    w(env.learn / "Experiment_Card.md", GOOD_CARD)
+    assert run(env, "L5") == 1
+    out = capsys.readouterr().out
+    assert "feynman-rifa.md" in out or "RIFA" in out
+    assert "đã có dấu PASS nhưng nay lại trượt" in out
+
+
+def test_L5_fails_when_L3_stamp_stale_after_claims_broken(env, capsys):
+    """L3 PASS thật, rồi Claims.md bị xoá mục CEO duyệt nguồn (regressed) —
+    dấu PASS L3 cũ không còn đúng, L5 phải bắt được."""
+    make_L5_ready(env)
+    make_claims(env, ceo_approval=None)  # ghi đè Claims.md, xoá mục CEO duyệt nguồn
+    w(env.learn / "Experiment_Card.md", GOOD_CARD)
+    assert run(env, "L5") == 1
+    out = capsys.readouterr().out
+    assert "đã có dấu PASS nhưng nay lại trượt" in out
 
 
 # ---------- L7 ----------
@@ -598,8 +802,16 @@ def make_L7(env, row, aar=GOOD_AAR):
     w(env.meta / "cycles.jsonl", json.dumps({"slug": "other"}) + "\n" + json.dumps(row, ensure_ascii=False) + "\n")
 
 
+GOOD_RUN_LOG = """
+    | Ngày | Quan sát | Số đo | Điểm nghẽn còn đó? |
+    |---|---|---|---|
+    | 2026-09-25 | Không trễ thanh toán | 0 ngày trễ | Không |
+    """
+
+
 def test_L7_pass(env):
     pass_gates(env, "L5")
+    w(env.learn / "Run_Log.md", GOOD_RUN_LOG)
     make_L7(env, cycle_row())
     assert run(env, "L7") == 0
 
@@ -607,6 +819,33 @@ def test_L7_pass(env):
 def test_L7_unapplied_cycle_can_close(env):
     make_L7(env, cycle_row(applied=False))
     assert run(env, "L7") == 0
+
+
+# ---------- I8(b): applied=true đòi Run_Log.md có số đo ở cột 'Số đo' ----------
+
+def test_L7_fails_applied_missing_run_log(env, capsys):
+    pass_gates(env, "L5")
+    make_L7(env, cycle_row())  # applied=True mặc định, không tạo Run_Log.md
+    assert run(env, "L7") == 1
+    assert "Run_Log" in capsys.readouterr().out
+
+
+def test_L7_fails_applied_run_log_no_so_do_column(env, capsys):
+    pass_gates(env, "L5")
+    w(env.learn / "Run_Log.md", "| Ngày | Quan sát |\n|---|---|\n| 2026-09-25 | ok |\n")
+    make_L7(env, cycle_row())
+    assert run(env, "L7") == 1
+    assert "Số đo" in capsys.readouterr().out
+
+
+def test_L7_fails_applied_run_log_so_do_cells_empty(env, capsys):
+    pass_gates(env, "L5")
+    w(env.learn / "Run_Log.md",
+      "| Ngày | Quan sát | Số đo | Điểm nghẽn còn đó? |\n|---|---|---|---|\n"
+      "| 2026-09-25 | ok | — | Không |\n")
+    make_L7(env, cycle_row())
+    assert run(env, "L7") == 1
+    assert "Số đo" in capsys.readouterr().out
 
 
 def test_L7_fails_applied_without_L5(env, capsys):
@@ -644,6 +883,18 @@ def test_L7_fails_empty_aar_section(env):
     assert run(env, "L7") == 1
 
 
+# ---------- I2: dòng cycles.jsonl là JSON hợp lệ nhưng không phải object ----------
+
+def test_L7_fails_cycle_row_not_object(env, capsys):
+    pass_gates(env, "L5")
+    w(env.learn / "AAR.md", GOOD_AAR)
+    w(env.meta / "cycles.jsonl", json.dumps([1]) + "\n")
+    assert run(env, "L7") == 1
+    out = capsys.readouterr().out
+    assert "không phải object" in out
+    assert "Traceback" not in out
+
+
 def test_L7_fails_corrupt_last_cycle_line(env, capsys):
     """Corrupt last line after valid row must FAIL, not silently use old row."""
     pass_gates(env, "L5")
@@ -660,6 +911,6 @@ def test_L7_fails_corrupt_last_cycle_line(env, capsys):
 
 def test_L5_framework_case_insensitive(env):
     """Framework matching should ignore case differences."""
-    pass_gates(env, "L3", "L4")
+    make_L5_ready(env)
     w(env.learn / "Experiment_Card.md", GOOD_CARD.replace("framework: Small Plates", "framework: small plates"))
     assert run(env, "L5") == 0
