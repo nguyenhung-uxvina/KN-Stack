@@ -1,0 +1,33 @@
+{
+  "skill": "book-to-learn",
+  "version": "1.0",
+  "description": "Binary assertions for /book-to-learn — orchestrator học sách → ứng dụng đo được trong ~30 ngày",
+  "mode": "static",
+  "test_input": "book to learn Profit First target VN-TGT-F",
+  "assertions": [
+    {"id": "BTL-PHASES", "name": "phases_L0_to_L7", "check": "defines phases L0..L7", "regex": "L7 Retro", "required": true},
+    {"id": "BTL-GATE", "name": "gate_script", "check": "calls the machine gate checker", "regex": "btl_gate_check\\.py", "required": true},
+    {"id": "BTL-L0", "name": "real_problem_block", "check": "L0 blocks without a real Workshop X problem", "regex": "vấn đề thật", "required": true},
+    {"id": "BTL-FEYNMAN", "name": "feynman_gate", "check": "Feynman gate before L5, CEO-authored", "regex": "cổng Feynman", "required": true},
+    {"id": "BTL-CARD", "name": "experiment_card", "check": "L5 produces an experiment card", "regex": "Experiment_Card\\.md", "required": true},
+    {"id": "BTL-DMIR", "name": "dmir_definition", "check": "DMIR = Diagnose-Model-Intervene-Reflect", "regex": "Diagnose.{1,3}Model.{1,3}Intervene.{1,3}Reflect", "required": true},
+    {"id": "BTL-DMIR-SKILLS", "name": "dmir_skills", "check": "delegates to DMIR skills", "regex": "/archetype.{0,40}/cld", "required": true},
+    {"id": "BTL-TOC", "name": "toc_skills", "check": "uses constraint and leverage skills", "regex": "/constraint.{0,40}/leverage", "required": true},
+    {"id": "BTL-LEARN-M", "name": "learn_methodology", "check": "uses learn-methodology", "regex": "learn-methodology", "required": true},
+    {"id": "BTL-LEARN-P", "name": "learn_practice", "check": "uses learn-practice", "regex": "learn-practice", "required": true},
+    {"id": "BTL-LEARN-T", "name": "learn_track", "check": "uses learn-track", "regex": "learn-track", "required": true},
+    {"id": "BTL-TEACH-MANUAL", "name": "learn_teach_manual", "check": "CEO runs /learn-teach manually", "regex": "tự gõ `?/learn-teach", "required": true},
+    {"id": "BTL-ANALYZE", "name": "analyze_meta_learning", "check": "uses /analyze part 3", "regex": "/analyze", "required": true},
+    {"id": "BTL-META", "name": "meta_ledger", "check": "writes cycles.jsonl", "regex": "cycles\\.jsonl", "required": true},
+    {"id": "BTL-NO-PERSONA", "name": "no_nlm_persona", "check": "forbids chat_configure custom goal", "regex": "chat_configure", "required": true},
+    {"id": "BTL-NO-PUBLIC", "name": "no_public_share", "check": "notebooks never shared publicly", "regex": "không bao giờ share public", "required": true},
+    {"id": "BTL-GROUNDING", "name": "sources_used_check", "check": "rejects answers with sources_used 0", "regex": "sources_used", "required": true},
+    {"id": "BTL-QUICK", "name": "quick_flag_limits", "check": "--quick cannot skip L0/Feynman/L5/L7", "regex": "--quick", "required": true},
+    {"id": "BTL-GALAXY", "name": "galaxy_gate", "check": "Galaxy candidates via galaxy-gate", "regex": "galaxy-gate", "required": true},
+    {"id": "BTL-REFS", "name": "references", "check": "links reference files", "regex": "references/(dmir-unified|phase-contracts)\\.md", "required": true},
+    {"id": "BTL-VN-NUMBERS", "name": "source_context_numbers", "check": "book figures stay in source context", "regex": "CẦN-CHUYỂN-VN", "required": false}
+  ],
+  "passing_score": 20,
+  "total_required": 20,
+  "total_optional": 1
+}
