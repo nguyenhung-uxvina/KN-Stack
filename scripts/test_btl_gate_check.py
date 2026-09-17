@@ -642,3 +642,24 @@ def test_L7_fails_empty_aar_section(env):
     pass_gates(env, "L5")
     make_L7(env, cycle_row(), aar=GOOD_AAR.replace("Khoản thu lệch lịch 10/25.", ""))
     assert run(env, "L7") == 1
+
+
+def test_L7_fails_corrupt_last_cycle_line(env, capsys):
+    """Corrupt last line after valid row must FAIL, not silently use old row."""
+    pass_gates(env, "L5")
+    w(env.learn / "AAR.md", GOOD_AAR)
+    # Valid old row + corrupt last line
+    w(env.meta / "cycles.jsonl", 
+      json.dumps({"slug": "other"}) + "\n" +
+      json.dumps(cycle_row(), ensure_ascii=False) + "\n" +
+      "{broken json\n")
+    assert run(env, "L7") == 1
+    out = capsys.readouterr().out
+    assert "JSON" in out or "hợp lệ" in out
+
+
+def test_L5_framework_case_insensitive(env):
+    """Framework matching should ignore case differences."""
+    pass_gates(env, "L3", "L4")
+    w(env.learn / "Experiment_Card.md", GOOD_CARD.replace("framework: Small Plates", "framework: small plates"))
+    assert run(env, "L5") == 0

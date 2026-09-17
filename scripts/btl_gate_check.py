@@ -387,7 +387,8 @@ def check_L5(ctx: Ctx) -> list:
     for k in CARD_KEYS:
         if not str(fm.get(k, "")).strip():
             errs.append(f"L5: thẻ thiếu ô {k}")
-    if str(fm.get("framework", "")).strip() and fm.get("framework") not in ctx.frameworks:
+    fw_card = str(fm.get("framework", "")).strip()
+    if fw_card and not any(fw_card.casefold() == fw.casefold() for fw in ctx.frameworks):
         errs.append(f"L5: framework '{fm.get('framework')}' không nằm trong framework_ung_vien")
     if str(fm.get("baseline", "")).strip() and not re.fullmatch(r"-?\d+(?:[.,]\d+)?", str(fm["baseline"]).strip()):
         errs.append(f"L5: baseline phải là con số, đang là '{fm['baseline']}'")
@@ -423,14 +424,14 @@ def check_L7(ctx: Ctx) -> list:
     ledger = ctx.meta_dir / "cycles.jsonl"
     rows = []
     if ledger.exists():
-        for line in read(ledger).splitlines():
+        for lineno, line in enumerate(read(ledger).splitlines(), 1):
             if line.strip():
                 try:
                     obj = json.loads(line)
                     if obj.get("slug") == ctx.slug:
                         rows.append(obj)
-                except json.JSONDecodeError:
-                    pass
+                except json.JSONDecodeError as e:
+                    errs.append(f"L7: cycles.jsonl dòng {lineno} không phải JSON hợp lệ — {e}")
     if not rows:
         return errs + [f"L7: cycles.jsonl chưa có dòng cho slug '{ctx.slug}'"]
     row = rows[-1]
