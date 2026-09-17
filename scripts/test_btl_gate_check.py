@@ -292,3 +292,65 @@ def test_L2_fails_count_mismatch(env):
     extra = make_L2(env)
     w(env.books / "demo" / "_source" / "ch03.md", "q" * 100)
     assert run(env, "L2", *extra) == 1
+
+
+def test_L2_fails_malformed_list_json(env, capsys):
+    make_L2(env)
+    lst = env.tmp / "nlm" / "list.json"
+    lst.write_text("{broken json", encoding="utf-8")  # Truncated/invalid JSON
+    argv = [str(env.learn), "L2",
+            "--skills-root", str(env.skills),
+            "--books-root", str(env.books),
+            "--meta-dir", str(env.meta),
+            "--nlm-list", str(lst),
+            "--nlm-content-dir", str(env.tmp / "nlm" / "content")]
+    assert gc.main(argv) == 1
+    out = capsys.readouterr().out
+    assert "JSON" in out or "không phải" in out
+    # Verify no traceback leaked
+    assert "Traceback" not in out
+
+
+def test_L2_fails_malformed_content_json(env, capsys):
+    src = env.books / "demo" / "_source"
+    w(src / "ch01.md", "x" * 100)
+    w(src / "ch02.md", "y" * 100)
+    items = [{"id": f"id{i}", "title": f"ch0{i + 1}.md", "type": "generated_text",
+              "url": None, "status": 2} for i in range(2)]
+    lst = w(env.tmp / "nlm" / "list.json", json.dumps(items))
+    cdir = env.tmp / "nlm" / "content"
+    w(cdir / "id0.json", json.dumps({"content": "z" * 80, "char_count": 80}))
+    w(cdir / "id1.json", "{broken json")  # Malformed second content file
+    argv = [str(env.learn), "L2",
+            "--skills-root", str(env.skills),
+            "--books-root", str(env.books),
+            "--meta-dir", str(env.meta),
+            "--nlm-list", str(lst),
+            "--nlm-content-dir", str(cdir)]
+    assert gc.main(argv) == 1
+    out = capsys.readouterr().out
+    assert "id1" in out or "JSON" in out or "không phải" in out
+    # Verify no traceback leaked
+    assert "Traceback" not in out
+
+
+def test_L2_fails_duplicate_titles(env, capsys):
+    src = env.books / "demo" / "_source"
+    w(src / "ch01.md", "x" * 100)
+    # Two sources with the same title (one ready, one not)
+    items = [
+        {"id": "id0", "title": "ch01.md", "type": "generated_text", "url": None, "status": 2},
+        {"id": "id1", "title": "ch01.md", "type": "generated_text", "url": None, "status": 1},
+    ]
+    lst = w(env.tmp / "nlm" / "list.json", json.dumps(items))
+    cdir = env.tmp / "nlm" / "content"
+    w(cdir / "id0.json", json.dumps({"content": "z" * 80, "char_count": 80}))
+    argv = [str(env.learn), "L2",
+            "--skills-root", str(env.skills),
+            "--books-root", str(env.books),
+            "--meta-dir", str(env.meta),
+            "--nlm-list", str(lst),
+            "--nlm-content-dir", str(cdir)]
+    assert gc.main(argv) == 1
+    out = capsys.readouterr().out
+    assert "ch01.md" in out and ("trùng" in out or "nhiều" in out or "duplicate" in out.lower())

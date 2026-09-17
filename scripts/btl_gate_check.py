@@ -253,7 +253,20 @@ def check_L2(ctx: Ctx) -> list:
         return ["L2: _source/ trống — chưa tách chương"]
     if not ctx.nlm_list or not ctx.nlm_list.exists():
         return ["L2: cần --nlm-list (JSON của `nlm source list <notebook> -j`) — không tin kết quả in ra của `source add`"]
-    items = json.loads(read(ctx.nlm_list))
+    try:
+        items = json.loads(read(ctx.nlm_list))
+    except json.JSONDecodeError as e:
+        return [f"L2: {ctx.nlm_list} không phải JSON hợp lệ — {e}"]
+
+    # Detect duplicate titles
+    title_counts = {}
+    for i in items:
+        title = i.get("title")
+        title_counts[title] = title_counts.get(title, 0) + 1
+    duplicates = [t for t, count in title_counts.items() if count > 1]
+    if duplicates:
+        return [f"L2: nhiều nguồn cùng tên '{dup}' — xoá bản trùng trước khi kiểm" for dup in duplicates]
+
     by_title = {i.get("title"): i for i in items}
     errs = []
     ready = [i for i in items if i.get("status") == 2]
@@ -271,7 +284,11 @@ def check_L2(ctx: Ctx) -> list:
         if not cpath or not cpath.exists():
             errs.append(f"L2: thiếu nội dung đã tải cho '{f.name}' (nlm source content {item['id']} -j)")
             continue
-        got = json.loads(read(cpath)).get("char_count", 0)
+        try:
+            got = json.loads(read(cpath)).get("char_count", 0)
+        except json.JSONDecodeError as e:
+            errs.append(f"L2: {cpath.name} không phải JSON hợp lệ — {e}")
+            continue
         need = len(read(f)) * 0.5
         if got < need:
             errs.append(f"L2: nguồn '{f.name}' chỉ {got} ký tự < 50% tệp gốc ({len(read(f))}) — nghi trang chặn bot")
