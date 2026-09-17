@@ -250,3 +250,45 @@ def test_L1_fails_missing_learning_kit(env):
     make_L1(env)
     (env.books / "demo" / "Learning_Kit.md").unlink()
     assert run(env, "L1") == 1
+
+
+# ---------- L2 ----------
+
+def make_L2(env, statuses=(2, 2), chars=(80, 90)):
+    src = env.books / "demo" / "_source"
+    w(src / "ch01.md", "x" * 100)
+    w(src / "ch02.md", "y" * 100)
+    items = [{"id": f"id{i}", "title": f"ch0{i + 1}.md", "type": "generated_text",
+              "url": None, "status": s} for i, s in enumerate(statuses)]
+    lst = w(env.tmp / "nlm" / "list.json", json.dumps(items))
+    cdir = env.tmp / "nlm" / "content"
+    for i, c in enumerate(chars):
+        w(cdir / f"id{i}.json", json.dumps({"content": "z" * c, "title": f"ch0{i + 1}.md",
+                                           "source_type": "generated_text", "url": None,
+                                           "char_count": c}))
+    return ["--nlm-list", str(lst), "--nlm-content-dir", str(cdir)]
+
+
+def test_L2_pass(env):
+    assert run(env, "L2", *make_L2(env)) == 0
+
+
+def test_L2_fails_without_nlm_list(env, capsys):
+    make_L2(env)
+    assert run(env, "L2") == 1
+    assert "--nlm-list" in capsys.readouterr().out
+
+
+def test_L2_fails_not_ready(env):
+    assert run(env, "L2", *make_L2(env, statuses=(2, 1))) == 1
+
+
+def test_L2_fails_bot_wall_short_content(env, capsys):
+    assert run(env, "L2", *make_L2(env, chars=(80, 30))) == 1
+    assert "ch02.md" in capsys.readouterr().out
+
+
+def test_L2_fails_count_mismatch(env):
+    extra = make_L2(env)
+    w(env.books / "demo" / "_source" / "ch03.md", "q" * 100)
+    assert run(env, "L2", *extra) == 1

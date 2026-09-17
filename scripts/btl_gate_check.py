@@ -246,7 +246,39 @@ def check_L1(ctx: Ctx) -> list:
     return errs
 
 
-CHECKS = {"L0": check_L0, "L1": check_L1}
+def check_L2(ctx: Ctx) -> list:
+    src = ctx.books_root / ctx.slug / "_source"
+    files = sorted(p for p in src.glob("*") if p.is_file()) if src.is_dir() else []
+    if not files:
+        return ["L2: _source/ trống — chưa tách chương"]
+    if not ctx.nlm_list or not ctx.nlm_list.exists():
+        return ["L2: cần --nlm-list (JSON của `nlm source list <notebook> -j`) — không tin kết quả in ra của `source add`"]
+    items = json.loads(read(ctx.nlm_list))
+    by_title = {i.get("title"): i for i in items}
+    errs = []
+    ready = [i for i in items if i.get("status") == 2]
+    if len(ready) != len(files):
+        errs.append(f"L2: {len(ready)} nguồn sẵn sàng ≠ {len(files)} tệp chương")
+    for f in files:
+        item = by_title.get(f.name)
+        if not item:
+            errs.append(f"L2: không thấy nguồn '{f.name}' trên notebook")
+            continue
+        if item.get("status") != 2:
+            errs.append(f"L2: nguồn '{f.name}' chưa sẵn sàng (status={item.get('status')})")
+            continue
+        cpath = ctx.nlm_content_dir / f"{item['id']}.json" if ctx.nlm_content_dir else None
+        if not cpath or not cpath.exists():
+            errs.append(f"L2: thiếu nội dung đã tải cho '{f.name}' (nlm source content {item['id']} -j)")
+            continue
+        got = json.loads(read(cpath)).get("char_count", 0)
+        need = len(read(f)) * 0.5
+        if got < need:
+            errs.append(f"L2: nguồn '{f.name}' chỉ {got} ký tự < 50% tệp gốc ({len(read(f))}) — nghi trang chặn bot")
+    return errs
+
+
+CHECKS = {"L0": check_L0, "L1": check_L1, "L2": check_L2}
 
 
 # ---------------------------------------------------------------- CLI
