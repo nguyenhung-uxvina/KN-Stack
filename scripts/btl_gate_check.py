@@ -27,7 +27,10 @@ BRIEF_KEYS = ("van_de_that", "du_doan_1", "du_doan_2", "du_doan_3", "dreyfus_tru
 # ---------------------------------------------------------------- đọc tệp
 
 def read(path) -> str:
-    return Path(path).read_text(encoding="utf-8")
+    # utf-8-sig: strip a UTF-8 BOM if present (PowerShell Out-File default on
+    # this host writes one) — plain utf-8 would leave "﻿---" as the first
+    # bytes and parse_frontmatter would silently return {} for the whole file.
+    return Path(path).read_text(encoding="utf-8-sig")
 
 
 def parse_frontmatter(text: str) -> dict:
@@ -177,7 +180,14 @@ def stamp(ctx: Ctx, phase: str, now: datetime) -> None:
 
 # ---------------------------------------------------------------- các cổng
 
-LABEL_ONLY = re.compile(r"\s*[-*]?\s*(?:[^:]*:\s*)?\(?[A-Z]\)?\s*\.?\s*")
+# Nhãn "trần" và nhãn bọc động từ đệm (chọn/lấy/theo/phương án/PA/option) đều
+# coi là chưa ghi bằng chữ — nhưng "Chọn A vì <lý do>" thì phần còn lại sau
+# nhãn không khớp hết (fullmatch), nên vẫn PASS.
+_FILLER = r"(?:chọn|chon|lấy|theo|phương\s+án|phuong\s+an|PA|option)"
+LABEL_ONLY = re.compile(
+    rf"\s*[-*]?\s*(?:[^:]*:\s*)?(?:{_FILLER}\s+)?\(?[A-Z]\)?\s*\.?\s*",
+    re.IGNORECASE,
+)
 
 
 def check_L0(ctx: Ctx) -> list:

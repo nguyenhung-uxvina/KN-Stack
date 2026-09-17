@@ -58,6 +58,13 @@ def state_text(env):
     return (env.learn / "_pipeline_state.md").read_text(encoding="utf-8")
 
 
+def wbom(path: Path, text: str) -> Path:
+    """Write with a UTF-8 BOM prefix — PowerShell Out-File default on this host."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_bytes(b"\xef\xbb\xbf" + textwrap.dedent(text).lstrip("\n").encode("utf-8"))
+    return path
+
+
 GOOD_BRIEF = """
     ---
     van_de_that: Định giá pilot VN-TGT-F khi biên gộp ở mức 10 bộ gần bằng 0
@@ -160,9 +167,39 @@ def test_L0_fails_without_target_and_noi_ap_dung(env):
     assert run(env, "L0") == 1
 
 
-@pytest.mark.parametrize("line", ["- Định giá pilot: (B)", "- (A)", "- Phương án: B"])
+@pytest.mark.parametrize("line", [
+    "- Định giá pilot: (B)", "- (A)", "- Phương án: B",
+    "- chọn A", "- Chọn (A).", "- Quyết định: chọn B",
+])
 def test_L0_fails_label_only_decision(env, capsys, line):
     w(env.learn / "_Project_Brief.md", GOOD_BRIEF.replace(
         "- Định giá pilot: chọn giá vốn cộng 5% để giữ thói quen trích lợi nhuận", line))
     assert run(env, "L0") == 1
     assert "bằng chữ" in capsys.readouterr().out
+
+
+def test_L0_passes_worded_decision_with_chon_verb(env):
+    w(env.learn / "_Project_Brief.md", GOOD_BRIEF.replace(
+        "- Định giá pilot: chọn giá vốn cộng 5% để giữ thói quen trích lợi nhuận",
+        "- Chọn A vì giữ thói quen trích lợi nhuận"))
+    assert run(env, "L0") == 0
+
+
+# ---------- BOM (PowerShell Out-File default trên host này) ----------
+
+def test_L0_pass_with_bom_project_brief(env):
+    wbom(env.learn / "_Project_Brief.md", GOOD_BRIEF)
+    assert run(env, "L0") == 0
+
+
+def test_state_with_bom_resolves_slug(env):
+    wbom(env.learn / "_pipeline_state.md", """
+        ---
+        slug: demo
+        framework_ung_vien: [Small Plates]
+        ---
+        """)
+    w(env.learn / "_Project_Brief.md", GOOD_BRIEF)
+    ctx = gc.Ctx.from_args(gc.parse_args([str(env.learn), "L0"]))
+    assert ctx.slug == "demo"
+    assert run(env, "L0") == 0
