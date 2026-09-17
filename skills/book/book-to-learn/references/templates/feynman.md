@@ -1,6 +1,6 @@
 ---
 framework:
-tac_gia: CEO
+tac_gia:
 ---
 # Cổng Feynman
 

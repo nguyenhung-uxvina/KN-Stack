@@ -5,3 +5,7 @@ Mỗi dòng bắt buộc có Nguồn và Vị trí (trang/chương/URL + đoạn
 
 | # | Luận điểm | Nhãn | Nguồn | Vị trí |
 |---|---|---|---|---|
+
+## CEO duyệt nguồn
+<!-- CEO ghi bằng lời đã xem và đồng ý danh sách nguồn trước khi nạp vào notebook btl-<slug>-mo-rong. Không phải dấu tick. -->
+
