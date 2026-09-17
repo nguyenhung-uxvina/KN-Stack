@@ -203,3 +203,50 @@ def test_state_with_bom_resolves_slug(env):
     ctx = gc.Ctx.from_args(gc.parse_args([str(env.learn), "L0"]))
     assert ctx.slug == "demo"
     assert run(env, "L0") == 0
+
+
+# ---------- L1 ----------
+
+def make_L1(env, skill_md="# Demo\nTAP 0–250K USD; nhân sự $150K–$250K\n", level="L5"):
+    w(env.skills / "demo" / "SKILL.md", skill_md)
+    w(env.skills / "demo" / "chapters" / "ch01-intro.md", "# Ch1\n")
+    w(env.books / "demo" / "Leverage_Map.md", f"""
+        | Framework | Mức | Lý do | Chương |
+        |---|---|---|---|
+        | Small Plates | {level} | đổi luật chơi phân bổ | ch02 |
+        """)
+    w(env.books / "demo" / "Learning_Kit.md", "## Small Plates\n### Chunking\n...\n")
+
+
+def test_L1_pass(env):
+    make_L1(env)
+    assert run(env, "L1") == 0
+
+
+def test_L1_fails_arg_substitution_hazard(env, capsys):
+    make_L1(env, skill_md="| Real Revenue | $0–250K |\n")
+    assert run(env, "L1") == 1
+    assert "$<số>" in capsys.readouterr().out
+
+
+def test_L1_allows_multi_digit_dollar(env):
+    make_L1(env, skill_md="Staffing $150K and $15/MTok\n")
+    assert run(env, "L1") == 0
+
+
+def test_L1_fails_bad_leverage_level(env, capsys):
+    make_L1(env, level="L13")
+    assert run(env, "L1") == 1
+    assert "Small Plates" in capsys.readouterr().out
+
+
+def test_L1_fails_no_chapters(env):
+    make_L1(env)
+    (env.skills / "demo" / "chapters" / "ch01-intro.md").unlink()
+    assert run(env, "L1") == 1
+
+
+def test_L1_fails_missing_learning_kit(env):
+    make_L1(env)
+    (env.books / "demo" / "Learning_Kit.md").unlink()
+    assert run(env, "L1") == 1

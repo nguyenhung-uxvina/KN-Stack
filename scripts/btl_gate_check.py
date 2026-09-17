@@ -215,7 +215,38 @@ def check_L0(ctx: Ctx) -> list:
     return errs
 
 
-CHECKS = {"L0": check_L0}
+ARG_SUBST = re.compile(r"\$[0-9](?![0-9])")
+LEVEL = re.compile(r"L([1-9]|1[0-2])")
+
+
+def check_L1(ctx: Ctx) -> list:
+    errs = []
+    skill_dir = ctx.skills_root / ctx.slug
+    skill_md = skill_dir / "SKILL.md"
+    if not skill_md.exists():
+        return [f"L1: thiếu {skill_md}"]
+    if not list((skill_dir / "chapters").glob("*.md")):
+        errs.append("L1: skill không có chương nào trong chapters/")
+    for i, line in enumerate(read(skill_md).splitlines(), 1):
+        if ARG_SUBST.search(line):
+            errs.append(f"L1: SKILL.md dòng {i} có '$<số>' — Claude Code sẽ thay bằng tham số: {line.strip()[:80]}")
+    lever = ctx.books_root / ctx.slug / "Leverage_Map.md"
+    if not lever.exists():
+        errs.append("L1: thiếu Leverage_Map.md")
+    else:
+        rows = table_rows(read(lever))
+        if not rows:
+            errs.append("L1: Leverage_Map.md không có dòng framework nào")
+        for r in rows:
+            if len(r) < 2 or not LEVEL.fullmatch(r[1]):
+                errs.append(f"L1: framework '{r[0]}' thiếu mức đòn bẩy L1–L12")
+    kit = ctx.books_root / ctx.slug / "Learning_Kit.md"
+    if not kit.exists() or not read(kit).strip():
+        errs.append("L1: thiếu hoặc rỗng Learning_Kit.md")
+    return errs
+
+
+CHECKS = {"L0": check_L0, "L1": check_L1}
 
 
 # ---------------------------------------------------------------- CLI
