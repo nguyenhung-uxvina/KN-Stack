@@ -14,6 +14,13 @@ Cổng máy: `python "$KN/scripts/btl_gate_check.py" "$LEARN" <pha> [cờ]` — 
 | L6 | thẻ đã duyệt | `LEARN/Run_Log.md`, cảnh báo trong `LEARN/Status.md` | — | (không có cổng máy) |
 | L7 | Run_Log, thẻ | `LEARN/AAR.md`, dòng `VAULT/2_Areas/CEO-Self/Learning-Meta/cycles.jsonl`, `calibration.md`, `transfer-map.md`, `skill-backlog.md` | `/reflect`, `/paradigm`, `galaxy-gate` | `… L7` |
 
+## Cổng máy còn chặn thêm
+
+- **L0**: Quyết định trong `## Quyết định` phải viết bằng lời — dòng chỉ có nhãn như "(A)", "B", "chọn A", "Phương án: B" bị chặn.
+- **L2**: Nếu list.json hoặc content/<id>.json không phải JSON hợp lệ ⇒ trượt; nếu hai nguồn cùng tên ⇒ trượt (xoá bản trùng/vỏ rỗng trước khi kiểm).
+- **L4**: Frontmatter phải có `framework` trùng tên ứng viên (không phân biệt hoa thường) và `tac_gia: CEO`.
+- **L7**: Bất kỳ dòng hỏng JSON nào trong cycles.jsonl ⇒ trượt.
+
 ## Tải JSON cho cổng L2
 
 ```bash
