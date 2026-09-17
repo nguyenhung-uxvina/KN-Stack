@@ -332,7 +332,16 @@ def check_L4(ctx: Ctx) -> list:
             errs.append(f"L4: thiếu learn/{name} cho framework '{fw}'")
             continue
         text = read(p)
-        if str(parse_frontmatter(text).get("tac_gia", "")).strip() != "CEO":
+        fm = parse_frontmatter(text)
+        # Check all FEYNMAN_KEYS are present and not blank
+        for key in FEYNMAN_KEYS:
+            if not str(fm.get(key, "")).strip():
+                errs.append(f"L4: {name} thiếu hoặc trống {key}:")
+        # Check framework value matches candidate (case-insensitive)
+        if str(fm.get("framework", "")).strip().casefold() != fw.strip().casefold():
+            errs.append(f"L4: {name} framework: '{fm.get('framework', '')}' ≠ ứng viên '{fw}'")
+        # Check tac_gia == "CEO"
+        if str(fm.get("tac_gia", "")).strip() != "CEO":
             errs.append(f"L4: {name} phải có tac_gia: CEO — AI không được điền câu trả lời Feynman")
         for q in ("Q1", "Q2", "Q3"):
             answer = "\n".join(l for l in section_starting(text, q).splitlines()

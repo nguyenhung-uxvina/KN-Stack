@@ -438,3 +438,67 @@ def test_L4_fails_rubric_level(env):
 def test_L4_fails_without_candidates(env):
     w(env.learn / "_pipeline_state.md", "---\nslug: demo\nframework_ung_vien: []\n---\n")
     assert run(env, "L4") == 1
+
+
+def test_L4_fails_missing_framework_key(env, capsys):
+    w(env.learn / "learn" / "feynman-small-plates.md", f"""
+        ---
+        tac_gia: CEO
+        ---
+        ## Q1 — Hiểu
+        > Question
+        {ANSWER}
+        ## Q2 — Áp dụng
+        > Question
+        {ANSWER}
+        ## Q3 — Tầng hệ thống
+        > Question
+        {ANSWER}
+        ## Rubric tự chấm
+        | Chỉ báo | Mức |
+        |---|---|
+        | Test | 3 |
+        """)
+    assert run(env, "L4") == 1
+    assert "framework" in capsys.readouterr().out
+
+
+def test_L4_fails_wrong_framework_name(env, capsys):
+    make_feynman(env, name="Small Plates")
+    w(env.learn / "_pipeline_state.md", "---\nslug: demo\nframework_ung_vien: [Different Framework]\n---\n")
+    assert run(env, "L4") == 1
+    assert "L4" in capsys.readouterr().out
+
+
+def test_L4_pass_case_insensitive_framework_match(env):
+    make_feynman(env, name="Small Plates")
+    w(env.learn / "_pipeline_state.md", "---\nslug: demo\nframework_ung_vien: [small plates]\n---\n")
+    assert run(env, "L4") == 0
+
+
+# ---------- Regression tests: previously uncovered --------
+
+def test_L3_fails_header_only_claims_table(env):
+    w(env.books / "demo" / "Claims.md", """
+        | # | Luận điểm | Nhãn | Nguồn | Vị trí |
+        |---|---|---|---|---|
+        """)
+    assert run(env, "L3") == 1
+
+
+def test_L4_fails_feynman_no_q_headings(env, capsys):
+    w(env.learn / "learn" / "feynman-small-plates.md", f"""
+        ---
+        framework: Small Plates
+        tac_gia: CEO
+        ---
+        This file has no Q headings at all.
+        {ANSWER}
+        """)
+    assert run(env, "L4") == 1
+    assert "Q1" in capsys.readouterr().out
+
+
+def test_L4_fails_rubric_fractional_level(env):
+    make_feynman(env, level="4/5")
+    assert run(env, "L4") == 1
