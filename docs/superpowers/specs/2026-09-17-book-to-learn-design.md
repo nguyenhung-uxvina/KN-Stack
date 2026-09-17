@@ -4,6 +4,7 @@
 - **Trạng thái:** chờ CEO duyệt bản viết
 - **Nhánh:** `feature/book-to-learn` (worktree `D:\KN-Stack-btl`)
 - **Kế thừa:** `book-to-skill`, `notebook-to-book` / `book-notebook`, `/research`, `learn-teach`, bộ skill DMIR (`/cld`, `/archetype`, `/sdmodel`, `/constraint`, `/leverage`, `/reflect`, `/paradigm`), `galaxy-gate`
+- **Tham chiếu học cách học:** `3_Resources/Tools & Software/Skills/deep-content-analyzer-v3/` (Phần 3 Meta-Learning; trong KN-Stack là `/analyze`), `5_Skills_AI_Cant_Replace_Multi_Framework_Analysis.md` (meta-learning là stock năng lực, vòng R4)
 - **Tiền lệ làm tay:** `2_Areas/CEO-Self/Learning-Architecture/PRACTICE_PahlBeitz_Mastery_2026-03-21.md`, `2_Areas/CEO-Self/AI-Fluency-Ledger/`
 - **Tham chiếu DMIR:** 3 tài liệu CEO cung cấp 2026-09-17 (Unified Framework × ODI × P&B; Deep Research; Playbook v1.0) + `Learning-Architecture/DMIR_Skill_Architecture_v2.md`
 
@@ -20,7 +21,8 @@ Quyết định thiết kế (CEO chốt 2026-09-17):
 | Đích | Ứng dụng đo được |
 | Nhịp | ~30 ngày mỗi cuốn |
 | Mở rộng | Cả 4 hướng: phản biện & bằng chứng; chuyển bối cảnh VN; bản mới & tác phẩm sau; nối tri thức sẵn có |
-| Meta-learning | Cả 3 tầng: hiểu cách CEO học; chuyển giao giữa các sách; pipeline tự cải tiến |
+| Meta-learning | Cả 3 tầng: hiểu cách CEO học; chuyển giao giữa các sách; pipeline tự cải tiến. Bổ sung 2026-09-17: meta-learning = **học cách học** (xem §2b) |
+| Cổng Feynman | CEO tự trả lời 3 câu Feynman + tự chấm rubric hành vi cho framework định áp dụng, trước L5 |
 | NotebookLM | Toàn văn, mỗi chương một nguồn |
 | Kiến trúc | **A — orchestrator mỏng**, gọi lại skill có sẵn, chỉ viết mới phần còn thiếu |
 | Vị trí chu kỳ | `1_Projects/LEARN-<slug>/` |
@@ -39,20 +41,39 @@ Quyết định thiết kế (CEO chốt 2026-09-17):
 - **Chỉ lấy cấu trúc, câu hỏi, template từ tài liệu tham chiếu.** Không trích như sự thật các con số chưa có nguồn kiểm (ví dụ "70% change initiatives fail", "15x faster", "ROI 10–50x", các case có ghi "giả lập").
 - **Biến thể tên:** `1_Projects/BB-01_LOMAH/References/dmir1…4` dùng Diagnose–Measure–Improve–Review. Skill ghi rõ đây là biến thể khác. Hợp nhất hay không là việc CEO quyết riêng.
 
-**Meta-learning đo theo 3 trục:**
-- Mức thành thạo Dreyfus 1–5 (Novice → Expert).
-- Mức đòn bẩy đã chạm tới L12→L1.
-- Mức siêu nhận thức Perkins: tacit / aware / strategic / reflective.
+## 2b. Meta-learning: 3 tầng
+
+**(a) Học cách học trong từng cuốn — bộ công cụ** (theo Deep Content Analyzer v3 Phần 3):
+
+| Kỹ thuật | Làm gì | Tiêu chí chất lượng | Skill |
+|---|---|---|---|
+| Chunking | Cây phụ thuộc giữa các khái niệm | Ghi rõ chỗ thứ tự phụ thuộc ≠ thứ tự tác giả trình bày | `learn-methodology` |
+| Feynman | Giải thích 60 giây + phép so sánh đời thường + 3 câu hỏi: hiểu → áp dụng → tầng hệ thống | Không thuật ngữ; câu 3 buộc nối với vòng lặp/điểm nghẽn | `learn-methodology` |
+| Mnemonic | Từ viết tắt có nghĩa | Mỗi chữ là một hành động | `learn-methodology` |
+| Rubric | Tự chấm theo mức | **Chỉ báo hành vi**, không phải chỉ báo kiến thức | `learn-track` |
+| Drill | Bài tập ngắn lặp lại | Nhắm framework đòn bẩy cao nhất hoặc chỗ hay sai nhất | `learn-practice` |
+| Interleaving | Lịch trộn chủ đề | Không hai khối liền nhau cùng chủ đề; khối sách xen khối việc thật WX | `learn-practice` |
+| Journal | Câu hỏi phản tư sau buổi học | ≥1 câu về vòng lặp phản hồi, ≥1 câu về chính cách học | `learn-track` |
+| Ôn giãn cách + đoán-trước | Hỏi nguội, đoán mức nhớ trước khi trả lời | Lệch đoán–thực ghi thành số | `learn-teach` (RETRIEVAL.md) |
+
+**(b) Stock năng lực học xuyên sách** (theo phân tích *5 Skills AI Can't Replace*):
+- Đơn vị: **tốc độ thích nghi** — thời gian đến năng lực dùng được. Trong skill đo bằng `days_to_competence` = số ngày từ L0 đến lúc thẻ thí nghiệm L5 được duyệt.
+- Dòng vào: luyện tập siêu nhận thức có chủ đích; trải nghiệm học đa dạng. Dòng ra: tự mãn.
+- Vòng R4 *lợi thế học tập cộng dồn*; mức đòn bẩy L2. Mục tiêu dài hạn: `days_to_competence` giảm dần qua các cuốn.
+
+**(c) Deutero-learning** qua DMIR-R: AAR, vòng kép, leo thang đòn bẩy.
+
+**Đo theo các trục:** Dreyfus 1–5 · mức đòn bẩy chạm tới L12→L1 · Perkins tacit/aware/strategic/reflective · `days_to_competence` · hữu ích của từng kỹ thuật (CEO chấm 1–5) · `illusion_gap`.
 
 ## 3. Các pha
 
 | Pha | Ngày | Việc | Gọi | COD | Cổng |
 |---|---|---|---|---|---|
 | **L0 Mission** | 0 | Đọc `Status.md` dự án đích. CEO ghi **vấn đề/quyết định thật** + **3 dự đoán** về sách + tiêu chí thành công + **tự chấm mức Dreyfus ban đầu** (chấm lại ở L7). DMIR-R bước lập kế hoạch siêu nhận thức. | khuôn MISSION | C | **Chặn cứng** nếu thiếu vấn đề thật |
-| **L1 Trích** | 1–2 | Skill tri thức (DEPTH=study); gán mỗi framework một mức đòn bẩy → `Leverage_Map.md` | `book-to-skill` | O | script |
+| **L1 Trích** | 1–2 | Skill tri thức (DEPTH=study); gán mỗi framework một mức đòn bẩy → `Leverage_Map.md`; Phần 3 Meta-Learning cho framework ứng viên (cây chunking, 3 câu Feynman *chưa có đáp án*, mnemonic, rubric hành vi) → `Learning_Kit.md` | `book-to-skill`, `/analyze` | O | script |
 | **L2 NLM** | 2 | Notebook `btl-<slug>-goc`: toàn văn, mỗi chương một nguồn | logic `book-notebook` | O | script |
 | **L3 Mở rộng** | 3–6 | 4 hướng → notebook `btl-<slug>-mo-rong` → `Claims.md` (SUPPORTED / CONTESTED / CẦN-CHUYỂN-VN) | `/research` | O | **C** duyệt danh sách nguồn trước khi nạp |
-| **L4 Học** | 3–10 | Workspace `learn/` chỉ cho framework ứng viên áp dụng; nhịp micro-DMIR hằng tuần; ôn giãn cách hết chu kỳ | `learn-teach` | O+C | không chặn |
+| **L4 Học** | 3–10 | Chỉ cho framework ứng viên. Trình tự: **chunking → Feynman → drill → interleaving** (khối sách xen khối việc thật WX) **→ journal → rubric**. Bài học + ôn giãn cách + đoán-trước trong `learn/`. Nhịp micro-DMIR hằng tuần | `learn-methodology`, `learn-practice`, `learn-track`, `learn-teach` | O+**C** | **Cổng Feynman (C):** CEO tự viết 3 câu trả lời Feynman + tự chấm rubric cho framework định áp dụng → `learn/feynman-<framework>.md`. Thiếu thì không vào L5 |
 | **L5 Thiết kế** | 8–12 | **D:** `/archetype` + `/cld`. **M:** 3 biến. **I:** `/constraint` + `/leverage`. → `Experiment_Card.md` với dự đoán ghi trước. D+M tối đa 2 phiên. | DMIR skills | O soạn, C chọn | **C** duyệt thẻ; thiếu thì L6/L7 bị khoá |
 | **L6 Chạy** | 12–28 | Chạy thật; `Run_Log.md`; kiểm tra 10/25: "điểm nghẽn còn đó không?" | — | C | trễ hạn → cảnh báo `Status.md` |
 | **L7 Retro** | 28–30 | AAR 4 câu; vòng kép (L3 mục tiêu, L2 mô hình tư duy); nối sổ meta; ứng viên Galaxy; đề xuất sửa skill; gợi ý sách kế tiếp | `/reflect`, `/paradigm`, `galaxy-gate` | O soạn, C quyết | **C** giữ / chỉnh / bỏ |
@@ -60,7 +81,7 @@ Quyết định thiết kế (CEO chốt 2026-09-17):
 **Thứ tự:**
 - L0 → L1 → L2 chạy liền.
 - L3 (máy, nền) song song L4 (phiên CEO).
-- L5 cần `Claims.md`. Nếu `--quick` thì mọi framework bị gắn nhãn CHƯA KIỂM.
+- L5 cần `Claims.md` **và** cổng Feynman L4 đã qua. Nếu `--quick` thì mọi framework bị gắn nhãn CHƯA KIỂM; `--quick` **không bỏ được cổng Feynman**.
 
 ## 4. Lệnh
 
@@ -68,7 +89,7 @@ Quyết định thiết kế (CEO chốt 2026-09-17):
 /book-to-learn <file|thư mục> [--slug X] [--notebook <id>] [--target <dự án>]
                [--from Ln] [--only Ln] [--resume] [--quick]
 ```
-- `--quick`: bỏ L3. **Không bỏ được L0 / L5 / L7.**
+- `--quick`: bỏ L3. **Không bỏ được L0, cổng Feynman L4, L5, L7.**
 - `--only L5 --target <dự án>`: dùng lại một cuốn đã học.
 - `--resume`: đọc `_pipeline_state.md`.
 
@@ -90,6 +111,7 @@ evals/book-to-learn.json         (mode: static)
 3_Resources/Books/<slug>/_source/        chương tách để upload
 3_Resources/Books/<slug>/Leverage_Map.md
 3_Resources/Books/<slug>/Claims.md
+3_Resources/Books/<slug>/Learning_Kit.md    chunking, câu hỏi Feynman, mnemonic, rubric
 ~/.claude/skills/<slug>/                 skill tri thức
 ```
 
@@ -98,7 +120,7 @@ evals/book-to-learn.json         (mode: static)
 1_Projects/LEARN-<slug>/_Project_Brief.md   = MISSION
 1_Projects/LEARN-<slug>/Status.md
 1_Projects/LEARN-<slug>/_pipeline_state.md  pha, dấu cổng, id 2 notebook
-1_Projects/LEARN-<slug>/learn/              workspace learn-teach
+1_Projects/LEARN-<slug>/learn/              workspace learn-teach + feynman-<framework>.md + journal + rubric tự chấm
 1_Projects/LEARN-<slug>/Experiment_Card.md
 1_Projects/LEARN-<slug>/Run_Log.md
 1_Projects/LEARN-<slug>/AAR.md
@@ -109,7 +131,7 @@ Dự án đích chỉ nhận **một dòng liên kết** tới thẻ thí nghi�
 ```
 2_Areas/CEO-Self/Learning-Meta/cycles.jsonl    1 dòng/cuốn
 2_Areas/CEO-Self/Learning-Meta/calibration.md
-2_Areas/CEO-Self/Learning-Meta/transfer-map.md
+2_Areas/CEO-Self/Learning-Meta/transfer-map.md    framework A ↔ B; kỹ thuật học nào hợp loại sách nào
 2_Areas/CEO-Self/Learning-Meta/skill-backlog.md
 ```
 
@@ -118,6 +140,8 @@ Schema một dòng `cycles.jsonl`:
 {"slug":"profit-first","opened":"YYYY-MM-DD","closed":"YYYY-MM-DD","target":"VN-TGT-F",
  "dreyfus_before":2,"dreyfus_after":3,"leverage_reached":"L5","perkins":"strategic",
  "applied":true,"decision":"keep|adapt|drop","prediction_hits":1,"prediction_total":3,
+ "days_to_competence":11,"techniques":{"chunking":4,"feynman":5,"drill":3,"interleaving":2,"journal":3},
+ "illusion_gap":0.25,"book_type":"text|technical",
  "failure_points":["..."],"next_book_hint":"..."}
 ```
 
@@ -133,6 +157,7 @@ Exit ≠ 0 thì không được đánh dấu pha xong. Exit 0 thì script ghi d�
 | L1 | skill có `SKILL.md` và ≥1 tệp `chapters/`; **không có `\$[0-9]` trong SKILL.md**; mọi framework trong `Leverage_Map.md` có mức `L1`–`L12` |
 | L2 | JSON `nlm source list -j`: số nguồn sẵn sàng = số tệp `_source/`; mỗi nguồn có độ dài nội dung (lấy qua `nlm source content -j`) ≥ 50% số ký tự của tệp chương tương ứng (status=2 vẫn có thể là trang chặn bot) |
 | L3 | mỗi dòng `Claims.md` có nhãn hợp lệ và nguồn kèm vị trí; không có "✅" trần |
+| L4 | có `learn/feynman-<framework>.md` cho mọi framework ghi trong thẻ L5 dự kiến; đủ 3 câu trả lời khác rỗng, mỗi câu ≥ 40 từ; khối trả lời mang dấu `tac_gia: CEO` (AI không được điền); rubric tự chấm có mức cho mọi dòng |
 | L5 | đủ ô: giả thuyết, chỉ số, baseline **là số**, ngưỡng, người chịu trách nhiệm, ngày kết thúc ≤ bắt đầu + 16, dự đoán, `don_vi_framework` = `don_vi_thi_nghiem`, mức tin cậy dữ liệu, dấu duyệt CEO |
 | L7 | AAR có đủ 4 câu; quyết định ∈ {keep, adapt, drop}; đã nối dòng `cycles.jsonl` hợp lệ theo schema; L5 chưa duyệt thì bắt buộc `applied:false` |
 
@@ -155,8 +180,8 @@ Exit ≠ 0 thì không được đánh dấu pha xong. Exit 0 thì script ghi d�
 - Sửa ở tệp nguồn (Brief, Claims), không vá vào tệp dựng ra.
 
 ## 7. Kiểm thử
-- **pytest `test_btl_gate_check.py`:** mỗi pha 1 bộ đạt + các bộ trượt: L0 thiếu vấn đề / 2 dự đoán; L1 còn `$0`; L2 lệch số nguồn / nguồn rỗng; L3 "✅" trần; L5 baseline chữ / quá 16 ngày / lệch đơn vị / thiếu duyệt; L7 thiếu quyết định / `applied:true` khi L5 chưa duyệt. L2 dùng JSON giả.
-- **Eval static `book-to-learn.json`:** SKILL.md có 3 cổng C, lệnh gọi script, cấm persona, cấm share public, tên các skill DMIR, định nghĩa DMIR. Kiểm eval bằng đột biến: xoá câu theo đúng regex của assertion → eval phải trượt.
+- **pytest `test_btl_gate_check.py`:** mỗi pha 1 bộ đạt + các bộ trượt: L0 thiếu vấn đề / 2 dự đoán; L1 còn `$0`; L2 lệch số nguồn / nguồn rỗng; L3 "✅" trần; L4 thiếu tệp Feynman / câu trả lời < 40 từ / thiếu dấu `tac_gia: CEO`; L5 baseline chữ / quá 16 ngày / lệch đơn vị / thiếu duyệt; L7 thiếu quyết định / `applied:true` khi L5 chưa duyệt. L2 dùng JSON giả.
+- **Eval static `book-to-learn.json`:** SKILL.md có 3 cổng C + cổng Feynman, lệnh gọi script, tên 4 skill `learn-*` và `/analyze`, cấm persona, cấm share public, tên các skill DMIR, định nghĩa DMIR. Kiểm eval bằng đột biến: xoá câu theo đúng regex của assertion → eval phải trượt.
 - `bash setup.sh --verify`.
 
 ## 8. Triển khai
