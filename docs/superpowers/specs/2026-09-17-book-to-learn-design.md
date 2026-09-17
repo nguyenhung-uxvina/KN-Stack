@@ -157,7 +157,7 @@ Exit ≠ 0 thì không được đánh dấu pha xong. Exit 0 thì script ghi d�
 | L1 | skill có `SKILL.md` và ≥1 tệp `chapters/`; **không có `\$[0-9]` trong SKILL.md**; mọi framework trong `Leverage_Map.md` có mức `L1`–`L12` |
 | L2 | JSON `nlm source list -j`: số nguồn sẵn sàng = số tệp `_source/`; mỗi nguồn có độ dài nội dung (lấy qua `nlm source content -j`) ≥ 50% số ký tự của tệp chương tương ứng (status=2 vẫn có thể là trang chặn bot) |
 | L3 | mỗi dòng `Claims.md` có nhãn hợp lệ và nguồn kèm vị trí; không có "✅" trần |
-| L4 | có `learn/feynman-<framework>.md` cho mọi framework ghi trong thẻ L5 dự kiến; đủ 3 câu trả lời khác rỗng, mỗi câu ≥ 40 từ; khối trả lời mang dấu `tac_gia: CEO` (AI không được điền); rubric tự chấm có mức cho mọi dòng |
+| L4 | có `learn/feynman-<framework>.md` cho mọi framework trong ô `framework_ung_vien` của `_pipeline_state.md` (CEO chọn sau L1, có thể chỉnh sau L3; thẻ L5 chỉ được dùng framework trong danh sách này); đủ 3 câu trả lời khác rỗng, mỗi câu ≥ 40 từ; khối trả lời mang dấu `tac_gia: CEO` (AI không được điền); rubric tự chấm có mức cho mọi dòng |
 | L5 | đủ ô: giả thuyết, chỉ số, baseline **là số**, ngưỡng, người chịu trách nhiệm, ngày kết thúc ≤ bắt đầu + 16, dự đoán, `don_vi_framework` = `don_vi_thi_nghiem`, mức tin cậy dữ liệu, dấu duyệt CEO |
 | L7 | AAR có đủ 4 câu; quyết định ∈ {keep, adapt, drop}; đã nối dòng `cycles.jsonl` hợp lệ theo schema; L5 chưa duyệt thì bắt buộc `applied:false` |
 
