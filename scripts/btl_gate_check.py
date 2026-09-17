@@ -295,7 +295,60 @@ def check_L2(ctx: Ctx) -> list:
     return errs
 
 
-CHECKS = {"L0": check_L0, "L1": check_L1, "L2": check_L2}
+CLAIM_LABELS = {"SUPPORTED", "CONTESTED", "CẦN-CHUYỂN-VN"}
+EMPTY_CELL = {"", "-", "—", "✅", "✓"}
+FEYNMAN_KEYS = ("framework", "tac_gia")
+MIN_ANSWER_WORDS = 40
+
+
+def check_L3(ctx: Ctx) -> list:
+    p = ctx.books_root / ctx.slug / "Claims.md"
+    if not p.exists():
+        return ["L3: thiếu Claims.md"]
+    rows = table_rows(read(p))
+    if not rows:
+        return ["L3: Claims.md không có luận điểm nào"]
+    errs = []
+    for r in rows:
+        if len(r) < 5:
+            errs.append(f"L3: dòng thiếu cột (cần #, Luận điểm, Nhãn, Nguồn, Vị trí): {r}")
+            continue
+        num, claim, label, source, where = r[:5]
+        if label not in CLAIM_LABELS:
+            errs.append(f"L3: luận điểm {num} có nhãn '{label}' — chỉ nhận {sorted(CLAIM_LABELS)}")
+        if source in EMPTY_CELL or where in EMPTY_CELL:
+            errs.append(f"L3: luận điểm {num} thiếu nguồn hoặc vị trí (dấu ✅ không phải trích dẫn)")
+    return errs
+
+
+def check_L4(ctx: Ctx) -> list:
+    if not ctx.frameworks:
+        return ["L4: framework_ung_vien trong _pipeline_state.md đang rỗng — CEO chọn sau L1"]
+    errs = []
+    for fw in ctx.frameworks:
+        name = f"feynman-{slugify(fw)}.md"
+        p = ctx.learn_dir / "learn" / name
+        if not p.exists():
+            errs.append(f"L4: thiếu learn/{name} cho framework '{fw}'")
+            continue
+        text = read(p)
+        if str(parse_frontmatter(text).get("tac_gia", "")).strip() != "CEO":
+            errs.append(f"L4: {name} phải có tac_gia: CEO — AI không được điền câu trả lời Feynman")
+        for q in ("Q1", "Q2", "Q3"):
+            answer = "\n".join(l for l in section_starting(text, q).splitlines()
+                               if not l.lstrip().startswith(">"))
+            if words(answer) < MIN_ANSWER_WORDS:
+                errs.append(f"L4: {name} {q} chỉ {words(answer)} từ < {MIN_ANSWER_WORDS}")
+        rubric = table_rows(section_starting(text, "Rubric"))
+        if not rubric:
+            errs.append(f"L4: {name} thiếu bảng Rubric tự chấm")
+        for r in rubric:
+            if r[-1] not in {"1", "2", "3", "4", "5"}:
+                errs.append(f"L4: {name} rubric '{r[0]}' có mức '{r[-1]}' — cần 1–5")
+    return errs
+
+
+CHECKS = {"L0": check_L0, "L1": check_L1, "L2": check_L2, "L3": check_L3, "L4": check_L4}
 
 
 # ---------------------------------------------------------------- CLI

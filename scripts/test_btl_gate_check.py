@@ -354,3 +354,87 @@ def test_L2_fails_duplicate_titles(env, capsys):
     assert gc.main(argv) == 1
     out = capsys.readouterr().out
     assert "ch01.md" in out and ("trùng" in out or "nhiều" in out or "duplicate" in out.lower())
+
+
+# ---------- L3 ----------
+
+def make_claims(env, row="| 1 | Trích lợi nhuận trước khi chi | SUPPORTED | Michalowicz 2014 | tr.19 |"):
+    w(env.books / "demo" / "Claims.md", f"""
+        | # | Luận điểm | Nhãn | Nguồn | Vị trí |
+        |---|---|---|---|---|
+        {row}
+        """)
+
+
+def test_L3_pass(env):
+    make_claims(env)
+    assert run(env, "L3") == 0
+
+
+@pytest.mark.parametrize("row", [
+    "| 1 | X | TRUE | Nguồn A | tr.3 |",
+    "| 1 | X | SUPPORTED | Nguồn A | ✅ |",
+    "| 1 | X | CONTESTED |  | tr.3 |",
+    "| 1 | X | CẦN-CHUYỂN-VN | Nguồn A | — |",
+])
+def test_L3_fails_bad_row(env, row):
+    make_claims(env, row)
+    assert run(env, "L3") == 1
+
+
+# ---------- L4 ----------
+
+ANSWER = " ".join(["từ"] * 45)
+
+
+def make_feynman(env, tac_gia="CEO", answer=ANSWER, level="3", name="Small Plates"):
+    w(env.learn / "learn" / f"feynman-{gc.slugify(name)}.md", f"""
+        ---
+        framework: {name}
+        tac_gia: {tac_gia}
+        ---
+        ## Q1 — Hiểu
+        > Giải thích Small Plates trong 60 giây cho một người không học kế toán.
+        {answer}
+        ## Q2 — Áp dụng
+        > Áp vào VN-TGT-F thì tài khoản nào mở trước?
+        {ANSWER}
+        ## Q3 — Tầng hệ thống
+        > Nó cắt vòng lặp nào, điểm nghẽn nào?
+        {ANSWER}
+        ## Rubric tự chấm
+        | Chỉ báo hành vi | Mức |
+        |---|---|
+        | Tự tính được tỉ lệ phân bổ từ số thật | {level} |
+        """)
+
+
+def test_L4_pass(env):
+    make_feynman(env)
+    assert run(env, "L4") == 0
+
+
+def test_L4_fails_missing_file(env, capsys):
+    assert run(env, "L4") == 1
+    assert "feynman-small-plates.md" in capsys.readouterr().out
+
+
+def test_L4_fails_ai_author(env):
+    make_feynman(env, tac_gia="AI")
+    assert run(env, "L4") == 1
+
+
+def test_L4_fails_short_answer(env, capsys):
+    make_feynman(env, answer="ngắn quá")
+    assert run(env, "L4") == 1
+    assert "Q1" in capsys.readouterr().out
+
+
+def test_L4_fails_rubric_level(env):
+    make_feynman(env, level="7")
+    assert run(env, "L4") == 1
+
+
+def test_L4_fails_without_candidates(env):
+    w(env.learn / "_pipeline_state.md", "---\nslug: demo\nframework_ung_vien: []\n---\n")
+    assert run(env, "L4") == 1
