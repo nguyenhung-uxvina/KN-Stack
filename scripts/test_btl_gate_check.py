@@ -502,3 +502,143 @@ def test_L4_fails_feynman_no_q_headings(env, capsys):
 def test_L4_fails_rubric_fractional_level(env):
     make_feynman(env, level="4/5")
     assert run(env, "L4") == 1
+
+
+# ---------- L5 ----------
+
+GOOD_CARD = """
+    ---
+    framework: Small Plates
+    gia_thuyet: Trích 5% mỗi khoản thu pilot không làm chậm chi trả nhà cung cấp
+    chi_so: Số ngày trễ hạn thanh toán nhà cung cấp
+    baseline: 0
+    nguong: ≤ 2 ngày trễ trong 16 ngày chạy
+    nguoi_chiu_trach_nhiem: CEO
+    ngay_bat_dau: 2026-09-20
+    ngay_ket_thuc: 2026-10-06
+    du_doan: Không trễ ngày nào
+    don_vi_framework: công ty
+    don_vi_thi_nghiem: công ty
+    muc_tin_cay_du_lieu: L3 — số kế toán thật
+    ceo_duyet: 2026-09-19
+    ---
+    """
+
+
+def pass_gates(env, *phases):
+    for ph in phases:
+        env.learn.joinpath("_pipeline_state.md").write_text(
+            state_text(env).rstrip("\n") + f"\n- {ph}: PASS 2026-09-18T09:00\n", encoding="utf-8")
+
+
+def test_L5_pass(env):
+    pass_gates(env, "L3", "L4")
+    w(env.learn / "Experiment_Card.md", GOOD_CARD)
+    assert run(env, "L5") == 0
+
+
+@pytest.mark.parametrize("old,new", [
+    ("baseline: 0", "baseline: chưa đo"),
+    ("ngay_ket_thuc: 2026-10-06", "ngay_ket_thuc: 2026-10-07"),
+    ("don_vi_thi_nghiem: công ty", "don_vi_thi_nghiem: dòng sản phẩm"),
+    ("ceo_duyet: 2026-09-19", "ceo_duyet:"),
+    ("framework: Small Plates", "framework: RIFA"),
+    ("muc_tin_cay_du_lieu: L3 — số kế toán thật", "muc_tin_cay_du_lieu: cao"),
+    ("nguoi_chiu_trach_nhiem: CEO", "nguoi_chiu_trach_nhiem:"),
+])
+def test_L5_fails_bad_card(env, old, new):
+    pass_gates(env, "L3", "L4")
+    w(env.learn / "Experiment_Card.md", GOOD_CARD.replace(old, new))
+    assert run(env, "L5") == 1
+
+
+def test_L5_fails_without_feynman_gate(env, capsys):
+    pass_gates(env, "L3")
+    w(env.learn / "Experiment_Card.md", GOOD_CARD)
+    assert run(env, "L5") == 1
+    assert "L4" in capsys.readouterr().out
+
+
+def test_L5_quick_skips_claims_but_not_feynman(env):
+    w(env.learn / "_pipeline_state.md", "---\nslug: demo\nframework_ung_vien: [Small Plates]\nquick: true\n---\n")
+    pass_gates(env, "L4")
+    w(env.learn / "Experiment_Card.md", GOOD_CARD)
+    assert run(env, "L5") == 0
+
+
+# ---------- L7 ----------
+
+GOOD_AAR = """
+    ---
+    quyet_dinh: adapt
+    ---
+    ## Định xảy ra gì
+    Không trễ thanh toán.
+    ## Thực tế ra sao
+    Trễ 1 ngày vào kỳ 25.
+    ## Vì sao khác
+    Khoản thu lệch lịch 10/25.
+    ## Lần sau làm gì
+    Dời ngày phân bổ theo lịch thu thật.
+    """
+
+
+def cycle_row(**over):
+    row = {"slug": "demo", "opened": "2026-09-17", "closed": "2026-10-17", "target": "VN-TGT-F",
+           "dreyfus_before": 2, "dreyfus_after": 3, "leverage_reached": "L5", "perkins": "strategic",
+           "applied": True, "decision": "adapt", "prediction_hits": 1, "prediction_total": 3,
+           "days_to_competence": 11, "techniques": {"feynman": 5}, "illusion_gap": 0.25,
+           "book_type": "text", "failure_points": [], "next_book_hint": "The Goal"}
+    row.update(over)
+    return row
+
+
+def make_L7(env, row, aar=GOOD_AAR):
+    w(env.learn / "AAR.md", aar)
+    w(env.meta / "cycles.jsonl", json.dumps({"slug": "other"}) + "\n" + json.dumps(row, ensure_ascii=False) + "\n")
+
+
+def test_L7_pass(env):
+    pass_gates(env, "L5")
+    make_L7(env, cycle_row())
+    assert run(env, "L7") == 0
+
+
+def test_L7_unapplied_cycle_can_close(env):
+    make_L7(env, cycle_row(applied=False))
+    assert run(env, "L7") == 0
+
+
+def test_L7_fails_applied_without_L5(env, capsys):
+    make_L7(env, cycle_row(applied=True))
+    assert run(env, "L7") == 1
+    assert "applied" in capsys.readouterr().out
+
+
+@pytest.mark.parametrize("over", [
+    {"decision": "maybe"}, {"dreyfus_after": "3"}, {"applied": "yes"},
+    {"days_to_competence": True}, {"perkins": "genius"}, {"leverage_reached": "L0"},
+])
+def test_L7_fails_bad_cycle_row(env, over):
+    pass_gates(env, "L5")
+    make_L7(env, cycle_row(**over))
+    assert run(env, "L7") == 1
+
+
+def test_L7_fails_missing_row(env):
+    pass_gates(env, "L5")
+    w(env.learn / "AAR.md", GOOD_AAR)
+    w(env.meta / "cycles.jsonl", json.dumps({"slug": "other"}) + "\n")
+    assert run(env, "L7") == 1
+
+
+def test_L7_fails_bad_aar(env):
+    pass_gates(env, "L5")
+    make_L7(env, cycle_row(), aar=GOOD_AAR.replace("quyet_dinh: adapt", "quyet_dinh: có lẽ"))
+    assert run(env, "L7") == 1
+
+
+def test_L7_fails_empty_aar_section(env):
+    pass_gates(env, "L5")
+    make_L7(env, cycle_row(), aar=GOOD_AAR.replace("Khoản thu lệch lịch 10/25.", ""))
+    assert run(env, "L7") == 1

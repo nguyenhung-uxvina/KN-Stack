@@ -17,7 +17,7 @@ import unicodedata
 from datetime import date, datetime
 from pathlib import Path
 
-PHASES = ("L0", "L1", "L2", "L3", "L4", "L5", "L7")
+PHASES = ("L0", "L1", "L2", "L3", "L4", "L5", "L7")  # Note: L6 is intentionally skipped
 
 STATE_KEYS = ("slug", "framework_ung_vien", "quick", "notebook_goc", "notebook_mo_rong", "started")
 BRIEF_KEYS = ("van_de_that", "du_doan_1", "du_doan_2", "du_doan_3", "dreyfus_truoc",
@@ -300,6 +300,23 @@ EMPTY_CELL = {"", "-", "—", "✅", "✓"}
 FEYNMAN_KEYS = ("framework", "tac_gia")
 MIN_ANSWER_WORDS = 40
 
+# Constants for L5 and L7
+CARD_KEYS = ("framework", "gia_thuyet", "chi_so", "baseline", "nguong", "nguoi_chiu_trach_nhiem",
+             "ngay_bat_dau", "ngay_ket_thuc", "du_doan", "don_vi_framework", "don_vi_thi_nghiem",
+             "muc_tin_cay_du_lieu", "ceo_duyet")
+MAX_RUN_DAYS = 16
+AAR_HEADINGS = ("Định xảy ra gì", "Thực tế ra sao", "Vì sao khác", "Lần sau làm gì")
+AAR_KEYS = ("quyet_dinh",)
+DECISIONS = {"keep", "adapt", "drop"}
+PERKINS = {"tacit", "aware", "strategic", "reflective"}
+CYCLE_KEYS = {
+    "slug": str, "opened": str, "closed": str, "target": (str, type(None)),
+    "dreyfus_before": int, "dreyfus_after": int, "leverage_reached": str, "perkins": str,
+    "applied": bool, "decision": str, "prediction_hits": int, "prediction_total": int,
+    "days_to_competence": int, "techniques": dict, "illusion_gap": (int, float),
+    "book_type": str, "failure_points": list, "next_book_hint": str,
+}
+
 
 def check_L3(ctx: Ctx) -> list:
     p = ctx.books_root / ctx.slug / "Claims.md"
@@ -357,7 +374,90 @@ def check_L4(ctx: Ctx) -> list:
     return errs
 
 
-CHECKS = {"L0": check_L0, "L1": check_L1, "L2": check_L2, "L3": check_L3, "L4": check_L4}
+def check_L5(ctx: Ctx) -> list:
+    errs = []
+    if not gate_passed(ctx, "L4"):
+        errs.append("L5: cổng Feynman L4 chưa qua")
+    if not ctx.state.get("quick") and not gate_passed(ctx, "L3"):
+        errs.append("L5: L3 (Claims) chưa qua — hoặc đặt quick: true và chấp nhận nhãn CHƯA KIỂM")
+    p = ctx.learn_dir / "Experiment_Card.md"
+    if not p.exists():
+        return errs + ["L5: thiếu Experiment_Card.md"]
+    fm = parse_frontmatter(read(p))
+    for k in CARD_KEYS:
+        if not str(fm.get(k, "")).strip():
+            errs.append(f"L5: thẻ thiếu ô {k}")
+    if str(fm.get("framework", "")).strip() and fm.get("framework") not in ctx.frameworks:
+        errs.append(f"L5: framework '{fm.get('framework')}' không nằm trong framework_ung_vien")
+    if str(fm.get("baseline", "")).strip() and not re.fullmatch(r"-?\d+(?:[.,]\d+)?", str(fm["baseline"]).strip()):
+        errs.append(f"L5: baseline phải là con số, đang là '{fm['baseline']}'")
+    start, end = parse_day(fm.get("ngay_bat_dau", "")), parse_day(fm.get("ngay_ket_thuc", ""))
+    if not start or not end:
+        errs.append("L5: ngay_bat_dau/ngay_ket_thuc phải là ngày ISO YYYY-MM-DD")
+    elif not 0 <= (end - start).days <= MAX_RUN_DAYS:
+        errs.append(f"L5: thời lượng {(end - start).days} ngày — phải trong 0–{MAX_RUN_DAYS}")
+    uf, ut = str(fm.get("don_vi_framework", "")).strip(), str(fm.get("don_vi_thi_nghiem", "")).strip()
+    if uf and ut and uf.casefold() != ut.casefold():
+        errs.append(f"L5: đơn vị phân tích lệch — framework '{uf}' ≠ thí nghiệm '{ut}'")
+    trust = str(fm.get("muc_tin_cay_du_lieu", "")).strip()
+    if trust and not re.match(r"L[1-5]\b", trust):
+        errs.append("L5: muc_tin_cay_du_lieu phải bắt đầu bằng L1–L5")
+    if str(fm.get("ceo_duyet", "")).strip() and not parse_day(fm.get("ceo_duyet")):
+        errs.append("L5: ceo_duyet phải là ngày ISO")
+    return errs
+
+
+def check_L7(ctx: Ctx) -> list:
+    errs = []
+    aar = ctx.learn_dir / "AAR.md"
+    if not aar.exists():
+        errs.append("L7: thiếu AAR.md")
+    else:
+        text = read(aar)
+        if parse_frontmatter(text).get("quyet_dinh") not in DECISIONS:
+            errs.append(f"L7: quyet_dinh phải thuộc {sorted(DECISIONS)}")
+        secs = sections(text)
+        for h in AAR_HEADINGS:
+            if not secs.get(h, "").strip():
+                errs.append(f"L7: AAR thiếu hoặc rỗng mục '{h}'")
+    ledger = ctx.meta_dir / "cycles.jsonl"
+    rows = []
+    if ledger.exists():
+        for line in read(ledger).splitlines():
+            if line.strip():
+                try:
+                    obj = json.loads(line)
+                    if obj.get("slug") == ctx.slug:
+                        rows.append(obj)
+                except json.JSONDecodeError:
+                    pass
+    if not rows:
+        return errs + [f"L7: cycles.jsonl chưa có dòng cho slug '{ctx.slug}'"]
+    row = rows[-1]
+    for k, typ in CYCLE_KEYS.items():
+        if k not in row:
+            errs.append(f"L7: dòng meta thiếu '{k}'")
+            continue
+        v = row[k]
+        ok = is_int(v) if typ is int else (isinstance(v, typ) and not (isinstance(v, bool) and typ != bool))
+        if not ok:
+            errs.append(f"L7: '{k}' sai kiểu: {v!r}")
+    if row.get("decision") not in DECISIONS:
+        errs.append("L7: decision phải là keep/adapt/drop")
+    if row.get("perkins") not in PERKINS:
+        errs.append(f"L7: perkins phải thuộc {sorted(PERKINS)}")
+    if not LEVEL.fullmatch(str(row.get("leverage_reached", ""))):
+        errs.append("L7: leverage_reached phải là L1–L12")
+    for k in ("dreyfus_before", "dreyfus_after"):
+        if is_int(row.get(k)) and not 1 <= row[k] <= 5:
+            errs.append(f"L7: {k} phải 1–5")
+    if row.get("applied") is True and not gate_passed(ctx, "L5"):
+        errs.append("L7: applied=true nhưng thẻ thí nghiệm L5 chưa qua cổng — ghi applied=false")
+    return errs
+
+
+CHECKS = {"L0": check_L0, "L1": check_L1, "L2": check_L2, "L3": check_L3, "L4": check_L4,
+          "L5": check_L5, "L7": check_L7}
 
 
 # ---------------------------------------------------------------- CLI
