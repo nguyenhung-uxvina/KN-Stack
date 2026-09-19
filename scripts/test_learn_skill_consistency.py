@@ -138,12 +138,15 @@ def test_duong_dan_script_va_reference_ton_tai():
     """SKILL.md trỏ tới script/reference của skill khác (learn-practice → quote_check của
     learn-methodology). Đổi tên hay dời tệp mà quên sửa chỗ trỏ thì skill hỏng im lặng."""
     thieu = []
-    for s in ('learn-methodology', 'learn-practice', 'learn-track'):
-        md = _doc(s, 'SKILL.md')
+    tep = [(s, ('SKILL.md',)) for s in ('learn-methodology', 'learn-practice', 'learn-track', 'learn-teach')]
+    tep.append(('learn-teach', ('references', 'SOURCING.md')))
+    for s, duong in tep:
+        md = _doc(s, *duong)
         for rel in re.findall(r'<KN-Stack>/([\w./-]+\.py)', md):
             if not os.path.isfile(os.path.join(ROOT, rel)):
                 thieu.append((s, rel))
         for sk, ref in re.findall(r'`([\w-]+):references:([\w-]+)`', md):
-            if not os.path.isfile(os.path.join(LEARN, sk, 'references', ref + '.md')):
+            # skill được tham chiếu có thể ở domain khác (vd. research ở skills/galaxy/)
+            if not _glob.glob(os.path.join(ROOT, '*', '**', sk, 'references', ref + '.md'), recursive=True):
                 thieu.append((s, '%s:references:%s' % (sk, ref)))
     assert not thieu, thieu

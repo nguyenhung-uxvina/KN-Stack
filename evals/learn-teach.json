@@ -5,8 +5,8 @@
   "mode": "static",
   "include_references": true,
   "test_input": "Tôi muốn học Claude Cowork để đưa nó tới 25 nhân sự phi kỹ thuật của xưởng",
-  "total_required": 21,
-  "passing_score": 20,
+  "total_required": 27,
+  "passing_score": 27,
   "assertions": [
     {
       "id": "LT-S0-BEFORE-LESSON",
@@ -153,6 +153,48 @@
       "name": "zpd_read_from_retention_not_coverage",
       "check": "zone of proximal development is read from what was RETAINED (the ledger) before what was taught (the records) — different things after two weeks",
       "regex": "cái gì thật sự còn lại, chứ không phải cái gì đã được dạy|nền còn lún thì đừng xây tiếp",
+      "required": true
+    },
+    {
+      "id": "LT-NB-GATE-FIRST",
+      "name": "notebook_gate_before_anything",
+      "check": "S0 runs s0_notebook_check.py before any other step, including /research",
+      "regex": "Cổng notebook — chạy trước mọi bước khác",
+      "required": true
+    },
+    {
+      "id": "LT-NB-REUSE",
+      "name": "existing_notebook_reused",
+      "check": "exit 0 means reuse — no nlm notebook create",
+      "regex": "\\*\\*0 DÙNG LẠI\\*\\*[^\n]*\\*\\*Không\\*\\* `nlm notebook create`",
+      "required": true
+    },
+    {
+      "id": "LT-NB-AUTH-NOT-ABSENT",
+      "name": "auth_error_never_means_create",
+      "check": "an NLM auth error never counts as 'no notebook' — stop, do not create",
+      "regex": "Lỗi xác thực không có nghĩa là không có notebook",
+      "required": true
+    },
+    {
+      "id": "LT-NB-CREATE-ONLY-1",
+      "name": "create_only_on_exit_1",
+      "check": "the standing notebook is created only when the gate returns 1",
+      "regex": "Chỉ tạo khi cổng notebook \\(bước 0\\) trả mã 1",
+      "required": true
+    },
+    {
+      "id": "LT-NB-RESEARCH-SCRATCH",
+      "name": "research_notebook_is_scratch",
+      "check": "/research's own notebook is a discovery scratch notebook holding ungated sources, never aliased learn-<slug>",
+      "regex": "là notebook nháp dùng để khám phá, không phải notebook thường trực",
+      "required": true
+    },
+    {
+      "id": "LT-NB-PREAPPROVED",
+      "name": "preexisting_resources_skip_rediscovery",
+      "check": "an existing RESOURCES.md (prior S0 or /book-to-learn L4) skips re-discovery; only coverage gaps rerun steps 1-3 and the gate for new sources",
+      "regex": "không chạy lại bước 1–3 cho toàn chủ đề",
       "required": true
     }
   ]

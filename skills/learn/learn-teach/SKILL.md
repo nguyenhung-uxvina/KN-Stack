@@ -45,7 +45,7 @@ Coi thư mục hiện tại là workspace học tập. Trạng thái học tập
 
 Trước khi `RESOURCES.md` được điền đầy đủ, ưu tiên tìm các tài nguyên chất lượng cao giúp người dùng thu thập kiến thức. Không bao giờ tin vào kiến thức tham số của bản thân.
 
-Câu trên là ràng buộc cứng, không phải lời khuyên. Nó được thực thi bằng [Giao Thức Nguồn Cấp](./references/SOURCING.md): pha **S0** chạy ngay sau khi mission chốt và **trước bài học đầu tiên** — rút truy vấn từ mission, gọi `/research` để khám phá nguồn đa kênh, chấm mỗi nguồn trên hai trục (tin cậy S/A/B/C × sư phạm E1/E2/E3), dựng notebook NLM thường trực cho workspace, rồi **dừng ở cổng duyệt nguồn** để người dùng xác nhận. Không viết bài học nào trước khi qua cổng.
+Câu trên là ràng buộc cứng, không phải lời khuyên. Nó được thực thi bằng [Giao Thức Nguồn Cấp](./references/SOURCING.md): pha **S0** chạy ngay sau khi mission chốt và **trước bài học đầu tiên** — rút truy vấn từ mission, gọi `/research` để khám phá nguồn đa kênh, chấm mỗi nguồn trên hai trục (tin cậy S/A/B/C × sư phạm E1/E2/E3), dựng notebook NLM thường trực cho workspace **chỉ khi cổng notebook `<KN-Stack>/skills/learn/learn-teach/scripts/s0_notebook_check.py` cho phép (workspace đã có notebook thì dùng lại, không bao giờ dựng cái thứ hai)**, rồi **dừng ở cổng duyệt nguồn** để người dùng xác nhận. Không viết bài học nào trước khi qua cổng.
 
 Đọc SOURCING.md trước khi làm bất cứ việc gì trong một workspace mới.
 
