@@ -50,6 +50,9 @@ MAP = {
     '\u2018': "'", '\u2019': "'", '\u201c': '"', '\u201d': '"',
     '\u2013': '-', '\u2014': '-', '\u2212': '-', '\u00a0': ' ',
 }
+# Ký hiệu tạm giữ dấu . , - của con số qua bước xoá dấu câu. Đặt ở vùng Private Use và lọc
+# sạch vùng này khỏi đầu vào trước, để văn bản nguồn không bao giờ trùng ký hiệu tạm.
+TAM = ''
 LUOC = re.compile(r'\[\s*(?:…|\.\.\.)\s*\]|…|\.\.\.')
 
 
@@ -59,15 +62,20 @@ def norm(s: str, noi_gach=False) -> str:
     s = s.replace('\u00ad', '')                    # soft hyphen
     for a, b in MAP.items():
         s = s.replace(a, b)
+    # Ký tự điều khiển và vùng Private Use (nơi đặt ký hiệu tạm bên dưới) → khoảng trắng.
+    # PDF có bảng chèn \x01 giữa các ô (CFMA, tr.5); bản cũ dùng chính \x01 làm ký hiệu tạm
+    # cho dấu phẩy giữa hai số → mọi ô bảng bị gắn dấu phẩy giả, 9/28 trích đúng báo KHÔNG THẤY.
+    s = ''.join(' ' if (unicodedata.category(c) == 'Cc' and c not in '\n\r\t')
+                or TAM[0] <= c <= TAM[2] else c for c in s)
     s = re.sub(r'(?<=\w)-[ \t]*\r?\n\s*(?=\w)', '', s)   # PDF ngắt từ: de-\nsign → design
     if noi_gach:
         s = re.sub(r'(?<=\w)-(?=\w)', '', s)       # self-reliance → selfreliance (khớp bản vừa nối)
     s = s.lower()
-    s = re.sub(r'(?<=\d)\.(?=\d)', '\x00', s)      # 7.5 giữ nguyên
-    s = re.sub(r'(?<=\d),(?=\d)', '\x01', s)       # 1,200 giữ nguyên
-    s = re.sub(r'(^|\s)-(?=\d)', '\\1\x02', s)     # -3.2 giữ dấu trừ
-    s = re.sub(r'[^\w\s\x00\x01\x02]|_', ' ', s)
-    s = s.replace('\x00', '.').replace('\x01', ',').replace('\x02', '-')
+    s = re.sub(r'(?<=\d)\.(?=\d)', TAM[0], s)      # 7.5 giữ nguyên
+    s = re.sub(r'(?<=\d),(?=\d)', TAM[1], s)       # 1,200 giữ nguyên
+    s = re.sub(r'(^|\s)-(?=\d)', lambda m: m.group(1) + TAM[2], s)   # -3.2 giữ dấu trừ
+    s = re.sub(r'[^\w\s%s]|_' % TAM, ' ', s)
+    s = s.replace(TAM[0], '.').replace(TAM[1], ',').replace(TAM[2], '-')
     return ' '.join(s.split())
 
 

@@ -203,6 +203,19 @@ def test_pdf_doc_bang_hai_thu_vien(tmp_path, monkeypatch):
 
 # ---------- hàm chuẩn hoá ----------
 
+def test_ky_tu_dieu_khien_giua_o_bang(tmp_path):
+    """Đo thật 2026-09-19 (Hari & Weiss, CFMA, tr.5): PDF chèn \\x01 giữa các ô bảng.
+    norm() từng dùng chính \\x01 làm ký hiệu tạm cho dấu phẩy giữa hai số → mọi ô bảng
+    bị gắn dấu phẩy giả, 9/28 trích dẫn đúng bị báo KHÔNG THẤY."""
+    src = 'Proven detection method is available in early design stage\x01\n1-3\x01\nEarly\x01\nTesting'
+    rc, out = chay(tmp_path, '«available in early design stage 1-3 Early»', nguon_text=src)
+    assert rc == 0, out
+
+
+def test_norm_bo_ky_tu_dieu_khien():
+    assert qc.norm('stage\x01 1-3\x00 Early\x02') == 'stage 1 3 early'
+
+
 def test_norm_giu_so_thap_phan_bo_dau_cau_cuoi():
     assert qc.norm('Factor 7.5.') == 'factor 7.5'
     assert qc.norm('1,200 units, then') == '1,200 units then'
