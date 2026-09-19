@@ -1,5 +1,33 @@
 # Changelog
 
+## [1.10.0] - 2026-09-20
+
+### Added
+- **`/learn-methodology --source <tệp|thư mục|notebook>`** — học bám một cuốn hoặc một cụm sách thay cho hiểu biết chung của AI. Khẳng định "sách nói" phải là `«trích nguyên văn»`; phần AI tự nghĩ mang nhãn `[AI]`; sách im lặng thì ghi `KHOẢNG TRỐNG`; cụm sách có mục bắt buộc "Chỗ các nguồn khác nhau" (không gộp hai tác giả thành một giọng). Nhận thẳng `BOOK/_source/` và notebook `btl-<slug>-goc` của `/book-to-learn`. Giao thức ở `skills/learn/learn-methodology/references/source-mode.md`.
+- **Cổng trích dẫn `skills/learn/learn-methodology/scripts/quote_check.py`** — đối chiếu mọi `«…»` với sách gốc (PDF/EPUB/MD/TXT): mã 0 đạt · 1 có trích sai/quá ngắn · 2 không đo được. Giữ chữ có dấu tiếng Việt và dấu thập phân (chuẩn hoá kiểu `[^a-z0-9]` cho lọt "lý"→"lỹ" và 7.5↔7,5). Đọc PDF bằng **cả pymupdf lẫn pypdf** — đo thật trên Borchert tr.16: một thư viện bỏ sót nguyên đoạn, gây 4/25 âm tính giả.
+- **`/learn-practice --source`** — chủ đề luyện, ví dụ giải sẵn và đáp án đều lấy từ sách; ví dụ của sách phải **tính lại** trước khi làm đáp án (bài CFMA: lời văn S=8 vs bảng S=10; một hàng ghi SFD 40 trong khi S·F·D=4).
+- **`skills/learn/learn-track/scripts/retrieval_stats.py`** — số đo từ sổ hồi tưởng `RETRIEVAL.md` của `/learn-teach` (tỉ lệ nhớ, ô chắc-mà-sai, mục quá hạn, bảng theo bài) làm bằng chứng cho Progress Tracker.
+- **`skills/learn/learn-teach/scripts/s0_notebook_check.py`** — cổng chạy TRƯỚC mọi bước của S0: DÙNG LẠI / ĐƯỢC TẠO / KHÔNG ĐO ĐƯỢC / DỪNG.
+- **Eval static** cho `learn-methodology` (23), `learn-practice` (17), `learn-track` (16), `learn-teach` (27) và **70 test pytest** trong `scripts/test_learn_*.py`.
+
+### Changed
+- **`learn-track` không để AI chấm trình độ người học.** Cột `Evidence (measured)` lấy từ phép đo; người học tự chấm mức; tự chấm ≥ 3 trên chiều còn mục chắc-mà-sai thì bị gắn cờ. Số hồi tưởng không bao giờ là bằng chứng kiểm chứng vật lý.
+- **Từ khoá kích hoạt của `learn-*` không còn giẫm lên skill khác** — bỏ "explain"/"giải thích"/"learning path"/"how to learn" (trùng `/learning`), "schedule" (trùng `/schedule`), "study plan" (trùng `/cycle`), "journal" (trùng `/journal`, `helix-design-journal`), "rubric", "practice". Mỗi description nói rõ yêu cầu lớn hơn thì chuyển sang skill nào.
+
+### Fixed
+- **`learn-practice`: lịch xen kẽ mẫu vi phạm chính luật 1 của nó** (tuần 1 xếp A→A, B→B). Luật nay tính cả qua ngày, có ngoại lệ buổi trộn và ngoại lệ tuần 1, và skill phải rà từng cặp buổi liền kề trước khi xuất.
+- **`learn-practice`: "DMIR" bị gọi là định dạng viết yêu cầu** → công thức outcome statement của ODI (Ulwick), khớp `/odi`.
+- **`learn-methodology`: thang ôn lệch `learn-teach`** → dùng chung 1·3·7·16·35 ngày, hiểu là **khoảng cách tới lần ôn sau** (lịch tuyệt đối 1, 4, 11, 27, 62), nhớ sai thì lùi hai bậc.
+- **`learn-teach`: S0 tạo notebook vô điều kiện** → workspace đã có notebook thì dùng lại; lỗi xác thực NLM không bao giờ dẫn tới tạo mới; notebook của `/research` được ghi rõ là notebook nháp.
+- **`learn-track`: description** đặt mô tả chức năng trước triggers.
+
+### Đã sửa sau vòng soát độc lập (trước khi merge)
+- `quote_check` từng cho **trích dẫn bịa hoàn toàn** và **số bịa kẹp giữa hai đoạn thật** đi qua với mã 0, vì đoạn < 2 từ bị loại khỏi phép kiểm mà vẫn tính vào ngưỡng số từ. Nay mọi đoạn phải ≥ 2 từ.
+- `quote_check` báo **mã 1 (trích sai)** cho nguồn máy không đọc được (PDF scan, tệp sai đuôi) — mã 1 bảo người dùng chép lại, tức lặp vô tận. Nay ngưỡng tính theo tệp và trả mã 2.
+- `retrieval_stats`: sổ thiếu cột `#` gây `KeyError`; ô giữ chỗ `—` ở cột Bậc/Đến hạn và ô Thực in đậm bị coi là dòng hỏng.
+- `s0_notebook_check`: nlm có hai đường báo "không thấy" (chỉ bắt một); một dòng stderr của nlm làm notebook còn sống thành "không đo được"; alias trỏ notebook nháp trong khi `RESOURCES.md` ghi id khác thì phải dừng hỏi; tiêu đề `## Notebook NLM` che dòng chuẩn bên dưới.
+- Ví dụ mẫu của `learn-track` mâu thuẫn với khuôn bảng ngay trên nó (4 cột cũ, không có ô bằng chứng).
+
 ## [1.9.0] - 2026-08-16
 
 ### Added
