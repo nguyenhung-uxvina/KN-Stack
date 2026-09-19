@@ -1,0 +1,88 @@
+{
+  "skill": "learn-practice",
+  "version": "1.0",
+  "description": "Binary assertions for learn-practice — drills, interleaving schedule, 90-min focus session. Static audit of SKILL.md. Rule-level correctness of the schedule template (no adjacent single-topic sessions, ODI not DMIR) is checked by scripts/test_learn_skill_consistency.py, which regex cannot express.",
+  "mode": "static",
+  "test_input": "study plan: Pahl-Beitz, FEM, Gate Review trong 8 tuần",
+  "assertions": [
+    {
+      "id": "LP-MODES",
+      "name": "three_modes_routed",
+      "check": "routes to Targeted Drills, Interleaving Schedule and Focus Session by input phrase",
+      "regex": "Targeted Drills[\\s\\S]{0,200}Interleaving Schedule[\\s\\S]{0,200}Focus Session",
+      "required": true
+    },
+    {
+      "id": "LP-DRILL-SCORING",
+      "name": "drill_stages_have_scoring",
+      "check": "each drill stage has a measurable pass target, not just a duration",
+      "regex": "target ≥ 50%[\\s\\S]{0,600}target: ≥ 70% correct",
+      "required": true
+    },
+    {
+      "id": "LP-RULE1-ACROSS-DAYS",
+      "name": "rule1_spans_days",
+      "check": "rule 1 explicitly counts Mon PM → Wed AM as consecutive, so adjacency is checked across day boundaries",
+      "regex": "including across days",
+      "required": true
+    },
+    {
+      "id": "LP-RULE1-MIXED",
+      "name": "mixed_session_exception_stated",
+      "check": "states that a mixed session may sit next to one of its own topics — without this, any schedule with A+B sessions is ambiguous",
+      "regex": "mixed session .{0,40}may sit next to one of its own topics",
+      "required": true
+    },
+    {
+      "id": "LP-WALK-PAIRS",
+      "name": "walk_adjacent_pairs_before_output",
+      "check": "before output, the schedule is walked pair by pair against rule 1",
+      "regex": "check rule 1 on every adjacent pair",
+      "required": true
+    },
+    {
+      "id": "LP-WEEK1-EXCEPTION",
+      "name": "rule3_week1_exception_explicit",
+      "check": "the only allowed rule-3 break (Week 1 Mon PM introduces B) is named, not silent",
+      "regex": "Week 1 Mon PM introduces Topic B",
+      "required": true
+    },
+    {
+      "id": "LP-INTEGRATION-WEEK",
+      "name": "fourth_week_integration",
+      "check": "every 4th week has no new material",
+      "regex": "Every 4th week = integration week",
+      "required": true
+    },
+    {
+      "id": "LP-ODI",
+      "name": "requirements_drill_uses_odi",
+      "check": "requirements drill uses the ODI outcome statement formula",
+      "regex": "ODI outcome statements \\(\\[Direction\\] \\+ \\[Metric\\]",
+      "required": true
+    },
+    {
+      "id": "LP-90MIN",
+      "name": "focus_block_sums_to_90",
+      "check": "the focus session is fully timed from 0:00 to 1:30",
+      "regex": "0:00 – 0:05[\\s\\S]{0,1200}1:20 – 1:30",
+      "required": true
+    },
+    {
+      "id": "LP-NEXT-ACTION",
+      "name": "ends_with_core_next_action",
+      "check": "every plan ends with a Core next action the learner executes",
+      "regex": "NEXT ACTION \\(Core",
+      "required": true
+    },
+    {
+      "id": "LP-ANALYST-TRAP",
+      "name": "analyst_trap_check",
+      "check": "every plan ends with an analyst-trap check that forces at least one physical drill",
+      "regex": "ANALYST TRAP CHECK[\\s\\S]{0,200}physical drill",
+      "required": true
+    }
+  ],
+  "total_required": 11,
+  "passing_score": 11
+}

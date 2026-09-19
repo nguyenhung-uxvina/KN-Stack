@@ -147,11 +147,15 @@ D = Detail Design
 "When starting any design: ask 'The CEO Executes Details?' → expands to 4 phases"
 
 ### Spaced Repetition Schedule
+Same ladder as `/learn-teach` (`references/RETRIEVAL.md`) — one ladder across the learn skills, so a mnemonic made here can go straight into a workspace's RETRIEVAL.md:
 - Day 0: Create mnemonic
-- Day 1: Recall without notes (< 30 sec)
-- Day 3: Recall + explain each term
-- Day 7: Apply to a real task
-- Day 21: Spot-check
+- Rung 1 → 5 = **1 · 3 · 7 · 16 · 35 days** after creation
+  - Day 1: Recall without notes (< 30 sec)
+  - Day 3: Recall + explain each term
+  - Day 7: Recall, then apply to a real task
+  - Day 16, 35: Cold spot-check
+- Recalled correctly → up one rung. Failed → **down two rungs** (floor = rung 1), not back to zero.
+- If a `/learn-teach` workspace exists for this topic, add the mnemonic's question to its `RETRIEVAL.md` instead of tracking it here.
 
 ### Defense Engineering Example
 [Show mnemonic applied to VN defense context: BB-01, VN-AST, VDI 2225, MIL-STD, etc.]

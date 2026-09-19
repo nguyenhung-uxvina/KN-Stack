@@ -1,6 +1,6 @@
 ---
 name: learn-track
-description: Triggers on "track learning", "journal", "nhật ký học", "self-assess", "rubric", "how am I doing", "learning progress", "đánh giá tiến độ học". Consolidates journal, progress tracker, and rubric generator into one skill.
+description: Tracks engineering learning in three modes — journal reflection prompts (learner writes), a competency progress grid with evidence per level, and a behavioral rubric generator with observable 1/3/5 anchors. Triggers on "track learning", "journal", "nhật ký học", "self-assess", "rubric", "how am I doing", "learning progress", "đánh giá tiến độ học".
 ---
 
 # Learn-Track — Consolidated Learning Skill

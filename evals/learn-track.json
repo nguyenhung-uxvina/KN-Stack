@@ -1,0 +1,67 @@
+{
+  "skill": "learn-track",
+  "version": "1.0",
+  "description": "Binary assertions for learn-track — journal prompts, competency tracker, behavioral rubric. Static audit of SKILL.md.",
+  "mode": "static",
+  "test_input": "create rubric for Gate Review readiness",
+  "assertions": [
+    {
+      "id": "LTR-DESC-WHAT",
+      "name": "description_says_what_first",
+      "check": "frontmatter description states what the skill does before its trigger phrases (KN-Stack CLAUDE.md rule 5)",
+      "regex": "description: Tracks engineering learning",
+      "required": true
+    },
+    {
+      "id": "LTR-MODES",
+      "name": "three_modes_routed",
+      "check": "routes to Journal, Progress Tracker and Rubric Generator",
+      "regex": "Journal[\\s\\S]{0,200}Progress Tracker[\\s\\S]{0,200}Rubric Generator",
+      "required": true
+    },
+    {
+      "id": "LTR-FEEDBACK-LOOP",
+      "name": "journal_has_loop_prompt",
+      "check": "at least one journal prompt must surface a feedback loop",
+      "regex": "At least one prompt must surface a feedback loop",
+      "required": true
+    },
+    {
+      "id": "LTR-LEARNER-WRITES",
+      "name": "ai_does_not_write_journal",
+      "check": "the journal is the learner's to write — the AI generates prompts only",
+      "regex": "do not write journal for the learner",
+      "required": true
+    },
+    {
+      "id": "LTR-EVIDENCE",
+      "name": "tracker_levels_need_evidence",
+      "check": "every tracker row carries evidence for the current level",
+      "regex": "\\| Evidence \\|",
+      "required": true
+    },
+    {
+      "id": "LTR-OBSERVABLE",
+      "name": "rubric_observable_behavior",
+      "check": "rubric indicators are observable behaviors, not vague understanding",
+      "regex": "observable, not vague",
+      "required": true
+    },
+    {
+      "id": "LTR-PHYSICAL-DIM",
+      "name": "rubric_physical_dimension",
+      "check": "rubric must include a physical/empirical validation dimension",
+      "regex": "At least one dimension must address physical/empirical validation",
+      "required": true
+    },
+    {
+      "id": "LTR-FAILURE-DIM",
+      "name": "rubric_failure_dimension",
+      "check": "rubric must include an error/failure-handling dimension",
+      "regex": "At least one dimension must address error/failure handling",
+      "required": true
+    }
+  ],
+  "total_required": 8,
+  "passing_score": 8
+}

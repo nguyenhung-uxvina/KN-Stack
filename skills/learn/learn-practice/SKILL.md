@@ -47,7 +47,7 @@ description: Targeted drills, interleaving study schedules, and focus sessions f
 
 ### Defense Engineering Drill Topics
 - Pahl-Beitz phases: Task Clarification → Conceptual → Embodiment → Detail
-- Requirements writing: quantified vs. wished requirements, DMIR/ODI format
+- Requirements writing: quantified vs. wished requirements, ODI outcome statements ([Direction] + [Metric] + [Object of control] + [Context clarifier], see `/odi`)
 - VDI 2225 evaluation matrix: weighted criteria, variant scoring
 - FEM/simulation setup: boundary conditions, mesh sensitivity
 - Gate Review: G1/G2/G3 checklist execution
@@ -59,18 +59,20 @@ description: Targeted drills, interleaving study schedules, and focus sessions f
 *Use when:* "Plan my study schedule for [topics] over [N] weeks"
 
 ### Rules
-1. Never schedule the same topic in consecutive sessions
+1. Never schedule the same single topic in consecutive sessions — including across days (Mon PM → Wed AM counts as consecutive). A mixed session (A+B, 3-topic) may sit next to one of its own topics: it is already interleaved.
 2. Minimum 2 topics interleaved per week (3 is optimal)
-3. Morning blocks = new/hard material | Afternoon blocks = review/practice
+3. Morning blocks = new/hard material | Afternoon blocks = review/practice. One exception: Week 1 Mon PM introduces Topic B, because A is the only thing learned so far and drilling it would break rule 1.
 4. Every 4th week = integration week (no new material, connect everything)
+
+**Before outputting a schedule, walk it session by session and check rule 1 on every adjacent pair.** An earlier version of this template broke rule 1 in Week 1 (A→A, B→B) and nobody noticed, because a template reads as correct at a glance.
 
 ### Schedule Template (4-week unit, repeat as needed)
 
 ```
-Week 1 — Introduction + Separation
-  Mon AM: Topic A (new)       Mon PM: Topic A (drill)
-  Wed AM: Topic B (new)       Wed PM: Topic B (drill)
-  Fri AM: Topic C (new)       Fri PM: Mixed A+B drill
+Week 1 — Introduction (sequence A · B · C · A · B · C)
+  Mon AM: Topic A (new)       Mon PM: Topic B (new, light intro)
+  Wed AM: Topic C (new)       Wed PM: Topic A (drill)
+  Fri AM: Topic B (deepen)    Fri PM: Topic C (drill)
 
 Week 2 — Deepening
   Mon AM: Topic B (extend)    Mon PM: Topic A (varied drill)
