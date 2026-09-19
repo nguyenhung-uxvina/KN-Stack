@@ -1,6 +1,6 @@
 ---
 name: learn-practice
-description: Targeted drills, interleaving study schedules, and focus sessions for engineering learning. Triggers on "practice", "drill", "luyện tập", "schedule", "interleave", "focus session", "pomodoro", "study plan", "practice plan".
+description: Targeted drills, interleaving study schedules, and 90-minute focus sessions for engineering learning — produces a practice plan as text, does not create calendar events or recurring agents (that is /schedule) and does not run the DMIR learning cycle (that is /cycle). Triggers on "practice plan", "practice drills", "drill", "luyện tập", "bài luyện", "interleave", "interleaving", "lịch học xen kẽ", "study schedule", "lịch ôn", "focus session", "pomodoro".
 ---
 
 # /learn-practice — Engineering Practice & Learning System

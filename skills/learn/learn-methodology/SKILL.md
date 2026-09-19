@@ -1,6 +1,6 @@
 ---
 name: learn-methodology
-description: Master any engineering concept using auto-detected learning technique (Feynman, chunking, mnemonic, learning architecture). With --source <file|folder|notebook> it teaches what a specific book or book cluster says instead of general knowledge — every book claim is a verbatim «quote» machine-checked against the source by scripts/quote_check.py. Triggers on "learn concept", "explain", "giải thích", "feynman", "chunking", "mnemonic", "learning path", "how to learn", "học concept", "học theo sách", "bám sách", "learn from this book", "giải thích theo sách"
+description: Master any engineering concept using auto-detected learning technique (Feynman, chunking, mnemonic, learning architecture). With --source <file|folder|notebook> it teaches what a specific book or book cluster says instead of general knowledge — every book claim is a verbatim «quote» machine-checked against the source by scripts/quote_check.py. Works on ONE concept or domain at a time; for a full learning sprint on a topic use /learning, for a book-to-applied-experiment cycle use /book-to-learn, for stateful interactive lessons with spaced review use /learn-teach. Triggers on "learn concept", "explain simply", "giải thích đơn giản", "ELI5", "feynman", "chunking", "phân tách khái niệm", "mnemonic", "giúp nhớ", "learning architecture", "học concept", "học theo sách", "bám sách", "learn from this book", "giải thích theo sách"
 argument-hint: "<khái niệm hoặc yêu cầu> [--source <tệp|thư mục|notebook> ...]"
 ---
 

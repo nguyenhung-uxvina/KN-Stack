@@ -76,3 +76,57 @@ def test_mot_thang_on_cho_ca_hai_skill():
     assert _thang(meth), 'learn-methodology không dùng thang 1·3·7·16·35 của learn-teach'
     assert 'Day 21' not in meth, 'còn sót thang cũ 0·1·3·7·21'
     assert re.search(r'down two rungs', meth), 'thiếu luật trượt lùi hai bậc'
+
+
+# ---------- từ khoá kích hoạt không giẫm lên skill khác ----------
+import glob as _glob
+
+# Từ quá chung (kéo skill vào mọi câu hỏi) hoặc tên skill có sẵn của Claude Code.
+CAM = {'explain', 'giải thích', 'journal', 'schedule', 'practice', 'rubric', 'how am i doing',
+       'learning path', 'how to learn', 'lộ trình', 'lộ trình học', 'study plan', 'plan my',
+       'loop', 'review', 'plan', 'learn', 'học'}
+
+
+def _mo_ta():
+    out = {}
+    for f in _glob.glob(os.path.join(ROOT, 'skills', '**', 'SKILL.md'), recursive=True) + \
+            _glob.glob(os.path.join(ROOT, 'plugins', '**', 'SKILL.md'), recursive=True):
+        t = open(f, encoding='utf-8', errors='replace').read()
+        m = re.search(r'^---\s*\n(.*?)\n---', t, re.S)
+        if m:
+            out[os.path.basename(os.path.dirname(f))] = ' '.join(m.group(1).split())
+    return out
+
+
+def _tu_khoa(mo_ta):
+    """Các cụm trong ngoặc kép/đơn SAU chữ 'Triggers on' — chỉ đó mới là từ khoá kích hoạt."""
+    m = re.search(r'Triggers? (?:on|when)\b(.*)', mo_ta, re.I | re.S)
+    if not m:
+        return set()
+    return {x.strip().lower() for x in re.findall(r'["\'‘“]([^"\'’”]{2,60})["\'’”]', m.group(1))}
+
+
+def test_learn_khong_dung_tu_khoa_qua_chung():
+    md = _mo_ta()
+    loi = {s: sorted(_tu_khoa(md[s]) & CAM) for s in md if s.startswith('learn-')}
+    assert not any(loi.values()), 'từ khoá quá chung / trùng tên skill có sẵn: %s' % {k: v for k, v in loi.items() if v}
+
+
+def test_learn_khong_trung_tu_khoa_skill_khac():
+    md = _mo_ta()
+    cua_khac = {}
+    for s, d in md.items():
+        if not s.startswith('learn-'):
+            for k in _tu_khoa(d):
+                cua_khac.setdefault(k, []).append(s)
+    trung = {s: {k: cua_khac[k] for k in _tu_khoa(md[s]) if k in cua_khac}
+             for s in md if s.startswith('learn-')}
+    assert not any(trung.values()), 'trùng từ khoá: %s' % {k: v for k, v in trung.items() if v}
+
+
+def test_learn_methodology_va_practice_track_noi_ranh_gioi():
+    """Description phải chỉ sang skill hàng xóm, để bộ định tuyến chọn đúng khi yêu cầu lớn hơn."""
+    md = _mo_ta()
+    assert '/learning' in md['learn-methodology'] and '/book-to-learn' in md['learn-methodology']
+    assert '/schedule' in md['learn-practice'] and '/cycle' in md['learn-practice']
+    assert '/journal' in md['learn-track']
