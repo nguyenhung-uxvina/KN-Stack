@@ -1,12 +1,31 @@
 ---
 name: learn-practice
-description: Targeted drills, interleaving study schedules, and 90-minute focus sessions for engineering learning — produces a practice plan as text, does not create calendar events or recurring agents (that is /schedule) and does not run the DMIR learning cycle (that is /cycle). Triggers on "practice plan", "practice drills", "drill", "luyện tập", "bài luyện", "interleave", "interleaving", "lịch học xen kẽ", "study schedule", "lịch ôn", "focus session", "pomodoro".
+description: Targeted drills, interleaving study schedules, and 90-minute focus sessions for engineering learning — produces a practice plan as text, does not create calendar events or recurring agents (that is /schedule) and does not run the DMIR learning cycle (that is /cycle). With --source <file|folder|notebook> the drill topics, worked examples and answer keys come from a specific book, every book claim a verbatim «quote» checked by learn-methodology's quote_check.py. Triggers on "practice plan", "practice drills", "drill", "luyện tập", "bài luyện", "interleave", "interleaving", "lịch học xen kẽ", "study schedule", "lịch ôn", "focus session", "pomodoro", "luyện theo sách".
+argument-hint: "<chủ đề hoặc yêu cầu> [--source <tệp|thư mục|notebook> ...]"
 ---
 
 # /learn-practice — Engineering Practice & Learning System
 
 **COD:** Offload (AI generates plan) | Core (learner executes + reflects)
 **Galaxy links:** [[Training Scars]] · [[Muscle Memory Law]]
+
+---
+
+## --source — Practising What a Book Teaches
+
+Without `--source`, drills use general knowledge and the fixed topic list below. With `--source`, drill **what the book teaches**. Practising the wrong version of a method is worse than not practising ([[Training Scars]]).
+
+`--source` takes the same values as `/learn-methodology --source`: a file, a folder (e.g. `BOOK/_source/`), or an NLM notebook id/alias. **First load the Skill `learn-methodology:references:source-mode`.** Steps S1 (resolve and dump the source), S2 (NLM traps), S3 (label rules: `«quote»` / paraphrase / `[AI]`) and S4 (the gate) apply unchanged. This section says only what differs for practice:
+
+1. **Topics come from the book.** Each drill topic is a framework or procedure the book names, introduced by a `«quote»` that defines it. The fixed *Defense Engineering Drill Topics* list below is not used. Inside a `/book-to-learn` cycle, the topics are exactly `framework_ung_vien` in `LEARN/_pipeline_state.md`. Add no others.
+2. **Week 1–2 worked examples are the book's own**, quoted with location. **Recompute every one before using it as an answer key.** A book's worked example can contradict its own text. Measured on the CFMA paper (Hari & Weiss): the prose gives the bulb-failure severity as 8, while Table 1 shows 10; and a row shows SFD 40 where S × F × D = 4. An inconsistent example goes into a `## Chỗ nguồn tự mâu thuẫn` section and is **not** an answer key.
+3. **Week 3–4 varied problems are `[AI]`**, and each answer key names the book rule that decides it as a `«quote»`. If the book's rules cannot decide the answer, drop the problem. It tests general knowledge, not the book.
+4. **Week 5+ gate review:** the checklist is the book's own criteria or steps, quoted. The learner defends against those, not against AI-invented criteria.
+5. **Interleaving:** Topics A/B/C are book frameworks. Where a real Workshop X task exists, a real-work block counts as a topic, so book blocks alternate with applying them.
+6. **Book has no worked example for a topic** → `KHOẢNG TRỐNG`, and an `[AI]` example whose answer the learner checks against the quoted rule.
+7. **Gate:** write the plan to a file (`LEARN/learn/lp-plan-<topic>.md` inside a `/book-to-learn` cycle, otherwise the scratchpad), then run
+   `python <KN-Stack>/skills/learn/learn-methodology/scripts/quote_check.py <plan.md> --nguon <source>`.
+   Exit codes are handled as in source-mode S4. A plan that has not exited 0 is not "book-grounded".
 
 ---
 

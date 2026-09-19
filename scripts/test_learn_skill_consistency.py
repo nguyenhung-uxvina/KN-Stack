@@ -130,3 +130,20 @@ def test_learn_methodology_va_practice_track_noi_ranh_gioi():
     assert '/learning' in md['learn-methodology'] and '/book-to-learn' in md['learn-methodology']
     assert '/schedule' in md['learn-practice'] and '/cycle' in md['learn-practice']
     assert '/journal' in md['learn-track']
+
+
+# ---------- đường dẫn mà SKILL.md nhắc tới phải tồn tại ----------
+
+def test_duong_dan_script_va_reference_ton_tai():
+    """SKILL.md trỏ tới script/reference của skill khác (learn-practice → quote_check của
+    learn-methodology). Đổi tên hay dời tệp mà quên sửa chỗ trỏ thì skill hỏng im lặng."""
+    thieu = []
+    for s in ('learn-methodology', 'learn-practice', 'learn-track'):
+        md = _doc(s, 'SKILL.md')
+        for rel in re.findall(r'<KN-Stack>/([\w./-]+\.py)', md):
+            if not os.path.isfile(os.path.join(ROOT, rel)):
+                thieu.append((s, rel))
+        for sk, ref in re.findall(r'`([\w-]+):references:([\w-]+)`', md):
+            if not os.path.isfile(os.path.join(LEARN, sk, 'references', ref + '.md')):
+                thieu.append((s, '%s:references:%s' % (sk, ref)))
+    assert not thieu, thieu

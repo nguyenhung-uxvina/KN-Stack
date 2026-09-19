@@ -81,8 +81,50 @@
       "check": "every plan ends with an analyst-trap check that forces at least one physical drill",
       "regex": "ANALYST TRAP CHECK[\\s\\S]{0,200}physical drill",
       "required": true
+    },
+    {
+      "id": "LP-SRC-FLAG",
+      "name": "source_flag_declared",
+      "check": "argument-hint advertises --source",
+      "regex": "argument-hint:.*--source",
+      "required": true
+    },
+    {
+      "id": "LP-SRC-REUSE",
+      "name": "reuses_methodology_protocol",
+      "check": "reuses learn-methodology's source-mode protocol instead of duplicating it",
+      "regex": "Skill `learn-methodology:references:source-mode`",
+      "required": true
+    },
+    {
+      "id": "LP-SRC-TOPICS",
+      "name": "topics_from_book_or_cycle",
+      "check": "drill topics come from the book; inside /book-to-learn exactly framework_ung_vien",
+      "regex": "exactly `framework_ung_vien`",
+      "required": true
+    },
+    {
+      "id": "LP-SRC-RECOMPUTE",
+      "name": "recompute_book_examples",
+      "check": "the book's worked examples are recomputed before becoming answer keys; inconsistent ones are flagged, not used",
+      "regex": "Recompute every one before using it as an answer key",
+      "required": true
+    },
+    {
+      "id": "LP-SRC-ANSWER-QUOTE",
+      "name": "answer_key_is_book_rule",
+      "check": "each AI-made problem's answer key names the deciding book rule as a quote; undecidable problems are dropped",
+      "regex": "answer key names the book rule that decides it",
+      "required": true
+    },
+    {
+      "id": "LP-SRC-GATE",
+      "name": "quote_check_gate",
+      "check": "the plan is written to a file and gated by quote_check.py",
+      "regex": "quote_check\\.py <plan\\.md> --nguon",
+      "required": true
     }
   ],
-  "total_required": 11,
-  "passing_score": 11
+  "total_required": 17,
+  "passing_score": 17
 }

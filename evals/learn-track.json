@@ -36,8 +36,8 @@
     {
       "id": "LTR-EVIDENCE",
       "name": "tracker_levels_need_evidence",
-      "check": "every tracker row carries evidence for the current level",
-      "regex": "\\| Evidence \\|",
+      "check": "every tracker row carries measured evidence — the column is named \"Evidence (measured)\" so an impression cannot pass as evidence",
+      "regex": "\\| Evidence \\(measured\\) \\|",
       "required": true
     },
     {
@@ -60,8 +60,57 @@
       "check": "rubric must include an error/failure-handling dimension",
       "regex": "At least one dimension must address error/failure handling",
       "required": true
+    },
+    {
+      "id": "LTR-NO-AI-LEVEL",
+      "name": "ai_never_assigns_level",
+      "check": "the AI never fills Current Level; the learner scores it from measured evidence",
+      "regex": "The AI never assigns Current Level",
+      "required": true
+    },
+    {
+      "id": "LTR-STATS-SCRIPT",
+      "name": "measurement_from_retrieval_ledger",
+      "check": "evidence comes from retrieval_stats.py over the learn-teach RETRIEVAL.md when one exists",
+      "regex": "retrieval_stats\\.py <workspace or RETRIEVAL\\.md>",
+      "required": true
+    },
+    {
+      "id": "LTR-NO-PARTIAL",
+      "name": "no_grid_on_partial_numbers",
+      "check": "unreadable ledger rows block the grid until fixed",
+      "regex": "Do not build the grid on partial numbers",
+      "required": true
+    },
+    {
+      "id": "LTR-NO-ESTIMATE",
+      "name": "unmeasured_says_so",
+      "check": "dimensions without measurement say 'chưa có phép đo', never an estimate",
+      "regex": "`chưa có phép đo` where none exist, never an estimate",
+      "required": true
+    },
+    {
+      "id": "LTR-CONFIDENT-MISS",
+      "name": "flag_confident_miss_vs_self_score",
+      "check": "a self-score ≥ 3 on a dimension containing a confident-but-wrong item is flagged",
+      "regex": "confident miss",
+      "required": true
+    },
+    {
+      "id": "LTR-MEMORY-NOT-DOING",
+      "name": "recall_is_not_physical_evidence",
+      "check": "recall numbers never count as physical/practical validation evidence",
+      "regex": "Recall measures \\*\\*memory, not doing\\*\\*",
+      "required": true
+    },
+    {
+      "id": "LTR-NO-TREND",
+      "name": "snapshot_not_trend",
+      "check": "one retrieval_stats run is a snapshot; trends need two dated trackers",
+      "regex": "Do not infer a trend from one run",
+      "required": true
     }
   ],
-  "total_required": 8,
-  "passing_score": 8
+  "total_required": 15,
+  "passing_score": 15
 }
