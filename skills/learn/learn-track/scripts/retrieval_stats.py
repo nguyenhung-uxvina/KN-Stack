@@ -71,11 +71,16 @@ def doc_so(path):
         if not {'muc', 'doan', 'thuc'} <= set(tieu_de):
             continue
         hang, hong = [], []
-        for d2 in dong[i + 2:]:
+        for stt, d2 in enumerate(dong[i + 2:], 1):
             if not d2.strip().startswith('|'):
                 break
             o = _o(d2)
             r = {k: (o[j] if j < len(o) else '') for j, k in enumerate(tieu_de) if k}
+            # Cột '#' không bắt buộc ở cổng tiêu đề, nên đừng đọc nó vô điều kiện: sổ thiếu
+            # cột này + có mục quá hạn ⇒ KeyError, traceback, và mã 1 (mã 1 nghĩa là "đã
+            # liệt kê dòng hỏng" — trong khi chẳng liệt kê gì).
+            if not r.get('#'):
+                r['#'] = str(stt)
             loi = _kiem_hang(r)
             (hong if loi else hang).append(dict(r, loi=loi) if loi else r)
         return {'path': path, 'cap_nhat': m.group(1) if m else None, 'hang': hang, 'hong': hong}
@@ -84,7 +89,9 @@ def doc_so(path):
 
 def _kiem_hang(r):
     """Chuẩn hoá tại chỗ; trả về lý do hỏng hoặc '' nếu đọc được."""
-    d, t = _chuan(r.get('doan', '')), r.get('thuc', '').strip().lower()
+    # _chuan cho CẢ HAI cột: sổ thật dùng in đậm trong bảng, nên "**✗**" rất dễ xảy ra —
+    # và đó đúng là ô "chắc mà sai", thứ cần bắt nhất.
+    d, t = _chuan(r.get('doan', '')), _chuan(r.get('thuc', ''))
     d = '' if d in TRONG else d
     t = '' if t in TRONG else t
     if d and d not in DOAN:
@@ -96,11 +103,15 @@ def _kiem_hang(r):
     # Thực mà không Đoán: ĐÃ ôn, chỉ thiếu bước đoán trước (sổ icdm 15/08). Tính vào tỉ lệ
     # nhớ, bỏ khỏi hiệu chỉnh — loại cả dòng thì tỉ lệ nhớ báo sai.
     r['doan'], r['thuc'] = DOAN.get(d), THUC.get(t)
+    # Ký hiệu giữ chỗ hợp lệ ở MỌI cột, không chỉ Đoán/Thực — một ô "—" ở cột Bậc từng
+    # làm cả Progress Tracker bị chặn.
     b = r.get('bac', '').strip()
+    b = '' if _chuan(b) in TRONG else b
     if b and not b.isdigit():
         return 'Bậc "%s" không phải số' % b
     r['bac'] = int(b) if b else None
     h = r.get('han', '').strip()
+    h = '' if _chuan(h) in TRONG else h
     if h:
         try:
             dt.date.fromisoformat(h)

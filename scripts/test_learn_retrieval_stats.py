@@ -69,6 +69,46 @@ def test_theo_bai(tmp_path):
     assert b['02']['muc'] == 3 and b['02']['da_on'] == 2 and b['02']['chac_sai'] == 0
 
 
+def test_chac_ma_sai_dem_dung_chieu(tmp_path):
+    """Soát PR: fixture cũ có 1 hàng C+✓ và 1 hàng C+✗ trong CÙNG bài 01, nên đảo cực tính
+    ('C','✗')→('C','✓') vẫn ra 1 — cột chac_sai của bảng-theo-bài không bị ghim."""
+    so = SO.replace('| 2 | D cao nghĩa là gì | 01 | C | ✗ |', '| 2 | D cao nghĩa là gì | 03 | C | ✓ |')
+    s = rs.thong_ke(rs.doc_so(str(ghi(tmp_path, so))), '2026-09-19')
+    assert s['theo_bai']['03']['chac_sai'] == 0      # bài chỉ có C+✓
+    assert s['theo_bai']['01']['chac_sai'] == 0
+    assert s['o']['C✓'] == 2 and s['o']['C✗'] == 0
+
+
+def test_thieu_cot_thu_tu_van_chay_duoc(tmp_path):
+    """Soát PR: cổng tiêu đề chỉ đòi Mục/Đoán/Thực, nhưng thong_ke đọc r['#'] vô điều kiện →
+    sổ không có cột '#' mà có mục quá hạn ⇒ KeyError + mã 1 (mã 1 nghĩa là 'đã liệt kê dòng
+    hỏng' — ở đây chỉ có traceback)."""
+    so = ('# Sổ\n\n| Mục | Bài | Đoán | Thực | Bậc | Đến hạn |\n|---|---|---|---|---|---|\n'
+          '| Vì sao X | 01 | C | ✓ | 2 | 2026-09-01 |\n')
+    rc, out = chay(ghi(tmp_path, so), '--hom-nay', '2026-09-19')
+    assert rc == 0, out
+    assert 'Traceback' not in out
+    assert 'Đến hạn hoặc quá hạn: 1' in out
+
+
+def test_giu_cho_o_cot_bac_va_den_han(tmp_path):
+    """Soát PR: TRONG chỉ áp cho Đoán/Thực; '—' ở cột Bậc/Đến hạn bị coi là dòng hỏng và
+    chặn cả Progress Tracker vì một ô giữ chỗ hợp lệ."""
+    so = SO.replace('| 5 | Thang F đo theo đơn vị gì | 02 | | | 1 | 2026-09-21 | chưa ôn |',
+                    '| 5 | Thang F đo theo đơn vị gì | 02 | — | — | — | — | chưa ôn |')
+    rc, out = chay(ghi(tmp_path, so), '--hom-nay', '2026-09-19')
+    assert rc == 0, out
+
+
+def test_o_in_dam_van_doc_duoc(tmp_path):
+    """Soát PR: _chuan() (bỏ **) áp cho Đoán mà không áp cho Thực. Sổ thật dùng in đậm trong
+    bảng, nên '**✗**' rất dễ xảy ra — và đó đúng là ô 'chắc mà sai' cần bắt nhất."""
+    so = SO.replace('| 2 | D cao nghĩa là gì | 01 | C | ✗ |', '| 2 | D cao nghĩa là gì | 01 | C | **✗** |')
+    rc, out = chay(ghi(tmp_path, so), '--hom-nay', '2026-09-19')
+    assert rc == 0, out
+    assert 'chắc✗ 1' in out
+
+
 def test_cli_in_ra_o_chac_ma_sai_va_nhan_anh_chup(tmp_path):
     rc, out = chay(ghi(tmp_path), '--hom-nay', '2026-09-19')
     assert rc == 0, out

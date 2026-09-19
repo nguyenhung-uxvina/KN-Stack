@@ -147,15 +147,13 @@ D = Detail Design
 "When starting any design: ask 'The CEO Executes Details?' → expands to 4 phases"
 
 ### Spaced Repetition Schedule
-Same ladder as `/learn-teach` (`references/RETRIEVAL.md`) — one ladder across the learn skills, so a mnemonic made here can go straight into a workspace's RETRIEVAL.md:
-- Day 0: Create mnemonic
-- Rung 1 → 5 = **1 · 3 · 7 · 16 · 35 days** after creation
-  - Day 1: Recall without notes (< 30 sec)
-  - Day 3: Recall + explain each term
-  - Day 7: Recall, then apply to a real task
-  - Day 16, 35: Cold spot-check
-- Recalled correctly → up one rung. Failed → **down two rungs** (floor = rung 1), not back to zero.
-- If a `/learn-teach` workspace exists for this topic, add the mnemonic's question to its `RETRIEVAL.md` instead of tracking it here.
+Same ladder as `/learn-teach` (`references/RETRIEVAL.md`), read the same way: **a rung is the gap to the *next* review, counted from the review you just did — not a day number counted from creation.**
+- Day 0: create the mnemonic. It starts on rung 1.
+- Rung 1 → 5 = wait **1 · 3 · 7 · 16 · 35 days** before the next cold recall.
+- Recalled correctly → up one rung (wait longer). Failed → **down two rungs** (floor = rung 1), not back to zero.
+- So an item recalled correctly every time comes due on **day 1, 4, 11, 27, 62**. Reading the rungs as absolute days from creation gives day 1, 3, 7, 16, 35 — a different, much tighter schedule, and it makes "down two rungs" meaningless because the earlier dates are already past.
+- Each review is cold: recall from memory first, no notes. Around day 11 (rung 3), apply it to a real task instead of only reciting it.
+- If a `/learn-teach` workspace exists for this topic, add the mnemonic's question to its `RETRIEVAL.md` instead of tracking it here — same ladder, same reading, one place.
 
 ### Defense Engineering Example
 [Show mnemonic applied to VN defense context: BB-01, VN-AST, VDI 2225, MIL-STD, etc.]

@@ -5,8 +5,8 @@
   "mode": "static",
   "include_references": true,
   "test_input": "giải thích đơn giản morphological matrix --source D:/Workshop_X/3_Resources/Books/pahl-beitz/_source",
-  "total_required": 20,
-  "passing_score": 20,
+  "total_required": 23,
+  "passing_score": 23,
   "assertions": [
     {
       "id": "LM-SRC-FLAG",
@@ -154,6 +154,20 @@
       "check": "states honestly that the script checks words, not meaning — a real quote next to a distorting paraphrase still passes",
       "regex": "Script bắt chữ, không bắt nghĩa",
       "required": false
+    },
+    {
+      "id": "LM-SEGMENT-2WORDS",
+      "name": "every_segment_checkable",
+      "check": "each run between ellipses must be >= 2 words, so a fabricated number cannot hide between two real fragments",
+      "regex": "mỗi đoạn giữa hai chỗ lược phải từ 2 từ trở lên",
+      "required": true
+    },
+    {
+      "id": "LM-LADDER-IS-GAP",
+      "name": "ladder_rung_is_a_gap",
+      "check": "a rung is the gap to the next review, not a day number from creation; the absolute schedule is spelled out",
+      "regex": "gap to the \\*next\\* review[\\s\\S]{0,700}day 1, 4, 11, 27, 62",
+      "required": true
     }
   ]
 }

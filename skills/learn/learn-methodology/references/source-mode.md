@@ -62,7 +62,7 @@ Mỗi dòng nội dung thuộc đúng một trong ba loại:
 Luật cho trích dẫn:
 
 - **Nguyên văn**, ngôn ngữ gốc của sách. Sách tiếng Anh thì trích tiếng Anh; phần Diễn giải viết tiếng Việt.
-- **5 từ trở lên** mỗi trích dẫn (ngắn hơn không chứng minh được gì). Lược bằng `[…]`; mỗi đoạn giữa các chỗ lược đều phải có trong sách.
+- **5 từ trở lên** mỗi trích dẫn (ngắn hơn không chứng minh được gì). Lược bằng `[…]`, nhưng **mỗi đoạn giữa hai chỗ lược phải từ 2 từ trở lên**: một đoạn một từ không đối chiếu được, nên cổng từ chối cả trích dẫn. Đừng lược sát quanh một con số — viết đủ cụm chữ quanh nó.
 - **Ngắn**: một câu, tối đa hai. Đây là tài liệu học nội bộ, không phải bản chép sách.
 - **Mọi con số từ sách phải nằm trong «…»** — số không được đứng trần trong phần Diễn giải. Script chỉ kiểm được những gì nằm trong ngoặc.
 - **Vị trí** lấy từ đầu ra của `quote_check.py` (`trang PDF n`, tên tệp chương), **không tự ghi số trang**: agent đọc văn bản trần thì không nhìn thấy số trang, và số trang đoán trông y hệt số trang thật. `trang PDF` là số thứ tự trang trong tệp, có thể lệch số trang in.

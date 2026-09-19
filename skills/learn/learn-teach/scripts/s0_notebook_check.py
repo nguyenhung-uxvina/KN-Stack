@@ -49,7 +49,9 @@ def _nlm(args, bo_base_url=False):
         env.pop('NOTEBOOKLM_BASE_URL', None)
     p = subprocess.run(cmd + args, capture_output=True, text=True, encoding='utf-8',
                        errors='replace', env=env)
-    return p.returncode, (p.stdout or '') + (p.stderr or '')
+    # Trả stdout và stderr RIÊNG: nlm ghi cảnh báo ("using cached credentials"…) ra stderr,
+    # ghép vào rồi parse JSON sẽ hỏng ⇒ notebook còn sống bị báo "không đo được".
+    return p.returncode, (p.stdout or ''), (p.stderr or '')
 
 
 def doc_resources(ws):
@@ -63,6 +65,8 @@ def doc_resources(ws):
         if 'Notebook NLM' in dong:
             a = re.search(r'`(learn-[\w-]+)`', dong)
             m = re.search(UUID, dong)
+            if not a and not m:
+                continue          # tiêu đề "## Notebook NLM" — đừng để nó che dòng chuẩn bên dưới
             alias, nid = (a.group(1) if a else None), (m.group(0) if m else None)
             break
     # Workspace thật (tu-nha-thau…) ghi 3 notebook trong BẢNG, không có dòng chuẩn. Chỉ
@@ -72,13 +76,13 @@ def doc_resources(ws):
 
 
 def alias_get(ten):
-    rc, out = _nlm(['alias', 'get', ten])
+    rc, out, err = _nlm(['alias', 'get', ten])
     m = re.search(UUID, out)
     if rc == 0 and m:
         return m.group(0), None
-    if rc == 1 and 'not found' in out.lower():
+    if rc == 1 and 'not found' in (out + err).lower():
         return None, None
-    return None, 'nlm alias get %s trả mã %d: %s' % (ten, rc, out.strip()[:200])
+    return None, 'nlm alias get %s trả mã %d: %s' % (ten, rc, (out + err).strip()[:200])
 
 
 def notebook_get(nid):
@@ -86,16 +90,21 @@ def notebook_get(nid):
     lan_thu = [False] + ([True] if os.environ.get('NOTEBOOKLM_BASE_URL') else [])
     msg = ''
     for bo in lan_thu:
-        _, out = _nlm(['notebook', 'get', nid, '-j'], bo_base_url=bo)
-        try:
-            j = json.loads(out[out.find('{'):]) if '{' in out else {}
-        except ValueError:
-            j = {}
+        _, out, err = _nlm(['notebook', 'get', nid, '-j'], bo_base_url=bo)
+        j = {}
+        if '{' in out:
+            try:                                  # raw_decode: bỏ qua chữ in sau JSON
+                j = json.JSONDecoder().raw_decode(out[out.find('{'):])[0]
+            except ValueError:
+                j = {}
         if j.get('notebook_id'):
             j['_bo_base_url'] = bo
             return 'song', j
-        msg = j.get('error') or out.strip()[:200]
-        if 'NOT_FOUND' in msg:
+        msg = j.get('error') or (out + err).strip()[:200]
+        # nlm có HAI đường báo không thấy: "API error (code 5): NOT_FOUND" và NotFoundError
+        # in "Notebook <id> not found." — bản trước chỉ bắt đường thứ nhất, nên notebook đã
+        # xoá bị xếp nhầm vào lỗi xác thực và đẩy người dùng đi chữa nhầm chỗ.
+        if 'NOT_FOUND' in msg.upper() or re.search(r'not found', msg, re.I):
             return 'xoa', msg
     return 'loi', msg
 
@@ -121,6 +130,15 @@ def main(argv=None):
     if len(ids) > 1:
         print('MÂU THUẪN: RESOURCES.md trỏ %s, alias %s trỏ %s. DỪNG — hỏi người dùng giữ notebook '
               'nào; không tạo cái thứ ba.' % (id_res, alias, id_alias))
+        return 3
+    # Khi id chỉ đến từ alias mà RESOURCES.md còn nhắc id khác, không được lặng lẽ chọn cái
+    # của alias: alias có thể đang trỏ notebook nháp của /research. Có dòng chuẩn thì dòng
+    # chuẩn là quyền quyết định, id khác trong tệp chỉ là ghi chú.
+    if ids and not id_res and uuid_khac:
+        print('DỪNG: alias %s trỏ %s, nhưng RESOURCES.md nhắc tới id khác: %s, và không có '
+              'dòng **Notebook NLM:** chuẩn. Hỏi người dùng cái nào là notebook thường trực '
+              '(alias có thể đang trỏ notebook nháp của /research).'
+              % (alias, id_alias, ', '.join(uuid_khac)))
         return 3
     if not ids and uuid_khac:
         print('DỪNG: RESOURCES.md không có dòng **Notebook NLM:** chuẩn nhưng nhắc tới %d id: %s. '

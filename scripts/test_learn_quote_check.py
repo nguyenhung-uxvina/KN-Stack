@@ -119,6 +119,27 @@ def test_trich_qua_ngan_khong_chung_minh_gi(tmp_path):
     assert 'QUÁ NGẮN' in out
 
 
+def test_moi_doan_giua_cho_luoc_phai_du_2_tu(tmp_path):
+    """Soát PR 2026-09-19: đoạn < 2 từ bị LOẠI khỏi danh sách kiểm mà vẫn tính vào --min-tu.
+    Trích dẫn toàn đoạn một từ ⇒ không đoạn nào được kiểm ⇒ báo OK cho chữ hoàn toàn bịa."""
+    rc, out = chay(tmp_path, '«bọ … cạp … ngựa … vằn … quỷ»')
+    assert rc == 1, out
+    assert 'OK' not in out.split('Tổng')[0]
+
+
+def test_chen_so_bia_giua_hai_cho_luoc(tmp_path):
+    """Nguy nhất: số bịa nằm TRONG ngoặc kép, bọc giữa hai đoạn trích thật."""
+    rc, out = chay(tmp_path, '«The safety factor shall be […] 99,9 […] for all lifting points»')
+    assert rc == 1, out
+
+
+def test_doan_mot_tu_that_van_bi_tu_choi_vi_khong_kiem_duoc(tmp_path):
+    """Kể cả khi đoạn một từ có thật trong nguồn: cổng không chứng minh được gì về nó."""
+    rc, out = chay(tmp_path, '«The safety factor shall be […] 7.5 […] for all lifting points»')
+    assert rc == 1, out
+    assert 'QUÁ NGẮN' in out
+
+
 def test_khong_co_trich_dan_nao(tmp_path):
     rc, out = chay(tmp_path, 'Feynman: bộ khuếch đại điện tích giống cái xô hứng mưa.')
     assert rc == 1
@@ -202,6 +223,44 @@ def test_pdf_doc_bang_hai_thu_vien(tmp_path, monkeypatch):
 
 
 # ---------- hàm chuẩn hoá ----------
+
+def test_nguon_pdf_scan_nhieu_trang_la_ma_2_khong_phai_ma_1(tmp_path, monkeypatch):
+    """Soát PR: ngưỡng 'gần như rỗng' tính trên TỔNG, nên PDF scan 40 trang × vài từ rác
+    OCR vượt ngưỡng → chỉ cảnh báo rồi báo KHÔNG THẤY (mã 1). Mã 1 nghĩa là 'chép lại cho
+    đúng', tức bảo người dùng lặp vô tận trên cuốn sách máy không đọc được. Ngưỡng nay tính
+    theo TỆP: trung bình < 20 từ/trang trên bản ghép hai thư viện."""
+    src = tmp_path / 'scan.pdf'
+    src.write_bytes(b'%PDF-1.4 fake')
+    out = tmp_path / 'out.md'
+    out.write_text('«The safety factor shall be 7.5 for all lifting points»', encoding='utf-8')
+    rac = ['rac %d ocr xyz' % i for i in range(40)]
+    monkeypatch.setattr(qc, '_pdf_fitz', lambda p: rac)
+    monkeypatch.setattr(qc, '_pdf_pypdf', lambda p: rac)
+    assert qc.main([str(out), '--nguon', str(src)]) == 2
+
+
+def test_duoi_tep_la_khong_doc_bua(tmp_path):
+    """Truyền thẳng .docx: DUOI chỉ lọc khi duyệt thư mục → đọc nhị phân như UTF-8 thành 'từ'."""
+    src = tmp_path / 'sach.docx'
+    src.write_bytes(b'PK' + b'rac ' * 300)
+    out = tmp_path / 'out.md'
+    out.write_text('«The safety factor shall be 7.5 for all lifting points»', encoding='utf-8')
+    p = subprocess.run([sys.executable, SCRIPT, str(out), '--nguon', str(src)],
+                       capture_output=True, text=True, encoding='utf-8')
+    assert p.returncode == 2, p.stdout
+
+
+def test_khop_phai_dung_bien_tu(tmp_path):
+    rc, out = chay(tmp_path, '«harge amplifier converts the charge from a piezoelectric senso»')
+    assert rc == 1, out
+
+
+def test_noi_gach_khop_ban_da_noi_trong_nguon(tmp_path):
+    """Nguồn PDF ngắt từ giữa dòng ('self-' rồi xuống dòng 'reliance'); trích dẫn viết liền dấu nối."""
+    src = 'The team values self-\nreliance above all other engineering virtues here.' + DEM
+    rc, out = chay(tmp_path, '«The team values self-reliance above all other engineering virtues»', nguon_text=src)
+    assert rc == 0, out
+
 
 def test_ky_tu_dieu_khien_giua_o_bang(tmp_path):
     """Đo thật 2026-09-19 (Hari & Weiss, CFMA, tr.5): PDF chèn \\x01 giữa các ô bảng.

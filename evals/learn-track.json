@@ -109,8 +109,15 @@
       "check": "one retrieval_stats run is a snapshot; trends need two dated trackers",
       "regex": "Do not infer a trend from one run",
       "required": true
+    },
+    {
+      "id": "LTR-EXAMPLE-MATCHES-FORMAT",
+      "name": "example_uses_the_measured_grid",
+      "check": "the worked example uses the same 6-column measured grid, including an unmeasured dimension and a flagged self-score",
+      "regex": "Evidence \\(measured\\) \\| Current Level \\(learner\\)[\\s\\S]{0,900}chưa có phép đo",
+      "required": true
     }
   ],
-  "total_required": 15,
-  "passing_score": 15
+  "total_required": 16,
+  "passing_score": 16
 }

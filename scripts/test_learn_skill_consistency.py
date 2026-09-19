@@ -78,6 +78,19 @@ def test_mot_thang_on_cho_ca_hai_skill():
     assert re.search(r'down two rungs', meth), 'thiếu luật trượt lùi hai bậc'
 
 
+def test_thang_on_cung_NGHIA_khong_chi_cung_con_so():
+    """Soát PR: cùng dãy 1·3·7·16·35 nhưng RETRIEVAL.md hiểu là KHOẢNG CÁCH tới lần ôn sau,
+    còn bản cũ của learn-methodology hiểu là NGÀY kể từ lúc tạo. Cùng một mục ở bậc 3 sẽ đến
+    hạn ngày 7 ở skill này và ngày 11 ở skill kia — test chỉ so chuỗi số thì chứng nhận nhầm
+    hai thang lệch nhau là một."""
+    meth = _doc('learn-methodology', 'SKILL.md')
+    assert 'days** after creation' not in meth, 'đọc bậc thành ngày-kể-từ-lúc-tạo'
+    assert re.search(r'gap to the \*?\*?next\*?\*? review', meth, re.I), 'không nói rõ bậc = khoảng cách'
+    assert 'day 1, 4, 11, 27, 62' in meth, 'thiếu lịch tuyệt đối suy ra từ khoảng cách'
+    teach = _doc('learn-teach', 'references', 'RETRIEVAL.md')
+    assert 'Nhớ đúng → lên một bậc' in teach, 'RETRIEVAL.md đổi cách lên bậc - xem lại cả hai'
+
+
 # ---------- từ khoá kích hoạt không giẫm lên skill khác ----------
 import glob as _glob
 

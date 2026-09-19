@@ -88,13 +88,18 @@ Levels: 1=Novice · 2=Developing · 3=Competent · 4=Proficient · 5=Expert
 - Teaching ability (can you explain to a peer?)
 - Physical/practical validation (have you tested it?)
 
-**Defense engineering example (P&B mastery). Levels below were scored by the learner, not the AI:**
-| Dimension | Current | Target | Gap |
-|---|---|---|---|
-| Task clarification (Step 1-2) | 2 | 4 | -2 |
-| Function structure (Step 3) | 1 | 3 | -2 |
-| VDI 2225 scoring | 1 | 3 | -2 |
-| Running a Gate Review | 1 | 4 | -3 |
+**Defense engineering example (P&B mastery), in the format above — Evidence from `retrieval_stats`, levels scored by the learner:**
+
+| Dimension | Lessons (Bài) | Evidence (measured) | Current Level (learner) | Target | Gap |
+|---|---|---|---|---|---|
+| Task clarification (Step 1-2) | 01, 02 | nhớ đúng 5/6 · chắc mà sai 0 | 2 | 4 | -2 |
+| Function structure (Step 3) | 03 | nhớ đúng 1/4 · chắc mà sai 1 (#7) | 1 | 3 | -2 |
+| VDI 2225 scoring | 04 | nhớ đúng 2/3 · chắc mà sai 1 (#11) | 3 ⚠ | 3 | 0 |
+| Running a Gate Review | — | chưa có phép đo (chưa chạy gate thật) | 1 | 4 | -3 |
+| Physical validation | — | 1 bench test 08/08, kết quả chưa đạt ngưỡng | 2 | 4 | -2 |
+
+⚠ trên dòng VDI 2225: người học tự chấm 3 (Competent) trong khi mục #11 là "chắc mà sai" — đúng ô người học không tự phát hiện được. Cờ này ở lại trong bảng; người học có quyền giữ mức đã chấm.
+Dòng *Physical validation* lấy bằng chứng từ kết quả thử thật, **không** từ số hồi tưởng.
 
 ---
 

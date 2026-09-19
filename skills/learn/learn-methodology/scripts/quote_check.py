@@ -181,6 +181,11 @@ def nap_nguon(duong_dan):
                     if f.lower().endswith(DUOI):
                         tep.append(os.path.join(goc, f))
         elif os.path.isfile(p):
+            if not p.lower().endswith(DUOI):
+                # Không đoán: .docx đọc như UTF-8 cho ra vài trăm "từ" rác, đủ vượt mọi ngưỡng
+                # rỗng, rồi mọi trích dẫn đúng đều báo KHÔNG THẤY (mã 1 = "bạn chép sai").
+                raise SystemExit('KHÔNG ĐO ĐƯỢC: %s không phải %s. .docx/.pptx thì chạy '
+                                 '/doc-to-md trước.' % (p, '/'.join(DUOI)))
             tep.append(p)
         else:
             raise SystemExit('KHÔNG ĐO ĐƯỢC: không thấy nguồn %s' % p)
@@ -189,9 +194,16 @@ def nap_nguon(duong_dan):
     out = []
     for p in sorted(tep):
         t = Tep(p)
-        if t.kieu == 'pdf' and t.so_don_vi and t.so_tu < 5 * t.so_don_vi:
-            print('CẢNH BÁO %s: %d trang mà chỉ %d từ — PDF scan không lớp chữ? Cần OCR trước.'
-                  % (t.ten, t.so_don_vi, t.so_tu))
+        # Ngưỡng theo TỆP, không theo tổng: PDF scan 40 trang × vài từ rác OCR vượt mọi
+        # ngưỡng tổng, rồi mọi trích dẫn đúng đều thành "KHÔNG THẤY" — mã 1 bảo người dùng
+        # chép lại cho đúng, tức lặp vô tận trên cuốn sách máy không đọc được.
+        # Ngưỡng 20 từ/trang tính trên bản ĐÃ GHÉP hai thư viện (nên một trang chữ thật đếm
+        # gấp đôi): sách có lớp chữ đạt hàng trăm, bản scan đạt 0–vài từ rác OCR.
+        if t.kieu == 'pdf' and t.so_don_vi and t.so_tu < 20 * t.so_don_vi:
+            raise SystemExit('KHÔNG ĐO ĐƯỢC: %s có %d trang mà chỉ %d từ (đã đọc bằng cả hai '
+                             'thư viện) — PDF scan không có lớp chữ. OCR trước rồi chạy lại; '
+                             'đừng dạy "bám sách" trên cuốn sách máy không đọc được.'
+                             % (t.ten, t.so_don_vi, t.so_tu))
         out.append(t)
     if sum(t.so_tu for t in out) < 20:
         raise SystemExit('KHÔNG ĐO ĐƯỢC: nguồn gần như rỗng (%d từ). PDF scan thì OCR trước; '
@@ -204,11 +216,22 @@ def nap_nguon(duong_dan):
 
 def kiem(trich, kho, min_tu):
     """→ (trạng thái, vị trí|ghi chú). Trạng thái: OK | KHÔNG THẤY | QUÁ NGẮN."""
-    doan = [norm(d) for d in LUOC.split(trich)]
+    tho = LUOC.split(trich)
+    doan = [norm(d) for d in tho]
     tong = sum(len(d.split()) for d in doan)
     if tong < min_tu:
         return 'QUÁ NGẮN', '%d từ < %d — quá ngắn để chứng minh là trích từ sách' % (tong, min_tu)
-    can = [(d, norm(g, True)) for d, g in zip(doan, LUOC.split(trich)) if len(d.split()) >= 2]
+    # MỌI đoạn giữa hai chỗ lược đều phải kiểm được. Bản trước bỏ qua đoạn < 2 từ nhưng vẫn
+    # cộng nó vào tổng, nên «bọ … cạp … ngựa … vằn … quỷ» (bịa hoàn toàn) và
+    # «The safety factor shall be […] 99,9 […] for all lifting points» (số bịa kẹp giữa hai
+    # đoạn thật) đều qua cổng với mã 0 — đúng thứ cổng này sinh ra để chặn.
+    ngan = [d for d in doan if 0 < len(d.split()) < 2]
+    if ngan:
+        return 'QUÁ NGẮN', ('đoạn «%s» chỉ 1 từ — không chứng minh được; viết đủ cụm ≥ 2 từ '
+                            'quanh nó, đừng lược sát' % _cat(ngan[0], 30))
+    can = [(d, norm(g, True)) for d, g in zip(doan, tho) if len(d.split()) >= 2]
+    if not can:
+        return 'QUÁ NGẮN', 'không đoạn nào ≥ 2 từ để đối chiếu'
     vi_tri = None
     for d, d_noi in can:
         thay = None

@@ -27,6 +27,8 @@ st = json.load(open(os.environ["FAKE_NLM_STATE"], encoding="utf-8"))
 log = os.environ["FAKE_NLM_STATE"] + ".log"
 open(log, "a", encoding="utf-8").write(" ".join(sys.argv[1:]) + "\n")
 a = sys.argv[1:]
+if a[:2] == ["alias", "get"] and st.get("alias_loi"):
+    print("Error: something broke in nlm"); sys.exit(2)
 if a[:2] == ["alias", "get"]:
     if a[2] in st.get("aliases", {}):
         print(st["aliases"][a[2]]); sys.exit(0)
@@ -38,9 +40,15 @@ if a[:2] == ["notebook", "get"]:
         sys.exit(0)
     nb = st.get("notebooks", {}).get(a[2])
     if nb is None:
-        print(json.dumps({"status": "error", "error": "Failed to get notebook: API error (code 5): NOT_FOUND"}))
+        if st.get("kieu_not_found") == "NotFoundError":
+            print(json.dumps({"status": "error", "error": "Notebook %s not found." % a[2],
+                              "hint": "Run 'nlm notebook list'"}))
+        else:
+            print(json.dumps({"status": "error", "error": "Failed to get notebook: API error (code 5): NOT_FOUND"}))
     else:
         print(json.dumps(dict(nb, notebook_id=a[2])))
+        if st.get("stderr_them"):
+            sys.stderr.write("warning: using cached credentials\n")
     sys.exit(0)
 print("unexpected call", a); sys.exit(9)
 '''
@@ -49,7 +57,7 @@ ID1 = '8d59b091-688a-4419-8072-caad4108ad19'
 ID2 = 'e68dc685-6aff-4e65-84c3-5b848b7a0000'
 
 
-def lam(tmp_path, resources=None, aliases=None, notebooks=None, auth='ok', base_url=None, slug=None):
+def lam(tmp_path, resources=None, aliases=None, notebooks=None, auth='ok', base_url=None, slug=None, **them):
     ws = tmp_path / 'ws'
     ws.mkdir()
     if resources is not None:
@@ -57,8 +65,8 @@ def lam(tmp_path, resources=None, aliases=None, notebooks=None, auth='ok', base_
     fake = tmp_path / 'fake_nlm.py'
     fake.write_text(FAKE, encoding='utf-8')
     state = tmp_path / 'state.json'
-    state.write_text(json.dumps({'aliases': aliases or {}, 'notebooks': notebooks or {}, 'auth': auth}),
-                     encoding='utf-8')
+    state.write_text(json.dumps(dict({'aliases': aliases or {}, 'notebooks': notebooks or {},
+                                      'auth': auth}, **them)), encoding='utf-8')
     env = dict(os.environ, NLM_BIN=str(fake), FAKE_NLM_STATE=str(state))
     env.pop('NOTEBOOKLM_BASE_URL', None)
     if base_url:
@@ -146,3 +154,52 @@ def test_resources_khong_co_dong_notebook_va_khong_slug_dung_ten_thu_muc(tmp_pat
     rc, out, _ = lam(tmp_path, resources='# Tài Nguyên\n\nchưa có notebook\n')
     assert rc == 1, out
     assert 'learn-ws' in out                          # slug mặc định = tên thư mục workspace
+
+
+def test_alias_get_loi_la_ma_2_khong_bao_gio_la_duoc_tao(tmp_path):
+    """Soát PR: nlm giả cũ chỉ sinh 2 kết cục cho `alias get`, nên nhánh lỗi không có test —
+    đột biến biến "nlm hỏng ⇒ mã 2" thành "coi như chưa có alias ⇒ ĐƯỢC TẠO" mà vẫn đủ điểm."""
+    rc, out, _ = lam(tmp_path, slug='cfma', alias_loi=True)
+    assert rc == 2, out
+    assert 'ĐƯỢC TẠO' not in out
+
+
+def test_notfound_kieu_NotFoundError_cung_la_da_xoa(tmp_path):
+    """nlm có HAI đường báo không thấy; đường NotFoundError in "Notebook <id> not found."
+    không chứa chuỗi NOT_FOUND → bản trước rơi vào nhánh lỗi xác thực (mã 2)."""
+    rc, out, _ = lam(tmp_path, resources=RES % ID1, aliases={'learn-cfma': ID1}, notebooks={},
+                     kieu_not_found='NotFoundError')
+    assert rc == 3, out
+    assert 'ĐÃ XOÁ' in out
+
+
+def test_stderr_kem_theo_khong_lam_hong_ket_qua(tmp_path):
+    """nlm ghi cảnh báo ra stderr; bản trước ghép stdout+stderr rồi json.loads tới hết chuỗi
+    ⇒ "Extra data" ⇒ notebook còn sống bị báo KHÔNG ĐO ĐƯỢC."""
+    rc, out, _ = lam(tmp_path, resources=RES % ID1, aliases={'learn-cfma': ID1},
+                     notebooks={ID1: {'title': 'x', 'source_count': 3}}, stderr_them=True)
+    assert rc == 0, out
+    assert 'DÙNG LẠI' in out
+
+
+def test_uuid_la_trong_resources_khi_da_co_id(tmp_path):
+    """Soát PR: uuid_khac chỉ được xét khi KHÔNG có id nào. Alias trỏ notebook nháp của
+    /research, RESOURCES.md liệt kê 2 notebook khác ⇒ bản trước chọn notebook nháp và còn
+    bảo người dùng ghi nó vào RESOURCES.md làm notebook thường trực."""
+    res = ('# Tài Nguyên\n\n| Notebook | id |\n|---|---|\n| `Book: x` | `%s` |\n| `ext` | `%s` |\n'
+           % (ID1, ID2))
+    nhap = 'aaaaaaaa-0000-0000-0000-000000000000'
+    rc, out, _ = lam(tmp_path, resources=res, aliases={'learn-ws': nhap},
+                     notebooks={nhap: {'title': 'nhap tu /research', 'source_count': 3}})
+    assert rc == 3, out
+    assert ID1 in out and ID2 in out
+
+
+def test_tieu_de_chua_chu_notebook_nlm_khong_che_dong_chuan(tmp_path):
+    """Soát PR: vòng lặp break ở dòng ĐẦU TIÊN chứa "Notebook NLM", kể cả khi đó là tiêu đề
+    không có alias lẫn UUID → mất dòng chuẩn ngay bên dưới."""
+    res = '# Tài Nguyên\n\n## Notebook NLM\n\n**Notebook NLM:** `learn-cfma` — `%s`\n' % ID1
+    rc, out, _ = lam(tmp_path, resources=res, aliases={'learn-cfma': ID1},
+                     notebooks={ID1: {'title': 'x', 'source_count': 5}})
+    assert rc == 0, out
+    assert 'DÙNG LẠI' in out
