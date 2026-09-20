@@ -79,9 +79,30 @@ Chỉ chặn cứng khi bạn không có bối cảnh nào để đoán — lúc
 
 ### Các bước
 
+0. **Cổng notebook — chạy trước mọi bước khác, kể cả trước `/research`.**
+
+   ```bash
+   python <KN-Stack>/skills/learn/learn-teach/scripts/s0_notebook_check.py <thư mục workspace> [--slug X]
+   ```
+
+   Script đọc hai chỗ có thể đã trỏ tới notebook — dòng `**Notebook NLM:**` trong `RESOURCES.md`, và alias `learn-<slug>` — rồi hỏi NLM notebook đó còn sống không. Nó không tạo hay sửa gì.
+
+   | Mã | Nghĩa | S0 làm gì |
+   |---|---|---|
+   | **0 DÙNG LẠI** | đã có notebook thường trực còn sống | **Không** `nlm notebook create`. Làm theo dòng nhắc thiếu alias / thiếu dòng RESOURCES nếu có. Sang mục "Khi `RESOURCES.md` đã có sẵn" bên dưới |
+   | **1 ĐƯỢC TẠO** | không chỗ nào trỏ tới notebook nào | chạy S0 đủ bước 1–6; tạo notebook theo mục [Notebook Thường Trực](#notebook-thường-trực) |
+   | **2 KHÔNG ĐO ĐƯỢC** | NLM không trả lời (thường là xác thực) | **dừng, không tạo**. Lỗi xác thực không có nghĩa là không có notebook. Sửa `nlm` (`/nlm-refresh`) rồi chạy lại cổng |
+   | **3 DỪNG** | hai chỗ trỏ mâu thuẫn, trỏ tới notebook đã xoá, hoặc `RESOURCES.md` nhắc id notebook mà không có dòng chuẩn | hỏi người dùng notebook nào là thường trực; không tự chọn, không tạo cái mới |
+
+   Vì sao là script: bản trước tạo notebook vô điều kiện, và `/book-to-learn` phải **dặn** CEO trả lời "đã có notebook" để tránh notebook thứ hai. Lời dặn không bắt buộc được gì. Script cũng giữ ba sự thật đo trên `nlm` thật: `nlm notebook get` trả mã 0 cả khi lỗi, nên phải đọc JSON; notebook đã xoá báo `NOT_FOUND`; lỗi xác thực thường chữa được bằng cách bỏ `NOTEBOOKLM_BASE_URL`, và script tự thử lại một lần như vậy.
+
+   #### Khi `RESOURCES.md` đã có sẵn
+
+   `RESOURCES.md` chỉ được ghi sau cổng duyệt nguồn: ở một vòng S0 trước, hoặc do `/book-to-learn` chép sẵn ở L4 với nguồn CEO đã duyệt ở L2/L3. Vì vậy **không chạy lại bước 1–3 cho toàn chủ đề**. Chạy **bước 4 (chấm phủ)** theo `MISSION.md` hiện tại. Chỉ vùng kiến thức nào thiếu E1 hoặc thiếu S/A mới chạy bước 1–3 cho riêng vùng đó, rồi qua **cổng bước 5 cho nguồn mới** trước khi nạp vào notebook thường trực.
+
 1. **Rút truy vấn từ mission.** Mỗi gạch đầu dòng trong "Thành Công Trông Như Thế Nào" là một vùng kiến thức cần phủ. 3–6 truy vấn. Nếu không rút được truy vấn nào cụ thể, mission còn quá mơ hồ — quay lại phỏng vấn người dùng.
 
-2. **Gọi `/research <vùng kiến thức>`** cho từng vùng lõi. Chạy theo vùng, đừng gộp cả chủ đề vào một cú — kết quả sẽ nông và lệch. `/research` trả về nguồn đã phân hạng S/A/B/C từ 5 kênh (Exa ngữ nghĩa, Web, YouTube, authority domain, patent) và tự dựng notebook NLM.
+2. **Gọi `/research <vùng kiến thức>`** cho từng vùng lõi. Chạy theo vùng, đừng gộp cả chủ đề vào một cú — kết quả sẽ nông và lệch. `/research` trả về nguồn đã phân hạng S/A/B/C từ 5 kênh (Exa ngữ nghĩa, Web, YouTube, authority domain, patent) và tự dựng notebook NLM. **Notebook đó là notebook nháp dùng để khám phá, không phải notebook thường trực.** Nó chứa nguồn **chưa** qua cổng. Đừng trỏ `/research --notebook` vào notebook thường trực, và đừng đặt alias `learn-<slug>` cho notebook nháp.
 
 3. **Gán trục E cho từng nguồn.** `/research` không làm việc này — nó không biết mục đích là dạy học. Đây là việc riêng của learn-teach. Với nguồn chưa đọc, mở xem thật rồi chấm; đừng đoán E từ tên miền.
 
@@ -107,7 +128,9 @@ Cổng duyệt nguồn không bao giờ được bỏ, kể cả khi mọi công
 
 ## Notebook Thường Trực
 
-Một notebook cho một workspace, tạo ở bước S0. Đây là kho kiến thức bền của workspace — nguồn đã duyệt nằm trong đó, không nằm trong trí nhớ model.
+Một notebook cho một workspace. Đây là kho kiến thức bền của workspace — nguồn đã duyệt nằm trong đó, không nằm trong trí nhớ model.
+
+**Chỉ tạo khi cổng notebook (bước 0) trả mã 1 ĐƯỢC TẠO.** Mọi mã khác đều cấm `nlm notebook create`.
 
 ```bash
 nlm notebook create "Learn: {Chủ Đề}"

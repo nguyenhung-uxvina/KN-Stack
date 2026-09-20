@@ -1,0 +1,173 @@
+{
+  "skill": "learn-methodology",
+  "version": "1.0",
+  "description": "Binary assertions for learn-methodology --source mode — teaching what a specific book says, with every book claim a verbatim «quote» machine-checked by scripts/quote_check.py. Static audit of SKILL.md + references/ because the protocol lives in references/source-mode.md. The script itself is covered by scripts/test_learn_quote_check.py.",
+  "mode": "static",
+  "include_references": true,
+  "test_input": "giải thích đơn giản morphological matrix --source D:/Workshop_X/3_Resources/Books/pahl-beitz/_source",
+  "total_required": 23,
+  "passing_score": 23,
+  "assertions": [
+    {
+      "id": "LM-SRC-FLAG",
+      "name": "source_flag_declared",
+      "check": "argument-hint advertises --source so the flag is discoverable at invocation",
+      "regex": "argument-hint:.*--source",
+      "required": true
+    },
+    {
+      "id": "LM-SRC-KINDS",
+      "name": "file_folder_notebook_accepted",
+      "check": "--source accepts a file, a folder (book-to-learn _source/) and an NLM notebook id/alias",
+      "regex": "accepts a file[\\s\\S]{0,120}folder[\\s\\S]{0,120}NLM notebook",
+      "required": true
+    },
+    {
+      "id": "LM-VERBATIM",
+      "name": "book_claims_are_verbatim_quotes",
+      "check": "every 'the book says' line is a verbatim «quote» in the book's original language",
+      "regex": "verbatim `«quote»`",
+      "required": true
+    },
+    {
+      "id": "LM-NUMBERS-IN-QUOTES",
+      "name": "numbers_only_inside_quotes",
+      "check": "every number taken from the book must sit inside «…» — the script can only check what is quoted",
+      "regex": "Every number taken from the book sits inside «…»",
+      "required": true
+    },
+    {
+      "id": "LM-AI-LABEL",
+      "name": "ai_invented_content_labelled",
+      "check": "analogies, acronyms, diagnostic questions and examples the AI invents carry an [AI] label and do not borrow the book's authority",
+      "regex": "labelled `\\[AI\\]`",
+      "required": true
+    },
+    {
+      "id": "LM-NO-HAND-PAGE",
+      "name": "location_from_script_not_typed",
+      "check": "the page/location comes from quote_check output, never typed by hand — a guessed page looks identical to a read one",
+      "regex": "never typed by hand",
+      "required": true
+    },
+    {
+      "id": "LM-GAP-NOT-FILL",
+      "name": "silent_book_is_a_gap",
+      "check": "when the book is silent the output records KHOẢNG TRỐNG instead of filling from general knowledge",
+      "regex": "KHOẢNG TRỐNG`, never general knowledge",
+      "required": true
+    },
+    {
+      "id": "LM-SPELLINGS",
+      "name": "try_spellings_before_gap",
+      "check": "try at least 3 spellings/synonyms before declaring a gap — most misses are search misses",
+      "regex": "≥ 3 (spellings|cách viết)",
+      "required": true
+    },
+    {
+      "id": "LM-GATE-SCRIPT",
+      "name": "quote_check_is_the_gate",
+      "check": "the output is written to a file and quote_check.py is run against the source, with explicit exit-code handling",
+      "regex": "quote_check\\.py <output\\.md> --nguon[\\s\\S]{0,400}Exit 1",
+      "required": true
+    },
+    {
+      "id": "LM-EXIT2-STOP",
+      "name": "unmeasurable_means_stop",
+      "check": "exit 2 (unreadable/empty/scanned source) stops the run — never delivered as source-grounded",
+      "regex": "Exit 2:\\*\\* stop",
+      "required": true
+    },
+    {
+      "id": "LM-NOT-GROUNDED-UNTIL-0",
+      "name": "no_grounded_label_before_pass",
+      "check": "the output may not be called source-grounded until the script exits 0",
+      "regex": "may not be called \"source-grounded\" until",
+      "required": true
+    },
+    {
+      "id": "LM-DELETE-NOT-DOWNGRADE",
+      "name": "unfound_claim_deleted_not_paraphrased",
+      "check": "a quote that cannot be found is deleted with its claim — not quietly downgraded to paraphrase",
+      "regex": "không hạ nó thành Diễn giải",
+      "required": true
+    },
+    {
+      "id": "LM-CLUSTER-CONFLICT",
+      "name": "book_cluster_conflicts_not_merged",
+      "check": "a book cluster gets a mandatory section placing conflicting quotes side by side, never merged into one voice",
+      "regex": "Chỗ các nguồn khác nhau[\\s\\S]{0,200}(never merged|không gộp)",
+      "required": true
+    },
+    {
+      "id": "LM-FILE-OVER-NLM",
+      "name": "file_beats_notebook",
+      "check": "when both a file and a notebook exist, verify against the file — NLM finds, the file is truth",
+      "regex": "NLM là công cụ tìm, tệp là sự thật",
+      "required": true
+    },
+    {
+      "id": "LM-NLM-PERSONA",
+      "name": "no_custom_persona",
+      "check": "forbids chat_configure with a custom goal because a persona silently disables source retrieval",
+      "regex": "Không `chat_configure`",
+      "required": true
+    },
+    {
+      "id": "LM-NLM-NEW-CONV",
+      "name": "one_conversation_per_question",
+      "check": "each NLM question opens a fresh conversation — only the first query in a conversation is reliably grounded",
+      "regex": "Mỗi câu hỏi một conversation mới",
+      "required": true
+    },
+    {
+      "id": "LM-NLM-ANSWER-NOT-QUOTE",
+      "name": "real_citation_does_not_prove_answer",
+      "check": "a real citation does not prove the answer — check the answer content in the book, not only the quoted passage",
+      "regex": "Trích dẫn đúng không chứng minh đáp án đúng",
+      "required": true
+    },
+    {
+      "id": "LM-MNEMONIC-COUNT",
+      "name": "mnemonic_list_matches_book",
+      "check": "MNEMONIC's list is copied from the book and its item count and order must match the book",
+      "regex": "Số mục và thứ tự",
+      "required": true
+    },
+    {
+      "id": "LM-FEYNMAN-ANSWER-QUOTE",
+      "name": "diagnostic_answers_are_quotes",
+      "check": "each FEYNMAN diagnostic question must be answerable by a quote from the book; questions the book cannot answer are dropped",
+      "regex": "đáp án của mỗi câu là một trích dẫn",
+      "required": true
+    },
+    {
+      "id": "LM-CHUNK-BOOK-STRUCTURE",
+      "name": "chunks_follow_book_structure",
+      "check": "CHUNKING follows the book's own chapter structure rather than an AI-invented dependency graph",
+      "regex": "Cụm đi theo \\*\\*cấu trúc của sách\\*\\*",
+      "required": true
+    },
+    {
+      "id": "LM-SEMANTIC-LIMIT",
+      "name": "gate_checks_words_not_meaning",
+      "check": "states honestly that the script checks words, not meaning — a real quote next to a distorting paraphrase still passes",
+      "regex": "Script bắt chữ, không bắt nghĩa",
+      "required": false
+    },
+    {
+      "id": "LM-SEGMENT-2WORDS",
+      "name": "every_segment_checkable",
+      "check": "each run between ellipses must be >= 2 words, so a fabricated number cannot hide between two real fragments",
+      "regex": "mỗi đoạn giữa hai chỗ lược phải từ 2 từ trở lên",
+      "required": true
+    },
+    {
+      "id": "LM-LADDER-IS-GAP",
+      "name": "ladder_rung_is_a_gap",
+      "check": "a rung is the gap to the next review, not a day number from creation; the absolute schedule is spelled out",
+      "regex": "gap to the \\*next\\* review[\\s\\S]{0,700}day 1, 4, 11, 27, 62",
+      "required": true
+    }
+  ]
+}

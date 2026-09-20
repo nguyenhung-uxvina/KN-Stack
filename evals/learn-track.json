@@ -1,0 +1,123 @@
+{
+  "skill": "learn-track",
+  "version": "1.0",
+  "description": "Binary assertions for learn-track — journal prompts, competency tracker, behavioral rubric. Static audit of SKILL.md.",
+  "mode": "static",
+  "test_input": "create rubric for Gate Review readiness",
+  "assertions": [
+    {
+      "id": "LTR-DESC-WHAT",
+      "name": "description_says_what_first",
+      "check": "frontmatter description states what the skill does before its trigger phrases (KN-Stack CLAUDE.md rule 5)",
+      "regex": "description: Tracks engineering learning",
+      "required": true
+    },
+    {
+      "id": "LTR-MODES",
+      "name": "three_modes_routed",
+      "check": "routes to Journal, Progress Tracker and Rubric Generator",
+      "regex": "Journal[\\s\\S]{0,200}Progress Tracker[\\s\\S]{0,200}Rubric Generator",
+      "required": true
+    },
+    {
+      "id": "LTR-FEEDBACK-LOOP",
+      "name": "journal_has_loop_prompt",
+      "check": "at least one journal prompt must surface a feedback loop",
+      "regex": "At least one prompt must surface a feedback loop",
+      "required": true
+    },
+    {
+      "id": "LTR-LEARNER-WRITES",
+      "name": "ai_does_not_write_journal",
+      "check": "the journal is the learner's to write — the AI generates prompts only",
+      "regex": "do not write journal for the learner",
+      "required": true
+    },
+    {
+      "id": "LTR-EVIDENCE",
+      "name": "tracker_levels_need_evidence",
+      "check": "every tracker row carries measured evidence — the column is named \"Evidence (measured)\" so an impression cannot pass as evidence",
+      "regex": "\\| Evidence \\(measured\\) \\|",
+      "required": true
+    },
+    {
+      "id": "LTR-OBSERVABLE",
+      "name": "rubric_observable_behavior",
+      "check": "rubric indicators are observable behaviors, not vague understanding",
+      "regex": "observable, not vague",
+      "required": true
+    },
+    {
+      "id": "LTR-PHYSICAL-DIM",
+      "name": "rubric_physical_dimension",
+      "check": "rubric must include a physical/empirical validation dimension",
+      "regex": "At least one dimension must address physical/empirical validation",
+      "required": true
+    },
+    {
+      "id": "LTR-FAILURE-DIM",
+      "name": "rubric_failure_dimension",
+      "check": "rubric must include an error/failure-handling dimension",
+      "regex": "At least one dimension must address error/failure handling",
+      "required": true
+    },
+    {
+      "id": "LTR-NO-AI-LEVEL",
+      "name": "ai_never_assigns_level",
+      "check": "the AI never fills Current Level; the learner scores it from measured evidence",
+      "regex": "The AI never assigns Current Level",
+      "required": true
+    },
+    {
+      "id": "LTR-STATS-SCRIPT",
+      "name": "measurement_from_retrieval_ledger",
+      "check": "evidence comes from retrieval_stats.py over the learn-teach RETRIEVAL.md when one exists",
+      "regex": "retrieval_stats\\.py <workspace or RETRIEVAL\\.md>",
+      "required": true
+    },
+    {
+      "id": "LTR-NO-PARTIAL",
+      "name": "no_grid_on_partial_numbers",
+      "check": "unreadable ledger rows block the grid until fixed",
+      "regex": "Do not build the grid on partial numbers",
+      "required": true
+    },
+    {
+      "id": "LTR-NO-ESTIMATE",
+      "name": "unmeasured_says_so",
+      "check": "dimensions without measurement say 'chưa có phép đo', never an estimate",
+      "regex": "`chưa có phép đo` where none exist, never an estimate",
+      "required": true
+    },
+    {
+      "id": "LTR-CONFIDENT-MISS",
+      "name": "flag_confident_miss_vs_self_score",
+      "check": "a self-score ≥ 3 on a dimension containing a confident-but-wrong item is flagged",
+      "regex": "confident miss",
+      "required": true
+    },
+    {
+      "id": "LTR-MEMORY-NOT-DOING",
+      "name": "recall_is_not_physical_evidence",
+      "check": "recall numbers never count as physical/practical validation evidence",
+      "regex": "Recall measures \\*\\*memory, not doing\\*\\*",
+      "required": true
+    },
+    {
+      "id": "LTR-NO-TREND",
+      "name": "snapshot_not_trend",
+      "check": "one retrieval_stats run is a snapshot; trends need two dated trackers",
+      "regex": "Do not infer a trend from one run",
+      "required": true
+    },
+    {
+      "id": "LTR-EXAMPLE-MATCHES-FORMAT",
+      "name": "example_uses_the_measured_grid",
+      "check": "the worked example uses the same 6-column measured grid, including an unmeasured dimension and a flagged self-score",
+      "regex": "Evidence \\(measured\\) \\| Current Level \\(learner\\)[\\s\\S]{0,900}chưa có phép đo",
+      "required": true
+    }
+  ],
+  "total_required": 16,
+  "passing_score": 16
+}
