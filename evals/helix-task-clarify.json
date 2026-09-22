@@ -95,9 +95,16 @@
       "check": "output includes failure-derived requirements or SPOF check",
       "regex": "failure.*mode|SPOF|failure.*derived|single.*point|FMEA|failure.*scan",
       "required": false
+    },
+    {
+      "id": "TC-HYDRO",
+      "name": "hydro_intake_marine",
+      "check": "orchestrator has step 1.5d hydrodynamic intake for self-propelled hulls: speed regime Fn_L/Fn_∇, hole shot >0.05 g, shallow water vs 0.8·LOA, sea state as H1/3 + wave period pair",
+      "regex": "1\\.5d|Hydro Intake|0,8·LOA|0\\.8.?LOA|H₁/₃.*T_w|hole shot",
+      "required": false
     }
   ],
   "passing_score": 10,
   "total_required": 10,
-  "total_optional": 3
+  "total_optional": 4
 }
