@@ -1,0 +1,181 @@
+{
+  "skill": "book-to-book",
+  "version": "1.0-pipeline",
+  "description": "Binary assertions cho /book-to-book — orchestrator sách gốc → sách phái sinh nội bộ, 10 pha, cổng nguyên bản đo bằng máy",
+  "mode": "static",
+  "include_references": false,
+  "test_input": "book to book cho cuốn Engineering Design Methods, mức F2, dùng nội bộ",
+  "assertions": [
+    {
+      "id": "B2B-P0",
+      "name": "p0_scope_gate_is_a_file_not_an_assumption",
+      "check": "P0 sinh _scope_decision.md — phạm vi phát hành là quyết định có chữ ký, không phải giả định của đường ống",
+      "regex": "_scope_decision\\.md",
+      "required": true
+    },
+    {
+      "id": "B2B-P0-BLOCK",
+      "name": "no_scope_decision_no_writing",
+      "check": "không có khai báo thì không được viết chữ nào",
+      "regex": "KHÔNG CÓ `?_scope_decision\\.md`? THÌ KHÔNG VIẾT|không có khai báo thì không (có phép đo|viết)",
+      "required": true
+    },
+    {
+      "id": "B2B-LEVELS",
+      "name": "four_fidelity_levels",
+      "check": "bốn mức nguyên bản F1-F4 có tên gọi riêng",
+      "regex": "F1[^\\n]{0,40}(Lược thuật)[\\s\\S]{0,600}F4[^\\n]{0,40}(Sát nguyên bản)",
+      "required": true
+    },
+    {
+      "id": "B2B-FLAG",
+      "name": "fidelity_flag_exists",
+      "check": "cờ --fidelity là tuỳ chọn trung tâm",
+      "regex": "--fidelity\\s+F1\\|F2\\|F3\\|F4",
+      "required": true
+    },
+    {
+      "id": "B2B-CEILING",
+      "name": "numeric_ceilings_per_level",
+      "check": "mỗi mức có trần bằng SỐ, không phải lời khuyên định tính",
+      "regex": "\\| 2% \\|[\\s\\S]{0,400}\\| 8% \\|[\\s\\S]{0,400}\\| 20% \\|",
+      "required": true
+    },
+    {
+      "id": "B2B-TWO-RATIOS",
+      "name": "coverage_and_density_are_different_questions",
+      "check": "phân biệt bao phủ (trên sách gốc) và mật độ (trên sách mình)",
+      "regex": "bao phủ[\\s\\S]{0,200}từ sách gốc[\\s\\S]{0,300}mật độ[\\s\\S]{0,200}từ sách mình",
+      "required": true
+    },
+    {
+      "id": "B2B-AUDIT-SCRIPT",
+      "name": "fidelity_gate_is_a_script_not_a_reminder",
+      "check": "cổng nguyên bản là script chạy thật, model không được tự chấm",
+      "regex": "fidelity_audit\\.py",
+      "required": true
+    },
+    {
+      "id": "B2B-NO-SELF-SCORE",
+      "name": "model_may_not_score_itself",
+      "check": "nêu rõ model không được tự chấm tỷ lệ; script là nơi duy nhất ra phán quyết",
+      "regex": "model không được tự chấm",
+      "required": true
+    },
+    {
+      "id": "B2B-EXIT-BLOCK",
+      "name": "nonzero_exit_blocks_checkpoint",
+      "check": "mã thoát khác 0 thì CẤM trình CEO checkpoint",
+      "regex": "(?:CẤM|KHÔNG được)[^\\n]{0,60}(?:trình|checkpoint)|mã thoát[^\\n]{0,40}khác 0[^\\n]{0,60}CẤM",
+      "required": true
+    },
+    {
+      "id": "B2B-EXIT2",
+      "name": "exit_code_2_is_not_clean",
+      "check": "mã thoát 2 (không đo được) KHÔNG phải là sạch — âm tính giả im lặng",
+      "regex": "[Mm]ã (thoát )?2 (không|KHÔNG) phải",
+      "required": true
+    },
+    {
+      "id": "B2B-INGEST",
+      "name": "reads_the_book_not_a_chatbot_summary",
+      "check": "P1 nạp thẳng tệp gốc bằng source_ingest.py thay vì hỏi NotebookLM",
+      "regex": "source_ingest\\.py",
+      "required": true
+    },
+    {
+      "id": "B2B-NLM-NOT-SOURCE",
+      "name": "nlm_is_a_lens_never_a_quote_source",
+      "check": "NLM chỉ là ống kính phụ; không bao giờ lấy chuỗi từ NLM đưa vào ngoặc kép",
+      "regex": "(ống kính phụ|KHÔNG phải nguồn trích)[\\s\\S]{0,900}không bao giờ lấy chuỗi từ NLM",
+      "required": true
+    },
+    {
+      "id": "B2B-F4-BLIND",
+      "name": "f4_sensor_declares_blindness",
+      "check": "ở F4 phép đo là MÙ, số thấp không đọc là sạch",
+      "regex": "(MÙ|mù)[^\\n]{0,80}không phải sạch|số thấp ấy là \\*\\*MÙ",
+      "required": true
+    },
+    {
+      "id": "B2B-P8-LOCK",
+      "name": "notebooklm_upload_locked_by_level",
+      "check": "P8 tắt mặc định ở F3/F4 — nạp lên dịch vụ bên thứ ba là phát tán, không phải bước kỹ thuật",
+      "regex": "P8[^\\n]{0,80}(TẮT|tắt)[\\s\\S]{0,400}(bên thứ ba|phát tán)",
+      "required": true
+    },
+    {
+      "id": "B2B-STAMP",
+      "name": "internal_only_stamp_is_machine_checked",
+      "check": "mọi tệp mang dấu BẢN NỘI BỘ và máy kiểm dấu đó",
+      "regex": "BẢN NỘI BỘ[\\s\\S]{0,200}(máy kiểm|Máy kiểm)",
+      "required": true
+    },
+    {
+      "id": "B2B-VERIFY-STALE",
+      "name": "stale_report_blocks_epub_and_nlm",
+      "check": "--verify trước P7.5/P8 để chặn báo cáo cũ từ trước lần sửa gần nhất",
+      "regex": "--verify[\\s\\S]{0,300}(báo cáo cũ|còn đúng với bản thảo)",
+      "required": true
+    },
+    {
+      "id": "B2B-NO-SCOPE-FLAG",
+      "name": "external_release_is_not_a_cli_flag",
+      "check": "không có cờ --scope; phát hành ra ngoài là quyết định khác, đo lại ở trần khác",
+      "regex": "[Kk]hông có (cờ )?`?--scope`?",
+      "required": true
+    },
+    {
+      "id": "B2B-BUDGET",
+      "name": "quote_budget_in_words_per_chapter",
+      "check": "ngân sách trích phát cho từng chương bằng SỐ TỪ, không phải lời khuyên trích ít thôi",
+      "regex": "[Nn]gân sách trích[\\s\\S]{0,300}(số từ|SỐ TỪ)",
+      "required": true
+    },
+    {
+      "id": "B2B-DATABUS",
+      "name": "databus_gate_still_enforced",
+      "check": "vẫn giữ cổng Data Bus của đường ống sách",
+      "regex": "databus_check\\.py",
+      "required": true
+    },
+    {
+      "id": "B2B-REFS",
+      "name": "reference_files_wired",
+      "check": "trỏ tới hai reference file của skill",
+      "regex": "references/(fidelity-levels|source-ingest)\\.md",
+      "required": true
+    },
+    {
+      "id": "B2B-TEST",
+      "name": "gate_has_two_way_mutation_test",
+      "check": "cổng có bộ kiểm đột biến hai chiều: mẫu thật phải đỗ, mẫu bịa phải trượt",
+      "regex": "test_book_to_book\\.py",
+      "required": false
+    },
+    {
+      "id": "B2B-CALIB",
+      "name": "ceilings_calibrated_on_measured_run",
+      "check": "trần hiệu chỉnh trên số đo thật 16,07% của lần chạy trước, không phải ước lượng",
+      "regex": "16,07%|16\\.07%",
+      "required": false
+    },
+    {
+      "id": "B2B-COD",
+      "name": "cod_classification",
+      "check": "phân loại COD, chọn mức nguyên bản là Core không uỷ thác được",
+      "regex": "Core \\(C\\)[^\\n]{0,80}không uỷ thác|COD",
+      "required": false
+    },
+    {
+      "id": "B2B-ONE-BLOCK",
+      "name": "one_phase_per_turn",
+      "check": "một pha một lượt, dừng và chờ CEO",
+      "regex": "MỘT PHA MỘT LƯỢT|ONE BLOCK PER TURN",
+      "required": false
+    }
+  ],
+  "passing_score": 18,
+  "total_required": 20,
+  "total_optional": 4
+}
