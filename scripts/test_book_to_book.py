@@ -39,6 +39,7 @@ def _load(name):
 
 si = _load('source_ingest')
 fa = _load('fidelity_audit')
+ql = _load('quote_locate')
 
 FAILED = []
 
@@ -412,13 +413,52 @@ def t_khoi_sau_sach():
           repr([n for n, _, _ in kh2]))
 
 
+def t_snap_pagemap():
+    """Moc trang phai duoc dich ve dung cho so trang xuat hien trong kho.
+
+    Lop loi that (Pahl & Beitz, 2026-09-26): chi 56/617 moc roi dung vao so trang cua
+    no; lech trung vi -18 ky tu. Mot trich nam gan ranh gioi bi gan LUI MOT TRANG, im
+    lang. Ca that: trich la gach dau dong DAU TIEN cua tr.250 nhung cong cu tra tr.249.
+
+    Cap dot bien:
+      THAT phai do  — moc lech duoc keo ve, trich dau trang tra dung so trang
+      BIA phai truot — moc dung roi thi khong duoc dich; don dieu phai duoc giu
+    """
+    # Trang 10 bat dau o offset 40; trang 11 bat dau o offset 80 trong van ban nay.
+    text = ('10 mo dau trang muoi ' + 'x ' * 9 +
+            '11 dau trang muoi mot ' + 'y ' * 9)
+    off10 = text.index('10 ')
+    off11 = text.index('11 ')
+
+    # pagemap LECH: moc trang 11 bi ghi muon 12 ky tu (roi vao giua 'y y y...')
+    pm_lech = [(off10, 10), (off11 + 12, 11)]
+    snap = ql.snap_pagemap(text, pm_lech)
+    check('moc lech duoc keo ve dung so trang', snap[1][0] == off11,
+          'ky vong %d, nhan %d' % (off11, snap[1][0]))
+
+    # pagemap DUNG: khong duoc dich di dau
+    pm_dung = [(off10, 10), (off11, 11)]
+    check('moc dung khong bi dich', ql.snap_pagemap(text, pm_dung) == pm_dung)
+
+    # doi chung am: so trang KHONG co trong van ban -> giu nguyen moc, khong doan
+    pm_vang = [(off10, 10), (off11, 99)]
+    check('so trang khong xuat hien -> giu nguyen moc',
+          ql.snap_pagemap(text, pm_vang)[1][0] == off11)
+
+    # don dieu: neu keo ve se lam moc lui qua moc truoc thi PHAI bo qua
+    pm_nguoc = [(off11, 11), (off11 + 4, 10)]
+    ra = ql.snap_pagemap(text, pm_nguoc)
+    check('giu tinh don dieu, tha khong dich con hon dich sai',
+          ra[1][0] >= ra[0][0], repr(ra))
+
+
 def main():
     print('=' * 70)
     print('KIEM CONG /book-to-book — dot bien hai chieu')
     print('=' * 70)
     for f in (t_chuan_hoa, t_ingest, t_bon_nhanh_trich_dan, t_nguyen_van_ngoai_ngoac,
               t_tran_theo_muc, t_f4_mu, t_cac_dang_hong_im_lang, t_dau_noi_bo,
-              t_bao_cao_cu, t_cau_quy_ket_tran, t_khoi_sau_sach):
+              t_bao_cao_cu, t_cau_quy_ket_tran, t_khoi_sau_sach, t_snap_pagemap):
         print('\n-- %s' % f.__name__)
         f()
     print('\n' + '=' * 70)

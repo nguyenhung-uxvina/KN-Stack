@@ -62,6 +62,7 @@ class Kho:
             pm = json.load(io.open(pmp, encoding='utf-8')) if os.path.isfile(pmp) else []
             mp = os.path.join(sdir, nhan + '.meta.json')
             meta = json.load(io.open(mp, encoding='utf-8')) if os.path.isfile(mp) else {}
+            pm = snap_pagemap(text, pm)      # xem docstring snap_pagemap
             self.nguon.append({
                 'nhan': nhan, 'text': text, 'pm': pm,
                 'offs': [o for o, _ in pm],
@@ -87,6 +88,47 @@ class Kho:
                 return {'ok': True, 'nhan': n['nhan'], 'trang': self.trang(n, pos),
                         'loai': n['kind'], 'so_tu': len(t.split()), 'so_lan': lan}
         return {'ok': False, 'ly_do': 'KHONG THAY trong bat ky kho nao', 'so_tu': len(t.split())}
+
+
+def snap_pagemap(text, pm):
+    """Dịch mốc trang về đúng chỗ số trang in xuất hiện trong kho.
+
+    🔴 Vì sao. Mốc do `source_ingest` ghi KHÔNG trùng chỗ trang thật sự bắt đầu: đo trên
+    Pahl & Beitz (2026-09-26) chỉ **56/617** mốc rơi đúng vào số trang của nó; lệch trung
+    vị −18 ký tự, biên độ −178..+195. Trang chuẩn hoá dài ~1.600 ký tự, nên một trích nằm
+    gần ranh giới bị gán **lùi một trang**, im lặng.
+
+    Ca thật đã bắt được: trích "clear specification of the operating conditions…" là gạch
+    đầu dòng ĐẦU TIÊN của trang in 250 (đọc từ ảnh), công cụ trả tr.249 — mốc trang 250 rơi
+    vào GIỮA TỪ (`clear specific|ation`), còn header "250 7 embodiment design" thì nằm trong
+    vùng gán cho 249. Một agent đã phải mở ảnh mới phát hiện.
+
+    Cách sửa: với mỗi mốc, tìm lần xuất hiện của **chính số trang ấy** như một token riêng,
+    gần mốc nhất trong cửa sổ ±300 ký tự, rồi dịch mốc về đó. Thận trọng: chỉ dịch khi tìm
+    thấy, và chỉ khi kết quả vẫn giữ tính đơn điệu — số trang in chạy trong body text (ví dụ
+    "250 mm") có thể bẫy phép dò.
+
+    Đo trên 86 trích thật của cuốn usv-thiet-ke-he-thong: sửa đúng **1** ca sai, **không
+    đụng** 85 ca còn lại. Không có dương tính giả.
+    """
+    ra, truoc = [], -1
+    for off, tr in pm:
+        if tr is None:
+            ra.append((off, tr))
+            continue
+        lo = max(0, off - 300)
+        cua_so = text[lo:off + 300]
+        tot = None
+        for m in re.finditer(r'(?<![0-9])' + re.escape(str(tr)) + r'(?![0-9])', cua_so):
+            d = (lo + m.start()) - off
+            if tot is None or abs(d) < abs(tot):
+                tot = d
+        moi = off + tot if tot is not None else off
+        if moi <= truoc:          # giữ đơn điệu — thà không dịch còn hơn dịch sai
+            moi = off
+        truoc = moi
+        ra.append((moi, tr))
+    return ra
 
 
 def main(argv=None):
