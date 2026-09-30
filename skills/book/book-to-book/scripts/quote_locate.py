@@ -87,7 +87,41 @@ class Kho:
                 lan = n['text'].count(t)
                 return {'ok': True, 'nhan': n['nhan'], 'trang': self.trang(n, pos),
                         'loai': n['kind'], 'so_tu': len(t.split()), 'so_lan': lan}
+        # Lượt phụ — lớp chữ PDF tách MỘT từ thành hai: 'electroly tes', 'dead rise'.
+        # Khác gạch-nối-ngắt-dòng (norm() đã xử): ở đây không có gạch nối nào để bám,
+        # nên phép so chuỗi báo HONG cho một câu CÓ IN TRONG SÁCH — âm tính giả.
+        # Đo trên hai kho cuốn USV: 23 ca / 264k từ, nhưng 9 ca nằm trên 'deadrise'
+        # — thuật ngữ trung tâm của nguồn, nên xác suất vấp cao hơn con số 23 gợi ra.
+        # Bỏ HẾT khoảng trắng hai bên rồi so lại.
+        #
+        # Ngưỡng 20 ký tự đặt bằng phép đo, không bằng phỏng đoán: 4.000 cụm 3–5 từ ghép
+        # bừa từ 400 từ phổ biến nhất của kho (lượt chính đều trượt) cho **0 ca khớp bừa**
+        # ở mọi ngưỡng thử từ 0 đến 40. Cái chặn dương tính giả là luật ≥3 từ cộng với độ
+        # đặc hiệu của chuỗi chữ, không phải ngưỡng này. Ngưỡng chỉ để một trích rất ngắn
+        # gồm toàn từ ngắn không lọt. Thử 40 trước thì chặn đúng ca đã đẻ ra bản vá
+        # ('avoidelectrolytesaltogether' = 27 ký tự) — nên đừng nâng lại mà không đo.
+        tl = t.replace(' ', '')
+        if len(tl) >= 20:
+            for n in self.nguon:
+                lt, idx = self._liet(n)
+                pos = lt.find(tl)
+                if pos >= 0:
+                    return {'ok': True, 'nhan': n['nhan'], 'trang': self.trang(n, idx[pos]),
+                            'loai': n['kind'], 'so_tu': len(t.split()),
+                            'so_lan': lt.count(tl), 'tach_chu': True}
         return {'ok': False, 'ly_do': 'KHONG THAY trong bat ky kho nao', 'so_tu': len(t.split())}
+
+    def _liet(self, n):
+        """Kho bỏ hết khoảng trắng + bảng ánh xạ vị trí về kho gốc (để còn tra ra trang).
+        Dựng một lần cho mỗi nguồn, và chỉ khi lượt tra chính đã thất bại."""
+        if 'liet' not in n:
+            buf, idx = [], []
+            for i, c in enumerate(n['text']):
+                if c != ' ':
+                    buf.append(c)
+                    idx.append(i)
+            n['liet'], n['liet_idx'] = ''.join(buf), idx
+        return n['liet'], n['liet_idx']
 
 
 def snap_pagemap(text, pm):
@@ -150,18 +184,25 @@ def main(argv=None):
     if not qs:
         raise SystemExit('can --tim hoac --tep')
 
-    hong = 0
+    hong = tach = 0
     for q in qs:
         r = kho.tra(q)
         if r['ok']:
             tr = ('tr.%s' % r['trang']) if r['loai'] == 'trang_in' else ('tr.PDF %s' % r['trang'])
             canh = '' if r['so_lan'] == 1 else '  [xuat hien %d lan — kiem dung cho]' % r['so_lan']
+            if r.get('tach_chu'):
+                canh += '  [LOP CHU TACH TU — MO ANH trang nay truoc khi dong ngoac kep]'
+                tach += 1
             print('  OK    %-4s %-10s %2d tu  | %s%s' % (tr, r['nhan'], r['so_tu'], q[:56], canh))
         else:
             hong += 1
             print('  HONG  %s | %s' % (r['ly_do'], q[:70]))
     print('-' * 74)
     print('  tim thay %d / hong %d  (tong %d)' % (len(qs) - hong, hong, len(qs)))
+    if tach:
+        print('  %d trich chi tim thay SAU KHI bo khoang trang — lop chu PDF tach mot tu' % tach)
+        print('  thanh hai. Chu IN TRONG SACH la dung; lop chu thi khong. Bat buoc mo anh')
+        print('  trang do va doi chieu truoc khi dong ngoac kep quanh no.')
     if hong:
         print('  HONG khong phai lúc nào cũng = bia. Ba nguyên nhân thật hay gặp:')
         print('    1. trich CHEP TAY sai mot chu   2. trich vat qua hai trang')

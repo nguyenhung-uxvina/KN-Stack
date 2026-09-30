@@ -452,13 +452,64 @@ def t_snap_pagemap():
           ra[1][0] >= ra[0][0], repr(ra))
 
 
+def t_lop_chu_tach_tu():
+    """Lop chu PDF tach MOT tu thanh hai -> cong bao HONG cho cau CO IN TRONG SACH.
+
+    Lop loi that (usv-thiet-ke-he-thong, 2026-09-30): trich 'Avoid electrolytes
+    altogether.' co in o tr.333 Pahl & Beitz, nhung lop chu PDF luu 'electroly tes'
+    nen phep so chuoi truot. Day la AM TINH GIA, va hau qua khong phai mot dong bao
+    loi — nguoi viet tuong minh chep sai, bo ngoac kep, va mot trich dan THAT bien
+    mat im lang.
+
+    Khac gach-noi-ngat-dong (norm() da xu): o day khong co gach noi nao de bam.
+
+    Do tren hai kho cuon USV: 23 ca / 264k tu — nho, nhung 9 ca nam tren 'deadrise',
+    dung thuat ngu trung tam cua nguon, nen xac suat vap cao hon con so 23 goi ra.
+
+    Cap dot bien:
+      THAT phai do  — chu in dung, kho bi tach -> tim thay, co co tach_chu, DUNG trang
+      BIA phai truot — bo khoang trang khong duoc bien mot cau bia thanh cau that
+    """
+    root = tempfile.mkdtemp(prefix='b2b-tachtu-')
+    try:
+        # kho co mot tu bi tach ('electroly tes') y nhu lop chu PDF that
+        lam_kho(root, SOURCE_TEXT + '\n\nJoints must avoid electroly tes altogether '
+                                    'in the region of dissimilar metals.\n')
+        kho = ql.Kho(root)
+
+        # THAT: nguoi viet go DUNG chinh ta -> luot chinh truot, luot phu phai cuu
+        r = kho.tra('avoid electrolytes altogether in the region')
+        check('chu in dung + kho bi tach -> van tim thay', r['ok'], repr(r))
+        check('phai khai ro da dung luot phu (de con bat mo anh)',
+              r.get('tach_chu') is True, repr(r))
+
+        # doi chung am 1: bia han, du dai -> bo khoang trang khong duoc cuu
+        r = kho.tra('avoid all galvanic couples altogether in every welded region')
+        check('AM: cau bia -> van truot du da bo khoang trang', not r['ok'], repr(r))
+
+        # doi chung am 2: that nhung SAI MOT CHU -> phai truot
+        r = kho.tra('avoid electrolytes altogezher in the region')
+        check('AM: sai mot chu -> truot', not r['ok'], repr(r))
+
+        # doi chung am 3: ghep bua qua ranh gioi tu, duoi nguong -> truot
+        r = kho.tra('electrolytesaltogether in')
+        check('AM: ghep qua ranh gioi tu, duoi nguong -> truot', not r['ok'], repr(r))
+
+        # KHONG HOI QUY: trich binh thuong phai do o luot CHINH, khong qua luot phu
+        r = kho.tra('A method is a lifebelt and not a straitjacket')
+        check('trich thuong van do o luot chinh', r['ok'] and not r.get('tach_chu'), repr(r))
+    finally:
+        shutil.rmtree(root, ignore_errors=True)
+
+
 def main():
     print('=' * 70)
     print('KIEM CONG /book-to-book — dot bien hai chieu')
     print('=' * 70)
     for f in (t_chuan_hoa, t_ingest, t_bon_nhanh_trich_dan, t_nguyen_van_ngoai_ngoac,
               t_tran_theo_muc, t_f4_mu, t_cac_dang_hong_im_lang, t_dau_noi_bo,
-              t_bao_cao_cu, t_cau_quy_ket_tran, t_khoi_sau_sach, t_snap_pagemap):
+              t_bao_cao_cu, t_cau_quy_ket_tran, t_khoi_sau_sach, t_snap_pagemap,
+              t_lop_chu_tach_tu):
         print('\n-- %s' % f.__name__)
         f()
     print('\n' + '=' * 70)
