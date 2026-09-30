@@ -41,7 +41,9 @@ si = _load('source_ingest')
 fa = _load('fidelity_audit')
 ql = _load('quote_locate')
 so = _load('self_overlap')
+fs = _load('frontmatter_sync')
 
+NL = chr(10)
 FAILED = []
 
 
@@ -575,6 +577,57 @@ def t_trung_chinh_no():
         shutil.rmtree(root, ignore_errors=True)
 
 
+def t_frontmatter_sinh_tu_than():
+    """Ba truong trich dan phai SINH tu than chuong, khong phai agent viet tay.
+
+    Lop loi that (usv-thiet-ke-he-thong, 2026-09-30): ba truong quote_budget / quote_used /
+    quotes_ok TRONG NHU do cong cu sinh — nguoi dieu phoi con noi voi ba agent rang chung do cong
+    cu sinh, nen ca ba tu choi sua khi thay sai. Kiem lai: KHONG script nao nhac toi chung.
+    Hau qua do duoc: Ch.22 khai "P&B 233/240 — dat"; do tu THAN ra "246/240 — VUOT". Loi khai che
+    dung mot cho vuot ngan sach, va con lam HAI vong ra soat doc lap tin Ch.22 thuan P&B.
+
+    Cap dot bien:
+      THAT phai do  — trich *"..."* trong than duoc dem, dung nguon, dung tong tu
+      BIA phai truot — chuoi tieng Viet trong ngoac nhon KHONG tinh la trich nguon; khoi ``` bi
+                       loai; thieu dan y ra ma thoat 2, khong bao gio 0
+    """
+    root = tempfile.mkdtemp(prefix='b2b-fm-')
+    try:
+        lam_kho(root)
+        d = os.path.join(root, 'Phase6-Revised')
+        os.makedirs(d)
+        dany = '### Ch.01 - thu@**Từ** 5.000 - **Trích** Nguon 40@'.replace('@', NL)
+        io.open(os.path.join(root, 'Phase3-Outline.md'), 'w',
+                encoding='utf-8', newline=NL).write(dany)
+        that = 'A method is a lifebelt and not a straitjacket'   # 9 tu, co that trong kho mau
+        than = (
+            '---@chapter: 1@quote_budget: SAI@quote_used: SAI@quotes_ok: 99/99@---@'
+            '# Ch01@@'
+            'Nguoi viet dan: *"' + that + '"*.@'
+            'Mot thuat ngu tieng Viet: «than gia dinh TG-1 khong phai thong so».@'
+            '```@trong khoi ma: *"' + that + '"*@```@').replace('@', NL)
+        io.open(os.path.join(d, 'Ch01.md'), 'w', encoding='utf-8', newline=NL).write(than)
+
+        rc = fs.main([root, '--chuong', 'Phase6-Revised', '--ghi'])
+        ra = io.open(os.path.join(d, 'Ch01.md'), encoding='utf-8').read()
+        check('doc ngan sach tu DAN Y, khong chep tay', 'quote_budget: Nguon 40' in ra, ra[:160])
+        check('dem trich *"..."* trong than, dung so tu', 'quote_used: Nguon 9' in ra, ra[:160])
+        check('chuoi tieng Viet KHONG tinh la trich nguon', 'quotes_ok: 1/1' in ra, ra[:160])
+        check('khoi ``` bi loai — khong dem hai lan', 'Nguon 18' not in ra)
+        check('trong ngan sach -> ma thoat 0', rc == 0, 'rc=%s' % rc)
+
+        io.open(os.path.join(root, 'Phase3-Outline.md'), 'w', encoding='utf-8',
+                newline=NL).write(dany.replace('Nguon 40', 'Nguon 5'))
+        check('AM: vuot ngan sach -> ma thoat 1',
+              fs.main([root, '--chuong', 'Phase6-Revised']) == 1)
+
+        root2 = tempfile.mkdtemp(prefix='b2b-fm2-')
+        check('AM: thieu dan y -> ma thoat 2 (khong doc nhu "sach")', fs.main([root2]) == 2)
+        shutil.rmtree(root2, ignore_errors=True)
+    finally:
+        shutil.rmtree(root, ignore_errors=True)
+
+
 def main():
     print('=' * 70)
     print('KIEM CONG /book-to-book — dot bien hai chieu')
@@ -582,7 +635,8 @@ def main():
     for f in (t_chuan_hoa, t_ingest, t_bon_nhanh_trich_dan, t_nguyen_van_ngoai_ngoac,
               t_tran_theo_muc, t_f4_mu, t_cac_dang_hong_im_lang, t_dau_noi_bo,
               t_bao_cao_cu, t_cau_quy_ket_tran, t_khoi_sau_sach, t_snap_pagemap,
-              t_lop_chu_tach_tu, t_trung_chinh_no):
+              t_lop_chu_tach_tu, t_trung_chinh_no,
+              t_frontmatter_sinh_tu_than):
         print('\n-- %s' % f.__name__)
         f()
     print('\n' + '=' * 70)
