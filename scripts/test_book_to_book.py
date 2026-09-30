@@ -40,6 +40,7 @@ def _load(name):
 si = _load('source_ingest')
 fa = _load('fidelity_audit')
 ql = _load('quote_locate')
+so = _load('self_overlap')
 
 FAILED = []
 
@@ -502,6 +503,78 @@ def t_lop_chu_tach_tu():
         shutil.rmtree(root, ignore_errors=True)
 
 
+def t_trung_chinh_no():
+    """Sach phai sinh trung CHINH NO — dai luong khong cong nao khac do duoc.
+
+    Lop loi that (usv-thiet-ke-he-thong, 2026-09-30): 228 mach trung >=12 tu giua cac chuong,
+    dai nhat 35 tu. Vi sao khong cong nao cu thay:
+      - fidelity_audit dem chuoi trung voi NGUON, khong dem sach trung chinh no
+      - kiem_ngan_sach_trich cong THEO CHUONG -> 3 chuong cung khai mot cau thi ca 3 "dat"
+      - nguoi viet tung chuong khong the thay: moi agent chi doc chuong cua minh
+
+    Cap dot bien:
+      THAT phai do  — doan lap lai o hai chuong bi bat, do dai dung
+      BIA phai truot — van ban khac nhau khong bi bao trung; khuon mau (>=N chuong) khong keu
+    """
+    root = tempfile.mkdtemp(prefix='b2b-trung-')
+    try:
+        d = os.path.join(root, 'ch')
+        os.makedirs(d)
+        lap = ('mot vi du co hai con so do duoc hinh 7 122 ve hai phuong an cung mot vo '
+               'dong co dien han cung khuon kho ')
+        khac = 'chuong nay noi ve mot chuyen hoan toan khac khong lap lai gi cua ai '
+        nhan = 'than gia dinh tg 1 khong phai thong so san pham '   # khuon mau, 6 chuong
+        for i in range(1, 7):
+            than = nhan + khac * 3
+            if i in (2, 5):
+                than += lap                      # dung 2 chuong lap doan nay
+            io.open(os.path.join(d, 'Ch%02d.md' % i), 'w',
+                    encoding='utf-8', newline='\n').write('# Ch%02d\n\n' % i + than)
+
+        rc = so.main([d, '--n', '12', '--khuon', '5'])
+        check('trung o hai chuong -> ma thoat 1', rc == 1, 'rc=%s' % rc)
+
+        # do truc tiep qua ham de kiem do dai + phan loai
+        kho = {}
+        for i in (2, 5):
+            t = io.open(os.path.join(d, 'Ch%02d.md' % i), encoding='utf-8').read()
+            kho[i] = [w for w, _ in so.tach_tu(so.go_khoi(t))]
+        check('go_khoi bo frontmatter va khoi ```',
+              'bi bo' not in so.go_khoi('---\na: 1\n---\nthan\n```\nbi bo\n```\n'))
+        check('gop_mach gop cua so chong nhau thanh MOT mach',
+              so.gop_mach([(0, 5), (1, 6), (2, 7)]) == [[0, 2, 5, 7]],
+              repr(so.gop_mach([(0, 5), (1, 6), (2, 7)])))
+        check('gop_mach KHONG gop hai cho roi nhau',
+              len(so.gop_mach([(0, 5), (9, 40)])) == 2)
+        check('phan loai tieng Viet vs tieng Anh',
+              so.la_tieng_viet('thong so san pham') is False
+              and so.la_tieng_viet('thân giả định') is True)
+
+        # doi chung am 1: khong chuong nao lap -> ma thoat 0
+        # 🔴 Khuon dau cua phep thu nay SAI: no lap cung mot cau 3 lan TRONG mot chuong,
+        # va cong bat dung (tu lap trong chuong la mot ca that — Ch.22 trich lai chinh no).
+        # Giu ghi chu nay: doi chung am phai SACH theo DUNG dai luong cam bien do.
+        root2 = tempfile.mkdtemp(prefix='b2b-trung0-')
+        d2 = os.path.join(root2, 'ch')
+        os.makedirs(d2)
+        for i in range(1, 7):
+            # moi chuong mot van ban RIENG, va KHONG lap lai gi trong chinh no
+            rieng = ' '.join('ch%dtu%d' % (i, j) for j in range(40))
+            io.open(os.path.join(d2, 'Ch%02d.md' % i), 'w', encoding='utf-8',
+                    newline='\n').write('# Ch%02d\n\n' % i + nhan + rieng)
+        rc2 = so.main([d2, '--n', '12', '--khuon', '5'])
+        check('AM: khong chuong nao lap -> ma thoat 0', rc2 == 0, 'rc=%s' % rc2)
+        shutil.rmtree(root2, ignore_errors=True)
+
+        # doi chung am 2: khong thay chuong -> ma thoat 2, KHONG phai 0
+        root3 = tempfile.mkdtemp(prefix='b2b-trung2-')
+        rc3 = so.main([root3, '--n', '12'])
+        check('AM: khong thay chuong -> ma thoat 2 (khong doc nhu "sach")', rc3 == 2, 'rc=%s' % rc3)
+        shutil.rmtree(root3, ignore_errors=True)
+    finally:
+        shutil.rmtree(root, ignore_errors=True)
+
+
 def main():
     print('=' * 70)
     print('KIEM CONG /book-to-book — dot bien hai chieu')
@@ -509,7 +582,7 @@ def main():
     for f in (t_chuan_hoa, t_ingest, t_bon_nhanh_trich_dan, t_nguyen_van_ngoai_ngoac,
               t_tran_theo_muc, t_f4_mu, t_cac_dang_hong_im_lang, t_dau_noi_bo,
               t_bao_cao_cu, t_cau_quy_ket_tran, t_khoi_sau_sach, t_snap_pagemap,
-              t_lop_chu_tach_tu):
+              t_lop_chu_tach_tu, t_trung_chinh_no):
         print('\n-- %s' % f.__name__)
         f()
     print('\n' + '=' * 70)
