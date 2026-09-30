@@ -628,6 +628,58 @@ def t_frontmatter_sinh_tu_than():
         shutil.rmtree(root, ignore_errors=True)
 
 
+def t_cong_thuc_va_lop_chu_gian():
+    """Cong nguyen ban: CONG THUC khong phai trich, va lop chu gian chu cai khong phai bia.
+
+    Lop loi that (usv-thiet-ke-he-thong, 2026-10-01): cong ra phan quyet KHONG DAT voi
+    «9 trich khong doi chieu duoc (bia hoac sua chu)». Chan doan:
+      - **7/9 la CONG THUC**, khong phai trich: `K_T/J_T² = T_P/[ρD²v²(1−W_T)²]`,
+        `PC_w = c_L·[…]`, `Lp/Bpx = 2,00 · 3,06 …`. Chung KHONG THE khop kho vi norm()
+        nghien moi con so va ky hieu — do la thiet ke. Mot cuon sach ky thuat in cong
+        thuc thi LUON truot, va phan quyet «bia» chia vao cho khong co loi.
+      - **2/9 la trich THAT**, tra duoc bang quote_locate nhung truot o day: lop chu PDF
+        **gian tung chu cai** (`r p r o d u c t i o n o p e r a t i o n s`, P&B tr.548).
+        quote_locate da duoc va cho lop loi nay (dee8b59) NHUNG tep nay cai phep tra RIENG
+        nen ban va khong bao gio toi cong ra PHAN QUYET. Hai gate, hai cach tra, mot cai
+        duoc va.
+
+    Cap dot bien:
+      THAT phai do  — cong thuc bi bo qua; chuoi gian chu cai van tra duoc
+      BIA phai truot — cau bia van bi bat; chuoi co >=3 tu chu cai KHONG bi coi la cong thuc
+    """
+    # la_cong_thuc: tach dung 7 cong thuc khoi 2 trich that
+    for q in ('K_T/J_T² = T_P/[ρD²v²(1−W_T)²]',
+              'PC_w = c_L·[ C_r·α·√W·√x + (C_p + C_s·√α)·t^1,5·l ]',
+              'Lp/Bpx = 2,00 · 3,06 · 4,09 · 5,50 · 7,00',
+              'A_B = EAR·(πD²/4)·[1,067 − 0,229(P/D)]'):
+        check('cong thuc bi nhan dien: %s' % q[:26], fa.la_cong_thuc(q), q)
+    for q in ('I caution you to provide reinforced structural and shock mitigation',
+              'For production operations Figure 11.9 can be used',
+              'the majority of costs have been committed when the principle solution'):
+        check('AM: trich that KHONG bi coi la cong thuc: %s' % q[:26],
+              not fa.la_cong_thuc(q), q)
+    # doi chung am: chuoi ngan khong co toan tu cung khong phai cong thuc
+    check('AM: chuoi khong co toan tu -> khong phai cong thuc',
+          not fa.la_cong_thuc('Ap tren nen'))
+
+    # luot tra phu tren lop chu GIAN CHU CAI
+    root = tempfile.mkdtemp(prefix='b2b-gian-')
+    try:
+        lam_kho(root, text=SOURCE_TEXT + NL + NL +
+                'F o r p r o d u c t i o n o p e r a t i o n s Figure 11.9 can be used.' + NL)
+        lam_khai_bao(root, 'F2')
+        lam_chuong(root, 'Ch01', 'Nguoi viet dan: "For production operations Figure 11.9 can be used".')
+        lam_chuong(root, 'Ch02', 'Nguoi viet dan: "This sentence was never printed in any source book".')
+        rc = chay(root, 'F2')
+        rep = io.open(os.path.join(root, 'Phase7-Fidelity-Report.md'), encoding='utf-8').read()
+        khoi = rep.split('KHÔNG đối chiếu')[1][:400] if 'KHÔNG đối chiếu' in rep else ''
+        check('chuoi bi GIAN chu cai van tra duoc (khong bao la bia)', 'Ch01' not in khoi, khoi[:150])
+        check('AM: cau bia VAN bi bat', 'Ch02' in khoi, khoi[:150])
+        check('AM: co trich bia -> ma thoat 1', rc == 1, 'rc=%s' % rc)
+    finally:
+        shutil.rmtree(root, ignore_errors=True)
+
+
 def main():
     print('=' * 70)
     print('KIEM CONG /book-to-book — dot bien hai chieu')
@@ -636,7 +688,7 @@ def main():
               t_tran_theo_muc, t_f4_mu, t_cac_dang_hong_im_lang, t_dau_noi_bo,
               t_bao_cao_cu, t_cau_quy_ket_tran, t_khoi_sau_sach, t_snap_pagemap,
               t_lop_chu_tach_tu, t_trung_chinh_no,
-              t_frontmatter_sinh_tu_than):
+              t_frontmatter_sinh_tu_than, t_cong_thuc_va_lop_chu_gian):
         print('\n-- %s' % f.__name__)
         f()
     print('\n' + '=' * 70)

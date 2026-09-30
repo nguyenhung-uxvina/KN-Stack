@@ -371,12 +371,43 @@ def ty_le_viet(s):
                           s.lower())) / max(len(s), 1)
 
 
+CT_TOAN = re.compile(r'[=≈≤≥/·×^√∑∫±]|\b\d+[,.]\d+\b')
+
+
+def la_cong_thuc(q: str) -> bool:
+    """Chuỗi này là CÔNG THỨC, không phải trích dẫn?
+
+    🔴 Vì sao cần. Cổng này từng ra phán quyết **KHÔNG ĐẠT — 9 trích không đối chiếu được** cho
+    `usv-thiet-ke-he-thong` (2026-10-01), và **7/9 là công thức**, không phải trích:
+        Lp/Bpx = 2,00 · 3,06 · 4,09 · 5,50 · 7,00
+        K_T/J_T² = T_P/[ρD²v²(1−W_T)²]
+        PC_w = c_L·[ C_r·α·√W·√x + (C_p + C_s·√α)·t^1,5·l ] + W_s*·t²·l·c_W
+    Chúng **không thể** khớp kho vì `norm()` nghiền mọi con số và ký hiệu — đó là thiết kế, không
+    phải lỗi. Đếm chúng như trích bịa làm cổng báo sai bản chất: một cuốn sách kỹ thuật in công
+    thức thì **luôn** trượt, và phán quyết «bịa hoặc sửa chữ» chĩa vào chỗ không có lỗi.
+
+    Tiêu chí đo trên chính 9 ca ấy: **dưới 3 từ chữ cái dài ≥3** *và* có ít nhất một toán tử. Nó
+    tách đúng 7 công thức khỏi 2 trích thật (`"I caution you to provide reinforced…"` và
+    `"For production operations Figure 11.9 can be used"`), không cần điều chỉnh tay.
+    """
+    tu = [w for w in re.findall(r'[A-Za-zÀ-ỹ]{3,}', q)]
+    return len(tu) < 3 and bool(CT_TOAN.search(q))
+
+
 def kiem_trich(kho, q):
     """Kiểm một trích trên nhiều nguồn. Trả (trạng thái, trang, nhãn nguồn, số từ khớp).
 
     Xử dấu lược: NLM/người viết lược giữa câu bằng "..." nên khớp nguyên chuỗi
     luôn trượt. Cắt theo dấu lược rồi kiểm TỪNG MẢNH; mảnh nào không thấy thì đó
     là nửa bịa. Không xử thì báo "18 câu sai" trong khi 16/18 là thật.
+
+    🔴 Lượt tra PHỤ (thêm 2026-10-01): lớp chữ PDF làm hỏng khoảng trắng theo HAI kiểu —
+    **tách một từ thành hai** (`electroly tes`, `dead rise`) và **giãn từng chữ cái**
+    (`r p r o d u c t i o n o p e r a t i o n s`, đúng ca P&B tr.548). Cả hai làm phép so chuỗi
+    trượt trên câu **có in trong sách**.
+    `quote_locate.py` đã được vá cho đúng lớp lỗi này (`dee8b59`), **nhưng tệp này cài phép tra
+    RIÊNG** nên bản vá không bao giờ tới đây — và đây mới là cổng ra **phán quyết**. Hai gate, hai
+    cách tra, một cái được vá. Nay cả hai bỏ hết khoảng trắng rồi so lại khi lượt chính trượt.
     """
     frags = [f for f in re.split(r'[.]{3}|…', q) if len(norm(f)) >= 25] or [q]
     tot = ('NOT-FOUND', None, None, 0)
@@ -387,6 +418,14 @@ def kiem_trich(kho, q):
             nf = norm(f)
             o = src['corpus'].find(nf)
             if o < 0:
+                # luot phu: bo HET khoang trang hai ben (xem docstring)
+                if 'liet' not in src:
+                    src['liet'] = src['corpus'].replace(' ', '')
+                if len(nf.replace(' ', '')) >= 20 and nf.replace(' ', '') in src['liet']:
+                    o = 0 if not offs else offs[-1]
+                    khop_tu += len(nf.split())
+                    offs.append(o)
+                    continue
                 w = nf.split()
                 head = ' '.join(w[:max(6, int(len(w) * 0.6))])
                 o = src['corpus'].find(head) if len(head) >= 25 else -1
@@ -522,6 +561,8 @@ def audit(outdir, level, min_run, pattern, nguon_nhan):
                 continue
             if nguon_ngoai_ngu and ty_le_viet(q) > 0.02:
                 continue
+            if la_cong_thuc(q):
+                continue          # công thức, không phải trích — xem la_cong_thuc()
             k = norm(q)[:80]
             if len(k) < 25 or k in seen:
                 continue
