@@ -37,6 +37,14 @@ import shutil
 import subprocess
 import sys
 import tempfile
+
+# Console Windows mac dinh cp1252: moi print co dau tieng Viet se LAM CHET script.
+# Da xay ra that 2026-10-01 — dong in `scope: nội bộ` lam script chet trong khi logic
+# nhan dien ĐÚNG. Loi nam o cho BAO, khong o cho QUYET DINH, nen no doc nhu mot ca bi chan.
+if hasattr(sys.stdout, 'reconfigure'):
+    sys.stdout.reconfigure(encoding='utf-8', errors='replace')
+if hasattr(sys.stderr, 'reconfigure'):
+    sys.stderr.reconfigure(encoding='utf-8', errors='replace')
 import zipfile
 
 # Cau hinh mermaid + CSS de THANG trong file nay, khong tach ra file canh skill:
@@ -212,6 +220,7 @@ def verify(epub_path, expect_png, expect_mermaid_left):
 # ---------------------------------------------------------------------- chay
 
 def convert(src, out, title=None, author=None, lang='vi', strip_comments=False,
+            rights=None,
             split_level=2, scale=3, no_diagrams=False):
     if not os.path.isfile(src):
         raise Fail('Khong thay tep dau vao: %s' % src)
@@ -260,6 +269,35 @@ def convert(src, out, title=None, author=None, lang='vi', strip_comments=False,
                '-M', 'lang=' + lang, '-o', out]
         if author or meta.get('author'):
             cmd += ['-M', 'author=' + (author or meta['author'])]
+        # dc:rights — cho tai lieu NOI BO, han che phat tan phai nam trong SIEU DU LIEU
+        # chu khong chi trong than sach. EPUB roi khoi may thi than sach khong di theo
+        # ngu canh; o day thi trinh doc, thu vien, va bat ky ai giai nen zip deu doc duoc.
+        # 🔴 CO CHE, KHONG PHAI LOI NHAC (sua 2026-10-01).
+        # Bản đầu để `--rights` là TUỲ CHỌN. Luật thì nằm trong SKILL.md («dấu BẢN NỘI BỘ phải có
+        # trong siêu dữ liệu EPUB, không chỉ trong thân sách»), nhưng không gì BẮT BUỘC — và lần
+        # dựng thật đầu tiên của cuốn `usv-thiet-ke-he-thong` đã ra một EPUB 20,7 MB có 30 chỗ
+        # «BẢN NỘI BỘ» trong thân mà siêu dữ liệu **chỉ có title + language**. Một tệp rời máy thì
+        # thân sách không đi theo ngữ cảnh; trình đọc, thư viện và bất kỳ ai giải nén zip đều chỉ
+        # đọc siêu dữ liệu.
+        # Nay: suy `rights` từ `scope:` trong frontmatter, và CHẶN nếu phạm vi là nội bộ mà
+        # không có dấu nào.
+        rg = rights or meta.get('rights')
+        pv = str(meta.get('scope') or meta.get('pham_vi') or '').strip()
+        if not rg and pv:
+            pvn = pv.upper().replace('Ộ', 'O').replace('Ị', 'I')
+            if 'NOI BO' in pvn or 'NOI-BO' in pvn or 'INTERNAL' in pvn:
+                rg = ('BẢN NỘI BỘ — tài liệu tham khảo và học tập nội bộ. '
+                      'KHÔNG phát hành ra ngoài, KHÔNG thương mại, '
+                      'KHÔNG tải lên dịch vụ của bên thứ ba.')
+                print('  dc:rights suy tu `scope: %s` trong frontmatter.' % pv)
+        if pv and not rg:
+            raise Fail(
+                'CHAN: frontmatter khai `scope: %s` nhung khong co dau han che phat tan nao '
+                'de ghi vao SIEU DU LIEU EPUB. Than sach khong di theo tep khi tep roi may — '
+                'trinh doc va bat ky ai giai nen zip chi doc sieu du lieu. Them `rights:` vao '
+                'frontmatter, hoac truyen --rights "..."' % pv)
+        if rg:
+            cmd += ['-M', 'rights=' + rg]
         r = subprocess.run(cmd, capture_output=True, text=True)
         if r.returncode != 0:
             raise Fail('pandoc that bai:\n%s' % (r.stderr or r.stdout)[-800:])
@@ -291,6 +329,7 @@ def main():
     ap.add_argument('--title')
     ap.add_argument('--author')
     ap.add_argument('--lang', default='vi')
+    ap.add_argument('--rights', help='dc:rights — han che phat tan, ghi vao SIEU DU LIEU EPUB')
     ap.add_argument('--strip-comments', action='store_true',
                     help='go het chu thich HTML an khoi ban xuat')
     ap.add_argument('--split-level', type=int, default=2,
@@ -303,6 +342,7 @@ def main():
     out = a.out or os.path.splitext(a.input)[0] + '.epub'
     try:
         convert(a.input, out, title=a.title, author=a.author, lang=a.lang,
+                rights=a.rights,
                 strip_comments=a.strip_comments, split_level=a.split_level,
                 scale=a.scale, no_diagrams=a.no_diagrams)
     except Fail as e:
