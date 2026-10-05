@@ -1,16 +1,15 @@
 # -*- coding: utf-8 -*-
 """Lop DO cua /book-map. Khong biet gi ve HTML.
 
-Measurements tren corpus: 2026-10-03 had 32 cuon, 2026-10-05 has 34 cuon co
-book.md tai D:/Workshop_X/3_Resources/Books. Xem spec §2.3 de biet ba loi da
-tra gia. Specific counts (H1/H2 split, CRLF, heading ###) are from 32-book
-sample; verify before citing.
+Measurements tren corpus (2026-10-05, 34 cuon co book.md tai
+D:/Workshop_X/3_Resources/Books): cac so trong tep nay do va kiem chung tren
+tap hien tai. Xem spec §2.3 de biet ba loi da tra gia.
 """
 import io
 import re
 
-# Dau phan cach co ca "—", ":", "·"; so chuong co khi khong dem 0
-# ("Chương 1"); co cuon dung lan hai dau.
+# Do that tren 34 cuon: 29 dung H1, 5 dung H2. Dau phan cach co ca "—", ":", "·";
+# so chuong co khi khong dem 0 ("Chương 1"); co cuon dung lan hai dau.
 CHAP_RE = r'^(#{1,4}) +(?:Chương|Chapter) +(\d{1,3})\b'
 
 # Than chuong cach nhau 200-600 dong; muc luc cuoi sach cach nhau 7-8 dong.
@@ -34,7 +33,8 @@ def heading_mask(lines):
 
     BI-1. Trong khoi ma `#` la chu thich chu khong phai tieu de:
     tau-nhom-han-quoc-phong co `# 80% cong viec...` trong so do ASCII, lam
-    parser chi thay 37.005 trong 95.731 tu. Loi nay vo 5 cuon.
+    parser chi thay 37.005 trong 95.731 tu. Loi nay vo 5 cuon. Corpus-wide
+    (2026-10-05, 34 cuon): 305 dong matching ^#{1,4} +\\S nam trong khoi ma.
     """
     out, fence = [], None
     for line in lines:
@@ -55,7 +55,8 @@ def heading_mask(lines):
 
 def chapter_levels(txt):
     """{do_sau: [(so_dong, so_chuong, nguyen_dong)]}. splitlines() chuan hoa
-    ca CRLF nen khong con \\r trong nguyen_dong."""
+    ca CRLF (3 cuon trong 34 dung CRLF, 2026-10-05) nen khong con \\r trong
+    nguyen_dong."""
     lines = txt.splitlines()
     mask = heading_mask(lines)
     lv = {}
@@ -250,8 +251,10 @@ def parse_outline(txt):
     """{num: {...}} tu Phase3-Outline.md. LOP LAM GIAU — thieu truong nao thi
     de trong, KHONG bia va KHONG suy luan.
 
-    Khuon khong nhat quan giua cac cuon: co cuon co heading `### `, co cuon
-    khong; co chuong dung bullet `- `, co dung dong `Dạy:`. Vi vay o tom tat
+    Khuon khong nhat quan: 26 cua 34 cuon co heading `### `, 8 khong (2026-10-05).
+    Bullet availability: corpus-wide 488 / 521 chuong (94%) co bullet, nhung
+    usv-thiet-ke-he-thong chi 13 / 28. Bullet nay khong phai tom tat (120-150
+    ky + dot clauses + page citations), chi la lieu tham khao. Vi vay o tom tat
     KHONG thu hoach duoc tu day — xem spec §1.2.
     """
     ch, part, cur = {}, None, None
