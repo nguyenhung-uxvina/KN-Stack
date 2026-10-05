@@ -607,12 +607,20 @@ def ste_lint(line):
 
     KHONG goi day la ASD-STE100: Dictionary cua chuan do la tieng Anh va co
     ban quyen ASD. Day la rang buoc viet ro cua Xuong, lay cam hung tu no.
+
+    Fix round 1 (review doc le-giua-cach-noi-va-cach-do): ham nay CHI bat
+    duoc BA dieu, khong phai nam dieu trong SKILL.md. "The bi dong" o day
+    nghia hep: CHI mau co NEU CHU THE ("duoc ... boi" / "bi ... boi" —
+    _PASSIVE_RE). The bi dong KHONG neu chu the (vd "Bien duoc ve.") lot
+    qua het, va ham nay khong do duoc "mot khai niem mot ten" hay "giu
+    thuat ngu goc". Thong bao loi vi vay goi dung ten mau da khop, khong
+    noi "the bi dong" chung chung nhu the da bat het moi dang bi dong.
     """
     bad = []
     if wc(line) > STE_MAX_WORDS:
         bad.append('dài %d từ, trần %d' % (wc(line), STE_MAX_WORDS))
     if re.search(_PASSIVE_RE, line):
-        bad.append('thể bị động — đổi sang chủ động')
+        bad.append('bị động có nêu chủ thể (mẫu "được…bởi"/"bị…bởi") — đổi sang chủ động')
     if len([x for x in re.split(r'(?<=[.!?])\s+', line.strip()) if x]) > 1:
         bad.append('một dòng một ý — tách thành hai mục')
     return bad
@@ -621,15 +629,34 @@ def ste_lint(line):
 def digest_anchor_ok(digest, parsed):
     """Danh sach neo SAI. Rong = moi dong tom tat neo dung vao than chuong.
 
+    Bien tren cua MOI chuong (ke ca chuong khong phai chuong cuoi) tinh
+    THANG tu than THAT cua chinh chuong do — `line` + so dong trong
+    `body` — KHONG suy tu dong tieu de cua chuong SO tiep theo.
+
+    Fix round 1 (review F2): ban truoc tinh bien tren cua mot chuong KHONG
+    PHAI chuong cuoi bang `ch[chuong_ke]['line'] - 1`. Hai cach do THUONG
+    trung nhau, nhung LECH khi co mot TIEU DE KHONG SO xen giua hai chuong
+    co so: parse_chapters da cat ngan than chuong truoc tai chinh tieu de
+    khong so do (xem bien `stop` trong parse_chapters), nen than THAT cua
+    chuong truoc NGAN hon khoang cach toi chuong so tiep theo. Dung cach cu
+    se cho mot bien RONG HON than THAT, am tham nhan mot neo roi vao vung
+    GIUA hai chuong (vung do khong thuoc chuong nao ca theo dung dinh nghia
+    cua parse_chapters) la hop le. Hai cong trong cung mot tinh nang phai
+    dong y nhau ve "o trong chuong nay" nghia la gi — xem
+    test_digest_anchor_respects_stray_heading_boundary. (Sach co tieu de
+    lac nhu vay thuong da bi cong `tieu de lac trong than chuong` cua
+    md_to_html.verify() chan rieng; nhung digest_anchor_ok khong duoc tu
+    mau thuan voi parse_chapters chi vi mot cong khac cung bat duoc loi do.)
+
     Bien hop le o CA HAI chieu: dong TIEU DE cua chinh chuong (gioi han
-    duoi, `lo`) va dong CUOI THAT cua than chuong — dong ngay truoc tieu de
-    chuong ke, hoac dong cuoi tep cho chuong cuoi cung (gioi han tren,
-    `hi`) — deu la neo HOP LE. Mot cau tom tat co the bat goc tu chinh cau
-    tieu de hoac tu cau ket chuong; chi qua mot trong hai bien nay (lac vao
-    than chuong ke, hoac qua EOF o chuong cuoi) moi la BAO LOI. Xem
-    test_digest_anchor_off_by_one: ban dau `hi` cua chuong CUOI tinh thua
-    mot dong (`start + N + 1` thay vi `start + N`) — mot loi off-by-one
-    se am tham nhan mot dong KHONG TON TAI (qua EOF) la neo hop le.
+    duoi, `lo`) va dong CUOI THAT cua than chuong (gioi han tren, `hi`) —
+    deu la neo HOP LE. Mot cau tom tat co the bat goc tu chinh cau tieu de
+    hoac tu cau ket chuong; chi qua mot trong hai bien nay (lac vao vung
+    ngoai than — chuong ke, tieu de khong so xen giua, hoac qua EOF o
+    chuong cuoi) moi la BAO LOI. Xem test_digest_anchor_off_by_one: ban dau
+    `hi` cua chuong CUOI tinh thua mot dong (`start + N + 1` thay vi
+    `start + N`) — mot loi off-by-one se am tham nhan mot dong KHONG TON
+    TAI (qua EOF) la neo hop le.
 
     Chuong TRUNG so: parse_chapters cho ban thu hai tro len mot key THAP
     PHAN nam CHAT trong (num, num+1) (vd 5.001 — xem parse_chapters).
@@ -642,15 +669,9 @@ def digest_anchor_ok(digest, parsed):
     test_digest_duplicate_chapter.
     """
     ch = parsed['chapters']
-    bad, bounds = [], {}
-    nums = sorted(ch)
-    for k, nn in enumerate(nums):
-        start = ch[nn]['line']
-        if k + 1 < len(nums):
-            end = ch[nums[k + 1]]['line'] - 1
-        else:
-            end = start + len(ch[nn]['body'].splitlines())
-        bounds[nn] = (start, end)
+    bad = []
+    bounds = {nn: (c['line'], c['line'] + len(c['body'].splitlines()))
+              for nn, c in ch.items()}
     for num, items in digest.items():
         for it in items:
             if num not in bounds:

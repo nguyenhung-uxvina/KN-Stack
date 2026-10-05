@@ -1055,6 +1055,37 @@ def test_digest_duplicate_chapter():
           bmp.digest_anchor_ok(bad, parsed))
 
 
+# --- Fix round 1 (review F2): hai cong trong CUNG mot tep phai dong y nhau
+# ve "o trong chuong nay" nghia la gi. parse_chapters cat ngan than mot
+# chuong tai tieu de KHONG SO xen giua truoc khi cham chuong SO tiep theo
+# (xem bien `stop`); digest_anchor_ok phai dung dung cho cat do, khong
+# duoc suy bien tren tu dong tieu de cua chuong so tiep theo (rong hon
+# than THAT, se am tham nhan mot neo roi vao vung giua hai chuong).
+def test_digest_anchor_respects_stray_heading_boundary():
+    txt = '\n'.join(
+        ['# Chương 01 — A'] + ['than'] * 30 +
+        ['# Lạc đề — tiêu đề không số'] + ['lac'] * 30 +
+        ['# Chương 02 — B'] + ['than'] * 30)
+    parsed = bmp.parse_chapters(txt)
+    ch = parsed['chapters']
+    real_end_ch1 = ch[1]['line'] + len(ch[1]['body'].splitlines())
+    check('setup: tieu de khong so cat ngan than Ch.01 truoc dong tieu de '
+          'Ch.02 — bien tren THAT phai nho hon "dong Ch.02 - 1"',
+          real_end_ch1 < ch[2]['line'] - 1, (real_end_ch1, ch[2]['line']))
+
+    ok = bmp.parse_digest('## Ch.01 L%d\nCâu trong thân thật.' % real_end_ch1)
+    check('neo dung dong CUOI THAT cua than Ch.01 => khong loi',
+          bmp.digest_anchor_ok(ok, parsed) == [],
+          bmp.digest_anchor_ok(ok, parsed))
+
+    bad = bmp.parse_digest(
+        '## Ch.01 L%d\nCâu neo vào vùng tiêu đề không số.' % (real_end_ch1 + 1))
+    check('neo QUA than THAT cua Ch.01 (roi vao vung tieu de khong so, '
+          'du van con TRUOC dong tieu de Ch.02) => PHAI BAO LOI',
+          len(bmp.digest_anchor_ok(bad, parsed)) == 1,
+          bmp.digest_anchor_ok(bad, parsed))
+
+
 def test_maybe_bad_encoding():
     """F4: maybe() must catch UnicodeDecodeError and return default."""
     # Create a file with invalid UTF-8 bytes (latin-1 bytes that aren't valid UTF-8)
@@ -1090,6 +1121,7 @@ if __name__ == '__main__':
     test_ip_table_number_with_title(); test_ip_row_requires_level_token()
     test_parse_digest(); test_ste_lint(); test_digest_anchor()
     test_digest_anchor_off_by_one(); test_digest_duplicate_chapter()
+    test_digest_anchor_respects_stray_heading_boundary()
     print()
     if FAILED:
         print('%d FAILED: %s' % (len(FAILED), ', '.join(FAILED)))

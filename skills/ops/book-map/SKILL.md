@@ -82,6 +82,19 @@ chuẩn đó là tiếng Anh và có bản quyền ASD):
 - Một khái niệm **một tên** xuyên toàn bản đồ. Không luân phiên từ đồng nghĩa.
 - Thuật ngữ kỹ thuật giữ nguyên tiếng Anh.
 
+Cổng `tom tat vi pham STE` (`ste_lint`) chỉ **đo được BA trong năm** ràng buộc
+trên — không phải cả năm:
+
+- Dài hơn 25 từ.
+- Hơn một câu trên một dòng.
+- Thể bị động **có nêu chủ thể**: mẫu `được … bởi` / `bị … bởi`.
+
+Nó **không** bắt được thể bị động không nêu chủ thể (`Biên được vẽ.` lọt qua
+sạch), và không có cảm biến nào cho "một khái niệm một tên" hay "giữ thuật
+ngữ gốc" — hai điều đó agent phải tự giữ khi viết, không có máy kiểm. Một
+dòng có thể vụng theo cách không máy nào ở đây bắt được. Đừng đọc tên hàng
+này rộng hơn cái nó đo.
+
 **Cổng `neo tom tat sai` CHẶN.** Không neo được câu vào một dòng có thật trong
 chương thì câu đó là bịa — bỏ nó đi, **đừng đổi số dòng cho lọt cổng**. Đây đúng
 là lý do cổng tồn tại: ô tóm tắt là **bề mặt bịa đặt duy nhất** của cả tính
@@ -91,9 +104,10 @@ lặng là tự tay vô hiệu hoá chính cổng đó — nó biến "cổng ki
 thành "cổng kiểm được số nào đó nằm trong khoảng cho phép", hai thứ khác nhau
 hoàn toàn.
 
-Cổng `tom tat vi pham STE` chỉ **cảnh báo**, không chặn — một câu vụng (dài, bị
-động, hai ý) là vấn đề văn phong, không phải bịa đặt; đừng lẫn hai cổng này vào
-nhau. Mất neo là mất sự thật, lỗi văn phong không mất gì ngoài độ gọn.
+Cổng `tom tat vi pham STE` chỉ **cảnh báo**, không chặn — một câu vụng (dài,
+bị động có nêu chủ thể, hoặc hai ý một dòng) là vấn đề văn phong, không phải
+bịa đặt; đừng lẫn hai cổng này vào nhau. Mất neo là mất sự thật, lỗi văn
+phong không mất gì ngoài độ gọn.
 
 ## An ninh — ràng buộc cứng
 
@@ -141,8 +155,10 @@ Dòng nào CHẶN thì script trả mã lỗi và in "CÒ ĐỘNG CHẶN — kh�
   khai. Đây là cổng của **bề mặt bịa đặt duy nhất** trong cả tính năng — không
   neo được là câu đó bịa, bỏ câu đó, đừng đổi số dòng.
 - **`tom tat vi pham STE`** — chỉ cảnh báo, không chặn. Đếm số dòng digest vi
-  phạm STE 80% (dài, bị động, hoặc hai ý một dòng). Vụng văn không phải bịa
-  đặt; đừng lẫn hàng này với `neo tom tat sai`.
+  phạm MỘT TRONG BA điều máy đo được (dài hơn 25 từ, bị động có nêu chủ thể,
+  hoặc hai ý một dòng) — xem "Tầng 3" ở trên để biết hai ràng buộc STE còn
+  lại mà hàng này KHÔNG đo. Vụng văn không phải bịa đặt; đừng lẫn hàng này
+  với `neo tom tat sai`.
 
 ## Sửa ở đâu
 
