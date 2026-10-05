@@ -454,26 +454,41 @@ def test_scope_skips_pipeline_note():
           'md_to_epub' not in lab, lab)
 
 
-def test_scope_skips_token_inside_pipeline_example():
-    """Dang hang-rao-song-va-nuoc (phat hien khi chay cong do tren corpus
-    that, 2026-10-05): mot blockquote CHU THICH DUONG ONG trich nguyen van
-    mot GIA TRI VI DU co token (`` `distribution: ⛔ NỘI BỘ` ở frontmatter
-    ``) de giai thich vi sao md_to_epub.py boc frontmatter — dong nay CO
-    token nhung khong phai loi khai bao CUA CHINH cuon nay. Loi khai bao
-    THAT nam o mot blockquote long trong sub-heading sau hon."""
+# Fix round 2 (2026-10-05): _PIPELINE_NOISE_RE bi XOA — no trung voi chinh
+# danh sach tu cong do tren kiem, nen cong "qua" ma khong do duoc gi ca.
+# Tin hieu THAT la CAU TRUC: token nam TRONG mot doan ma inline (giua hai
+# backtick) la mot gia tri bi TRICH DAN, khong phai mot loi KHANG DINH.
+def test_scope_token_in_code_span_is_not_a_declaration():
+    """Dang hang-rao-song-va-nuoc THAT: mot blockquote trich nguyen van mot
+    GIA TRI VI DU co token NAM TRONG backtick — day la TRICH DAN, khong
+    phai loi khang dinh. Loi khang dinh THAT nam o mot dong **in dam** sau
+    do, trong cung muc. Nhan phai la dong in dam, khong duoc lan chu
+    "frontmatter" tu dong backtick."""
     txt = '\n'.join(
         ['# ⛔ Phạm vi lưu hành', '',
-         '> **Trang này là TỆP NGUỒN.** Đo được trên một cuốn khác: bản xuất có', '',
          '> `distribution: ⛔ NỘI BỘ` ở frontmatter và 0 trên 70 tệp chứa chữ ấy.', '',
-         '## Quyết định phát hành', '',
-         '> ## ⛔ NỘI BỘ XƯỞNG', '',
+         '**NỘI BỘ XƯỞNG.**', '',
          '# Chương 01 — A'] + ['x'] * 40)
     lab, fid, src = bmp.read_scope(txt, None)
-    check('pipeline example: nguon than-sach', src == 'than-sach', src)
-    check('pipeline example: nhan la quyet dinh THAT, khong phai vi du',
-          'XƯỞNG' in lab, lab)
-    check('pipeline example: khong lan chu thich ve frontmatter',
+    check('code-span: nguon than-sach', src == 'than-sach', src)
+    check('code-span: nhan la dong in dam THAT, khong phai trich dan',
+          lab == 'NỘI BỘ XƯỞNG.' or '**NỘI BỘ XƯỞNG.**' in lab, lab)
+    check('code-span: khong lan chu "frontmatter" tu dong backtick',
           'frontmatter' not in lab, lab)
+
+
+def test_scope_only_code_span_token_falls_back():
+    """Cung blockquote backtick nhu tren, nhung KHONG co dong khang dinh
+    nao khac trong muc -> day KHONG phai mot loi khai bao dung (token duy
+    nhat nam trong trich dan). Phai lui ve SCOPE_FALLBACK/bao-toan."""
+    txt = '\n'.join(
+        ['# ⛔ Phạm vi lưu hành', '',
+         '> `distribution: ⛔ NỘI BỘ` ở frontmatter và 0 trên 70 tệp chứa chữ ấy.', '',
+         '# Chương 01 — A'] + ['x'] * 40)
+    lab, fid, src = bmp.read_scope(txt, None)
+    check('code-span only: lui ve bao-toan', src == 'bao-toan', src)
+    check('code-span only: nhan la dung SCOPE_FALLBACK',
+          lab == bmp.SCOPE_FALLBACK, lab)
 
 
 def test_scope_no_token_falls_back():
@@ -532,7 +547,8 @@ if __name__ == '__main__':
     test_scope_never_empty(); test_scope_front_matter_only(); test_scope_wider_forms(); test_maybe_bad_encoding()
     test_scope_blockquote_must_be_adjacent(); test_scope_label_markup_clean()
     test_scope_label_from_section_body(); test_scope_skips_pipeline_note()
-    test_scope_skips_token_inside_pipeline_example()
+    test_scope_token_in_code_span_is_not_a_declaration()
+    test_scope_only_code_span_token_falls_back()
     test_scope_no_token_falls_back(); test_scope_class()
     print()
     if FAILED:

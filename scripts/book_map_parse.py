@@ -186,12 +186,22 @@ _SCOPE_KEYWORDS = r'(?:phạm vi|phát hành|lưu hành|phân loại|nội bộ)
 # mang MOT trong cac tu nay.
 _TOKEN_RE = r'NỘI BỘ|MẬT|SENSITIVE|REVIEW|SAFE'
 
-# hang-rao-song-va-nuoc: mot blockquote CHU THICH DUONG ONG trich NGUYEN
-# VAN mot gia tri vi du co token ("`distribution: ⛔ NỘI BỘ` ở frontmatter")
-# de giai thich tai sao md_to_epub.py boc frontmatter — dong nay CO token
-# nhung KHONG phai loi khai bao cua CHINH cuon sach. Loai bo dong nao vua co
-# token vua mang tu chi-dan-ve-duong-ong nay, tiep tuc tim dong sau.
-_PIPELINE_NOISE_RE = r'frontmatter|md_to_epub|TỆP NGUỒN'
+def _strip_code_spans(text):
+    """Bo CAC doan ma inline (giua hai dau backtick) — CHI dung de DO token,
+    khong bao gio dung cho nhan tra ve.
+
+    Fix round 2 (2026-10-05): _PIPELINE_NOISE_RE (danh sach tu "frontmatter
+    | md_to_epub | TỆP NGUỒN") bi XOA — no trung voi chinh danh sach tu cong
+    do kiem, nen cong do "qua" chi vi code suy dung CHINH may tu cong tim,
+    khong do duoc gi ca. Tin hieu THAT la CAU TRUC, khong phai tu: hang-rao-
+    song-va-nuoc trich nguyen van mot GIA TRI VI DU (`distribution: ⛔ NỘI
+    BỘ`) — token nam TRONG mot doan ma inline, nghia la tac gia dang TRICH
+    DAN mot gia tri truong, khong phai dang KHANG DINH pham vi cua chinh
+    cuon sach. Mot loi khang dinh THAT viet bang prose hoac **in dam**,
+    khong bao giam trong backtick. Vi vay: bo doan ma inline TRUOC khi tim
+    token; neu token duy nhat cua dong nam trong do, dong xem nhu KHONG co
+    token, va phep quet tiep tuc sang dong sau."""
+    return re.sub(r'`[^`]*`', '', text)
 
 
 def _strip_scope_markers(text):
@@ -314,12 +324,14 @@ def read_scope(book_txt, scope_txt=None):
             if not mask[k]:
                 continue
             cand = _strip_scope_markers(lines[k])
-            if not cand or not re.search(_TOKEN_RE, cand, re.IGNORECASE):
+            if not cand:
                 continue
-            if re.search(_PIPELINE_NOISE_RE, cand, re.IGNORECASE):
-                # Token present, but the line is explaining the PIPELINE's
-                # own behaviour (quoting an example value), not declaring
-                # THIS book's scope — keep scanning for a real line.
+            # Token must survive with inline code spans removed — a token
+            # that lives ONLY inside `backticks` is a quoted field value,
+            # not this book's own assertion. The returned label stays the
+            # ORIGINAL (markers-stripped) line — only the probe is pruned.
+            probe = _strip_code_spans(cand)
+            if not re.search(_TOKEN_RE, probe, re.IGNORECASE):
                 continue
             found = cand
             break
