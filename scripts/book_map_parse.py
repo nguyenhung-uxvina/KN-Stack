@@ -181,6 +181,17 @@ def stray_headings(parsed):
                   cuon do (do that).
     Di qua heading_mask() truoc khi dem: mot `#` trong khoi ma (vd so do
     ASCII) KHONG duoc tinh la tieu de.
+
+    Fix round 2 (2026-10-06): loi L1 lich su la "CHI chuong CUOI chay den
+    EOF" (mot chuong, khong lam vo chuong giua). Duoi dang HEP, dung dang
+    cua loi do, cam bien nay tra ve 4 tren tu-khong-den-mot, 3 tren
+    ghi-de-quy-trach-nhiem, va 0 tren cac cuon khong co phu luc de hut —
+    vd usv-thiet-ke-he-thong, bloat ratio chi 1.08x nen khong co gi de
+    chuong cuoi "hut" ca; 0 o day la DUNG, khong phai bo sot. Mot dang
+    RONG hon (ca luat dung bien mat, lam chuong GIUA cung vo — xem
+    test_negative_eof_broad_real_file) cho so cao hon (10/6/6/0) vi do la
+    mot loi NANG HON loi L1 thuc; dung de minh hoa cam bien van bat duoc
+    loi nang hon, khong phai chu ky cua L1.
     """
     depth = parsed['depth']
     if not depth:

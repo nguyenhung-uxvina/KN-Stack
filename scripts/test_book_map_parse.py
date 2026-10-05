@@ -701,28 +701,78 @@ def _no_stop_generic(bmpmod, txt):
     return {'chapters': out, 'depth': depth, 'warn': warn, 'dups': []}
 
 
-# --- DOI CHUNG AM 3 (sach THAT, lop DO): stray_headings PHAI bat duoc loi
-# EOF-overrun ma ty le bloat KHONG bat duoc. 4 so do that CEO da tu kiem,
-# cong do PHAI tai tao dung.
-STRAY_EOF_MEASURED = {
+# --- DOI CHUNG AM 3, dang RONG (sach THAT, lop DO): tat HOAN TOAN luat
+# dung — mot loi NANG HON loi L1 lich su (lam vo CA chuong GIUA, khong chi
+# chuong cuoi). Dung de minh hoa cam bien van bat duoc loi nang hon; KHONG
+# phai chu ky cua L1 — xem test_negative_eof_narrow_real_file ben duoi cho
+# dang DUNG cua L1. 4 so do that CEO da tu kiem o dang nay, cong do PHAI
+# tai tao dung.
+EOF_BROAD_MEASURED = {
     'tu-khong-den-mot': 10,
     'ghi-de-quy-trach-nhiem': 6,
     'usv-thiet-ke-he-thong': 6,
     'finding-alphas': 0,   # chuong cuoi DAI THAT (1.61x) — phai IM LANG
 }
 
-def test_stray_headings_eof_corpus():
+def test_negative_eof_broad_real_file():
     if not os.path.isdir(CORPUS):
-        print('SKIP stray_headings EOF (sach that) — khong thay %s' % CORPUS)
+        print('SKIP stray_headings EOF rong (sach that) — khong thay %s' % CORPUS)
         return
-    for slug, expect in STRAY_EOF_MEASURED.items():
+    for slug, expect in EOF_BROAD_MEASURED.items():
         p = os.path.join(CORPUS, slug, 'book.md')
         if not os.path.exists(p):
-            print('SKIP stray_headings EOF %s — khong thay tep' % slug)
+            print('SKIP stray_headings EOF rong %s — khong thay tep' % slug)
             continue
         txt = bmp.rd(p)
         n = bmp.stray_headings(_no_stop_generic(bmp, txt))
-        check('stray_headings EOF %s: tai tao dung so do that = %d'
+        check('stray_headings EOF RONG %s: tai tao dung so do that = %d'
+              % (slug, expect), n == expect, n)
+
+
+def _eof_narrow(bmpmod, txt):
+    """CHI chuong CUOI (theo vi tri dong, 'line' lon nhat) chay den EOF,
+    moi chuong khac van dung dung luat dung — day la DANG CHINH XAC cua
+    loi L1 lich su (mot chuong, khong lam vo chuong giua). Fix round 2
+    (2026-10-06): dang nay thay the dang RONG o tren lam chuan cho cong
+    --verify, vi dang RONG mo phong mot loi LON HON loi L1 thuc tung xay ra."""
+    parsed = bmpmod.parse_chapters(txt)
+    ch = parsed['chapters']
+    if not ch:
+        return parsed
+    lines = txt.splitlines()
+    last_key = max(ch, key=lambda k: ch[k]['line'])
+    new_ch = dict(ch)
+    c = dict(ch[last_key])
+    c['body'] = '\n'.join(lines[ch[last_key]['line']:])
+    c['words'] = bmpmod.wc(c['body'])
+    new_ch[last_key] = c
+    out = dict(parsed)
+    out['chapters'] = new_ch
+    return out
+
+
+# --- DOI CHUNG AM 3, dang HEP (sach THAT, lop DO): CHINH XAC dang cua loi
+# L1 lich su. finding-alphas (bloat 1.61x) la doi chung AM CUA doi chung AM:
+# chuong cuoi DAI THAT, khong co phu luc de hut — cam bien PHAI im lang 0,
+# day chinh la cuon lam cho nguong ty le cu bi nang len roi mu di truoc do.
+EOF_NARROW_MEASURED = {
+    'tu-khong-den-mot': 4,
+    'ghi-de-quy-trach-nhiem': 3,
+    'finding-alphas': 0,
+}
+
+def test_negative_eof_narrow_real_file():
+    if not os.path.isdir(CORPUS):
+        print('SKIP stray_headings EOF hep (sach that) — khong thay %s' % CORPUS)
+        return
+    for slug, expect in EOF_NARROW_MEASURED.items():
+        p = os.path.join(CORPUS, slug, 'book.md')
+        if not os.path.exists(p):
+            print('SKIP stray_headings EOF hep %s — khong thay tep' % slug)
+            continue
+        txt = bmp.rd(p)
+        n = bmp.stray_headings(_eof_narrow(bmp, txt))
+        check('stray_headings EOF HEP (dang L1 lich su) %s: do dung = %d'
               % (slug, expect), n == expect, n)
 
 
@@ -774,7 +824,8 @@ if __name__ == '__main__':
     test_scope_no_token_falls_back(); test_scope_class()
     test_negative_eof(); test_negative_fixed_stop(); test_corpus()
     test_negative_control_mask_real(); test_negative_fixed_stop_real()
-    test_stray_headings_unit(); test_stray_headings_eof_corpus()
+    test_stray_headings_unit(); test_negative_eof_broad_real_file()
+    test_negative_eof_narrow_real_file()
     test_stray_headings_positive_corpus()
     print()
     if FAILED:
