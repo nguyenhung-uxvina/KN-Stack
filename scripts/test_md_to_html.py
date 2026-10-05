@@ -191,10 +191,96 @@ def test_crlf_render():
               '\r' not in h, 'con \\r')
 
 
+def _rows(rep_rows):
+    return {r[0]: r for r in rep_rows}
+
+def test_verify_passes_clean():
+    with tempfile.TemporaryDirectory() as tmp:
+        d = mkbook(tmp)
+        out = os.path.join(tmp, 'map.html')
+        mth.build(d, out)
+        rows, code = mth.verify(out, d)
+        r = _rows(rows)
+        check('verify: sach lanh thi thoat 0', code == 0, code)
+        for k in ('ty le phu', 'goi mang', 'the script', 'chu thich html',
+                  'nhan pham vi', 'so the vs so chuong', 'so do the vs nguon'):
+            check('verify: co phep do %r' % k, k in r, sorted(r))
+        check('verify: khong co dong CHAN',
+              not [x for x in rows if x[3] == 'CHAN'],
+              [x for x in rows if x[3] == 'CHAN'])
+
+
+# --- DOI CHUNG AM 2: tiem the CDN => cong PHAI chan
+def test_negative_cdn():
+    with tempfile.TemporaryDirectory() as tmp:
+        d = mkbook(tmp)
+        out = os.path.join(tmp, 'map.html')
+        mth.build(d, out)
+        h = io.open(out, encoding='utf-8').read()
+        io.open(out, 'w', encoding='utf-8').write(h.replace(
+            '</head>', '<script src="https://cdn.jsdelivr.net/npm/x"></script></head>'))
+        rows, code = mth.verify(out, d)
+        r = _rows(rows)
+        check('DOI CHUNG AM CDN: cong thoat khac 0', code != 0, code)
+        check('DOI CHUNG AM CDN: phep do goi mang bao CHAN',
+              r['goi mang'][3] == 'CHAN', r['goi mang'])
+
+
+# --- DOI CHUNG AM 3: bo nhan pham vi => cong PHAI chan
+def test_negative_scope_label():
+    with tempfile.TemporaryDirectory() as tmp:
+        d = mkbook(tmp)
+        out = os.path.join(tmp, 'map.html')
+        mth.build(d, out)
+        h = io.open(out, encoding='utf-8').read()
+        io.open(out, 'w', encoding='utf-8').write(
+            h.replace('NỘI BỘ', 'khong co gi').replace('CHƯA KHAI', 'khong co gi'))
+        rows, code = mth.verify(out, d)
+        check('DOI CHUNG AM nhan: cong thoat khac 0', code != 0, code)
+        check('DOI CHUNG AM nhan: phep do nhan bao CHAN',
+              _rows(rows)['nhan pham vi'][3] == 'CHAN',
+              _rows(rows)['nhan pham vi'])
+
+
+# --- Review Focus 4: dau vao thieu / rong / 0 chuong
+def run_cli(*args):
+    return subprocess.run([sys.executable, SCRIPT] + list(args),
+                          capture_output=True, text=True, encoding='utf-8')
+
+def test_bad_input():
+    with tempfile.TemporaryDirectory() as tmp:
+        r1 = run_cli(os.path.join(tmp, 'khong-co-that'))
+        check('thu muc thieu: thoat khac 0', r1.returncode != 0, r1.returncode)
+        check('thu muc thieu: khong Traceback', 'Traceback' not in r1.stderr,
+              r1.stderr[-300:])
+
+        d2 = os.path.join(tmp, 'rong')
+        os.makedirs(d2)
+        io.open(os.path.join(d2, 'book.md'), 'w', encoding='utf-8').write('   \n')
+        r2 = run_cli(d2)
+        check('book.md rong: thoat khac 0', r2.returncode != 0, r2.returncode)
+        check('book.md rong: khong Traceback', 'Traceback' not in r2.stderr,
+              r2.stderr[-300:])
+
+        d3 = os.path.join(tmp, 'khong-chuong')
+        os.makedirs(d3)
+        io.open(os.path.join(d3, 'book.md'), 'w', encoding='utf-8').write(
+            '# Lời mở\n\nkhong co chuong nao ca\n')
+        r3 = run_cli(d3)
+        check('0 chuong: thoat khac 0', r3.returncode != 0, r3.returncode)
+        check('0 chuong: KHONG sinh trang rong',
+              not os.path.exists(os.path.join(d3, 'khong-chuong-map.html')),
+              'da sinh trang rong')
+        check('0 chuong: khong Traceback', 'Traceback' not in r3.stderr,
+              r3.stderr[-300:])
+
+
 if __name__ == '__main__':
     test_escape(); test_render_and_gates(); test_hide_empty_sections()
     test_arc_svg_renders()
     test_crlf_render(); test_vietnamese_path()
+    test_verify_passes_clean(); test_negative_cdn()
+    test_negative_scope_label(); test_bad_input()
     print()
     if FAILED:
         print('%d FAILED: %s' % (len(FAILED), ', '.join(FAILED)))

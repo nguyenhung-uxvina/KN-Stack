@@ -270,24 +270,87 @@ def build(book_dir, out_path):
             'bloat': (ws[-1] / float(med)) if med else 0}
 
 
+_NET_RE = r'(?:src|href)="https?://'
+
+
+def verify(out_path, book_dir):
+    """(rows, exit_code). rows = [(ten, gia tri, nguong, trang thai)].
+
+    BI-5. Phep do dau tien so voi `wc -w` CA TEP book.md — mot tong tinh
+    NGOAI duong ong. Do la cam bien duy nhat bat du 5/5 ca loi khoi ma; hai
+    cam bien chi so cac chuong voi nhau bo sot 4/5, va pahl-beitz-tap2 nam o
+    40% phu ma chung bao 'sach'.
+    """
+    h = bmp.rd(out_path)
+    txt = bmp.rd(os.path.join(book_dir, 'book.md'))
+    parsed = bmp.parse_chapters(txt)
+    ch = parsed['chapters']
+    cov = bmp.coverage(parsed, txt)
+    ws = [ch[n]['words'] for n in sorted(ch)] or [0]
+    med = sorted(ws)[len(ws) // 2] or 1
+
+    net = len(re.findall(_NET_RE, h))
+    scripts = len(re.findall(r'<script', h, re.I))
+    comments = h.count('<!--')
+    has_label = int(bool(re.search(r'NỘI BỘ|CHƯA KHAI', h)))
+    cards = h.count('class="card')
+    mer_src = len(re.findall(r'^```mermaid', txt, re.M))
+    mer_page = sum(c['mermaid'] for c in ch.values())
+
+    rows = [
+        ('ty le phu', '%.0f%%' % (cov * 100), '>=70% chan · <85% canh bao',
+         'CHAN' if cov < COV_BLOCK else ('canh-bao' if cov < COV_WARN else 'ok')),
+        ('goi mang', net, '=0', 'CHAN' if net else 'ok'),
+        ('the script', scripts, '=0 o bac A', 'CHAN' if scripts else 'ok'),
+        ('chu thich html', comments, '=0', 'CHAN' if comments else 'ok'),
+        ('nhan pham vi', has_label, '>=1', 'ok' if has_label else 'CHAN'),
+        ('so the vs so chuong', '%d vs %d' % (cards, len(ch)), 'lech 0',
+         'ok' if cards == len(ch) else 'CHAN'),
+        ('so do the vs nguon', '%d vs %d' % (mer_page, mer_src), 'lech 0',
+         'ok' if mer_page == mer_src else 'canh-bao'),
+        ('chuong cuoi / trung vi', '%.2fx' % (ws[-1] / float(med)),
+         '<1.8x (canh bao)',
+         'canh-bao' if ws[-1] / float(med) > BLOAT_WARN else 'ok'),
+        ('so chuong trung', parsed['dups'] or 0, '=0',
+         'canh-bao' if parsed['dups'] else 'ok'),
+    ]
+    return rows, (1 if [r for r in rows if r[3] == 'CHAN'] else 0)
+
+
 def main():
     ap = argparse.ArgumentParser(
         description='Dung ban do sach (mot tep HTML, offline) tu thu muc sach.')
     ap.add_argument('book_dir', help='Thu muc chua book.md')
     ap.add_argument('-o', '--out', help='Noi ra. Mac dinh <thu-muc>/<slug>-map.html')
+    ap.add_argument('--verify', action='store_true',
+                    help='Chi chay cong nghiem thu tren tep da dung, khong dung lai')
     a = ap.parse_args()
     d = a.book_dir
     slug = os.path.basename(d.rstrip('/\\'))
     out = a.out or os.path.join(d, slug + '-map.html')
-    rep = build(d, out)
-    print('%-16s: %s' % ('sach', slug))
-    print('%-16s: H%s %s' % ('muc tieu de', rep['depth'],
-                             ('CANH BAO: ' + rep['warn']) if rep['warn'] else 'ok'))
-    print('%-16s: %d' % ('chuong', len(rep['chapters'])))
-    print('%-16s: %.0f%%' % ('ty le phu', rep['coverage'] * 100))
-    print('%-16s: %s (%s)' % ('pham vi', rep['scope'][0], rep['scope'][2]))
-    print('%-16s: %s' % ('-> tep', out))
-    return 0
+
+    if a.verify:
+        if not os.path.exists(out):
+            raise SystemExit('Khong thay %s — dung truoc da.' % out)
+        rows, code = verify(out, d)
+    else:
+        rep = build(d, out)
+        print('%-16s: %s' % ('sach', slug))
+        print('%-16s: H%s %s'
+              % ('muc tieu de', rep['depth'],
+                 ('CANH BAO: ' + rep['warn']) if rep['warn'] else 'ok'))
+        print('%-16s: %d' % ('chuong', len(rep['chapters'])))
+        print('%-16s: %s (%s)' % ('pham vi', rep['scope'][0], rep['scope'][2]))
+        print('%-16s: %s' % ('-> tep', out))
+        print()
+        rows, code = verify(out, d)
+
+    print('%-24s %-16s %-28s %s' % ('PHEP DO', 'GIA TRI', 'NGUONG', 'TRANG THAI'))
+    for name, val, thr, st in rows:
+        print('%-24s %-16s %-28s %s' % (name, val, thr, st))
+    if code:
+        print('\nCO DONG CHAN — khong giao tep nay.')
+    return code
 
 
 if __name__ == '__main__':

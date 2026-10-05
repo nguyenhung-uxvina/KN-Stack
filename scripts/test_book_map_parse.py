@@ -525,6 +525,76 @@ def test_scope_class():
           bmp.scope_class(bmp.SCOPE_FALLBACK))
 
 
+# --- DOI CHUNG AM 4: chuong chay den EOF => chuong cuoi PHAI phinh
+def test_negative_eof():
+    broken = load('bmp_eof', 'book_map_parse.py')
+    orig = broken.pick_level
+    def no_stop(txt):
+        depth, hits, warn = orig(broken.chapter_levels(txt))
+        lines = txt.splitlines()
+        out = {}
+        for k, (ln, num, head) in enumerate(hits):
+            end = hits[k + 1][0] if k + 1 < len(hits) else len(lines)
+            body = '\n'.join(lines[ln + 1:end])
+            out[num] = {'title': '', 'words': broken.wc(body), 'mermaid': 0,
+                        'body': body, 'line': ln}
+        return {'chapters': out, 'depth': depth, 'warn': warn, 'dups': []}
+    txt = '\n'.join(['# Chương 01 — A'] + ['than'] * 100 +
+                     ['# Chương 02 — B'] + ['than'] * 100 +
+                     ['# Phụ lục'] + ['phu luc'] * 400)
+    good = bmp.parse_chapters(txt)['chapters']
+    bad = no_stop(txt)['chapters']
+    gl = good[max(good)]['words']; bl = bad[max(bad)]['words']
+    check('DOI CHUNG AM EOF: de chay den EOF lam chuong cuoi phinh',
+          bl > gl * 1.8, 'tot=%d xau=%d' % (gl, bl))
+
+
+# --- DOI CHUNG AM 5: co dinh luat dung theo depth => sach H2 bi cat vun
+def test_negative_fixed_stop():
+    broken = load('bmp_fix', 'book_map_parse.py')
+    def fixed_stop(txt):
+        depth, hits, warn = broken.pick_level(broken.chapter_levels(txt))
+        lines = txt.splitlines()
+        mask = broken.heading_mask(lines)
+        stop = [i for i, L in enumerate(lines)
+                if mask[i] and __import__('re').match(r'^#{1,%d} +\S' % depth, L)]
+        out = {}
+        for ln, num, head in hits:
+            nxt = [i for i in stop if i > ln]
+            body = '\n'.join(lines[ln + 1:nxt[0] if nxt else len(lines)])
+            out[num] = {'title': '', 'words': broken.wc(body), 'mermaid': 0,
+                        'body': body, 'line': ln}
+        return {'chapters': out, 'depth': depth, 'warn': warn, 'dups': []}
+    good = bmp.parse_chapters(FIX_H2_MIXED)['chapters']
+    bad = fixed_stop(FIX_H2_MIXED)['chapters']
+    check('DOI CHUNG AM luat dung: co dinh theo depth lam sach H2 cat vun',
+          bad[1]['words'] < good[1]['words'] / 1.5,
+          'tot=%d xau=%d' % (good[1]['words'], bad[1]['words']))
+
+
+# --- ra TOAN KHO: bo qua neu may khong co kho
+CORPUS = r'D:/Workshop_X/3_Resources/Books'
+
+def test_corpus():
+    if not os.path.isdir(CORPUS):
+        print('SKIP ra toan kho — khong thay %s' % CORPUS)
+        return
+    books = [s for s in sorted(os.listdir(CORPUS))
+             if os.path.exists(os.path.join(CORPUS, s, 'book.md'))]
+    check('kho: tim duoc >= 30 cuon', len(books) >= 30, len(books))
+    low, nochap = [], []
+    for s in books:
+        txt = bmp.rd(os.path.join(CORPUS, s, 'book.md'))
+        p = bmp.parse_chapters(txt)
+        if not p['chapters']:
+            nochap.append(s); continue
+        cov = bmp.coverage(p, txt)
+        if cov < 0.70:
+            low.append((s, round(cov, 2)))
+    check('kho: moi cuon parse ra it nhat 1 chuong', nochap == [], nochap)
+    check('kho: khong cuon nao duoi nguong CHAN 70%%', low == [], low)
+
+
 def test_maybe_bad_encoding():
     """F4: maybe() must catch UnicodeDecodeError and return default."""
     # Create a file with invalid UTF-8 bytes (latin-1 bytes that aren't valid UTF-8)
@@ -550,6 +620,7 @@ if __name__ == '__main__':
     test_scope_token_in_code_span_is_not_a_declaration()
     test_scope_only_code_span_token_falls_back()
     test_scope_no_token_falls_back(); test_scope_class()
+    test_negative_eof(); test_negative_fixed_stop(); test_corpus()
     print()
     if FAILED:
         print('%d FAILED: %s' % (len(FAILED), ', '.join(FAILED)))
