@@ -358,6 +358,38 @@ Citations + source tiers đính kèm cuối chapter dưới section `## Sources`
 ### Source tracking
 `Phase7-Audit-Log.md` bổ sung section `## Research Sources` liệt kê tất cả NLM notebooks + tier classification để P8 có context.
 
+## P7.6 — Bản đồ sách HTML (**tuỳ chọn, CEO quyết, không chặn pha sau**)
+
+Ngay sau khi CEO ký duyệt IP ở P7 và `book.md` đã hợp xong (pipeline này không
+có P7.5, nên P7.6 chạy thẳng sau P7), **hỏi CEO một câu** trước khi sang P8:
+
+```
+═══ P7.6 — BẢN ĐỒ SÁCH (tuỳ chọn) ═══
+`book.md` đã hợp: {{N}} chương · {{W}} từ · {{M}} sơ đồ
+Phạm vi đã chốt: {{scope}}  — trang HTML Ở LẠI TRÊN MÁY, không publish
+
+CEO:
+(1) ▶️ Dựng bản đồ — /book-map, một tệp HTML, offline tuyệt đối
+(2) ⏭️ Bỏ qua      — sang pha sau
+══════════════════════════════════════
+```
+
+Nếu chọn (1):
+
+```bash
+python D:/KN-Stack/scripts/md_to_html.py "<output_dir>"
+```
+
+- **Đọc bảng nghiệm thu trước khi báo xong.** `ty le phu` dưới **70% là CHẶN** —
+  nghĩa là parser mất chương, không phải sách ngắn. `goi mang` · `the script` ·
+  `chu thich html` phải bằng 0. `nhan pham vi` phải ≥ 1.
+- **Không publish trang này.** Phạm vi đã chốt đi theo tệp; đổi định dạng không
+  phải một quyết định phát hành mới.
+- **Không chặn pha sau.** CEO bỏ qua thì ghi "P7.6 bỏ qua" vào ledger rồi đi tiếp.
+  Chạy sau lúc nào cũng được bằng `/book-map <output_dir>`.
+
+---
+
 ## P8 NotebookLM Integration
 
 Block `book-notebook` dùng notebooklm-mcp tools:

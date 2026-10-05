@@ -406,6 +406,27 @@ def test_bad_input():
               r3.stderr[-300:])
 
 
+REPO = os.path.dirname(HERE)
+
+def test_skill_wiring():
+    sk = os.path.join(REPO, 'skills', 'ops', 'book-map', 'SKILL.md')
+    check('skill: co tep SKILL.md', os.path.exists(sk), sk)
+    if os.path.exists(sk):
+        s = io.open(sk, encoding='utf-8').read()
+        check('skill: frontmatter co name dung thu muc',
+              'name: book-map' in s, s[:200])
+        check('skill: description co "Triggers on:"', 'Triggers on:' in s, '')
+        check('skill: tro dung script', 'md_to_html.py' in s, '')
+        check('skill: noi ro rang buoc offline',
+              'offline' in s.lower(), '')
+    for f in ('codebase-to-book', 'notebook-to-book', 'book-to-book'):
+        p = os.path.join(REPO, 'skills', 'book', f, 'SKILL.md')
+        s = io.open(p, encoding='utf-8').read()
+        check('%s: co pha P7.6' % f, 'P7.6' in s, '')
+        check('%s: P7.6 khong chan pha sau' % f,
+              'không chặn' in s.split('P7.6', 1)[-1][:2000], '')
+
+
 if __name__ == '__main__':
     test_escape(); test_render_and_gates(); test_hide_empty_sections()
     test_arc_svg_renders()
@@ -416,6 +437,7 @@ if __name__ == '__main__':
     test_negative_duplicate_chapter_numbers()
     test_negative_mermaid_page_tamper()
     test_bad_input()
+    test_skill_wiring()
     print()
     if FAILED:
         print('%d FAILED: %s' % (len(FAILED), ', '.join(FAILED)))
