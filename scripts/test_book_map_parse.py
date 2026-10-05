@@ -9,6 +9,7 @@ import importlib.util
 import io
 import os
 import sys
+import tempfile
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 
@@ -314,11 +315,78 @@ def test_maybe():
           is True)
 
 
+def test_scope_never_empty():
+    """F1: sidecar with whitespace-only phạm vi must not return empty label."""
+    sidecar_empty = '\n'.join(['**mức nguyên bản: F2**', '**phạm vi phát hành:    **'])
+    plain = '# Chương 01 — A\n' + 'x' * 40
+    lab, fid, src = bmp.read_scope(plain, sidecar_empty)
+    check('F1: nhan KHONG rong sau strip', len(lab.strip()) > 0, repr(lab))
+    check('F1: khong co khai thi bao toan, khong phai sidecar rong',
+          src == 'bao-toan', src)
+
+
+def test_scope_front_matter_only():
+    """F2: scope heading in chapter body must be ignored, only front matter checked."""
+    txt = '\n'.join(
+        ['# Chương 01 — A'] + ['noi dung'] * 40 +
+        ['# Chương 02 — Phạm vi lưu hành của sản phẩm đối thủ'] + ['noi dung'] * 40)
+    lab, fid, src = bmp.read_scope(txt, None)
+    check('F2: khong doc sai tieu de chuong thanh khai', src == 'bao-toan', src)
+    check('F2: nhan khong phai ten chuong', 'Chương 02' not in lab, lab)
+
+
+def test_scope_wider_forms():
+    """F3: accept wider variations of scope declarations in front matter."""
+    # Test 1: # ⚠️ Phạm vi (without full phrase)
+    txt1 = '\n'.join(['# ⚠️ Phạm vi', '', '# Chương 01 — A'] + ['x'] * 40)
+    lab1, fid1, src1 = bmp.read_scope(txt1, None)
+    check('F3 hình 1: heading với Phạm vi', src1 == 'than-sach', src1)
+    check('F3 hình 1: nhan khong rong', len(lab1.strip()) > 0, repr(lab1))
+
+    # Test 2: ## ⛔ CẢNH BÁO PHÁT HÀNH (all caps variation)
+    txt2 = '\n'.join(['## ⛔ CẢNH BÁO PHÁT HÀNH', '> NỘI BỘ', '', '# Chương 01 — A'] + ['x'] * 40)
+    lab2, fid2, src2 = bmp.read_scope(txt2, None)
+    check('F3 hình 2: PHÁT HÀNH all caps', src2 == 'than-sach', src2)
+    check('F3 hình 2: nhan khong rong', len(lab2.strip()) > 0, repr(lab2))
+
+    # Test 3: blockquote với PHẠM VI PHÁT HÀNH
+    txt3 = '\n'.join(['', '> ⚠️ **PHẠM VI PHÁT HÀNH: NỘI BỘ**', '', '# Chương 01 — A'] + ['x'] * 40)
+    lab3, fid3, src3 = bmp.read_scope(txt3, None)
+    check('F3 hình 3: blockquote PHẠM VI PHÁT HÀNH', src3 == 'than-sach', src3)
+    check('F3 hình 3: nhan lay tu blockquote', 'NỘI BỘ' in lab3, lab3)
+
+    # Test 4: blockquote với PHÂN LOẠI
+    txt4 = '\n'.join(['', '> ## ⚠️ PHÂN LOẠI: REVIEW — NỘI BỘ', '', '# Chương 01 — A'] + ['x'] * 40)
+    lab4, fid4, src4 = bmp.read_scope(txt4, None)
+    check('F3 hình 4: blockquote PHÂN LOẠI', src4 == 'than-sach', src4)
+    check('F3 hình 4: nhan khong rong', len(lab4.strip()) > 0, repr(lab4))
+
+    # Test 5: prose-only NỘI BỘ (not heading/blockquote) — should fall back
+    txt5 = '\n'.join(['Cuốn này là NỘI BỘ và chỉ dành cho CEO.', '', '# Chương 01 — A'] + ['x'] * 40)
+    lab5, fid5, src5 = bmp.read_scope(txt5, None)
+    check('F3 hình 5: prose-only NỘI BỘ fall back', src5 == 'bao-toan', src5)
+
+
+def test_maybe_bad_encoding():
+    """F4: maybe() must catch UnicodeDecodeError and return default."""
+    # Create a file with invalid UTF-8 bytes (latin-1 bytes that aren't valid UTF-8)
+    with tempfile.NamedTemporaryFile(mode='wb', suffix='.md', delete=False) as f:
+        # Write latin-1 encoded text that is NOT valid UTF-8
+        f.write(b'Title: \xe9cole')  # latin-1 encoded 'école' — the \xe9 byte is invalid UTF-8
+        temp_path = f.name
+    try:
+        result = bmp.maybe(temp_path, bmp.parse_outline, {})
+        check('F4: bad encoding returns default', result == {}, result)
+    finally:
+        os.unlink(temp_path)
+
+
 if __name__ == '__main__':
     test_wc(); test_mask(); test_pick_level(); test_crlf(); test_separators()
     test_parse_chapters(); test_mermaid_count(); test_duplicate_numbers()
     test_coverage(); test_negative_control_mask(); test_duplicate_then_next_number(); test_title_separators()
     test_crossrefs(); test_read_scope(); test_parse_outline(); test_maybe()
+    test_scope_never_empty(); test_scope_front_matter_only(); test_scope_wider_forms(); test_maybe_bad_encoding()
     print()
     if FAILED:
         print('%d FAILED: %s' % (len(FAILED), ', '.join(FAILED)))

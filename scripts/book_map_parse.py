@@ -172,9 +172,11 @@ def crossrefs(parsed):
 
 SCOPE_FALLBACK = '⛔ PHẠM VI CHƯA KHAI — coi như NỘI BỘ'
 
-_BODY_SCOPE_RE = r'^#+ +.*?(?:⛔ *)?(?:Phạm vi lưu hành|BẢN NỘI BỘ[^\n]*)'
 _SIDE_SCOPE_RE = r'\*\*phạm vi phát hành: ([^*]+?)\*\*'
 _FIDELITY_RE = r'\*\*mức nguyên bản: (\w+)\*\*'
+
+# Keywords that mark a scope declaration (case-insensitive)
+_SCOPE_KEYWORDS = r'(?:phạm vi|phát hành|lưu hành|phân loại|nội bộ)'
 
 
 def read_scope(book_txt, scope_txt=None):
@@ -194,21 +196,43 @@ def read_scope(book_txt, scope_txt=None):
 
     lines = book_txt.splitlines()
     mask = heading_mask(lines)
-    for i, line in enumerate(lines):
-        if not mask[i] or not re.match(_BODY_SCOPE_RE, line):
-            continue
-        head = re.sub(r'^#+ +', '', line).strip()
-        # Lay ca mot dong trich dan ngay sau tieu de neu co ("> BẢN NỘI BỘ")
-        for nxt in lines[i + 1:i + 5]:
-            m = re.match(r'^> *(.*NỘI BỘ.*)$', nxt.strip())
-            if m:
-                return m.group(1).strip(), fid, 'than-sach'
-        return head, fid, 'than-sach'
 
+    # Find front matter: search only before first chapter heading
+    front_matter_end = len(lines)
+    lv = chapter_levels(book_txt)
+    if lv:
+        depth, hits, _ = pick_level(lv)
+        if hits:
+            front_matter_end = hits[0][0]
+
+    # Search front matter for scope declaration in headings or blockquotes
+    for i in range(front_matter_end):
+        line = lines[i]
+        if not mask[i]:
+            continue
+
+        # Check if this is a heading or blockquote line that matches scope keywords
+        is_heading = re.match(r'^#+\s+', line)
+        is_blockquote = re.match(r'^>\s*', line)
+
+        if (is_heading or is_blockquote) and re.search(_SCOPE_KEYWORDS, line, re.IGNORECASE):
+            # Extract text without leading symbols
+            text = re.sub(r'^#+\s+|^>\s*', '', line).strip()
+            if text:  # Only if non-empty
+                # Check for blockquote on next line (prefer it over heading)
+                for nxt in lines[i + 1:min(i + 5, front_matter_end)]:
+                    if re.match(r'^>\s*', nxt) and re.search(_SCOPE_KEYWORDS, nxt, re.IGNORECASE):
+                        text = re.sub(r'^>\s*', '', nxt).strip()
+                        break
+                return text, fid, 'than-sach'
+
+    # Fall back to sidecar (only if it has a non-empty scope declaration)
     if scope_txt:
         m = re.search(_SIDE_SCOPE_RE, scope_txt)
         if m:
-            return m.group(1).strip(), fid, 'sidecar'
+            label = m.group(1).strip()
+            if label:  # F1: must not return empty label
+                return label, fid, 'sidecar'
 
     return SCOPE_FALLBACK, fid, 'bao-toan'
 
@@ -274,5 +298,5 @@ def maybe(path, fn, default):
     sap ca lan chay chi vi thieu mot tep tuy chon."""
     try:
         return fn(rd(path))
-    except (IOError, OSError):
+    except (OSError, UnicodeDecodeError):
         return default
