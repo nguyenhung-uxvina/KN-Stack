@@ -141,7 +141,7 @@ code{font-family:ui-monospace,monospace;font-size:.9em}
 """
 
 
-def render_map(parsed, outline, scope, slug, cov, sha):
+def render_map(parsed, outline, scope, slug, cov, sha, ip):
     ch = parsed['chapters']
     nums = sorted(ch)
     edges = bmp.crossrefs(parsed)
@@ -218,8 +218,13 @@ def render_map(parsed, outline, scope, slug, cov, sha):
             o.append('<p class="note undone">chưa tóm tắt</p>')
         tgt = spec_.get('target', 0)
         pc = ((c['words'] - tgt) * 100.0 / tgt) if tgt else 0
+        # Spec §3.4: muc IP CHI den tu bang doc duoc bang may (bmp.read_ip_table)
+        # — khong bao gio doan tu khoa trong than chuong. Khong co bang thi in
+        # 'chua do', khong bia.
+        ip_cell = ('<i>mức IP: %s</i>' % esc(ip[int(n)]['level'])
+                   if int(n) in ip else '<i class="undone">mức IP: chưa đo</i>')
         o.append('<div class="met"><i>%s từ</i>%s<i>%d sơ đồ%s</i>'
-                 '<i>cần %d ch. khác</i><i class="undone">mức IP: chưa đo</i>'
+                 '<i>cần %d ch. khác</i>%s'
                  '</div>'
                  % (vn(c['words']),
                     ('<i%s>đặt %s (%+.0f%%)</i>'
@@ -227,7 +232,8 @@ def render_map(parsed, outline, scope, slug, cov, sha):
                     if tgt else '<i class="undone">đặt: chưa đo</i>',
                     c['mermaid'],
                     (' / đặt %d' % spec_['figs']) if spec_.get('figs') else '',
-                    len(edges.get(n, []))))
+                    len(edges.get(n, [])),
+                    ip_cell))
         if spec_.get('risk'):
             o.append('<div class="risk%s">%s</div>'
                      % (' r' if spec_.get('red') else '', esc(spec_['risk'])))
@@ -250,6 +256,7 @@ def build(book_dir, out_path):
     if not txt.strip():
         raise SystemExit('%s rong.' % src)
     parsed = bmp.parse_chapters(txt)
+    ip = bmp.read_ip_table(txt)
     if not parsed['chapters']:
         raise SystemExit('Khong thay tieu de chuong nao trong %s (%s). Khong '
                          'sinh trang rong.' % (src, parsed['warn']))
@@ -261,7 +268,7 @@ def build(book_dir, out_path):
                        lambda s: s, None))
     sha = hashlib.sha256(txt.encode('utf-8')).hexdigest()
     slug = os.path.basename(book_dir.rstrip('/\\'))
-    page = render_map(parsed, outline, scope, slug, cov, sha)
+    page = render_map(parsed, outline, scope, slug, cov, sha, ip)
     with io.open(out_path, 'w', encoding='utf-8') as f:
         f.write(page)
 
@@ -269,7 +276,7 @@ def build(book_dir, out_path):
     med = sorted(ws)[len(ws) // 2]
     return {'chapters': parsed['chapters'], 'depth': parsed['depth'],
             'warn': parsed['warn'], 'dups': parsed['dups'], 'coverage': cov,
-            'scope': scope, 'sha': sha, 'out': out_path,
+            'scope': scope, 'sha': sha, 'out': out_path, 'ip': ip,
             'mermaid_src': len(re.findall(r'^```mermaid', txt, re.M)),
             'mermaid_page': sum(c['mermaid'] for c in parsed['chapters'].values()),
             'comments': mte.count_html_comments(txt),

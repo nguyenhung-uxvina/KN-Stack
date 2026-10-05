@@ -490,6 +490,52 @@ def parse_outline(txt):
     return ch
 
 
+_IP_HEAD_RE = r'^#+ +.*[Xx]ếp mức IP'
+_IP_ROW_RE = (r'^\| *(\d{1,3}) *(?:[–—-] *(\d{1,3}) *)?\| *([^|]+?) *\| *'
+              r'([^|]*?) *\|')
+
+
+def read_ip_table(book_txt):
+    """{num: {'level','why'}} tu bang `Xep muc IP theo chuong` trong THAN sach.
+
+    Spec 3.4 CAM do muc IP bang tu khoa. Phase7-Audit-Log.md xep muc trong
+    van xuoi va hai agent KHONG dong y nhau (IP-B xep Ch.07/09/10/12/13 la
+    SAFE, IP-A xep ca nam SENSITIVE), ban hop nhat ra 28/28 SENSITIVE ma
+    chinh log goi la 'thoai hoa'. Day la lop loi 'dat ten cot theo thu minh
+    muon no do'. Nen: chi doc bang DA o dang doc duoc bang may; khong co
+    bang thi tra {} va the in 'chua do'.
+
+    Ca viec tim heading MO bang lan diem KET MUC deu di qua heading_mask()
+    truoc khi khop `#` — mot `#` nam trong khoi ma (vd chu thich ASCII) o
+    ca truoc hoac giua bang khong duoc coi la tieu de thuc.
+    """
+    lines = book_txt.splitlines()
+    mask = heading_mask(lines)
+    start = None
+    for i, line in enumerate(lines):
+        if mask[i] and re.match(_IP_HEAD_RE, line):
+            start = i
+            break
+    if start is None:
+        return {}
+
+    out = {}
+    for i in range(start + 1, len(lines)):
+        line = lines[i]
+        if mask[i] and re.match(r'^#+ +\S', line):      # het muc
+            break
+        m = re.match(_IP_ROW_RE, line)
+        if not m:
+            continue
+        lo = int(m.group(1))
+        hi = int(m.group(2)) if m.group(2) else lo
+        if hi < lo or hi - lo > 200:        # dong rac, khong phai dai chuong
+            continue
+        for k in range(lo, hi + 1):
+            out[k] = {'level': m.group(3).strip(), 'why': m.group(4).strip()}
+    return out
+
+
 def maybe(path, fn, default):
     """Doc tep neu co, tra `default` neu khong. Lop lam giau khong duoc lam
     sap ca lan chay chi vi thieu mot tep tuy chon."""

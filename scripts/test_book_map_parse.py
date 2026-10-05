@@ -797,6 +797,82 @@ def test_stray_headings_positive_corpus():
           viol == [], viol)
 
 
+# --- Task 9: bang xep muc IP trong than sach (spec 3.4) — CHI doc bang da
+# o dang doc duoc bang may, KHONG BAO GIO doan tu khoa trong than chuong.
+# Khuon that, chep tu performance-by-design-ntb: co dai chuong "01-14"
+IP_TABLE = '\n'.join([
+    '# ⛔ Phạm vi lưu hành', '', '> BẢN NỘI BỘ', '',
+    '## Xếp mức IP theo chương', '',
+    '| Chương | Mức | Vì sao |',
+    '|---|---|---|',
+    '| 01–14 | 🟡 REVIEW | Phương pháp đo là tri thức chung. |',
+    '| 15 | 🟡 REVIEW | Mô tả cổng G1→G3 — quy trình nội bộ. |',
+    '| 16 | 🔴 SENSITIVE | Chương trình thử mẫu: trình tự, nhân lực. |',
+    '', '# Chương 01 — A'] + ['x'] * 40)
+
+def test_read_ip_table():
+    t = bmp.read_ip_table(IP_TABLE)
+    check('bang IP: no dai 01-14 thanh tung chuong', len(t) == 16, sorted(t))
+    check('bang IP: Ch.01 la REVIEW', 'REVIEW' in t[1]['level'], t.get(1))
+    check('bang IP: Ch.14 la REVIEW', 'REVIEW' in t[14]['level'], t.get(14))
+    check('bang IP: Ch.16 la SENSITIVE', 'SENSITIVE' in t[16]['level'], t.get(16))
+    check('bang IP: giu ly do', 'nhân lực' in t[16]['why'], t[16]['why'])
+    check('bang IP: khong co bang => rong KHONG doan',
+          bmp.read_ip_table('# Chương 01 — A\nx x x') == {}, 'phai rong')
+    # Spec 3.4: KHONG duoc do tu khoa trong than chuong
+    sneaky = '# Chương 01 — A\n\nChuong nay SAFE de chia se ra ngoai.\n'
+    check('bang IP: KHONG do tu khoa trong than chuong',
+          bmp.read_ip_table(sneaky) == {}, bmp.read_ip_table(sneaky))
+
+
+# --- khong duoc nhiem bang KHAC trong than sach: mot bang do luc/goc ở muc
+# sau, cot dau cung la so, PHAI bi bo qua. Muc bang IP phai KET THUC o tieu
+# de ke tiep (`# Chương 01 — A`) truoc khi den muc bang do luc.
+IP_TABLE_WITH_DECOY = '\n'.join([
+    '# ⛔ Phạm vi lưu hành', '', '> BẢN NỘI BỘ', '',
+    '## Xếp mức IP theo chương', '',
+    '| Chương | Mức | Vì sao |',
+    '|---|---|---|',
+    '| 01–02 | 🟡 REVIEW | ly do that. |',
+    '', '# Chương 01 — A'] + ['x'] * 40 +
+    ['# Chương 02 — B'] + ['x'] * 40 +
+    ['', '## Bảng đo lực kéo', '',
+     '| lần | góc | tải |',
+     '|---|---|---|',
+     '| 99 | 30 | 120 |',
+     '| 100 | 45 | 180 |'])
+
+def test_ip_table_not_from_other_sections():
+    t = bmp.read_ip_table(IP_TABLE_WITH_DECOY)
+    check('bang IP: chi lay dung 2 chuong tu bang IP THAT',
+          sorted(t) == [1, 2], sorted(t))
+    check('bang IP: KHONG nhiem so tu bang do luc khac (99/100)',
+          99 not in t and 100 not in t, sorted(t))
+
+
+# --- dong rac trong bang IP: dai nguoc (14-01) hoac dai phi ly (1-500) phai
+# bi BO QUA, khong duoc no ra hang tram chuong gia.
+IP_TABLE_GARBAGE = '\n'.join([
+    '## Xếp mức IP theo chương', '',
+    '| Chương | Mức | Vì sao |',
+    '|---|---|---|',
+    '| 14–01 | 🔴 SENSITIVE | dai dao nguoc. |',
+    '| 1–500 | 🟡 REVIEW | dai phi ly. |',
+    '| 03 | 🟡 REVIEW | dong hop le. |',
+    '', '# Chương 01 — A'] + ['x'] * 40)
+
+def test_ip_table_range_sanity():
+    t = bmp.read_ip_table(IP_TABLE_GARBAGE)
+    check('bang IP: dai dao nguoc (14-01) bi bo qua het',
+          14 not in t and 1 not in t, sorted(t))
+    check('bang IP: dai phi ly (1-500) bi bo qua het',
+          500 not in t and 2 not in t and 1 not in t, sorted(t))
+    check('bang IP: dong hop le (03) van duoc doc',
+          t.get(3, {}).get('level') == '🟡 REVIEW', t.get(3))
+    check('bang IP: chi co dung 1 chuong (dong rac khong no ra gi)',
+          len(t) == 1, sorted(t))
+
+
 def test_maybe_bad_encoding():
     """F4: maybe() must catch UnicodeDecodeError and return default."""
     # Create a file with invalid UTF-8 bytes (latin-1 bytes that aren't valid UTF-8)
@@ -827,6 +903,8 @@ if __name__ == '__main__':
     test_stray_headings_unit(); test_negative_eof_broad_real_file()
     test_negative_eof_narrow_real_file()
     test_stray_headings_positive_corpus()
+    test_read_ip_table(); test_ip_table_not_from_other_sections()
+    test_ip_table_range_sanity()
     print()
     if FAILED:
         print('%d FAILED: %s' % (len(FAILED), ', '.join(FAILED)))
