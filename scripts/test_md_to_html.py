@@ -343,6 +343,50 @@ def test_negative_duplicate_chapter_numbers():
               r['so chuong trung'][1] == [5], r['so chuong trung'])
 
 
+# --- Fix round 2 (2026-10-06): chuong TRUNG KHONG duoc "muon" muc IP cua
+# ban song sinh. parse_chapters cho ban trung thu hai mot key THAP PHAN nam
+# CHAT trong (num, num+1) — vd 5.001 — va `int(5.001) == 5`, nen mot phien
+# ban cu (tra cuu bang `int(n) in ip`) se cho CA HAI the cung hien thi muc
+# cua chuong 5, du sach chi tung xep muc cho MOT noi dung. Day la dung mot
+# cua: "bia mot phan loai sach khong dua ra" — chinh cai spec 3.4 cam, chi
+# la den qua cua khac (anh xa key, khong phai doan tu khoa). Anh xa that su
+# MO HO khi trung so, nen cau tra loi trung thuc la "chua do" cho CA HAI
+# ban, khong co cach "khon" nao chon dung mot ban de giu muc.
+DUP_IP_BOOK = '\n'.join(
+    ['# ⛔ Phạm vi lưu hành', '', '> BẢN NỘI BỘ', '',
+     '## Xếp mức IP theo chương', '',
+     '| Chương | Mức | Vì sao |',
+     '|---|---|---|',
+     '| 05 | 🔴 SENSITIVE | ly do that. |',
+     '',
+     '# Chương 05 — Bản thật'] + ['than'] * 40 +
+    ['# Chương 05 — Bản trùng'] + ['than'] * 40)
+
+def test_ip_badge_not_inherited_by_duplicate():
+    with tempfile.TemporaryDirectory() as tmp:
+        d = mkbook(tmp, body=DUP_IP_BOOK)
+        out = os.path.join(tmp, 'map.html')
+        mth.build(d, out)
+        h = io.open(out, encoding='utf-8').read()
+        cells = [re.sub(r'<[^>]+>', '', c) for c in
+                 re.findall(r'<i(?: class="undone")?>mức IP: (.*?)</i>', h, re.S)]
+        check('trung so + bang IP: dung 2 the mang muc IP',
+              len(cells) == 2, cells)
+        check('trung so + bang IP: dung MOT the giu muc that cua bang',
+              cells.count('🔴 SENSITIVE') == 1, cells)
+        check('trung so + bang IP: ban trung KHONG duoc "muon" muc — phai '
+              'la chua do, khong duoc hien lai muc cua ban kia',
+              cells.count('chưa đo') == 1, cells)
+
+        rows, code = mth.verify(out, d)
+        r = _rows(rows)
+        check('trung so + bang IP: cong "so chuong trung" van bao canh-bao '
+              '(hai tin hieu — the va cong — phai dong thuan)',
+              r['so chuong trung'][3] == 'canh-bao', r['so chuong trung'])
+        check('trung so + bang IP: cong ghi dung so chuong trung (5)',
+              r['so chuong trung'][1] == [5], r['so chuong trung'])
+
+
 # --- F1: so do the vs nguon phai do TU TRANG (h), khong phai tu book.md lai
 # lan nua — tam CHINH so dem da IN RA TRANG (khong dong vao book.md) va kiem
 # hang nay PHAI lech. Day la doi chung CHUNG MINH F1 that su da sua: no THAT
@@ -435,6 +479,7 @@ if __name__ == '__main__':
     test_negative_scope_label(); test_negative_eof_real()
     test_negative_script_tag(); test_negative_html_comment()
     test_negative_duplicate_chapter_numbers()
+    test_ip_badge_not_inherited_by_duplicate()
     test_negative_mermaid_page_tamper()
     test_bad_input()
     test_skill_wiring()

@@ -221,8 +221,18 @@ def render_map(parsed, outline, scope, slug, cov, sha, ip):
         # Spec §3.4: muc IP CHI den tu bang doc duoc bang may (bmp.read_ip_table)
         # — khong bao gio doan tu khoa trong than chuong. Khong co bang thi in
         # 'chua do', khong bia.
+        #
+        # Fix round 2 (2026-10-06): `n` la so NGUYEN, TRU khi la ban trung —
+        # ban trung thu hai tro len mang key THAP PHAN nam CHAT trong
+        # (num, num+1), vd 5.001 (xem parse_chapters). `int(5.001) == 5` nen
+        # mot phien ban cu se cho chuong trung MUON ca muc IP cua chuong 5 —
+        # mot phan loai sach KHONG he dua ra cho noi dung do. `n == int(n)`
+        # la True cho so nguyen va False cho moi key thap phan cua ban trung,
+        # nen chi tra cuu bang khi n THAT SU la so nguyen; ban trung luon ra
+        # 'chua do' — anh xa that su mo ho, khong co cach nao "khon" hon.
         ip_cell = ('<i>mức IP: %s</i>' % esc(ip[int(n)]['level'])
-                   if int(n) in ip else '<i class="undone">mức IP: chưa đo</i>')
+                   if n == int(n) and int(n) in ip
+                   else '<i class="undone">mức IP: chưa đo</i>')
         o.append('<div class="met"><i>%s từ</i>%s<i>%d sơ đồ%s</i>'
                  '<i>cần %d ch. khác</i>%s'
                  '</div>'
