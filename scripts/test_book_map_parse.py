@@ -228,11 +228,46 @@ def test_crossrefs():
     check('tham chieu: khong tro chinh no', 1 not in e.get(1, []), e[1])
 
 
+# Do that: nhan pham vi nam trong THAN sach o 26/28 cuon khong co tep sidecar;
+# `_scope_decision.md` chi co 4/32. Than sach la nguon CHINH.
+BODY_SCOPE = '\n'.join(['# ⛔ Phạm vi lưu hành', '', '> BẢN NỘI BỘ', '',
+                        '# Chương 01 — A'] + ['x'] * 40)
+BODY_NOIBO = '\n'.join(['# BẢN NỘI BỘ — Workshop X', '', '# Chương 01 — A'] + ['x'] * 40)
+SIDECAR = '\n'.join(['**mức nguyên bản: F2** — Diễn giải ứng dụng',
+                     '**phạm vi phát hành: NỘI BỘ** — CEO tham khảo'])
+
+def test_read_scope():
+    lab, fid, src = bmp.read_scope(BODY_SCOPE, None)
+    check('nguon 1: doc tu THAN sach', src == 'than-sach', src)
+    check('nguon 1: nhan co chu NOI BO', 'NỘI BỘ' in lab, lab)
+
+    lab2, fid2, src2 = bmp.read_scope(BODY_NOIBO, None)
+    check('nguon 1: nhan dang "BẢN NỘI BỘ"', src2 == 'than-sach', src2)
+
+    plain = '# Chương 01 — A\n' + 'x' * 40
+    lab3, fid3, src3 = bmp.read_scope(plain, SIDECAR)
+    check('nguon 2: lui ve sidecar', src3 == 'sidecar', src3)
+    check('nguon 2: lay dung muc nguyen ban', fid3 == 'F2', fid3)
+    check('nguon 2: lay dung nhan', 'NỘI BỘ' in lab3, lab3)
+
+    lab4, fid4, src4 = bmp.read_scope(plain, None)
+    check('BI-4: khong khai o dau => nhan BAO TOAN', src4 == 'bao-toan', src4)
+    check('BI-4: nhan bao toan noi ro coi nhu NOI BO',
+          lab4 == bmp.SCOPE_FALLBACK and 'NỘI BỘ' in lab4, lab4)
+    check('BI-4: KHONG BAO GIO tra nhan rong', bool(lab4.strip()), repr(lab4))
+
+    # than sach THANG sidecar khi ca hai co
+    lab5, fid5, src5 = bmp.read_scope(BODY_SCOPE, SIDECAR)
+    check('than sach uu tien hon sidecar', src5 == 'than-sach', src5)
+    check('van lay muc nguyen ban tu sidecar khi than sach khong co',
+          fid5 == 'F2', fid5)
+
+
 if __name__ == '__main__':
     test_wc(); test_mask(); test_pick_level(); test_crlf(); test_separators()
     test_parse_chapters(); test_mermaid_count(); test_duplicate_numbers()
     test_coverage(); test_negative_control_mask(); test_duplicate_then_next_number(); test_title_separators()
-    test_crossrefs()
+    test_crossrefs(); test_read_scope()
     print()
     if FAILED:
         print('%d FAILED: %s' % (len(FAILED), ', '.join(FAILED)))

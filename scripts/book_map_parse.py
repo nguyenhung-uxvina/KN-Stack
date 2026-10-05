@@ -168,3 +168,46 @@ def crossrefs(parsed):
                 tgt.add(y)
         edges[n] = sorted(tgt)
     return edges
+
+
+SCOPE_FALLBACK = '⛔ PHẠM VI CHƯA KHAI — coi như NỘI BỘ'
+
+_BODY_SCOPE_RE = r'^#+ +.*?(?:⛔ *)?(?:Phạm vi lưu hành|BẢN NỘI BỘ[^\n]*)'
+_SIDE_SCOPE_RE = r'\*\*phạm vi phát hành: ([^*]+?)\*\*'
+_FIDELITY_RE = r'\*\*mức nguyên bản: (\w+)\*\*'
+
+
+def read_scope(book_txt, scope_txt=None):
+    """(nhan, muc_nguyen_ban, nguon). Thu tu doc, dung o nguon dau tien.
+
+    BI-4. Than sach la nguon CHINH: do that 26/28 cuon khong co sidecar van
+    khai pham vi trong than, con `_scope_decision.md` chi co 4/32.
+    Khong khai o dau (2/32) thi PHAI in nhan bao toan — da co tien le do
+    duoc: ban EPUB dau cua 10x-easier-than-2x mang nhan o frontmatter va
+    0/70 tep trong zip chua chu ay.
+    """
+    fid = '?'
+    if scope_txt:
+        m = re.search(_FIDELITY_RE, scope_txt)
+        if m:
+            fid = m.group(1)
+
+    lines = book_txt.splitlines()
+    mask = heading_mask(lines)
+    for i, line in enumerate(lines):
+        if not mask[i] or not re.match(_BODY_SCOPE_RE, line):
+            continue
+        head = re.sub(r'^#+ +', '', line).strip()
+        # Lay ca mot dong trich dan ngay sau tieu de neu co ("> BẢN NỘI BỘ")
+        for nxt in lines[i + 1:i + 5]:
+            m = re.match(r'^> *(.*NỘI BỘ.*)$', nxt.strip())
+            if m:
+                return m.group(1).strip(), fid, 'than-sach'
+        return head, fid, 'than-sach'
+
+    if scope_txt:
+        m = re.search(_SIDE_SCOPE_RE, scope_txt)
+        if m:
+            return m.group(1).strip(), fid, 'sidecar'
+
+    return SCOPE_FALLBACK, fid, 'bao-toan'
