@@ -298,10 +298,22 @@ def verify(out_path, book_dir):
     net = len(re.findall(_NET_RE, h))
     scripts = len(re.findall(r'<script', h, re.I))
     comments = h.count('<!--')
-    has_label = int(bool(re.search(r'NỘI BỘ|CHƯA KHAI', h)))
+    # Fix round 3 (2026-10-06), F2: BI-4 doi hoi nhan nam trong THAN trang —
+    # mot nhan chi nam trong <title> hay mot attribute se qua duoc phep do
+    # cu (tim ca tep). Cat rieng vung <body>...</body> ra roi moi tim; thieu
+    # han <body> thi coi la KHONG dat (0), khong lui ve tim ca tep.
+    body_m = re.search(r'<body[^>]*>(.*)</body>', h, re.S | re.I)
+    has_label = int(bool(body_m and re.search(r'NỘI BỘ|CHƯA KHAI', body_m.group(1))))
     cards = h.count('class="card')
     mer_src = len(re.findall(r'^```mermaid', txt, re.M))
-    mer_page = sum(c['mermaid'] for c in ch.values())
+    # Fix round 3 (2026-10-06), F1: TRUOC day mer_page tinh lai tu `ch`
+    # (parse_chapters cua CHINH book.md) — tuc la so voi chinh minh, khong
+    # he doc tu `h` (trang da dung). Hang ten 'so do the vs nguon' nhung
+    # khong he nhin vao trang: xoa HET so dem tren trang van bao 'ok'. Moi
+    # chuong in dung MOT <i>N sơ đồ</i> trong khoi .met (xem render_map) —
+    # doc cac N do tu CHINH h roi cong lai, de hang nay so sanh trang voi
+    # nguon dung nghia den ten no.
+    mer_page = sum(int(n) for n in re.findall(r'(\d+) sơ đồ', h))
     stray = bmp.stray_headings(parsed)
 
     rows = [

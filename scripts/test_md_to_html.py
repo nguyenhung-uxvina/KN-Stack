@@ -22,6 +22,7 @@ chuong (de pick_level khong bao 'MUC LUC'), va duoc noi de crossrefs tra ve
 import importlib.util
 import io
 import os
+import re
 import subprocess
 import sys
 import tempfile
@@ -287,6 +288,91 @@ def test_negative_eof_real():
               r['chuong cuoi / trung vi'])
 
 
+# --- Fix round 3 (2026-10-06), F3: 4/10 hang chua co doi chung am la mot
+# hang khong ai tung thay no bao do — mot stub tra ve 0 se qua duoc ca bon.
+# Moi doi chung tao bang cach TAM hoac fixture, KHONG de loi trong ma SX.
+
+# --- the script
+def test_negative_script_tag():
+    with tempfile.TemporaryDirectory() as tmp:
+        d = mkbook(tmp)
+        out = os.path.join(tmp, 'map.html')
+        mth.build(d, out)
+        h = io.open(out, encoding='utf-8').read()
+        io.open(out, 'w', encoding='utf-8').write(
+            h.replace('</body>', '<script>alert(1)</script></body>'))
+        rows, code = mth.verify(out, d)
+        r = _rows(rows)
+        check('DOI CHUNG AM the script: cong thoat khac 0', code != 0, code)
+        check('DOI CHUNG AM the script: hang "the script" bao CHAN',
+              r['the script'][3] == 'CHAN', r['the script'])
+
+
+# --- chu thich html
+def test_negative_html_comment():
+    with tempfile.TemporaryDirectory() as tmp:
+        d = mkbook(tmp)
+        out = os.path.join(tmp, 'map.html')
+        mth.build(d, out)
+        h = io.open(out, encoding='utf-8').read()
+        io.open(out, 'w', encoding='utf-8').write(
+            h.replace('</body>', '<!-- ghi chu noi bo --></body>'))
+        rows, code = mth.verify(out, d)
+        r = _rows(rows)
+        check('DOI CHUNG AM chu thich: cong thoat khac 0', code != 0, code)
+        check('DOI CHUNG AM chu thich: hang "chu thich html" bao CHAN',
+              r['chu thich html'][3] == 'CHAN', r['chu thich html'])
+
+
+# --- so chuong trung: fixture co 2 chuong cung so
+DUP_BOOK = '\n'.join(
+    ['# Chương 05 — Bản thật'] + ['than'] * 60 +
+    ['# Chương 05 — Bản trùng'] + ['than'] * 60 +
+    ['# Chương 06 — Khác'] + ['than'] * 60)
+
+def test_negative_duplicate_chapter_numbers():
+    with tempfile.TemporaryDirectory() as tmp:
+        d = mkbook(tmp, body=DUP_BOOK)
+        out = os.path.join(tmp, 'map.html')
+        mth.build(d, out)
+        rows, code = mth.verify(out, d)
+        r = _rows(rows)
+        check('DOI CHUNG AM trung so: hang "so chuong trung" bao canh-bao',
+              r['so chuong trung'][3] == 'canh-bao', r['so chuong trung'])
+        check('DOI CHUNG AM trung so: gia tri ghi dung so chuong trung (5)',
+              r['so chuong trung'][1] == [5], r['so chuong trung'])
+
+
+# --- F1: so do the vs nguon phai do TU TRANG (h), khong phai tu book.md lai
+# lan nua — tam CHINH so dem da IN RA TRANG (khong dong vao book.md) va kiem
+# hang nay PHAI lech. Day la doi chung CHUNG MINH F1 that su da sua: no THAT
+# BAI tren ma TRUOC fix round 3 (xem report) vi mer_page khi do tinh tu `ch`
+# (nguon lai), khong tu `h` — tam trang khong lam no doi.
+def test_negative_mermaid_page_tamper():
+    with tempfile.TemporaryDirectory() as tmp:
+        d = mkbook(tmp)
+        out = os.path.join(tmp, 'map.html')
+        mth.build(d, out)
+        h = io.open(out, encoding='utf-8').read()
+        before_rows, _ = mth.verify(out, d)
+        before = _rows(before_rows)['so do the vs nguon']
+        tampered = re.sub(r'\d+ sơ đồ', '0 sơ đồ', h)
+        io.open(out, 'w', encoding='utf-8').write(tampered)
+        rows, code = mth.verify(out, d)
+        r = _rows(rows)
+        check('DOI CHUNG AM so do: truoc tam, hang khop (ok)',
+              before[3] == 'ok', before)
+        check('DOI CHUNG AM so do: cong van thoat 0 (canh-bao, khong CHAN)',
+              code == 0, code)
+        check('DOI CHUNG AM so do: sau khi xoa so dem TREN TRANG (book.md '
+              'khong doi), hang "so do the vs nguon" PHAI bao canh-bao',
+              r['so do the vs nguon'][3] == 'canh-bao',
+              r['so do the vs nguon'])
+        check('DOI CHUNG AM so do: gia tri phia trang phai tut ve 0',
+              r['so do the vs nguon'][1].startswith('0 vs '),
+              r['so do the vs nguon'])
+
+
 # --- Review Focus 4: dau vao thieu / rong / 0 chuong
 def run_cli(*args):
     return subprocess.run([sys.executable, SCRIPT] + list(args),
@@ -326,6 +412,9 @@ if __name__ == '__main__':
     test_crlf_render(); test_vietnamese_path()
     test_verify_passes_clean(); test_negative_cdn()
     test_negative_scope_label(); test_negative_eof_real()
+    test_negative_script_tag(); test_negative_html_comment()
+    test_negative_duplicate_chapter_numbers()
+    test_negative_mermaid_page_tamper()
     test_bad_input()
     print()
     if FAILED:
