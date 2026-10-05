@@ -141,7 +141,7 @@ code{font-family:ui-monospace,monospace;font-size:.9em}
 """
 
 
-def render_map(parsed, outline, scope, slug, cov, sha, ip):
+def render_map(parsed, outline, scope, slug, cov, sha, ip, digest):
     ch = parsed['chapters']
     nums = sorted(ch)
     edges = bmp.crossrefs(parsed)
@@ -206,7 +206,22 @@ def render_map(parsed, outline, scope, slug, cov, sha, ip):
                  % (int(n), ' · MỚI' if spec_.get('new') else '',
                     (' · ' + spec_['neo']) if spec_.get('neo') else ''))
         o.append('<div class="ct">%s</div>' % esc(c['title']))
-        if spec_.get('bullets'):
+        # Tang 3 (spec 1.2): o tom tat la be mat bia dat duy nhat cua tinh
+        # nang nay, nen thu tu uu tien la digest (viet boi agent, co neo
+        # dong kiem duoc) -> bullets dan y (lam giau, khong phai tom tat
+        # that -> xem parse_outline docstring) -> 'chua tom tat'.
+        #
+        # `n == int(n)` cung dieu kien nhu o the muc IP duoi: ban TRUNG (key
+        # thap phan, vd 5.001) KHONG duoc "muon" digest viet cho ban dau —
+        # digest chi gan voi key SO NGUYEN (xem digest_anchor_ok). Thieu
+        # dieu kien nay se mac lai dung loi da vo o muc IP (Fix round 2,
+        # 2026-10-06): mot chuong TRUNG hien lai tom tat cua ban kia.
+        if n == int(n) and digest.get(int(n)):
+            o.append('<ul>')
+            for it in digest[int(n)][:5]:
+                o.append('<li>%s</li>' % esc(it['text']))
+            o.append('</ul>')
+        elif spec_.get('bullets'):
             o.append('<ul>')
             for b in spec_['bullets'][:3]:
                 t = re.split(r'(?<=[.;])\s', b)[0]
@@ -278,7 +293,12 @@ def build(book_dir, out_path):
                        lambda s: s, None))
     sha = hashlib.sha256(txt.encode('utf-8')).hexdigest()
     slug = os.path.basename(book_dir.rstrip('/\\'))
-    page = render_map(parsed, outline, scope, slug, cov, sha, ip)
+    # Tang 3 (spec 1.2): o tom tat. Python KHONG sinh tom tat — chi doc tep
+    # agent da viet (<thu-muc-sach>/_book_map_digest.md), lint theo STE 80%
+    # va kiem neo dong. Thieu tep nay thi {} (lop lam giau, suy thoai em).
+    digest = bmp.maybe(os.path.join(book_dir, '_book_map_digest.md'),
+                       bmp.parse_digest, {})
+    page = render_map(parsed, outline, scope, slug, cov, sha, ip, digest)
     with io.open(out_path, 'w', encoding='utf-8') as f:
         f.write(page)
 
@@ -290,7 +310,12 @@ def build(book_dir, out_path):
             'mermaid_src': len(re.findall(r'^```mermaid', txt, re.M)),
             'mermaid_page': sum(c['mermaid'] for c in parsed['chapters'].values()),
             'comments': mte.count_html_comments(txt),
-            'bloat': (ws[-1] / float(med)) if med else 0}
+            'bloat': (ws[-1] / float(med)) if med else 0,
+            'digest': digest,
+            'digest_bad': bmp.digest_anchor_ok(digest, parsed),
+            'ste_bad': [(n, i['text'], bmp.ste_lint(i['text']))
+                        for n, items in digest.items() for i in items
+                        if bmp.ste_lint(i['text'])]}
 
 
 _NET_RE = r'(?:src|href)="https?://'
@@ -332,6 +357,16 @@ def verify(out_path, book_dir):
     # nguon dung nghia den ten no.
     mer_page = sum(int(n) for n in re.findall(r'(\d+) sơ đồ', h))
     stray = bmp.stray_headings(parsed)
+    # Tang 3 (spec 1.2, spec 9 R-1): verify() PHAI tu tinh lai hai gia tri
+    # nay tu book_dir — khong nhan tu build() — vi day phai dung duoc mot
+    # minh (xem docstring module). digest la be mat bia dat duy nhat cua
+    # tinh nang nay nen cong neo PHAI CHAN; vi pham STE chi la van de van
+    # phong, nen CHI canh bao.
+    digest = bmp.maybe(os.path.join(book_dir, '_book_map_digest.md'),
+                       bmp.parse_digest, {})
+    dbad = bmp.digest_anchor_ok(digest, parsed)
+    sbad = [1 for items in digest.values() for i in items
+            if bmp.ste_lint(i['text'])]
 
     rows = [
         ('ty le phu', '%.0f%%' % (cov * 100), '>=70% chan · <85% canh bao',
@@ -356,6 +391,9 @@ def verify(out_path, book_dir):
          'canh-bao' if ws[-1] / float(med) > BLOAT_WARN else 'ok'),
         ('so chuong trung', parsed['dups'] or 0, '=0',
          'canh-bao' if parsed['dups'] else 'ok'),
+        ('neo tom tat sai', len(dbad), '=0', 'CHAN' if dbad else 'ok'),
+        ('tom tat vi pham STE', len(sbad), '=0 (canh bao)',
+         'canh-bao' if sbad else 'ok'),
     ]
     return rows, (1 if [r for r in rows if r[3] == 'CHAN'] else 0)
 

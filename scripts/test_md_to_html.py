@@ -205,11 +205,16 @@ def test_verify_passes_clean():
         check('verify: sach lanh thi thoat 0', code == 0, code)
         for k in ('ty le phu', 'goi mang', 'the script', 'chu thich html',
                   'nhan pham vi', 'so the vs so chuong', 'so do the vs nguon',
-                  'tieu de lac trong than chuong'):
+                  'tieu de lac trong than chuong', 'neo tom tat sai',
+                  'tom tat vi pham STE'):
             check('verify: co phep do %r' % k, k in r, sorted(r))
         check('verify: khong co dong CHAN',
               not [x for x in rows if x[3] == 'CHAN'],
               [x for x in rows if x[3] == 'CHAN'])
+        check('verify: khong co tep digest thi "neo tom tat sai" = ok',
+              r['neo tom tat sai'][3] == 'ok', r['neo tom tat sai'])
+        check('verify: khong co tep digest thi "tom tat vi pham STE" = ok',
+              r['tom tat vi pham STE'][3] == 'ok', r['tom tat vi pham STE'])
 
 
 # --- DOI CHUNG AM 2: tiem the CDN => cong PHAI chan
@@ -452,6 +457,47 @@ def test_bad_input():
 
 REPO = os.path.dirname(HERE)
 
+# --- Task 10 (spec 1.2, spec 9 R-1): hai hang cong moi — "neo tom tat sai"
+# PHAI CHAN (be mat bia dat duy nhat cua tinh nang), "tom tat vi pham STE"
+# CHI canh bao (van phong lung cung khong phai bia dat). Hai thu nay KHONG
+# duoc lam lan nhau: mot cau bia phai lam cong thoat != 0, mot cau vung ve
+# thi khong.
+def test_ste_lint_does_not_block():
+    with tempfile.TemporaryDirectory() as tmp:
+        d = mkbook(tmp)
+        out = os.path.join(tmp, 'map.html')
+        mth.build(d, out)
+        digest_path = os.path.join(d, '_book_map_digest.md')
+
+        # Dong vi pham STE (qua 25 tu) nhung neo DUNG (L10 nam trong Ch.01,
+        # xem BOOK: tieu de Ch.01 o dong 5, Ch.02 o dong 60).
+        long_line = ' '.join(['từ'] * 30) + '.'
+        io.open(digest_path, 'w', encoding='utf-8').write(
+            '## Ch.01 L10\n' + long_line)
+        rows, code = mth.verify(out, d)
+        r = _rows(rows)
+        check('STE vi pham: hang "tom tat vi pham STE" bao canh-bao, KHONG CHAN',
+              r['tom tat vi pham STE'][3] == 'canh-bao', r['tom tat vi pham STE'])
+        check('STE vi pham: hang "neo tom tat sai" van ok (neo dung)',
+              r['neo tom tat sai'][3] == 'ok', r['neo tom tat sai'])
+        check('STE vi pham: cong KHONG CHAN vi day chi la van phong',
+              code == 0, code)
+
+        # Dong neo SAI (bia dat) — phai CHAN, du van ban STE sach.
+        io.open(digest_path, 'w', encoding='utf-8').write(
+            '## Ch.01 L999999\nCâu bịa không neo được vào book.md.')
+        rows2, code2 = mth.verify(out, d)
+        r2 = _rows(rows2)
+        check('neo sai: hang "neo tom tat sai" bao CHAN',
+              r2['neo tom tat sai'][3] == 'CHAN', r2['neo tom tat sai'])
+        check('neo sai: hang "tom tat vi pham STE" van ok (van ban sach)',
+              r2['tom tat vi pham STE'][3] == 'ok', r2['tom tat vi pham STE'])
+        check('neo sai: cong CHAN (thoat khac 0) vi day la bia dat',
+              code2 != 0, code2)
+
+        os.remove(digest_path)
+
+
 def test_skill_wiring():
     sk = os.path.join(REPO, 'skills', 'ops', 'book-map', 'SKILL.md')
     check('skill: co tep SKILL.md', os.path.exists(sk), sk)
@@ -481,6 +527,7 @@ if __name__ == '__main__':
     test_negative_duplicate_chapter_numbers()
     test_ip_badge_not_inherited_by_duplicate()
     test_negative_mermaid_page_tamper()
+    test_ste_lint_does_not_block()
     test_bad_input()
     test_skill_wiring()
     print()

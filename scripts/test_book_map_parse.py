@@ -927,6 +927,134 @@ def test_ip_row_requires_level_token():
           len(t) == 1, sorted(t))
 
 
+# --- Task 10 (spec 1.2, spec 9 R-1): o tom tat — be mat bia dat duy nhat
+# cua tinh nang nay. Python KHONG sinh tom tat; chi doc, lint STE 80% va
+# kiem neo dong.
+DIGEST = '\n'.join([
+    '## Ch.01 L2',
+    'Biên hệ thống là một lựa chọn, không phải sự thật về con tàu.',
+    '## Ch.01 L3',
+    'Đổi biên thì hàm phụ thành hàm chính.',
+    '## Ch.02 L70',
+    'Người lái là bộ hạn chế tải sóng đập.',
+])
+
+def test_parse_digest():
+    d = bmp.parse_digest(DIGEST)
+    check('tom tat: 2 chuong', sorted(d) == [1, 2], sorted(d))
+    check('tom tat: Ch.01 co 2 dong', len(d[1]) == 2, d[1])
+    check('tom tat: giu so dong neo', d[1][0]['line'] == 2, d[1][0])
+    check('tom tat: giu nguyen van', 'một lựa chọn' in d[1][0]['text'], d[1][0])
+    check('tom tat: khong co tep => rong', bmp.parse_digest('') == {}, 'phai rong')
+
+
+def test_ste_lint():
+    clean = 'Đổi biên thì hàm phụ thành hàm chính.'
+    check('STE: cau sach thi khong vi pham', bmp.ste_lint(clean) == [],
+          bmp.ste_lint(clean))
+    long_ = ' '.join(['từ'] * 30) + '.'
+    check('STE: cau dai hon 25 tu bi bat',
+          any('25' in v for v in bmp.ste_lint(long_)), bmp.ste_lint(long_))
+    passive = 'Biên được vẽ bởi người thiết kế.'
+    check('STE: the bi dong bi bat',
+          any('bị động' in v for v in bmp.ste_lint(passive)),
+          bmp.ste_lint(passive))
+    two = 'Câu một. Câu hai.'
+    check('STE: hai cau trong mot dong bi bat',
+          any('một ý' in v for v in bmp.ste_lint(two)), bmp.ste_lint(two))
+
+
+def test_digest_anchor():
+    txt = '\n'.join(['# Chương 01 — A', 'dong hai', 'dong ba'] + ['x'] * 60 +
+                     ['# Chương 02 — B'] + ['y'] * 60)
+    parsed = bmp.parse_chapters(txt)
+    ok = bmp.digest_anchor_ok(bmp.parse_digest(DIGEST), parsed)
+    check('neo: dong L2/L3 nam trong Ch.01 => khong bao loi',
+          not [b for b in ok if b['chapter'] == 1], ok)
+    bad = bmp.parse_digest('## Ch.01 L9999\nMột câu.')
+    check('neo: so dong ngoai pham vi chuong => BAO LOI',
+          len(bmp.digest_anchor_ok(bad, parsed)) == 1,
+          bmp.digest_anchor_ok(bad, parsed))
+    bad2 = bmp.parse_digest('## Ch.99 L2\nMột câu.')
+    check('neo: chuong khong ton tai => BAO LOI',
+          len(bmp.digest_anchor_ok(bad2, parsed)) == 1,
+          bmp.digest_anchor_ok(bad2, parsed))
+
+
+# --- Off-by-one tai BIEN chuong, ca hai chieu. Quyet dinh THIET KE: dong
+# TIEU DE cua chinh chuong (gioi han duoi) va dong CUOI THAT cua than
+# chuong (gioi han tren, truoc tieu de chuong ke hoac EOF o chuong cuoi)
+# deu la neo HOP LE — mot cau tom tat co the bat goc tu cau tieu de hoac
+# tu cau ket chuong. Ngay NGOAI mot trong hai bien (lac vao than chuong ke,
+# hoac qua EOF o chuong cuoi) la BAO LOI. Day la cho off-by-one de "am
+# tham nhan mot dong thuoc chuong hang xom" (hoac mot dong KHONG TON TAI
+# qua EOF) la hop le ma khong ai thay.
+def test_digest_anchor_off_by_one():
+    txt = '\n'.join(['# Chương 01 — A', 'dong hai', 'dong ba'] + ['x'] * 60 +
+                     ['# Chương 02 — B'] + ['y'] * 60)
+    parsed = bmp.parse_chapters(txt)
+    h1, h2 = parsed['chapters'][1]['line'], parsed['chapters'][2]['line']
+    last1 = h2 - 1
+    n2 = len(parsed['chapters'][2]['body'].splitlines())
+    last2 = h2 + n2   # dong cuoi THAT cua than chuong CUOI (sach ket thuc o day)
+
+    ok_heading = bmp.parse_digest(
+        '## Ch.01 L%d\nCâu một.\n## Ch.02 L%d\nCâu hai.' % (h1, h2))
+    check('neo bien: dong TIEU DE cua chinh chuong la neo hop le (Ch.01 va Ch.02)',
+          bmp.digest_anchor_ok(ok_heading, parsed) == [],
+          bmp.digest_anchor_ok(ok_heading, parsed))
+
+    ok_last = bmp.parse_digest(
+        '## Ch.01 L%d\nCâu một.\n## Ch.02 L%d\nCâu hai.' % (last1, last2))
+    check('neo bien: dong CUOI THAT cua than chuong la neo hop le (Ch.01 va Ch.02)',
+          bmp.digest_anchor_ok(ok_last, parsed) == [],
+          bmp.digest_anchor_ok(ok_last, parsed))
+
+    bad_lo = bmp.parse_digest('## Ch.02 L%d\nCâu bịa.' % (h2 - 1))
+    check('neo bien: dong NGAY TRUOC tieu de Ch.02 (thuoc Ch.01) => BAO LOI cho Ch.02',
+          len(bmp.digest_anchor_ok(bad_lo, parsed)) == 1,
+          bmp.digest_anchor_ok(bad_lo, parsed))
+
+    bad_hi = bmp.parse_digest('## Ch.02 L%d\nCâu bịa.' % (last2 + 1))
+    check('neo bien: mot dong SAU dong cuoi THAT cua chuong CUOI (qua EOF) '
+          '=> BAO LOI, khong duoc off-by-one am tham cho qua',
+          len(bmp.digest_anchor_ok(bad_hi, parsed)) == 1,
+          bmp.digest_anchor_ok(bad_hi, parsed))
+
+
+# --- Chuong TRUNG so + digest. Quyet dinh THIET KE: parse_digest chi doc
+# duoc so nguyen ("## Ch.05"), va parse_chapters cho ban trung (xuat hien
+# thu hai tro len) mot key THAP PHAN (vd 5.001 — nam CHAT trong (5,6)).
+# Vay mot dong tom tat "Ch.05" CHI gan duoc voi BAN DAU (chuong xuat hien
+# truoc, key nguyen) — KHONG co cach nao tro vao ban trung. Test nay pin
+# dung dieu do: mot dong neo vao THAN cua ban TRUNG (ngoai pham vi ban dau)
+# phai BAO LOI, du dong do la mot dong co thuc trong sach.
+DUP_DIGEST_BOOK = '\n'.join(
+    ['# Chương 05 — Bản thật'] + ['than'] * 60 +
+    ['# Chương 05 — Bản trùng'] + ['than'] * 60 +
+    ['# Chương 06 — Khác'] + ['than'] * 60)
+
+def test_digest_duplicate_chapter():
+    parsed = bmp.parse_chapters(DUP_DIGEST_BOOK)
+    ch = parsed['chapters']
+    check('trung so: co ban dau (key nguyen 5) va ban trung (key thap phan)',
+          5 in ch and any(k != 5 and int(k) == 5 for k in ch), sorted(ch))
+    dup_key = [k for k in ch if k != 5 and int(k) == 5][0]
+    dup_line = ch[dup_key]['line']
+
+    good = bmp.parse_digest('## Ch.05 L2\nCâu hợp lệ, neo vào bản thật.')
+    check('trung so + digest: neo vao BAN DAU (chuong xuat hien truoc) => khong loi',
+          bmp.digest_anchor_ok(good, parsed) == [],
+          bmp.digest_anchor_ok(good, parsed))
+
+    bad = bmp.parse_digest(
+        '## Ch.05 L%d\nCâu neo vào thân bản trùng.' % dup_line)
+    check('trung so + digest: "Ch.05" KHONG gan duoc voi ban TRUNG — neo '
+          'vao than ban trung (ngoai pham vi ban dau) PHAI BAO LOI',
+          len(bmp.digest_anchor_ok(bad, parsed)) == 1,
+          bmp.digest_anchor_ok(bad, parsed))
+
+
 def test_maybe_bad_encoding():
     """F4: maybe() must catch UnicodeDecodeError and return default."""
     # Create a file with invalid UTF-8 bytes (latin-1 bytes that aren't valid UTF-8)
@@ -960,6 +1088,8 @@ if __name__ == '__main__':
     test_read_ip_table(); test_ip_table_not_from_other_sections()
     test_ip_table_range_sanity()
     test_ip_table_number_with_title(); test_ip_row_requires_level_token()
+    test_parse_digest(); test_ste_lint(); test_digest_anchor()
+    test_digest_anchor_off_by_one(); test_digest_duplicate_chapter()
     print()
     if FAILED:
         print('%d FAILED: %s' % (len(FAILED), ', '.join(FAILED)))

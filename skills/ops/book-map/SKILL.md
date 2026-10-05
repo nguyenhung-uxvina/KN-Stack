@@ -46,6 +46,55 @@ Nếu không có đường dẫn trong `$ARGUMENTS`, hỏi người dùng cần 
    thường — in `chưa đo`, đừng suy luận.
 3. **Sinh mới** — ô tóm tắt 3–5 dòng. Hiện in `chưa tóm tắt`; xem spec §1.2.
 
+## Tầng 3 — ô tóm tắt, việc của agent chứ không phải của script
+
+Script **không sinh** tóm tắt. Khi người dùng gọi `/book-map` và sách chưa có
+`_book_map_digest.md`, agent viết 3–5 dòng mỗi chương vào tệp đó. Mỗi mục hai
+dòng: dòng đầu `## Ch.NN LNNN`, dòng sau là câu tóm tắt. `Ch.NN` là số chương;
+`LNNN` là **số dòng trong `book.md`** nơi câu ấy có gốc.
+
+Cách lấy nguyên liệu — đã đo lại trên toàn kho ngày 2026-10-05, khác với giả
+định ban đầu: bullet của `Phase3-Outline.md` **có mặt ở hầu hết chương** (488/521
+chương trên 34 cuốn, 94%) — không phải trường hợp hiếm. `usv-thiet-ke-he-thong`
+(13/28) là cuốn LỆCH, không phải điển hình. Nhưng bullet đó dài 120–150 ký tự,
+gộp nhiều mệnh đề và số trang trích dẫn — ví dụ *"Biên hệ thống không phải sự
+thật về con tàu mà là **một lựa chọn**; đổi biên thì hàm phụ thành hàm chính và
+ngược lại (tr.33)."* — nên nó là **tư liệu nguồn tốt**, không phải tóm tắt một-ý-
+một-dòng đã xong việc. Vì vậy, khi viết digest:
+
+- Chương **có** bullet dàn ý: đọc bullet, **chắt lại** thành 1 dòng ≤25 từ, một
+  ý, rồi tự đi tìm số dòng gốc trong `book.md` khớp với ý đó.
+- Chương **không có** bullet (hoặc bullet không đủ cho một ý rõ): đọc thẳng
+  thân chương, chọn câu/đoạn mang quyết định hoặc hệ quả, rồi ghi số dòng của
+  chính câu/đoạn đó.
+
+Cả hai đường đều **đọc rồi viết lại bằng lời agent**, không copy-paste bullet
+nguyên văn — một bullet 140 ký tự dán thẳng vào thường vi phạm trần 25 từ và
+"một dòng một ý" ngay lập tức.
+
+Ràng buộc viết — gọi là **STE 80%**, *không* gọi là ASD-STE100 (Dictionary của
+chuẩn đó là tiếng Anh và có bản quyền ASD):
+
+- Một dòng một ý. Tối đa **25 từ**.
+- Thể chủ động. Chủ ngữ là vật hoặc người làm việc.
+- Mỗi dòng kết bằng **một đại lượng, một quyết định, hoặc một hệ quả** — không
+  kết bằng chủ đề.
+- Một khái niệm **một tên** xuyên toàn bản đồ. Không luân phiên từ đồng nghĩa.
+- Thuật ngữ kỹ thuật giữ nguyên tiếng Anh.
+
+**Cổng `neo tom tat sai` CHẶN.** Không neo được câu vào một dòng có thật trong
+chương thì câu đó là bịa — bỏ nó đi, **đừng đổi số dòng cho lọt cổng**. Đây đúng
+là lý do cổng tồn tại: ô tóm tắt là **bề mặt bịa đặt duy nhất** của cả tính
+năng (mọi ô khác đều là số đo từ `book.md`), nên nó là ô duy nhất cần một cổng
+kiểm chuyên biệt. Sửa một anchor sai bằng cách đổi `LNNN` cho tới khi cổng im
+lặng là tự tay vô hiệu hoá chính cổng đó — nó biến "cổng kiểm được neo có thật"
+thành "cổng kiểm được số nào đó nằm trong khoảng cho phép", hai thứ khác nhau
+hoàn toàn.
+
+Cổng `tom tat vi pham STE` chỉ **cảnh báo**, không chặn — một câu vụng (dài, bị
+động, hai ý) là vấn đề văn phong, không phải bịa đặt; đừng lẫn hai cổng này vào
+nhau. Mất neo là mất sự thật, lỗi văn phong không mất gì ngoài độ gọn.
+
 ## An ninh — ràng buộc cứng
 
 Trang dựng **offline tuyệt đối**: không CDN, không `<script>`, không gọi bất kỳ
@@ -61,7 +110,7 @@ quyết định phát hành mới; phạm vi chốt ở pipeline gốc đi theo 
 
 ## Đọc bảng nghiệm thu
 
-Script in một bảng 10 phép đo cuối lượt chạy (cả khi dựng mới và khi `--verify`).
+Script in một bảng 12 phép đo cuối lượt chạy (cả khi dựng mới và khi `--verify`).
 Dòng nào CHẶN thì script trả mã lỗi và in "CÒ ĐỘNG CHẶN — không giao tệp này":
 
 - **`ty le phu`** — tổng số từ trong các chương chia cho `wc -w` của cả
@@ -87,6 +136,13 @@ Dòng nào CHẶN thì script trả mã lỗi và in "CÒ ĐỘNG CHẶN — kh�
   `tieu de lac trong than chuong` ở trên.
 - **`so chuong trung`** khác 0 ⇒ sách có hai chương cùng số. Cảnh báo, không
   chặn — nói con số cho CEO, đừng tự chọn giữ chương nào.
+- **`neo tom tat sai`** — CHẶN nếu khác 0. Mỗi dòng của `_book_map_digest.md`
+  (tầng 3, xem mục trên) phải neo vào một số dòng nằm trong đúng chương nó
+  khai. Đây là cổng của **bề mặt bịa đặt duy nhất** trong cả tính năng — không
+  neo được là câu đó bịa, bỏ câu đó, đừng đổi số dòng.
+- **`tom tat vi pham STE`** — chỉ cảnh báo, không chặn. Đếm số dòng digest vi
+  phạm STE 80% (dài, bị động, hoặc hai ý một dòng). Vụng văn không phải bịa
+  đặt; đừng lẫn hàng này với `neo tom tat sai`.
 
 ## Sửa ở đâu
 

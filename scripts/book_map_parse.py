@@ -577,3 +577,89 @@ def maybe(path, fn, default):
         return fn(rd(path))
     except (OSError, UnicodeDecodeError):
         return default
+
+
+STE_MAX_WORDS = 25
+_PASSIVE_RE = r'\bđược\s+\S+\s+bởi\b|\bbị\s+\S+\s+bởi\b'
+
+
+def parse_digest(txt):
+    """{num: [{'text','line'}]} tu _book_map_digest.md.
+
+    Spec 9 R-1: o tom tat la be mat bia dat duy nhat cua tinh nang nay, nen
+    moi dong PHAI mang mot so dong trong book.md de kiem duoc.
+    """
+    out, cur = {}, None
+    for line in txt.splitlines():
+        m = re.match(r'^## +Ch\.(\d{1,3}) +L(\d+) *$', line.strip())
+        if m:
+            cur = (int(m.group(1)), int(m.group(2)))
+            continue
+        if cur and line.strip():
+            out.setdefault(cur[0], []).append(
+                {'text': line.strip(), 'line': cur[1]})
+            cur = None
+    return out
+
+
+def ste_lint(line):
+    """Danh sach vi pham rang buoc STE 80% (spec 1.2). Rong = sach.
+
+    KHONG goi day la ASD-STE100: Dictionary cua chuan do la tieng Anh va co
+    ban quyen ASD. Day la rang buoc viet ro cua Xuong, lay cam hung tu no.
+    """
+    bad = []
+    if wc(line) > STE_MAX_WORDS:
+        bad.append('dài %d từ, trần %d' % (wc(line), STE_MAX_WORDS))
+    if re.search(_PASSIVE_RE, line):
+        bad.append('thể bị động — đổi sang chủ động')
+    if len([x for x in re.split(r'(?<=[.!?])\s+', line.strip()) if x]) > 1:
+        bad.append('một dòng một ý — tách thành hai mục')
+    return bad
+
+
+def digest_anchor_ok(digest, parsed):
+    """Danh sach neo SAI. Rong = moi dong tom tat neo dung vao than chuong.
+
+    Bien hop le o CA HAI chieu: dong TIEU DE cua chinh chuong (gioi han
+    duoi, `lo`) va dong CUOI THAT cua than chuong — dong ngay truoc tieu de
+    chuong ke, hoac dong cuoi tep cho chuong cuoi cung (gioi han tren,
+    `hi`) — deu la neo HOP LE. Mot cau tom tat co the bat goc tu chinh cau
+    tieu de hoac tu cau ket chuong; chi qua mot trong hai bien nay (lac vao
+    than chuong ke, hoac qua EOF o chuong cuoi) moi la BAO LOI. Xem
+    test_digest_anchor_off_by_one: ban dau `hi` cua chuong CUOI tinh thua
+    mot dong (`start + N + 1` thay vi `start + N`) — mot loi off-by-one
+    se am tham nhan mot dong KHONG TON TAI (qua EOF) la neo hop le.
+
+    Chuong TRUNG so: parse_chapters cho ban thu hai tro len mot key THAP
+    PHAN nam CHAT trong (num, num+1) (vd 5.001 — xem parse_chapters).
+    parse_digest chi doc duoc so nguyen ("## Ch.05"), nen mot dong tom tat
+    cho Ch.05 CHI co the gan voi BAN DAU (key nguyen, chuong xuat hien
+    truoc) — khong co cach nao tro vao ban trung. Day la mot lua chon THIET
+    KE, khong phai so sot: anh xa "chuong nao" da mo ho ngay tu luc sach co
+    hai tieu de cung so, nen cau tra loi trung thuc la gan CO DINH vao ban
+    xuat hien truoc, khong doan ban nao "dung hon". Xem
+    test_digest_duplicate_chapter.
+    """
+    ch = parsed['chapters']
+    bad, bounds = [], {}
+    nums = sorted(ch)
+    for k, nn in enumerate(nums):
+        start = ch[nn]['line']
+        if k + 1 < len(nums):
+            end = ch[nums[k + 1]]['line'] - 1
+        else:
+            end = start + len(ch[nn]['body'].splitlines())
+        bounds[nn] = (start, end)
+    for num, items in digest.items():
+        for it in items:
+            if num not in bounds:
+                bad.append({'chapter': num, 'line': it['line'],
+                            'why': 'chương không tồn tại trong sách'})
+                continue
+            lo, hi = bounds[num]
+            if not (lo <= it['line'] <= hi):
+                bad.append({'chapter': num, 'line': it['line'],
+                            'why': 'dòng %d nằm ngoài Ch.%02d (%d–%d)'
+                                   % (it['line'], num, lo, hi)})
+    return bad
