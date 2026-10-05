@@ -1,9 +1,10 @@
 """Test cho md_to_html.py — ket xuat ban do sach bac A.
 
-Bon ca bien do that tren 32 cuon (2026-10-03):
+Bon ca bien do that tren 32 cuon (2026-10-03; CRLF do lai 2026-10-05 tren
+34 cuon — xem F2):
   - 5/32 cuon co <>&" trong TEN CHUONG (tau-nhom-han-quoc-phong Ch.01 la
     `"Nhom chi la thep nhe hon."`) -> khong escape thi trang vo.
-  - 4/32 cuon dung CRLF.
+  - 3/34 cuon dung CRLF (do lai 2026-10-05; so cu "4/32" da bi RUT LAI).
   - 2/32 cuon khong khai pham vi o dau -> phai in nhan bao toan.
   - inside-the-box co 0 so do va 2 canh phu thuoc -> phai AN muc, khong in
     khung trong.
@@ -422,6 +423,89 @@ def test_negative_mermaid_page_tamper():
               r['so do the vs nguon'])
 
 
+# --- Fix round 4 (2026-10-06), F1: bullet dan y hien tren trang PHAI duoc
+# danh dau RO la chua qua cong neo, VA phai bi lint STE nhu dong digest —
+# truoc fix nay hai dieu nay deu KHONG xay ra (bullet hien giong digest het,
+# "tom tat vi pham STE" chi do tep digest rieng nen luon bao sach tren
+# 32/34 cuon khong co digest).
+OUTLINE_LONG_BULLET = '\n'.join([
+    '### Ch.01 — Tên chương',
+    '- ' + ' '.join(['từ'] * 30) + '.',
+])
+
+def test_summary_from_outline_bullets_is_marked_and_linted():
+    with tempfile.TemporaryDirectory() as tmp:
+        d = mkbook(tmp, outline=OUTLINE_LONG_BULLET)
+        out = os.path.join(tmp, 'map.html')
+        mth.build(d, out)
+        h = io.open(out, encoding='utf-8').read()
+        check('F1: bullet dan y duoc danh dau class rieng summary-unanchored',
+              'class="summary-unanchored"' in h, 'thieu class')
+        check('F1: co nhan tieng Viet canh bao chua qua cong neo',
+              'CHƯA qua cổng neo' in h, 'thieu nhan')
+        rows, code = mth.verify(out, d)
+        r = _rows(rows)
+        check('F1: "tom tat vi pham STE" bat dong bullet qua 25 tu, canh-bao',
+              r['tom tat vi pham STE'][3] == 'canh-bao', r['tom tat vi pham STE'])
+        check('F1: "neo tom tat sai" van ok — bullet khong mang so dong goc '
+              'de neo, nen khong tinh vao hang nay',
+              r['neo tom tat sai'][3] == 'ok', r['neo tom tat sai'])
+        check('F1: cong KHONG CHAN — day la van phong, khong phai bia dat',
+              code == 0, code)
+
+
+# --- Fix round 4 (2026-10-06), nho #2: mot bullet dan y chua dung cum
+# "N sơ đồ" (vd trich dan "3 sơ đồ minh họa cấu trúc") KHONG duoc lam phinh
+# "so do the vs nguon" — hang nay chi duoc doc tu khoi .met, khong doc ca
+# trang.
+OUTLINE_FAKE_DIAGRAM_PHRASE = '\n'.join([
+    '### Ch.01 — Tên chương',
+    '- Chương vẽ đúng 3 sơ đồ minh họa cấu trúc biên hệ thống rõ ràng.',
+])
+
+def test_mermaid_count_not_inflated_by_bullet_text():
+    with tempfile.TemporaryDirectory() as tmp:
+        d = mkbook(tmp, outline=OUTLINE_FAKE_DIAGRAM_PHRASE)
+        out = os.path.join(tmp, 'map.html')
+        rep = mth.build(d, out)
+        h = io.open(out, encoding='utf-8').read()
+        check('nho #2: bullet co cum "3 sơ đồ" that su xuat hien tren trang',
+              '3 sơ đồ' in h, 'khong thay cum trong bullet')
+        rows, code = mth.verify(out, d)
+        r = _rows(rows)
+        check('nho #2: "so do the vs nguon" KHONG bi phinh boi van ban bullet',
+              r['so do the vs nguon'][1] == '%d vs %d'
+              % (rep['mermaid_page'], rep['mermaid_src']),
+              r['so do the vs nguon'])
+        check('nho #2: hang van khop (ok) — cum trong bullet khong duoc dem',
+              r['so do the vs nguon'][3] == 'ok', r['so do the vs nguon'])
+
+
+# --- Fix round 4 (2026-10-06), nho #3: nhan pham vi phai nhan dien CA cac
+# token don le MẬT/SENSITIVE/REVIEW/SAFE (cung bo token ma scope reader
+# dung — bmp._TOKEN_RE), khong chi "NỘI BỘ"/"CHƯA KHAI" — truoc fix nay mot
+# nhan dung dan nhu "MẬT." mot minh se bi hang nay CHAN NHAM du day la mot
+# loi khai bao pham vi HOP LE.
+MAT_ONLY_BOOK = '\n'.join(
+    ['# ⛔ Phạm vi lưu hành', '', '**MẬT.**', '',
+     '# Chương 01 — A'] + ['x'] * 40)
+
+def test_scope_label_widened_tokens():
+    with tempfile.TemporaryDirectory() as tmp:
+        d = mkbook(tmp, body=MAT_ONLY_BOOK)
+        out = os.path.join(tmp, 'map.html')
+        mth.build(d, out)
+        rows, code = mth.verify(out, d)
+        r = _rows(rows)
+        check('nho #3: nhan "MẬT" mot minh (khong co NỘI BỘ) van duoc nhan '
+              'dien, KHONG bi CHAN nham', r['nhan pham vi'][3] == 'ok',
+              r['nhan pham vi'])
+        check('nho #3: cong khong CHAN tren mot trang da khai pham vi dung',
+              code == 0, code)
+    # Doi chung am: cong hien tai (truoc fix) VAN phai CHAN khi thuc su
+    # thieu nhan — xem test_negative_scope_label o tren, van giu nguyen.
+
+
 # --- Review Focus 4: dau vao thieu / rong / 0 chuong
 def run_cli(*args):
     return subprocess.run([sys.executable, SCRIPT] + list(args),
@@ -466,7 +550,6 @@ def test_ste_lint_does_not_block():
     with tempfile.TemporaryDirectory() as tmp:
         d = mkbook(tmp)
         out = os.path.join(tmp, 'map.html')
-        mth.build(d, out)
         digest_path = os.path.join(d, '_book_map_digest.md')
 
         # Dong vi pham STE (qua 25 tu) nhung neo DUNG (L10 nam trong Ch.01,
@@ -474,6 +557,11 @@ def test_ste_lint_does_not_block():
         long_line = ' '.join(['từ'] * 30) + '.'
         io.open(digest_path, 'w', encoding='utf-8').write(
             '## Ch.01 L10\n' + long_line)
+        # Fix round 4 (2026-10-06), F1: verify() lint dong tom tat tu CHINH
+        # trang da dung (xem summary_lines_from_page), khong con doc
+        # _book_map_digest.md rieng — nen phai build() LAI sau khi ghi
+        # digest de trang mang noi dung moi truoc khi verify() doc no.
+        mth.build(d, out)
         rows, code = mth.verify(out, d)
         r = _rows(rows)
         check('STE vi pham: hang "tom tat vi pham STE" bao canh-bao, KHONG CHAN',
@@ -486,6 +574,7 @@ def test_ste_lint_does_not_block():
         # Dong neo SAI (bia dat) — phai CHAN, du van ban STE sach.
         io.open(digest_path, 'w', encoding='utf-8').write(
             '## Ch.01 L999999\nCâu bịa không neo được vào book.md.')
+        mth.build(d, out)
         rows2, code2 = mth.verify(out, d)
         r2 = _rows(rows2)
         check('neo sai: hang "neo tom tat sai" bao CHAN',
@@ -528,6 +617,9 @@ if __name__ == '__main__':
     test_ip_badge_not_inherited_by_duplicate()
     test_negative_mermaid_page_tamper()
     test_ste_lint_does_not_block()
+    test_summary_from_outline_bullets_is_marked_and_linted()
+    test_mermaid_count_not_inflated_by_bullet_text()
+    test_scope_label_widened_tokens()
     test_bad_input()
     test_skill_wiring()
     print()

@@ -80,7 +80,7 @@ def test_pick_level():
     check('khong co tieu de: tra None + ly do', d3 is None and h3 is None and w3, w3)
 
 
-# --- Review Focus 2: CRLF (4/32 cuon that)
+# --- Review Focus 2: CRLF (3/34 cuon that, do lai 2026-10-05 — truoc la 4/32)
 def test_crlf():
     lv = bmp.chapter_levels(FIX_FENCE.replace('\n', '\r\n'))
     nums = sorted(h[1] for h in lv.get(1, []))
@@ -229,8 +229,11 @@ def test_crossrefs():
     check('tham chieu: khong tro chinh no', 1 not in e.get(1, []), e[1])
 
 
-# Do that: nhan pham vi nam trong THAN sach o 26/28 cuon khong co tep sidecar;
-# `_scope_decision.md` chi co 4/32. Than sach la nguon CHINH.
+# F2 (sua 2026-10-06, so cu "26/28 ... 4/32" da bi RUT LAI): do lai
+# 2026-10-05 tren 34 cuon co book.md — 23 khai pham vi trong THAN sach, 0
+# cuon chi dua vao sidecar (ca 5 cuon co _scope_decision.md deu DA khai
+# trong than), 11 khong khai o dau (xem docstring bmp.read_scope). Than
+# sach la nguon CHINH.
 BODY_SCOPE = '\n'.join(['# ⛔ Phạm vi lưu hành', '', '> BẢN NỘI BỘ', '',
                         '# Chương 01 — A'] + ['x'] * 40)
 BODY_NOIBO = '\n'.join(['# BẢN NỘI BỘ — Workshop X', '', '# Chương 01 — A'] + ['x'] * 40)
@@ -264,9 +267,12 @@ def test_read_scope():
           fid5 == 'F2', fid5)
 
 
-# Khuon dan y KHONG nhat quan: do that tren usv-thiet-ke-he-thong, 13/28 chuong
-# dung bullet `- `, 15/28 dung dong `Dạy:`. 22/32 cuon co heading `### `,
-# 10/32 khong co. Lop nay PHAI suy thoai em, khong duoc bia.
+# Khuon dan y KHONG nhat quan. F2 (sua 2026-10-06, so cu "22/32" da bi RUT
+# LAI): do lai 2026-10-05 tren 34 cuon — 26/34 co heading `### `, 8/34
+# khong. Rieng bullet `- `: corpus-wide 488/521 chuong (94%) CO bullet —
+# usv-thiet-ke-he-thong la cuon LECH DUY NHAT chi 13/28, khong phai dien
+# hinh (15/28 cuon do dung dong `Dạy:`). Lop nay PHAI suy thoai em, khong
+# duoc bia.
 OUTLINE = '\n'.join([
     '## Phần I — Trước khi vẽ gì',
     '### Ch.01 — Biên hệ thống',
@@ -905,6 +911,22 @@ def test_ip_table_number_with_title():
           len(t) == 3, sorted(t))
 
 
+# --- Fix round 2 (2026-10-06), nho #1: _IP_HEAD_RE phai khop "Xếp mức IP"
+# NHU MOT TU TRON, khong phai mot CHUOI CON — mot tieu de dai hon "Xếp mức
+# IPO" (ve so huu tri tue theo nghia khac) khong duoc mo mot muc IP gia.
+IP_HEAD_BOGUS = '\n'.join([
+    '## Xếp mức IPO của sản phẩm', '',
+    '| Chương | Mức | Vì sao |',
+    '|---|---|---|',
+    '| 01 | 🔴 SENSITIVE | không phải bảng IP thật — chỉ trùng tiền tố. |',
+    '', '# Chương 01 — A'] + ['x'] * 40)
+
+def test_ip_head_re_anchored_not_substring():
+    t = bmp.read_ip_table(IP_HEAD_BOGUS)
+    check('IP head: "Xếp mức IPO" (hậu tố dài hơn "IP") KHÔNG mở mục IP',
+          t == {}, t)
+
+
 # --- Fix round 1 (2026-10-06): cot 2 PHAI mang token phan loai THAT. Mot
 # dong do luc/goc tinh co nam TRONG muc bang IP (cot dau cung la so) khong
 # duoc nhan nham la dong IP chi vi khop duoc 3 o. Day dong mot lo hong AM
@@ -1117,7 +1139,7 @@ if __name__ == '__main__':
     test_negative_eof_narrow_real_file()
     test_stray_headings_positive_corpus()
     test_read_ip_table(); test_ip_table_not_from_other_sections()
-    test_ip_table_range_sanity()
+    test_ip_table_range_sanity(); test_ip_head_re_anchored_not_substring()
     test_ip_table_number_with_title(); test_ip_row_requires_level_token()
     test_parse_digest(); test_ste_lint(); test_digest_anchor()
     test_digest_anchor_off_by_one(); test_digest_duplicate_chapter()

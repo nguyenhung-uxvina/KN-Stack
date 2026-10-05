@@ -117,6 +117,12 @@ li{font-size:13.5px;margin-bottom:5px}
 .risk{font-size:12.5px;color:var(--warn);border-top:1px dashed var(--line);
 padding-top:8px;margin-top:auto}
 .risk.r{color:var(--red)}
+ul.summary-anchored{border-left:2px solid var(--accent);margin-left:-3px;
+padding-left:14px}
+ul.summary-unanchored{border-left:2px dashed var(--warn);margin-left:-3px;
+padding-left:14px}
+.unanchored-label{color:var(--warn);font-style:italic;font-size:11.5px;
+margin:0 0 4px}
 .met{display:flex;gap:11px;flex-wrap:wrap;font-size:11.5px;color:var(--mut);
 margin-top:9px;font-variant-numeric:tabular-nums}
 .met i{font-style:normal}
@@ -217,12 +223,24 @@ def render_map(parsed, outline, scope, slug, cov, sha, ip, digest):
         # dieu kien nay se mac lai dung loi da vo o muc IP (Fix round 2,
         # 2026-10-06): mot chuong TRUNG hien lai tom tat cua ban kia.
         if n == int(n) and digest.get(int(n)):
-            o.append('<ul>')
+            o.append('<ul class="summary-anchored">')
             for it in digest[int(n)][:5]:
                 o.append('<li>%s</li>' % esc(it['text']))
             o.append('</ul>')
         elif spec_.get('bullets'):
-            o.append('<ul>')
+            # Fix round 4 (2026-10-06), F1: bullet dan y la TU LIEU THAM KHAO (xem
+            # parse_outline docstring + spec §1.2 R-1), KHONG phai tom tat
+            # da qua cong neo — truoc fix nay no hien y nhu dong digest,
+            # khong co gi phan biet, du khong agent nao viet lai hay kiem
+            # qua. Phai danh dau RO cho nguoi doc bang tieng Viet + class
+            # rieng (xem CSS). Van duoc LINT STE o verify() (xem
+            # summary_lines_from_page) vi mot cau vung van la cau vung bat
+            # ke nguon nao sinh ra no, nhung KHONG co cong neo — bullet dan
+            # y khong mang so dong goc nen khong co gi de neo, do KHONG
+            # phai bia dat, chi la chua kiem.
+            o.append('<p class="note unanchored-label">Từ dàn ý — CHƯA qua '
+                     'cổng neo, không phải tóm tắt đã kiểm</p>')
+            o.append('<ul class="summary-unanchored">')
             for b in spec_['bullets'][:3]:
                 t = re.split(r'(?<=[.;])\s', b)[0]
                 if len(t) > 190:
@@ -320,14 +338,74 @@ def build(book_dir, out_path):
 
 _NET_RE = r'(?:src|href)="https?://'
 
+# Fix round 4 (2026-10-06), F1: hai lop tom tat hien ra HTML giong nhau het — digest da
+# neo (summary-anchored) va bullet dan y chua neo (summary-unanchored, xem
+# render_map). Gom chung mot regex mo ("anchored|unanchored") de doc CA HAI
+# tu TRANG DA DUNG, khong phai tu tep rieng.
+_SUMMARY_UL_RE = r'<ul class="summary-(?:anchored|unanchored)">(.*?)</ul>'
+_LI_RE = r'<li>(.*?)</li>'
+
+
+def summary_lines_from_page(h):
+    """Tat ca dong tom tat THAT SU hien tren trang — ca hai nguon: digest
+    da neo VA bullet dan y chua neo. Tra ve VAN BAN THO (da bo the HTML con,
+    da giai ma entity) de ste_lint() do dung.
+
+    F1: 'tom tat vi pham STE' phai lint CAI DANG HIEN TREN TRANG, khong doc
+    lai `_book_map_digest.md` rieng. Do that (2026-10-05, 34 cuon): 32/34
+    cuon hien tom tat tu bullet dan y (0/34 co tep digest), nen cong cu
+    truoc chi do tep digest se LUON bao 'sach' tren van ban CHUA AI LINT
+    QUA — 1.402 dong bullet se render, 281 trong so do vi pham tran 25
+    tu/dong, ma cong bao 0. Doc truc tiep tu `h` sua dung lo hong do."""
+    out = []
+    for ul_body in re.findall(_SUMMARY_UL_RE, h, re.S):
+        for li in re.findall(_LI_RE, ul_body, re.S):
+            t = html.unescape(re.sub(r'<[^>]+>', '', li)).strip()
+            if t:
+                out.append(t)
+    return out
+
+
+# Fix round 4 (2026-10-06), nho #2: gioi han dem "so do the vs nguon" vao DUNG khoi
+# .met — truoc khi co bullet dan y hien tren trang (fix F1 o tren), mot
+# bullet 1.402 dong CO KHA NANG mang nguyen van cum "N sơ đồ" (vd mot cau
+# dan y trich "3 sơ đồ minh hoa cau truc"), va regex cu quet CA TRANG se
+# dem nham cum do vao tong. render_map() LUON in dung MOT <i>N sơ đồ</i>
+# ngay dau khoi .met (xem render_map), nen quet rieng tung khoi .met roi
+# bat <i>N sơ đồ ngay sau dau mo la an toan voi van ban bullet tu do.
+_MET_BLOCK_RE = r'<div class="met">.*?</div>'
+_MET_MERMAID_RE = r'<i>(\d+) sơ đồ'
+
+
+def _mer_page_count(h):
+    total = 0
+    for block in re.findall(_MET_BLOCK_RE, h, re.S):
+        m = re.search(_MET_MERMAID_RE, block)
+        if m:
+            total += int(m.group(1))
+    return total
+
 
 def verify(out_path, book_dir):
     """(rows, exit_code). rows = [(ten, gia tri, nguong, trang thai)].
 
     BI-5. Phep do dau tien so voi `wc -w` CA TEP book.md — mot tong tinh
-    NGOAI duong ong. Do la cam bien duy nhat bat du 5/5 ca loi khoi ma; hai
-    cam bien chi so cac chuong voi nhau bo sot 4/5, va pahl-beitz-tap2 nam o
-    40% phu ma chung bao 'sach'.
+    NGOAI duong ong. Trong phep so sanh TRUOC/SAU vo loi (sua mat na khoi
+    ma), day la cam bien duy nhat tut ca 5/5 ca loi khoi ma; hai cam bien
+    chi so cac chuong voi nhau bo sot 4/5, va pahl-beitz-tap2 nam o 40% phu
+    ma chung bao 'sach'.
+
+    Fix round 4 (2026-10-06), F3: cau 'bat 5/5' dung cho SO SANH truoc/sau, SAI cho
+    NGUONG TUYET DOI da chon shipped (COV_BLOCK=0.70, COV_WARN=0.85) — do
+    lai 5 cuon do tren MOT luot chay: tau-nhom-han-quoc-phong 38,9% CHAN,
+    pahl-beitz-tap2 40,1% CHAN, ai-at-war 76,6% canh bao, cross-design-
+    methods 94,0% ok (im lang), kien-truc-tu-hanh-hang-hai 93,7% ok (im
+    lang). Hang nay chan ca NANG, canh bao ca VUA, im lang truoc ca NHE —
+    khong nguong tuyet doi nao bat het vi mot mat 4% nam duoi moi san se
+    chan nham sach hop le gan nhat (76,1%). Hang `tieu de lac trong than
+    chuong` (bmp.stray_headings) moi bat dung CA NAM ca nay; hai hang hop
+    lai moi phu mat NANG + loi CAU TRUC, khong hang nao mot minh bat mat
+    NHE.
     """
     h = bmp.rd(out_path)
     txt = bmp.rd(os.path.join(book_dir, 'book.md'))
@@ -345,28 +423,29 @@ def verify(out_path, book_dir):
     # cu (tim ca tep). Cat rieng vung <body>...</body> ra roi moi tim; thieu
     # han <body> thi coi la KHONG dat (0), khong lui ve tim ca tep.
     body_m = re.search(r'<body[^>]*>(.*)</body>', h, re.S | re.I)
-    has_label = int(bool(body_m and re.search(r'NỘI BỘ|CHƯA KHAI', body_m.group(1))))
+    # Fix round 4 (2026-10-06), nho #3: mo rong nhan pham vi ra CUNG bo
+    # token ma scope reader dung (bmp._TOKEN_RE) — truoc chi khop "NỘI BỘ|
+    # CHƯA KHAI", nen mot nhan dung cham dung "MẬT"/"REVIEW"/"SAFE" mot minh
+    # (hop le theo bmp._TOKEN_RE va scope_class()) se bi cong nay CHAN nham
+    # mot trang da khai pham vi DUNG cach.
+    _LABEL_RE = bmp._TOKEN_RE + r'|CHƯA KHAI'
+    has_label = int(bool(body_m and re.search(_LABEL_RE, body_m.group(1))))
     cards = h.count('class="card')
     mer_src = len(re.findall(r'^```mermaid', txt, re.M))
-    # Fix round 3 (2026-10-06), F1: TRUOC day mer_page tinh lai tu `ch`
-    # (parse_chapters cua CHINH book.md) — tuc la so voi chinh minh, khong
-    # he doc tu `h` (trang da dung). Hang ten 'so do the vs nguon' nhung
-    # khong he nhin vao trang: xoa HET so dem tren trang van bao 'ok'. Moi
-    # chuong in dung MOT <i>N sơ đồ</i> trong khoi .met (xem render_map) —
-    # doc cac N do tu CHINH h roi cong lai, de hang nay so sanh trang voi
-    # nguon dung nghia den ten no.
-    mer_page = sum(int(n) for n in re.findall(r'(\d+) sơ đồ', h))
+    mer_page = _mer_page_count(h)
     stray = bmp.stray_headings(parsed)
-    # Tang 3 (spec 1.2, spec 9 R-1): verify() PHAI tu tinh lai hai gia tri
-    # nay tu book_dir — khong nhan tu build() — vi day phai dung duoc mot
-    # minh (xem docstring module). digest la be mat bia dat duy nhat cua
-    # tinh nang nay nen cong neo PHAI CHAN; vi pham STE chi la van de van
-    # phong, nen CHI canh bao.
+    # Tang 3 (spec 1.2, spec 9 R-1): verify() PHAI tu tinh lai cac gia tri
+    # nay tu book_dir/trang da dung — khong nhan tu build() — vi day phai
+    # dung duoc mot minh (xem docstring module). digest la be mat bia dat
+    # duy nhat cua tinh nang nay nen cong neo PHAI CHAN va CHI doc digest —
+    # bullet dan y khong mang so dong goc nen khong co gi de neo. Vi pham
+    # STE chi la van de van phong, nen CHI canh bao — nhung (fix round 4,
+    # F1) phai lint CAI DANG HIEN TREN TRANG (ca digest VA bullet), khong
+    # chi tep digest rieng — xem summary_lines_from_page().
     digest = bmp.maybe(os.path.join(book_dir, '_book_map_digest.md'),
                        bmp.parse_digest, {})
     dbad = bmp.digest_anchor_ok(digest, parsed)
-    sbad = [1 for items in digest.values() for i in items
-            if bmp.ste_lint(i['text'])]
+    sbad = [1 for line in summary_lines_from_page(h) if bmp.ste_lint(line)]
 
     rows = [
         ('ty le phu', '%.0f%%' % (cov * 100), '>=70% chan · <85% canh bao',
@@ -391,8 +470,18 @@ def verify(out_path, book_dir):
          'canh-bao' if ws[-1] / float(med) > BLOAT_WARN else 'ok'),
         ('so chuong trung', parsed['dups'] or 0, '=0',
          'canh-bao' if parsed['dups'] else 'ok'),
-        ('neo tom tat sai', len(dbad), '=0', 'CHAN' if dbad else 'ok'),
-        ('tom tat vi pham STE', len(sbad), '=0 (canh bao)',
+        # Fix round 4 (2026-10-06), F1: nguong chi noi ro PHAM VI cua hang
+        # nay — digest MOI co so dong de neo; bullet dan y khong co, nen
+        # KHONG the va KHONG duoc tinh vao hang nay (do khong phai bia dat).
+        ('neo tom tat sai', len(dbad), '=0 (chi dong _book_map_digest.md)',
+         'CHAN' if dbad else 'ok'),
+        # Fix round 4 (2026-10-06), F1: gia tri nay gio linh CA dong digest
+        # VA dong bullet dan y dang hien tren trang (xem
+        # summary_lines_from_page) — truoc chi doc tep digest rieng, nen
+        # tren 32/34 cuon khong co digest, hang nay LUON bao 'sach' tren
+        # van ban bullet CHUA AI LINT QUA.
+        ('tom tat vi pham STE', len(sbad),
+         '=0 (canh bao; linh ca dong bullet dan y chua neo)',
          'canh-bao' if sbad else 'ok'),
     ]
     return rows, (1 if [r for r in rows if r[3] == 'CHAN'] else 0)

@@ -147,8 +147,26 @@ def parse_chapters(txt):
 def coverage(parsed, txt):
     """BI-5. So tong tu trong chuong voi `wc -w` CA TEP — mot tong tinh NGOAI
     duong ong. Hai cam bien chi so cac chuong voi nhau (trung vi qua nho,
-    chuong cuoi phinh) bo sot 4/5 ca loi L3; cam bien nay bat 5/5.
-    pahl-beitz-tap2 nam o 40% phu ma hai cam bien kia bao 'sach'."""
+    chuong cuoi phinh) bo sot 4/5 ca loi L3 trong phep SO SANH TRUOC/SAU vo
+    (phu tut o ca 5 cuon khi loi duoc mo phong); cam bien nay tut ca 5/5
+    trong phep so sanh do. pahl-beitz-tap2 nam o 40% phu ma hai cam bien kia
+    bao 'sach'.
+
+    Fix round 4 (2026-10-06), F3: cau 'bat 5/5' chi dung cho SO SANH truoc/sau noi
+    tren. No SAI cho cong `--verify` da giao, vi cong do dung MOT NGUONG
+    TUYET DOI tren MOT luot chay (COV_BLOCK=0.70, COV_WARN=0.85 trong
+    md_to_html.py), khong so truoc/sau. Do lai 5 cuon L3 do voi nguong da
+    chon: tau-nhom-han-quoc-phong 38,9% CHAN, pahl-beitz-tap2 40,1% CHAN,
+    ai-at-war 76,6% canh bao, cross-design-methods 94,0% ok (im lang),
+    kien-truc-tu-hanh-hang-hai 93,7% ok (im lang). Chi 2/5 bi CHAN, 2/5 im
+    lang hoan toan. Hang nay chan duoc ca NANG (39-40%) va canh bao ca VUA
+    (77%), nhung KHONG bat duoc ca NHE (94%) — va khong nguong tuyet doi nao
+    co the bat, vi mot mat 4% nam duoi moi san se dong thoi chan nham sach
+    hop le gan nhat (nha-luoi-chong-uav, 76,1%). Hang cau truc `tieu de lac
+    trong than chuong` (xem stray_headings duoi) moi la cam bien bat dung CA
+    NAM ca nay — giua hai hang: hang nay bat mat NANG, hang stray_headings
+    bat loi CAU TRUC chinh xac, nhung khong hang nao mot minh bat duoc mat
+    NHE."""
     whole = wc(txt)
     if not whole:
         return 0.0
@@ -490,7 +508,12 @@ def parse_outline(txt):
     return ch
 
 
-_IP_HEAD_RE = r'^#+ +.*[Xx]ếp mức IP'
+# Fix round 2 (2026-10-06): `\b` sau "IP" — thieu no, mot tieu de dai hon
+# nhu "Xếp mức IPO" (hau to "O" la ky tu chu khac) van khop vi regex cu chi
+# can "Xếp mức IP" la MOT CHUOI CON, khong can la MOT TU TRON. Day la rui ro
+# vi badge IP la dau ra nguy hiem nhat cong cu nay in ra — mo nham mot muc
+# KHONG phai bang IP se doc du lieu rac tu mot bang khac thanh phan loai IP.
+_IP_HEAD_RE = r'^#+ +.*[Xx]ếp mức IP\b'
 
 # Cot 1: so chuong (hoac dai so chuong) roi BO QUA phan con lai cua o — do
 # that (Fix round 1, 2026-10-06) tren hang-rao-song-va-nuoc/khu-pho-6-bang:

@@ -41,10 +41,17 @@ Nếu không có đường dẫn trong `$ARGUMENTS`, hỏi người dùng cần 
 1. **Xương, bắt buộc** — đọc từ `book.md`: danh sách chương, tên chương, số từ,
    số sơ đồ, đồ thị tham chiếu chéo, nhãn phạm vi. Thiếu thì dừng, không sinh trang.
 2. **Làm giàu, suy thoái êm** — từ `Phase3-Outline.md`: số từ đặt ra, dòng `Rủi ro:`,
-   số hình, neo. Khuôn dàn ý **không nhất quán** giữa các cuốn (22/32 có heading
-   `###`; ngay trong một cuốn chỉ 13/28 chương dùng bullet), nên thiếu là chuyện
-   thường — in `chưa đo`, đừng suy luận.
-3. **Sinh mới** — ô tóm tắt 3–5 dòng. Hiện in `chưa tóm tắt`; xem spec §1.2.
+   số hình, neo. Khuôn dàn ý **không nhất quán** giữa các cuốn — đo lại 2026-10-05
+   trên 34 cuốn (số cũ "22/32" đã bị **rút lại**): **26/34** có heading `### `;
+   bullet `- ` có mặt ở **488/521** chương (94%), và `usv-thiet-ke-he-thong` là
+   cuốn LỆCH duy nhất chỉ dùng ở 13/28 — nên thiếu là chuyện thường, in `chưa đo`,
+   đừng suy luận.
+3. **Sinh mới** — ô tóm tắt 3–5 dòng. Nếu sách có `_book_map_digest.md`, in dòng
+   digest (đã qua cổng neo — xem Tầng 3 dưới). Nếu không (32/34 cuốn hiện tại),
+   in bullet của dàn ý — nhưng gắn nhãn tiếng Việt rõ "Từ dàn ý — CHƯA qua cổng
+   neo" và một class CSS riêng (`summary-unanchored`) để không ai nhầm nó với một
+   tóm tắt đã kiểm. Không còn dàn ý thì mới in `chưa tóm tắt`. Xem spec §1.2 và
+   mục "Đọc bảng nghiệm thu" dưới.
 
 ## Tầng 3 — ô tóm tắt, việc của agent chứ không phải của script
 
@@ -125,13 +132,24 @@ quyết định phát hành mới; phạm vi chốt ở pipeline gốc đi theo 
 ## Đọc bảng nghiệm thu
 
 Script in một bảng 12 phép đo cuối lượt chạy (cả khi dựng mới và khi `--verify`).
-Dòng nào CHẶN thì script trả mã lỗi và in "CÒ ĐỘNG CHẶN — không giao tệp này":
+Dòng nào CHẶN thì script trả mã lỗi và in "CO DONG CHAN — khong giao tep nay."
+(đúng chữ script in ra, không dấu):
 
 - **`ty le phu`** — tổng số từ trong các chương chia cho `wc -w` của cả
   `book.md`. Dưới **70% là CHẶN**: nghĩa là parser mất chương, không phải sách
-  ngắn. 70–85% là cảnh báo. Đây là cảm biến **duy nhất** bắt đủ 5/5 ca lỗi parse
-  đã đo được — hai cảm biến chỉ so các chương với nhau bỏ sót 4/5, và một cuốn
-  (`pahl-beitz-tap2`) nằm ở **40% phủ** mà hai cảm biến đó vẫn báo "sạch".
+  ngắn. 70–85% là cảnh báo. **Sửa 2026-10-06 (F3):** câu "cảm biến duy nhất bắt
+  đủ 5/5" ở bản trước chỉ đúng cho một phép **so sánh trước/sau** (phủ tụt ở cả
+  5 cuốn khi lỗi khối mã được mô phỏng) — nó **sai** cho cổng `--verify` đã giao,
+  vì cổng đó dùng một **ngưỡng tuyệt đối trên một lượt chạy**. Đo lại 5 cuốn đó
+  với ngưỡng đã chọn: `tau-nhom-han-quoc-phong` 38,9% CHẶN, `pahl-beitz-tap2`
+  40,1% CHẶN, `ai-at-war` 76,6% cảnh báo, `cross-design-methods` 94,0% ok (im
+  lặng), `kien-truc-tu-hanh-hang-hai` 93,7% ok (im lặng) — chỉ 2/5 bị chặn, 2/5
+  im lặng hoàn toàn. Hàng này bắt ca **nặng** (39–40%), cảnh báo ca **vừa**
+  (77%), nhưng **không** bắt được ca **nhẹ** (94%) — và không ngưỡng tuyệt đối
+  nào có thể, vì một mất 4% nằm dưới mọi sàn mà không đồng thời chặn nhầm sách
+  hợp lệ gần nhất (76,1%). Hàng cấu trúc `tieu de lac trong than chuong` dưới
+  đây mới bắt đúng cả năm ca này — giữa hai hàng: hàng này bắt mất NẶNG, hàng
+  cấu trúc bắt lỗi CẤU TRÚC chính xác, không hàng nào một mình bắt được mất NHẸ.
 - **`goi mang`** · **`the script`** · **`chu thich html`** — phải bằng 0,
   CHẶN nếu khác 0.
 - **`nhan pham vi`** — phải ≥ 1, CHẶN nếu = 0. Không khai được phạm vi ở đâu
@@ -150,14 +168,23 @@ Dòng nào CHẶN thì script trả mã lỗi và in "CÒ ĐỘNG CHẶN — kh�
   `tieu de lac trong than chuong` ở trên.
 - **`so chuong trung`** khác 0 ⇒ sách có hai chương cùng số. Cảnh báo, không
   chặn — nói con số cho CEO, đừng tự chọn giữ chương nào.
-- **`neo tom tat sai`** — CHẶN nếu khác 0. Mỗi dòng của `_book_map_digest.md`
-  (tầng 3, xem mục trên) phải neo vào một số dòng nằm trong đúng chương nó
-  khai. Đây là cổng của **bề mặt bịa đặt duy nhất** trong cả tính năng — không
-  neo được là câu đó bịa, bỏ câu đó, đừng đổi số dòng.
-- **`tom tat vi pham STE`** — chỉ cảnh báo, không chặn. Đếm số dòng digest vi
-  phạm MỘT TRONG BA điều máy đo được (dài hơn 25 từ, bị động có nêu chủ thể,
-  hoặc hai ý một dòng) — xem "Tầng 3" ở trên để biết hai ràng buộc STE còn
-  lại mà hàng này KHÔNG đo. Vụng văn không phải bịa đặt; đừng lẫn hàng này
+- **`neo tom tat sai`** — CHẶN nếu khác 0, nhưng **chỉ đọc `_book_map_digest.md`**
+  (không đọc bullet dàn ý). Mỗi dòng digest (tầng 3, xem mục trên) phải neo vào
+  một số dòng nằm trong đúng chương nó khai. Đây là cổng của **bề mặt bịa đặt
+  duy nhất** trong cả tính năng — không neo được là câu đó bịa, bỏ câu đó, đừng
+  đổi số dòng. Bullet dàn ý không có số dòng gốc để neo, nên **không thể và
+  không được** tính vào hàng này — thiếu neo ở đó không phải bịa đặt, chỉ là
+  chưa kiểm (xem `tom tat vi pham STE` dưới).
+- **`tom tat vi pham STE`** — chỉ cảnh báo, không chặn. **Sửa 2026-10-06 (F1):**
+  trước đây hàng này chỉ đọc `_book_map_digest.md` — vì KHÔNG cuốn nào trong kho
+  có tệp đó (0/34), hàng này luôn báo "sạch" trên đúng cái ô tóm tắt mà
+  32/34 cuốn đang hiện ra (bullet dàn ý, chưa ai lint qua: ~1.402 dòng render,
+  281 dòng trong số đó vượt trần 25 từ). Giờ hàng này đọc trực tiếp các dòng
+  tóm tắt **đã render trên trang** — cả `summary-anchored` (digest) VÀ
+  `summary-unanchored` (bullet) — và lint cả hai như nhau, đếm số dòng vi phạm
+  MỘT TRONG BA điều máy đo được (dài hơn 25 từ, bị động có nêu chủ thể, hoặc hai
+  ý một dòng) — xem "Tầng 3" ở trên để biết hai ràng buộc STE còn lại mà hàng
+  này KHÔNG đo. Vụng văn không phải bịa đặt; đừng lẫn hàng này
   với `neo tom tat sai`.
 
 ## Sửa ở đâu
