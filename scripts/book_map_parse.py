@@ -1,14 +1,16 @@
 # -*- coding: utf-8 -*-
 """Lop DO cua /book-map. Khong biet gi ve HTML.
 
-Moi con so trong tep nay do ngay 2026-10-03 tren 32 cuon co book.md tai
-D:/Workshop_X/3_Resources/Books. Xem spec §2.3 de biet ba loi da tra gia.
+Measurements tren corpus: 2026-10-03 had 32 cuon, 2026-10-05 has 34 cuon co
+book.md tai D:/Workshop_X/3_Resources/Books. Xem spec §2.3 de biet ba loi da
+tra gia. Specific counts (H1/H2 split, CRLF, heading ###) are from 32-book
+sample; verify before citing.
 """
 import io
 import re
 
-# Do tren 32 cuon: 27 dung H1, 5 dung H2; dau phan cach co ca "—", ":", "·";
-# so chuong co khi khong dem 0 ("Chương 1"); co cuon dung lan hai dau.
+# Dau phan cach co ca "—", ":", "·"; so chuong co khi khong dem 0
+# ("Chương 1"); co cuon dung lan hai dau.
 CHAP_RE = r'^(#{1,4}) +(?:Chương|Chapter) +(\d{1,3})\b'
 
 # Than chuong cach nhau 200-600 dong; muc luc cuoi sach cach nhau 7-8 dong.
@@ -53,7 +55,7 @@ def heading_mask(lines):
 
 def chapter_levels(txt):
     """{do_sau: [(so_dong, so_chuong, nguyen_dong)]}. splitlines() chuan hoa
-    ca CRLF (4/32 cuon dung CRLF) nen khong con \\r trong nguyen_dong."""
+    ca CRLF nen khong con \\r trong nguyen_dong."""
     lines = txt.splitlines()
     mask = heading_mask(lines)
     lv = {}
@@ -182,11 +184,12 @@ _SCOPE_KEYWORDS = r'(?:phạm vi|phát hành|lưu hành|phân loại|nội bộ)
 def read_scope(book_txt, scope_txt=None):
     """(nhan, muc_nguyen_ban, nguon). Thu tu doc, dung o nguon dau tien.
 
-    BI-4. Than sach la nguon CHINH: do that 26/28 cuon khong co sidecar van
-    khai pham vi trong than, con `_scope_decision.md` chi co 4/32.
-    Khong khai o dau (2/32) thi PHAI in nhan bao toan — da co tien le do
-    duoc: ban EPUB dau cua 10x-easier-than-2x mang nhan o frontmatter va
-    0/70 tep trong zip chua chu ay.
+    BI-4. Than sach la nguon CHINH. Do that tren 34 cuon co book.md tai
+    D:/Workshop_X/3_Resources/Books (2026-10-05): 23 khai pham vi trong THAN,
+    0 tu sidecar (all 5 co _scope_decision.md cung khai trong than), 11 khong
+    khai (8 ko co NỘI BỘ, 3 chi co trong prose). Vi the than sach la uu tien.
+    SCOPE_FALLBACK in khi khong khai: tien le do duoc tren ban EPUB dau cua
+    10x-easier-than-2x (nhan o frontmatter, 0/70 tep trong zip chua chu ay).
     """
     fid = '?'
     if scope_txt:
@@ -247,10 +250,9 @@ def parse_outline(txt):
     """{num: {...}} tu Phase3-Outline.md. LOP LAM GIAU — thieu truong nao thi
     de trong, KHONG bia va KHONG suy luan.
 
-    Khuon khong nhat quan: 22/32 cuon co heading `### `, 10/32 khong. Ngay
-    trong usv-thiet-ke-he-thong chi 13/28 chuong dung bullet `- `, so con lai
-    dung dong `Dạy:`. Vi vay o tom tat KHONG thu hoach duoc tu day — xem
-    spec §1.2.
+    Khuon khong nhat quan giua cac cuon: co cuon co heading `### `, co cuon
+    khong; co chuong dung bullet `- `, co dung dong `Dạy:`. Vi vay o tom tat
+    KHONG thu hoach duoc tu day — xem spec §1.2.
     """
     ch, part, cur = {}, None, None
     for line in txt.splitlines():
