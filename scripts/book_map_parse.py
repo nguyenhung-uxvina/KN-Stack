@@ -491,8 +491,25 @@ def parse_outline(txt):
 
 
 _IP_HEAD_RE = r'^#+ +.*[Xx]ếp mức IP'
-_IP_ROW_RE = (r'^\| *(\d{1,3}) *(?:[–—-] *(\d{1,3}) *)?\| *([^|]+?) *\| *'
-              r'([^|]*?) *\|')
+
+# Cot 1: so chuong (hoac dai so chuong) roi BO QUA phan con lai cua o — do
+# that (Fix round 1, 2026-10-06) tren hang-rao-song-va-nuoc/khu-pho-6-bang:
+# o Chuong mang CA so CA ten chuong tren cung mot dong ("01 Ba câu hỏi…",
+# "01 · Sáu bằng…"), khong phai so/dai so THUAN nhu performance-by-design-ntb
+# ("01–14"). `\**` cho phep mot cap **in dam** boc QUANH CA O (vd
+# "**09 · Thứ không ai…**" trong khu-pho-6-bang) — vi `[^|]*` o cuoi da an
+# toan voi moi ky tu con lai (ke ca dau `-`/`**` lam phan ten chuong), tien
+# to `\**` chi can xu ly dau sao MO truoc chinh con so.
+_IP_ROW_RE = (r'^\| *\**(\d{1,3}) *(?:[–—-] *(\d{1,3}))? *[^|]*\| *'
+              r'([^|]+?) *\| *([^|]*?) *\|')
+
+# Cot 2 PHAI mang mot token phan loai THAT — day la diem phan biet CHINH,
+# khong phai cot 1. Mot bang do luc/goc nam canh bang IP co cot dau cung la
+# so se KHONG BAO GIO co SAFE/REVIEW/SENSITIVE/MẬT o cot thu hai, nen doi hoi
+# nay la an toan: no khong mo rong pham vi "doan tu khoa trong THAN CHUONG"
+# (spec 3.4) — day van la doc MOT BANG da o dang may doc duoc, chi la kiem
+# cot thu hai co mang token hay khong truoc khi tin no la mot dong IP.
+_IP_LEVEL_TOKEN_RE = r'SAFE|REVIEW|SENSITIVE|MẬT'
 
 
 def read_ip_table(book_txt):
@@ -508,6 +525,20 @@ def read_ip_table(book_txt):
     Ca viec tim heading MO bang lan diem KET MUC deu di qua heading_mask()
     truoc khi khop `#` — mot `#` nam trong khoi ma (vd chu thich ASCII) o
     ca truoc hoac giua bang khong duoc coi la tieu de thuc.
+
+    Fix round 1 (2026-10-06): do that tren kho cho thay "3/32 cuon" ban dau
+    la SAI theo kieu chinh cai da tra gia nhieu lan trong plan nay — dem
+    duoc tieu de `Xếp mức IP` khac voi dem duoc mot BANG DOC DUOC BANG MAY;
+    voi regex cu (cot 1 chi nhan so/dai so thuan) chi 1/3 cuon khop. Hai
+    cuon con lai (hang-rao-song-va-nuoc, khu-pho-6-bang) co cot 1 mang CA so
+    CA ten chuong — da MO RONG cot 1 de nhan dang nay, nhung PHAN BIET bang
+    cot 2: mot dong chi duoc nhan la dong IP khi cot 2 mang mot token phan
+    loai THAT (_IP_LEVEL_TOKEN_RE). Dieu kien nay dong luon mot lo hong AM
+    trong chinh regex ban dau — cot 2 cu la `([^|]+?)` KHONG rang buoc gi,
+    nen mot dong do luc/goc tinh cờ nam trong MUC bang IP (vd `| 03 | 12° |
+    400 |`) se bi nhan nham level la "12°". Muc THAT luon giu nguyen nhu
+    tac gia viet (ke ca emoji/in dam) — khong chuan hoa — vi do la cai CEO
+    da ky duyet, khong phai cai ham nay suy dien ra.
     """
     lines = book_txt.splitlines()
     mask = heading_mask(lines)
@@ -527,12 +558,15 @@ def read_ip_table(book_txt):
         m = re.match(_IP_ROW_RE, line)
         if not m:
             continue
+        level = m.group(3).strip()
+        if not re.search(_IP_LEVEL_TOKEN_RE, level, re.IGNORECASE):
+            continue                        # cot 2 khong co token: khong phai dong IP
         lo = int(m.group(1))
         hi = int(m.group(2)) if m.group(2) else lo
         if hi < lo or hi - lo > 200:        # dong rac, khong phai dai chuong
             continue
         for k in range(lo, hi + 1):
-            out[k] = {'level': m.group(3).strip(), 'why': m.group(4).strip()}
+            out[k] = {'level': level, 'why': m.group(4).strip()}
     return out
 
 

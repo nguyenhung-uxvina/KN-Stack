@@ -873,6 +873,60 @@ def test_ip_table_range_sanity():
           len(t) == 1, sorted(t))
 
 
+# --- Fix round 1 (2026-10-06): cot 1 mang CA so CA ten chuong tren cung
+# dong, hai dang THAT do tren kho — hang-rao-song-va-nuoc dung "01 Ten…",
+# khu-pho-6-bang dung "01 · Ten…" (va hai dong **in dam boc ca o** 09/10).
+IP_TABLE_NUMBER_WITH_TITLE = '\n'.join([
+    '## Xếp mức IP theo chương', '',
+    '| Chương | Mức | Vì sao |',
+    '|---|:--:|---|',
+    '| 01 Ba câu hỏi trông giống nhau nhưng không phải một | 🔴 SENSITIVE | '
+    'nêu thẳng ràng buộc danh mục |',
+    '| 02 Ba bức tường | 🟢 SAFE | khung phương pháp |',
+    '| **03 · Lockheed tự đảo ngược mình** | 🔴 **SENSITIVE** | quyết định '
+    'kiến trúc nội bộ |',
+    '', '# Chương 01 — A'] + ['x'] * 40)
+
+def test_ip_table_number_with_title():
+    t = bmp.read_ip_table(IP_TABLE_NUMBER_WITH_TITLE)
+    check('bang IP: so+ten (khong dau phan cach) van doc duoc Ch.01',
+          1 in t, sorted(t))
+    check('bang IP: Ch.01 giu dung muc kem emoji',
+          t.get(1, {}).get('level') == '🔴 SENSITIVE', t.get(1))
+    check('bang IP: so+ten (dau "·") van doc duoc Ch.02',
+          2 in t, sorted(t))
+    check('bang IP: Ch.02 la SAFE — thong tin CO GIA TRI, khong duoc danh mat',
+          t.get(2, {}).get('level') == '🟢 SAFE', t.get(2))
+    check('bang IP: o boc **in dam** quanh CA so+ten (Ch.03) van doc duoc',
+          3 in t, sorted(t))
+    check('bang IP: Ch.03 giu muc kem in dam nhu tac gia viet',
+          t.get(3, {}).get('level') == '🔴 **SENSITIVE**', t.get(3))
+    check('bang IP: dung 3 chuong, khong lan ten chuong vao gi khac',
+          len(t) == 3, sorted(t))
+
+
+# --- Fix round 1 (2026-10-06): cot 2 PHAI mang token phan loai THAT. Mot
+# dong do luc/goc tinh co nam TRONG muc bang IP (cot dau cung la so) khong
+# duoc nhan nham la dong IP chi vi khop duoc 3 o. Day dong mot lo hong AM
+# cua chinh regex ban dau — cot 2 cu KHONG rang buoc gi ca.
+IP_TABLE_NON_LEVEL_ROW = '\n'.join([
+    '## Xếp mức IP theo chương', '',
+    '| Chương | Mức | Vì sao |',
+    '|---|---|---|',
+    '| 03 | 12° | 400 |',
+    '| 04 | 🟡 REVIEW | dong hop le ke ben. |',
+    '', '# Chương 01 — A'] + ['x'] * 40)
+
+def test_ip_row_requires_level_token():
+    t = bmp.read_ip_table(IP_TABLE_NON_LEVEL_ROW)
+    check('bang IP: dong khong co token phan loai (cot 2 = "12°") bi bo qua',
+          3 not in t, sorted(t))
+    check('bang IP: dong hop le ben canh van duoc doc',
+          t.get(4, {}).get('level') == '🟡 REVIEW', t.get(4))
+    check('bang IP: chi co dung 1 chuong (dong rac bi loai)',
+          len(t) == 1, sorted(t))
+
+
 def test_maybe_bad_encoding():
     """F4: maybe() must catch UnicodeDecodeError and return default."""
     # Create a file with invalid UTF-8 bytes (latin-1 bytes that aren't valid UTF-8)
@@ -905,6 +959,7 @@ if __name__ == '__main__':
     test_stray_headings_positive_corpus()
     test_read_ip_table(); test_ip_table_not_from_other_sections()
     test_ip_table_range_sanity()
+    test_ip_table_number_with_title(); test_ip_row_requires_level_token()
     print()
     if FAILED:
         print('%d FAILED: %s' % (len(FAILED), ', '.join(FAILED)))
