@@ -367,6 +367,41 @@ def test_scope_wider_forms():
     check('F3 hình 5: prose-only NỘI BỘ fall back', src5 == 'bao-toan', src5)
 
 
+def test_scope_blockquote_must_be_adjacent():
+    """Finding A: a following blockquote is only the declaration's own
+    continuation when it is the NEXT NON-BLANK line after the heading
+    (blank lines may be skipped, nothing else). A prose line in between
+    means an unrelated blockquote further down must NOT be used."""
+    txt_unrelated = '\n'.join(
+        ['# ⚠️ Phạm vi', '', 'Đây là một dòng văn xuôi bình thường.',
+         '> **PHÂN LOẠI: SAI — đây là khai báo KHÁC**', '',
+         '# Chương 01 — A'] + ['x'] * 40)
+    lab, fid, src = bmp.read_scope(txt_unrelated, None)
+    check('A: prose chen giua -> KHONG dung blockquote xa',
+          'SAI' not in lab and 'KHÁC' not in lab, lab)
+    check('A: van dung nhan tu HEADING, khong rong', len(lab.strip()) > 0, repr(lab))
+
+    txt_adjacent = '\n'.join(
+        ['# ⚠️ Phạm vi', '', '> **PHÂN LOẠI: REVIEW — NỘI BỘ**', '',
+         '# Chương 01 — A'] + ['x'] * 40)
+    lab2, fid2, src2 = bmp.read_scope(txt_adjacent, None)
+    check('A: blockquote LIEN KE ngay sau heading (qua dong trong) -> dung blockquote',
+          'REVIEW' in lab2 and 'NỘI BỘ' in lab2, lab2)
+
+
+def test_scope_label_markup_clean():
+    """Finding B: label must never retain stray '#' or '>' markup, even when
+    the declaration is a blockquote that itself wraps a heading."""
+    txt = '\n'.join(
+        ['', '> ## ⚠️ PHÂN LOẠI: REVIEW — NỘI BỘ', '',
+         '# Chương 01 — A'] + ['x'] * 40)
+    lab, fid, src = bmp.read_scope(txt, None)
+    check('B: nhan khong bat dau bang # > hoac khoang trang',
+          lab[:1] not in ('#', '>', ' ', '\t'), repr(lab))
+    check('B: nhan con giu PHÂN LOẠI', 'PHÂN LOẠI' in lab, lab)
+    check('B: nhan con giu REVIEW', 'REVIEW' in lab, lab)
+
+
 def test_maybe_bad_encoding():
     """F4: maybe() must catch UnicodeDecodeError and return default."""
     # Create a file with invalid UTF-8 bytes (latin-1 bytes that aren't valid UTF-8)
@@ -387,6 +422,7 @@ if __name__ == '__main__':
     test_coverage(); test_negative_control_mask(); test_duplicate_then_next_number(); test_title_separators()
     test_crossrefs(); test_read_scope(); test_parse_outline(); test_maybe()
     test_scope_never_empty(); test_scope_front_matter_only(); test_scope_wider_forms(); test_maybe_bad_encoding()
+    test_scope_blockquote_must_be_adjacent(); test_scope_label_markup_clean()
     print()
     if FAILED:
         print('%d FAILED: %s' % (len(FAILED), ', '.join(FAILED)))

@@ -8,7 +8,7 @@ tap hien tai. Xem spec §2.3 de biet ba loi da tra gia.
 import io
 import re
 
-# Do that tren 34 cuon: 29 dung H1, 5 dung H2. Dau phan cach co ca "—", ":", "·";
+# Do that (2026-10-05, 34 cuon): 29 dung H1, 5 dung H2. Dau phan cach co ca "—", ":", "·";
 # so chuong co khi khong dem 0 ("Chương 1"); co cuon dung lan hai dau.
 CHAP_RE = r'^(#{1,4}) +(?:Chương|Chapter) +(\d{1,3})\b'
 
@@ -182,6 +182,19 @@ _FIDELITY_RE = r'\*\*mức nguyên bản: (\w+)\*\*'
 _SCOPE_KEYWORDS = r'(?:phạm vi|phát hành|lưu hành|phân loại|nội bộ)'
 
 
+def _strip_scope_markers(text):
+    """Bo lan luot dau blockquote '>' va dau heading '#' o DAU chuoi, lap lai
+    cho den khi khong con dau nao, roi strip khoang trang. Finding B:
+    mot lan the '> ## ...' chi bo duoc '>', con '##' sot lai."""
+    while True:
+        new = re.sub(r'^>\s*', '', text)
+        new = re.sub(r'^#+\s*', '', new)
+        if new == text:
+            break
+        text = new
+    return text.strip()
+
+
 def read_scope(book_txt, scope_txt=None):
     """(nhan, muc_nguyen_ban, nguon). Thu tu doc, dung o nguon dau tien.
 
@@ -191,6 +204,13 @@ def read_scope(book_txt, scope_txt=None):
     khai (8 ko co NỘI BỘ, 3 chi co trong prose). Vi the than sach la uu tien.
     SCOPE_FALLBACK in khi khong khai: tien le do duoc tren ban EPUB dau cua
     10x-easier-than-2x (nhan o frontmatter, 0/70 tep trong zip chua chu ay).
+
+    Finding A: mot blockquote chi duoc coi la PHAN TIEP cua mot heading khi
+    no la dong KHONG-TRANG ke tiep ngay sau heading (duoc phep bo qua dong
+    trong, khong gi khac) — rockefeller-habits tung bi vo vi lookahead cu
+    quet qua xa va vo mot blockquote KHONG lien quan 4 dong sau. Khi chinh
+    dong khop la mot blockquote (vd `> ## ⚠️ PHÂN LOẠI...`), dong do CHINH LA
+    loi khai bao — khong duoc tiep tuc tim xa hon.
     """
     fid = '?'
     if scope_txt:
@@ -215,20 +235,35 @@ def read_scope(book_txt, scope_txt=None):
         if not mask[i]:
             continue
 
-        # Check if this is a heading or blockquote line that matches scope keywords
-        is_heading = re.match(r'^#+\s+', line)
-        is_blockquote = re.match(r'^>\s*', line)
+        is_heading = bool(re.match(r'^#+\s+', line))
+        is_blockquote = bool(re.match(r'^>\s*', line))
 
-        if (is_heading or is_blockquote) and re.search(_SCOPE_KEYWORDS, line, re.IGNORECASE):
-            # Extract text without leading symbols
-            text = re.sub(r'^#+\s+|^>\s*', '', line).strip()
-            if text:  # Only if non-empty
-                # Check for blockquote on next line (prefer it over heading)
-                for nxt in lines[i + 1:min(i + 5, front_matter_end)]:
-                    if re.match(r'^>\s*', nxt) and re.search(_SCOPE_KEYWORDS, nxt, re.IGNORECASE):
-                        text = re.sub(r'^>\s*', '', nxt).strip()
-                        break
+        if not (is_heading or is_blockquote):
+            continue
+        if not re.search(_SCOPE_KEYWORDS, line, re.IGNORECASE):
+            continue
+
+        if is_blockquote:
+            # The matched line IS the declaration, already its own
+            # continuation — never look further forward for another one.
+            text = _strip_scope_markers(line)
+            if text:
                 return text, fid, 'than-sach'
+            continue
+
+        # Heading match: a following blockquote counts as this declaration's
+        # continuation only when it is the NEXT NON-BLANK line (blank lines
+        # may be skipped, nothing else — never past front_matter_end).
+        text = _strip_scope_markers(line)
+        j = i + 1
+        while j < front_matter_end and not lines[j].strip():
+            j += 1
+        if (j < front_matter_end and mask[j] and re.match(r'^>\s*', lines[j])):
+            cont = _strip_scope_markers(lines[j])
+            if cont:
+                text = cont
+        if text:
+            return text, fid, 'than-sach'
 
     # Fall back to sidecar (only if it has a non-empty scope declaration)
     if scope_txt:
@@ -252,8 +287,9 @@ def parse_outline(txt):
     de trong, KHONG bia va KHONG suy luan.
 
     Khuon khong nhat quan: 26 cua 34 cuon co heading `### `, 8 khong (2026-10-05).
-    Bullet availability: corpus-wide 488 / 521 chuong (94%) co bullet, nhung
-    usv-thiet-ke-he-thong chi 13 / 28. Bullet nay khong phai tom tat (120-150
+    Bullet availability (2026-10-05, 34 cuon): corpus-wide 488 / 521 chuong
+    (94%) co bullet, nhung usv-thiet-ke-he-thong chi 13 / 28. Bullet nay
+    khong phai tom tat (120-150
     ky + dot clauses + page citations), chi la lieu tham khao. Vi vay o tom tat
     KHONG thu hoach duoc tu day — xem spec §1.2.
     """
