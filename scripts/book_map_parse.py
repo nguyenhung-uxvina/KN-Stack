@@ -155,6 +155,53 @@ def coverage(parsed, txt):
     return sum(c['words'] for c in parsed['chapters'].values()) / float(whole)
 
 
+def stray_headings(parsed):
+    """Dem tieu de (ngoai khoi ma) con SOT trong THAN mot chuong du le ra
+    phai lam dut chuong do — mot dieu kien CAU TRUC, khong phai thong ke.
+
+    Fix round 1 (2026-10-05): cam bien ty le 'chuong cuoi / trung vi'
+    (BLOAT_WARN=1.8x o md_to_html.py) KHONG tach duoc loi EOF-overrun nay.
+    Do that tren tu-khong-den-mot: loi THAT (chuong cuoi chay den EOF, hut
+    phu luc) do duoc ti le 1.49x trung vi — nam NGAY GIUA hai chuong cuoi
+    DAI THAT, khong phai loi (mot cuon khac 1.61x, mot cuon nua 1.48x).
+    Khong co nguong nao tren ty le do tach duoc ca ba: nguong phai < 1.49
+    (de bat loi) VA > 1.61 (de im voi chuong dai THAT) cung luc — hai dieu
+    kien nay mau thuan nhau, cam bien thong ke vo nghia o day. (Nguong
+    1.8x duoc nang tu 1.5x truoc do CHINH VI finding-alphas 1.61x, tuc la
+    hanh dong sua false-positive da lam cam bien mu voi true-positive.)
+
+    Thay bang dieu kien CAU TRUC theo dung hai nhanh cua BI-2 (`depth` =
+    muc chuong do pick_level chon):
+      depth == 1: KHONG tieu de H1 (`^# `) nao duoc nam trong than chuong —
+                  H1 la muc dinh, moi H1 deu la mot diem dung hop le.
+      depth  > 1: CHI tieu de NONG HON depth (level < depth) la vi pham.
+                  Tieu de CUNG muc (level == depth) la tieu muc hop phap —
+                  principles-ba-tai-san dung H2 cho CA chuong LAN tieu muc;
+                  dem ca tieu de cung muc se ra 91 vi pham GIA tren chinh
+                  cuon do (do that).
+    Di qua heading_mask() truoc khi dem: mot `#` trong khoi ma (vd so do
+    ASCII) KHONG duoc tinh la tieu de.
+    """
+    depth = parsed['depth']
+    if not depth:
+        return 0
+    total = 0
+    for c in parsed['chapters'].values():
+        lines = c['body'].splitlines()
+        mask = heading_mask(lines)
+        for i, line in enumerate(lines):
+            if not mask[i]:
+                continue
+            m = re.match(r'^(#+) +\S', line)
+            if not m:
+                continue
+            level = len(m.group(1))
+            violation = (level == 1) if depth == 1 else (level < depth)
+            if violation:
+                total += 1
+    return total
+
+
 REF_RE = r'(?:Chương|Chapter|Ch\.) *(\d{1,3})'
 
 

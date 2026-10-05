@@ -203,7 +203,8 @@ def test_verify_passes_clean():
         r = _rows(rows)
         check('verify: sach lanh thi thoat 0', code == 0, code)
         for k in ('ty le phu', 'goi mang', 'the script', 'chu thich html',
-                  'nhan pham vi', 'so the vs so chuong', 'so do the vs nguon'):
+                  'nhan pham vi', 'so the vs so chuong', 'so do the vs nguon',
+                  'tieu de lac trong than chuong'):
             check('verify: co phep do %r' % k, k in r, sorted(r))
         check('verify: khong co dong CHAN',
               not [x for x in rows if x[3] == 'CHAN'],
@@ -240,6 +241,50 @@ def test_negative_scope_label():
         check('DOI CHUNG AM nhan: phep do nhan bao CHAN',
               _rows(rows)['nhan pham vi'][3] == 'CHAN',
               _rows(rows)['nhan pham vi'])
+
+
+# --- Fix round 1 (2026-10-05): DOI CHUNG AM 3 (EOF) tren SACH THAT —
+# khong phai tren bloat-ratio (hang do KHONG bat duoc loi nay — xem BLOAT_WARN),
+# ma tren hang CAU TRUC moi 'tieu de lac trong than chuong'. Nam o LOP
+# md_to_html vi day la hang trong bang verify(), khong phai ham DO thuan.
+REAL_CORPUS = r'D:/Workshop_X/3_Resources/Books'
+
+def test_negative_eof_real():
+    book_dir = os.path.join(REAL_CORPUS, 'tu-khong-den-mot')
+    if not os.path.exists(os.path.join(book_dir, 'book.md')):
+        print('SKIP DOI CHUNG AM EOF (sach that) — khong thay %s'
+              % book_dir)
+        return
+    # Mot ban RIENG cua md_to_html, chi TAT luat dung tren CHINH ban rieng
+    # do (khong dung lai luc nao den ma san xuat) — mo phong dung loi
+    # 'chuong chay den EOF': bo qua stop[], chi cat o 'hit' ke tiep/EOF.
+    broken = load('mth_eof_real', 'md_to_html.py')
+    def no_stop(txt):
+        depth, hits, warn = broken.bmp.pick_level(broken.bmp.chapter_levels(txt))
+        lines = txt.splitlines()
+        out = {}
+        for k, (ln, num, head) in enumerate(hits):
+            end = hits[k + 1][0] if k + 1 < len(hits) else len(lines)
+            body = '\n'.join(lines[ln + 1:end])
+            out[num] = {'title': '', 'words': broken.bmp.wc(body), 'mermaid': 0,
+                        'body': body, 'line': ln + 1}
+        return {'chapters': out, 'depth': depth, 'warn': warn, 'dups': []}
+    broken.bmp.parse_chapters = no_stop
+    with tempfile.TemporaryDirectory() as tmp:
+        out = os.path.join(tmp, 'tkdm-map.html')
+        broken.build(book_dir, out)   # chi doc book_dir, ghi ra tmp — khong dong vao kho
+        rows, code = broken.verify(out, book_dir)
+        r = _rows(rows)
+        check('DOI CHUNG AM EOF (sach that tu-khong-den-mot): cong thoat khac 0',
+              code != 0, code)
+        check('DOI CHUNG AM EOF (sach that): hang CAU TRUC moi bao CHAN',
+              r['tieu de lac trong than chuong'][3] == 'CHAN',
+              r['tieu de lac trong than chuong'])
+        bloat_ratio = float(r['chuong cuoi / trung vi'][1].rstrip('x'))
+        check('DOI CHUNG AM EOF (sach that): minh hoa vi sao can hang CAU '
+              'TRUC — bloat ratio KHONG vuot 1.8x tren CHINH loi nay '
+              '(do that ~1.49x)', bloat_ratio < 1.8,
+              r['chuong cuoi / trung vi'])
 
 
 # --- Review Focus 4: dau vao thieu / rong / 0 chuong
@@ -280,7 +325,8 @@ if __name__ == '__main__':
     test_arc_svg_renders()
     test_crlf_render(); test_vietnamese_path()
     test_verify_passes_clean(); test_negative_cdn()
-    test_negative_scope_label(); test_bad_input()
+    test_negative_scope_label(); test_negative_eof_real()
+    test_bad_input()
     print()
     if FAILED:
         print('%d FAILED: %s' % (len(FAILED), ', '.join(FAILED)))

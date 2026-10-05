@@ -595,6 +595,158 @@ def test_corpus():
     check('kho: khong cuon nao duoi nguong CHAN 70%%', low == [], low)
 
 
+# ============================================================
+# Fix round 1 (2026-10-05): doi chung am 2 va 4 duoc CEO tu do lai tren
+# CHINH cac cuon sach that, va xac nhan ca hai giu nguyen. Doi chung am 3
+# (EOF) thi KHONG giu — ty le 'chuong cuoi / trung vi' 1.8x im lang voi
+# loi THAT (1.49x) vi loi nam GIUA hai chuong cuoi dai THAT (1.61x/1.48x).
+# Cam bien thong ke bi thay bang stray_headings() — dieu kien CAU TRUC.
+# ============================================================
+
+# --- DOI CHUNG AM 2 (sach THAT): tau-nhom-han-quoc-phong, tat mat na khoi ma
+def test_negative_control_mask_real():
+    p = os.path.join(CORPUS, 'tau-nhom-han-quoc-phong', 'book.md')
+    if not os.path.exists(p):
+        print('SKIP DOI CHUNG AM 2 (sach that) — khong thay %s' % p)
+        return
+    broken = load('bmp_broken_real', 'book_map_parse.py')
+    broken.heading_mask = lambda lines: [True] * len(lines)   # tat BI-1
+    txt = bmp.rd(p)
+    good = bmp.coverage(bmp.parse_chapters(txt), txt)
+    bad = broken.coverage(broken.parse_chapters(txt), txt)
+    check('DOI CHUNG AM 2 (sach that tau-nhom-han-quoc-phong): '
+          'phu TUT duoi nguong CHAN 70%% khi tat mat na khoi ma',
+          bad < 0.70, 'tot=%.3f xau=%.3f' % (good, bad))
+    check('DOI CHUNG AM 2 (sach that): phu DUNG phai cao (>90%%) de thay ro do lech',
+          good > 0.90, good)
+
+
+# --- DOI CHUNG AM 4 (sach THAT): principles-ba-tai-san, co dinh luat dung
+def test_negative_fixed_stop_real():
+    p = os.path.join(CORPUS, 'principles-ba-tai-san', 'book.md')
+    if not os.path.exists(p):
+        print('SKIP DOI CHUNG AM 4 (sach that) — khong thay %s' % p)
+        return
+    broken = load('bmp_fix_real', 'book_map_parse.py')
+    def fixed_stop(txt):
+        depth, hits, warn = broken.pick_level(broken.chapter_levels(txt))
+        lines = txt.splitlines()
+        mask = broken.heading_mask(lines)
+        stop = [i for i, L in enumerate(lines)
+                if mask[i] and __import__('re').match(r'^#{1,%d} +\S' % depth, L)]
+        out = {}
+        for ln, num, head in hits:
+            nxt = [i for i in stop if i > ln]
+            body = '\n'.join(lines[ln + 1:nxt[0] if nxt else len(lines)])
+            out[num] = {'title': '', 'words': broken.wc(body), 'mermaid': 0,
+                        'body': body, 'line': ln}
+        return {'chapters': out, 'depth': depth, 'warn': warn, 'dups': []}
+    txt = bmp.rd(p)
+    good = bmp.parse_chapters(txt)['chapters']
+    bad = fixed_stop(txt)['chapters']
+    gw = sorted(c['words'] for c in good.values())
+    bw = sorted(c['words'] for c in bad.values())
+    med_g, med_b = gw[len(gw) // 2], bw[len(bw) // 2]
+    check('DOI CHUNG AM 4 (sach that principles-ba-tai-san): '
+          'trung vi tut ve ~326 tu/chuong khi co dinh luat dung theo depth',
+          300 <= med_b <= 360, 'tot=%d xau=%d' % (med_g, med_b))
+
+
+# --- stray_headings(): don vi, hai nhanh cua BI-2 (depth==1 vs depth>1)
+def test_stray_headings_unit():
+    bad = {'chapters': {1: {'body': '\n'.join(
+                ['# Lạc vào thân — khong duoc o day'] + ['lac'] * 10)}},
+           'depth': 1, 'warn': None, 'dups': []}
+    check('stray_headings: depth==1, mot H1 lac trong than => 1 vi pham',
+          bmp.stray_headings(bad) == 1, bmp.stray_headings(bad))
+
+    good_h2 = {'chapters': {1: {'body': '\n'.join(
+                ['## Một tiểu mục cùng cấp'] + ['than'] * 10)}},
+               'depth': 2, 'warn': None, 'dups': []}
+    check('stray_headings: depth>1, tieu de CUNG muc la tieu muc hop phap '
+          '=> 0 vi pham', bmp.stray_headings(good_h2) == 0,
+          bmp.stray_headings(good_h2))
+
+    bad_h2 = {'chapters': {1: {'body': '\n'.join(
+                ['# Tieu de NONG hon depth lac vao'] + ['than'] * 10)}},
+              'depth': 2, 'warn': None, 'dups': []}
+    check('stray_headings: depth>1, tieu de NONG HON depth la vi pham => 1',
+          bmp.stray_headings(bad_h2) == 1, bmp.stray_headings(bad_h2))
+
+    in_fence = {'chapters': {1: {'body': '\n'.join(
+                ['```', '# 80% cong viec trong khoi ma', '```'] + ['than'] * 10)}},
+                'depth': 1, 'warn': None, 'dups': []}
+    check('stray_headings: # trong khoi ma KHONG duoc dem',
+          bmp.stray_headings(in_fence) == 0, bmp.stray_headings(in_fence))
+
+    no_depth = {'chapters': {}, 'depth': None, 'warn': 'x', 'dups': []}
+    check('stray_headings: khong co depth => 0, khong crash',
+          bmp.stray_headings(no_depth) == 0, bmp.stray_headings(no_depth))
+
+
+def _no_stop_generic(bmpmod, txt):
+    """Tat HOAN TOAN luat dung (bo qua stop[] — moi chuong chi cat o 'hit'
+    (tieu de chuong CUNG muc) ke tiep, hoac EOF cho chuong cuoi). Day la
+    cach loi 'chuong chay den EOF' THAT xay ra: KHONG chi chuong cuoi — moi
+    chuong giua co tieu de NONG HON xen giua hai 'hit' (vd tieu de Phan)
+    cung mat bien dung."""
+    depth, hits, warn = bmpmod.pick_level(bmpmod.chapter_levels(txt))
+    lines = txt.splitlines()
+    out = {}
+    for k, (ln, num, head) in enumerate(hits):
+        end = hits[k + 1][0] if k + 1 < len(hits) else len(lines)
+        body = '\n'.join(lines[ln + 1:end])
+        out[num] = {'title': '', 'words': bmpmod.wc(body), 'mermaid': 0,
+                     'body': body, 'line': ln + 1}
+    return {'chapters': out, 'depth': depth, 'warn': warn, 'dups': []}
+
+
+# --- DOI CHUNG AM 3 (sach THAT, lop DO): stray_headings PHAI bat duoc loi
+# EOF-overrun ma ty le bloat KHONG bat duoc. 4 so do that CEO da tu kiem,
+# cong do PHAI tai tao dung.
+STRAY_EOF_MEASURED = {
+    'tu-khong-den-mot': 10,
+    'ghi-de-quy-trach-nhiem': 6,
+    'usv-thiet-ke-he-thong': 6,
+    'finding-alphas': 0,   # chuong cuoi DAI THAT (1.61x) — phai IM LANG
+}
+
+def test_stray_headings_eof_corpus():
+    if not os.path.isdir(CORPUS):
+        print('SKIP stray_headings EOF (sach that) — khong thay %s' % CORPUS)
+        return
+    for slug, expect in STRAY_EOF_MEASURED.items():
+        p = os.path.join(CORPUS, slug, 'book.md')
+        if not os.path.exists(p):
+            print('SKIP stray_headings EOF %s — khong thay tep' % slug)
+            continue
+        txt = bmp.rd(p)
+        n = bmp.stray_headings(_no_stop_generic(bmp, txt))
+        check('stray_headings EOF %s: tai tao dung so do that = %d'
+              % (slug, expect), n == expect, n)
+
+
+# --- Doi chung DUONG (yeu cau #6): stray_headings PHAI im lang tren ma DUNG
+def test_stray_headings_positive_corpus():
+    if not os.path.isdir(CORPUS):
+        print('SKIP stray_headings duong — khong thay %s' % CORPUS)
+        return
+    books = [s for s in sorted(os.listdir(CORPUS))
+             if os.path.exists(os.path.join(CORPUS, s, 'book.md'))]
+    viol = []
+    for s in books:
+        txt = bmp.rd(os.path.join(CORPUS, s, 'book.md'))
+        p = bmp.parse_chapters(txt)
+        if not p['chapters']:
+            continue
+        n = bmp.stray_headings(p)
+        if n:
+            viol.append((s, n))
+    check('stray_headings: 0 vi pham tren toan kho voi ma DUNG '
+          '(mot cam bien chi bat loi ma khong bao gio im thi vo dung)',
+          viol == [], viol)
+
+
 def test_maybe_bad_encoding():
     """F4: maybe() must catch UnicodeDecodeError and return default."""
     # Create a file with invalid UTF-8 bytes (latin-1 bytes that aren't valid UTF-8)
@@ -621,6 +773,9 @@ if __name__ == '__main__':
     test_scope_only_code_span_token_falls_back()
     test_scope_no_token_falls_back(); test_scope_class()
     test_negative_eof(); test_negative_fixed_stop(); test_corpus()
+    test_negative_control_mask_real(); test_negative_fixed_stop_real()
+    test_stray_headings_unit(); test_stray_headings_eof_corpus()
+    test_stray_headings_positive_corpus()
     print()
     if FAILED:
         print('%d FAILED: %s' % (len(FAILED), ', '.join(FAILED)))

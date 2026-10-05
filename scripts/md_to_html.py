@@ -26,7 +26,13 @@ bmp = _load('book_map_parse', 'book_map_parse.py')
 mte = _load('md_to_epub', 'md_to_epub.py')      # chi dung count_html_comments
 
 MIN_EDGES = 5          # inside-the-box co 2 canh => an do thi
-BLOAT_WARN = 1.8       # CANH BAO, khong phai cong chan (spec §9 R-3)
+BLOAT_WARN = 1.8       # CANH BAO hinh dang long, KHONG phai cong chan (spec
+                       # §9 R-3) — va fix round 1 (2026-10-05): KHONG bat
+                       # duoc loi EOF-overrun. Loi THAT do 1.49x trung vi,
+                       # nam GIUA hai chuong cuoi DAI THAT (1.61x/1.48x);
+                       # khong nguong nao tren ty le nay tach duoc ca ba.
+                       # Cam bien CHAN that cho loi nay la dong 'tieu de
+                       # lac trong than chuong' (bmp.stray_headings) duoi.
 COV_BLOCK = 0.70
 COV_WARN = 0.85
 
@@ -296,6 +302,7 @@ def verify(out_path, book_dir):
     cards = h.count('class="card')
     mer_src = len(re.findall(r'^```mermaid', txt, re.M))
     mer_page = sum(c['mermaid'] for c in ch.values())
+    stray = bmp.stray_headings(parsed)
 
     rows = [
         ('ty le phu', '%.0f%%' % (cov * 100), '>=70% chan · <85% canh bao',
@@ -308,8 +315,15 @@ def verify(out_path, book_dir):
          'ok' if cards == len(ch) else 'CHAN'),
         ('so do the vs nguon', '%d vs %d' % (mer_page, mer_src), 'lech 0',
          'ok' if mer_page == mer_src else 'canh-bao'),
+        # Fix round 1 (2026-10-05): dieu kien CAU TRUC, chinh xac — khong
+        # phai thong ke. Hang nay BAT duoc loi EOF-overrun ma hang ty le
+        # ben duoi KHONG bat duoc (xem docstring bmp.stray_headings). CHAN
+        # vi dieu kien nay khong co vung xam: sai 1 dong la loi, khong phai
+        # muc do.
+        ('tieu de lac trong than chuong', stray, '=0',
+         'CHAN' if stray else 'ok'),
         ('chuong cuoi / trung vi', '%.2fx' % (ws[-1] / float(med)),
-         '<1.8x (canh bao)',
+         '<1.8x (canh bao, hinh dang long — KHONG bat EOF-overrun)',
          'canh-bao' if ws[-1] / float(med) > BLOAT_WARN else 'ok'),
         ('so chuong trung', parsed['dups'] or 0, '=0',
          'canh-bao' if parsed['dups'] else 'ok'),
