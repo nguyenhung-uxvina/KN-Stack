@@ -93,6 +93,7 @@ font:16px/1.55 -apple-system,"Segoe UI",system-ui,sans-serif}
 .wrap{max-width:1140px;margin:0 auto;padding:28px 16px 72px}
 .scope{display:inline-block;border:1px solid var(--red);color:var(--red);
 border-radius:4px;padding:2px 9px;font-size:13px;font-weight:600}
+.scopelabel{font-size:12.5px;color:var(--mut);margin:6px 0 0}
 h1{font-size:26px;margin:14px 0 6px}
 .sub{color:var(--mut);font-size:14px;margin-bottom:26px}
 .sub b{color:var(--fg);font-variant-numeric:tabular-nums}
@@ -141,12 +142,18 @@ def render_map(parsed, outline, scope, slug, cov, sha):
     tot = sum(c['words'] for c in ch.values())
     mer = sum(c['mermaid'] for c in ch.values())
     label, fid, src = scope
+    cls = bmp.scope_class(label)
 
     o = ['<!DOCTYPE html><html lang="vi"><head><meta charset="utf-8">',
          '<meta name="viewport" content="width=device-width,initial-scale=1">',
          '<title>Bản đồ sách — %s</title>' % html.escape(slug),
          '<style>%s</style></head><body><div class="wrap">' % CSS,
-         '<div class="scope">%s</div>' % esc(label),
+         # Fix round 1: badge chi mang TOKEN phan loai (scope_class) — nhan
+         # prose day du (co khi 114 ky tu, mot cau day trich dan) KHONG
+         # vua lam badge. Nhan day du in lai ngay duoi, van thoa BI-4 vi
+         # phan loai nam trong THAN trang.
+         '<div class="scope">⛔ %s</div>' % esc(cls),
+         '<p class="scopelabel">%s</p>' % esc(label),
          '<h1>Bản đồ sách — %s</h1>' % html.escape(slug),
          '<p class="sub">%d chương · <b>%s</b> từ · <b>%d</b> sơ đồ · '
          'mức nguyên bản <b>%s</b> · phủ <b>%.0f%%</b> · ước đọc lại '

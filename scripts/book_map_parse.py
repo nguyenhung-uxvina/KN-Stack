@@ -181,6 +181,18 @@ _FIDELITY_RE = r'\*\*mức nguyên bản: (\w+)\*\*'
 # Keywords that mark a scope declaration (case-insensitive)
 _SCOPE_KEYWORDS = r'(?:phạm vi|phát hành|lưu hành|phân loại|nội bộ)'
 
+# Fix round 1 (2026-10-05): tu PHAN LOAI THAT — khong phai moi dong "trong
+# muc scope keyword" deu la mot loi khai bao dung. Mot dong chi dung khi no
+# mang MOT trong cac tu nay.
+_TOKEN_RE = r'NỘI BỘ|MẬT|SENSITIVE|REVIEW|SAFE'
+
+# hang-rao-song-va-nuoc: mot blockquote CHU THICH DUONG ONG trich NGUYEN
+# VAN mot gia tri vi du co token ("`distribution: ⛔ NỘI BỘ` ở frontmatter")
+# de giai thich tai sao md_to_epub.py boc frontmatter — dong nay CO token
+# nhung KHONG phai loi khai bao cua CHINH cuon sach. Loai bo dong nao vua co
+# token vua mang tu chi-dan-ve-duong-ong nay, tiep tuc tim dong sau.
+_PIPELINE_NOISE_RE = r'frontmatter|md_to_epub|TỆP NGUỒN'
+
 
 def _strip_scope_markers(text):
     """Bo lan luot dau blockquote '>' va dau heading '#' o DAU chuoi, lap lai
@@ -211,6 +223,31 @@ def read_scope(book_txt, scope_txt=None):
     quet qua xa va vo mot blockquote KHONG lien quan 4 dong sau. Khi chinh
     dong khop la mot blockquote (vd `> ## ⚠️ PHÂN LOẠI...`), dong do CHINH LA
     loi khai bao — khong duoc tiep tuc tim xa hon.
+
+    Fix round 1 (2026-10-05): mot heading/blockquote khop _SCOPE_KEYWORDS
+    KHONG co nghia no la loi khai bao — do that tren 34 cuon: 10/23 cuon
+    "khai trong than" thuc ra tra ve mot TIEU DE muc (`⛔ Phạm vi lưu hành`,
+    khong co tu phan loai nao) hoac CHU THICH DUONG ONG ve cach md_to_epub.py
+    xu ly frontmatter — khong phai loi khai bao thuc. Loi khai bao THAT nam
+    trong THAN cua muc, co khi sau mot sub-heading sau hon (`## Quyết định
+    phát hành`). Vi vay: mot heading mo ra mot MUC (den heading ke tiep CUNG
+    hoac NONG hon, hoac het front matter); quet MUC do THEO THU TU, lay dong
+    DAU TIEN mang mot token phan loai thuc (_TOKEN_RE). Khong tim thay token
+    nao trong ca muc -> day KHONG phai loi khai bao dung — tiep tuc quet
+    phan con lai cua front matter, cuoi cung lui ve sidecar roi SCOPE_FALLBACK.
+    Khong duoc BIA mot phan loai ma sach khong noi ra.
+
+    Mot dong CO token van co the la CHU THICH DUONG ONG: hang-rao-song-va-nuoc
+    trich nguyen van mot gia tri VI DU co token (`` `distribution: ⛔ NỘI BỘ`
+    ở frontmatter ``) de giai thich vi sao md_to_epub.py boc frontmatter —
+    dong do bi loai boi _PIPELINE_NOISE_RE, loi khai bao THAT nam o dong sau
+    (`## Quyết định phát hành` -> `> ## ⛔ NỘI BỘ XƯỞNG`).
+
+    Do lai tren cung 34 cuon sau fix: phan bo nguon KHONG doi (23 than-sach /
+    11 bao-toan) — ca 23 cuon than-sach deu co mot token THAT o dau do trong
+    muc, chi la khong luon nam tren chinh dong heading/blockquote dau tien.
+    `khong co tu phan loai: []` va `ro chu thich duong ong: []` tren toan bo
+    corpus (do ngay 2026-10-05).
     """
     fid = '?'
     if scope_txt:
@@ -229,41 +266,71 @@ def read_scope(book_txt, scope_txt=None):
         if hits:
             front_matter_end = hits[0][0]
 
-    # Search front matter for scope declaration in headings or blockquotes
-    for i in range(front_matter_end):
+    # Search front matter for scope declaration in headings or blockquotes.
+    # A heading/blockquote matching _SCOPE_KEYWORDS only OPENS a candidate
+    # declaration section — it is accepted only if some line inside that
+    # section carries a real classification token (_TOKEN_RE). Otherwise we
+    # keep scanning rest of front matter instead of inventing a label.
+    i = 0
+    while i < front_matter_end:
         line = lines[i]
         if not mask[i]:
+            i += 1
             continue
 
         is_heading = bool(re.match(r'^#+\s+', line))
         is_blockquote = bool(re.match(r'^>\s*', line))
 
         if not (is_heading or is_blockquote):
+            i += 1
             continue
         if not re.search(_SCOPE_KEYWORDS, line, re.IGNORECASE):
+            i += 1
             continue
 
-        if is_blockquote:
-            # The matched line IS the declaration, already its own
-            # continuation — never look further forward for another one.
-            text = _strip_scope_markers(line)
-            if text:
-                return text, fid, 'than-sach'
-            continue
+        if is_heading:
+            # Section runs until the next heading at the SAME or SHALLOWER
+            # depth (a deeper sub-heading, e.g. `## Quyết định phát hành`
+            # under a `#` heading, stays INSIDE the section), or until
+            # front matter ends.
+            level = len(re.match(r'^(#+)', line).group(1))
+            end = front_matter_end
+            for j in range(i + 1, front_matter_end):
+                if not mask[j]:
+                    continue
+                hm = re.match(r'^(#+)\s', lines[j])
+                if hm and len(hm.group(1)) <= level:
+                    end = j
+                    break
+            section = range(i, end)
+        else:
+            # Standalone blockquote (no governing heading): a one-line
+            # candidate section — it is already its own continuation.
+            end = i + 1
+            section = range(i, end)
 
-        # Heading match: a following blockquote counts as this declaration's
-        # continuation only when it is the NEXT NON-BLANK line (blank lines
-        # may be skipped, nothing else — never past front_matter_end).
-        text = _strip_scope_markers(line)
-        j = i + 1
-        while j < front_matter_end and not lines[j].strip():
-            j += 1
-        if (j < front_matter_end and mask[j] and re.match(r'^>\s*', lines[j])):
-            cont = _strip_scope_markers(lines[j])
-            if cont:
-                text = cont
-        if text:
-            return text, fid, 'than-sach'
+        found = None
+        for k in section:
+            if not mask[k]:
+                continue
+            cand = _strip_scope_markers(lines[k])
+            if not cand or not re.search(_TOKEN_RE, cand, re.IGNORECASE):
+                continue
+            if re.search(_PIPELINE_NOISE_RE, cand, re.IGNORECASE):
+                # Token present, but the line is explaining the PIPELINE's
+                # own behaviour (quoting an example value), not declaring
+                # THIS book's scope — keep scanning for a real line.
+                continue
+            found = cand
+            break
+        if found:
+            return found, fid, 'than-sach'
+
+        # Matched the keyword but no line in the section carries a real
+        # token — not a usable declaration. Keep scanning past this
+        # section rather than falling back immediately: a later heading
+        # may carry the real one.
+        i = end
 
     # Fall back to sidecar (only if it has a non-empty scope declaration)
     if scope_txt:
@@ -274,6 +341,25 @@ def read_scope(book_txt, scope_txt=None):
                 return label, fid, 'sidecar'
 
     return SCOPE_FALLBACK, fid, 'bao-toan'
+
+
+def scope_class(label):
+    """Rut cac token phan loai THAT tu nhan (xem _TOKEN_RE), theo THU TU
+    xuat hien, IN HOA, khong lap. Khong tim thay token nao -> 'CHƯA KHAI'.
+
+    Dung de ve BADGE ngan — nhan prose co the dai toi 114 ky tu (mot cau
+    day trich dan), khong phai BADGE. SCOPE_FALLBACK duoc kiem rieng bang
+    danh tinh: ban than hang chu cua no co doan "coi như NỘI BỘ" nen mot
+    phep quet token don gian se nham tra ve 'NỘI BỘ' — day la mot nhan BAO
+    TOAN, KHONG phai mot loi khai bao, va phai luon doc la 'CHƯA KHAI'."""
+    if label == SCOPE_FALLBACK:
+        return 'CHƯA KHAI'
+    toks = []
+    for m in re.finditer(_TOKEN_RE, label, re.IGNORECASE):
+        t = m.group(0).upper()
+        if t not in toks:
+            toks.append(t)
+    return ' — '.join(toks) if toks else 'CHƯA KHAI'
 
 
 ROMAN = {'I': 1, 'II': 2, 'III': 3, 'IV': 4, 'V': 5,

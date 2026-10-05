@@ -336,9 +336,15 @@ def test_scope_front_matter_only():
 
 
 def test_scope_wider_forms():
-    """F3: accept wider variations of scope declarations in front matter."""
-    # Test 1: # ⚠️ Phạm vi (without full phrase)
-    txt1 = '\n'.join(['# ⚠️ Phạm vi', '', '# Chương 01 — A'] + ['x'] * 40)
+    """F3: accept wider variations of scope declarations in front matter.
+
+    Fix round 1: khop _SCOPE_KEYWORDS khong du nua — muc do phai co mot
+    dong mang token phan loai THAT (_TOKEN_RE) o dau do trong muc. Hinh 1
+    gio them mot dong than mang token de van kiem tra duoc dang heading
+    ngan ("Phạm vi" khong di kem "phát hành"/"lưu hành") ma khong bia."""
+    # Test 1: # ⚠️ Phạm vi (without full phrase) + dong than co token
+    txt1 = '\n'.join(['# ⚠️ Phạm vi', '', 'NỘI BỘ Workshop X.', '',
+                       '# Chương 01 — A'] + ['x'] * 40)
     lab1, fid1, src1 = bmp.read_scope(txt1, None)
     check('F3 hình 1: heading với Phạm vi', src1 == 'than-sach', src1)
     check('F3 hình 1: nhan khong rong', len(lab1.strip()) > 0, repr(lab1))
@@ -371,9 +377,15 @@ def test_scope_blockquote_must_be_adjacent():
     """Finding A: a following blockquote is only the declaration's own
     continuation when it is the NEXT NON-BLANK line after the heading
     (blank lines may be skipped, nothing else). A prose line in between
-    means an unrelated blockquote further down must NOT be used."""
+    means an unrelated blockquote further down must NOT be used.
+
+    Fix round 1: ca hai dong trong 'unrelated' (prose va blockquote SAI)
+    khong mang token phan loai THAT, nen theo luat moi chung se bi bo qua
+    du gi — doan nay them token vao ngay HEADING de bai test van do dung
+    dieu no dinh do (mot dong KHAC khong lien quan khong duoc de bep nhan
+    THAT), ma khong vi pham luat "khong bia phan loai"."""
     txt_unrelated = '\n'.join(
-        ['# ⚠️ Phạm vi', '', 'Đây là một dòng văn xuôi bình thường.',
+        ['# ⚠️ Phạm vi: NỘI BỘ', '', 'Đây là một dòng văn xuôi bình thường.',
          '> **PHÂN LOẠI: SAI — đây là khai báo KHÁC**', '',
          '# Chương 01 — A'] + ['x'] * 40)
     lab, fid, src = bmp.read_scope(txt_unrelated, None)
@@ -402,6 +414,102 @@ def test_scope_label_markup_clean():
     check('B: nhan con giu REVIEW', 'REVIEW' in lab, lab)
 
 
+# --- Fix round 1 (2026-10-05): loi khai bao THAT nam trong THAN cua muc,
+# khong phai tren chinh dong heading/blockquote khop _SCOPE_KEYWORDS.
+def test_scope_label_from_section_body():
+    """Dang dua-bia-ra: heading la mot TIEU DE muc
+    (`# ⛔ Phạm vi lưu hành`, khong tu phan loai), loi khai bao THAT nam o
+    mot dong than sau do. Nhan phai la dong do, khong phai tieu de."""
+    txt = '\n'.join(
+        ['# ⛔ Phạm vi lưu hành', '',
+         '**NỘI BỘ XƯỞNG — KHÔNG PHÁT HÀNH RA NGOÀI.**', '',
+         'Đây là một đoạn văn xuôi không liên quan, giải thích lý do.', '',
+         '# Chương 01 — A'] + ['x'] * 40)
+    lab, fid, src = bmp.read_scope(txt, None)
+    check('section-body: nguon than-sach', src == 'than-sach', src)
+    check('section-body: nhan KHONG phai la tieu de muc',
+          lab != 'Phạm vi lưu hành' and '⛔' not in lab, lab)
+    check('section-body: nhan la dong co token thuc',
+          'NỘI BỘ XƯỞNG' in lab, lab)
+
+
+def test_scope_skips_pipeline_note():
+    """Dang khu-pho-6-bang: blockquote ke sau heading la CHU THICH DUONG
+    ONG (noi ve frontmatter/md_to_epub), KHONG mang token — phai bi bo qua;
+    loi khai bao THAT nam sau mot sub-heading sau hon (`## Quyết định phát
+    hành`), van nam TRONG cung muc vi sau hon tieu de mo muc."""
+    txt = '\n'.join(
+        ['# ⛔ Phạm vi lưu hành', '',
+         '> Trang này nằm trong thân sách, không nằm trong frontmatter '
+         'mà md_to_epub.py tạo ra.', '',
+         '## Quyết định phát hành', '',
+         '**CEO ký duyệt 2026-09-15: NỘI BỘ XƯỞNG.**', '',
+         '# Chương 01 — A'] + ['x'] * 40)
+    lab, fid, src = bmp.read_scope(txt, None)
+    check('skip pipeline note: nguon than-sach', src == 'than-sach', src)
+    check('skip pipeline note: nhan co NỘI BỘ', 'NỘI BỘ' in lab, lab)
+    check('skip pipeline note: khong lan chu thich ve frontmatter',
+          'frontmatter' not in lab, lab)
+    check('skip pipeline note: khong lan chu thich ve md_to_epub',
+          'md_to_epub' not in lab, lab)
+
+
+def test_scope_skips_token_inside_pipeline_example():
+    """Dang hang-rao-song-va-nuoc (phat hien khi chay cong do tren corpus
+    that, 2026-10-05): mot blockquote CHU THICH DUONG ONG trich nguyen van
+    mot GIA TRI VI DU co token (`` `distribution: ⛔ NỘI BỘ` ở frontmatter
+    ``) de giai thich vi sao md_to_epub.py boc frontmatter — dong nay CO
+    token nhung khong phai loi khai bao CUA CHINH cuon nay. Loi khai bao
+    THAT nam o mot blockquote long trong sub-heading sau hon."""
+    txt = '\n'.join(
+        ['# ⛔ Phạm vi lưu hành', '',
+         '> **Trang này là TỆP NGUỒN.** Đo được trên một cuốn khác: bản xuất có', '',
+         '> `distribution: ⛔ NỘI BỘ` ở frontmatter và 0 trên 70 tệp chứa chữ ấy.', '',
+         '## Quyết định phát hành', '',
+         '> ## ⛔ NỘI BỘ XƯỞNG', '',
+         '# Chương 01 — A'] + ['x'] * 40)
+    lab, fid, src = bmp.read_scope(txt, None)
+    check('pipeline example: nguon than-sach', src == 'than-sach', src)
+    check('pipeline example: nhan la quyet dinh THAT, khong phai vi du',
+          'XƯỞNG' in lab, lab)
+    check('pipeline example: khong lan chu thich ve frontmatter',
+          'frontmatter' not in lab, lab)
+
+
+def test_scope_no_token_falls_back():
+    """Muc khop tu khoa scope nhung KHONG dong nao trong than co token phan
+    loai THAT -> day KHONG phai mot loi khai bao dung. Phai lui ve
+    SCOPE_FALLBACK/bao-toan — khong duoc bia phan loai."""
+    txt = '\n'.join(
+        ['# ⛔ Phạm vi lưu hành', '',
+         'Chúng tôi chưa quyết định việc này.', '',
+         '# Chương 01 — A'] + ['x'] * 40)
+    lab, fid, src = bmp.read_scope(txt, None)
+    check('no-token: lui ve bao-toan, KHONG bia phan loai',
+          src == 'bao-toan', src)
+    check('no-token: nhan la dung SCOPE_FALLBACK',
+          lab == bmp.SCOPE_FALLBACK, lab)
+
+
+def test_scope_class():
+    check('scope_class: mot token NỘI BỘ',
+          bmp.scope_class('**NỘI BỘ XƯỞNG.**') == 'NỘI BỘ',
+          bmp.scope_class('**NỘI BỘ XƯỞNG.**'))
+    check('scope_class: REVIEW va NỘI BỘ theo thu tu xuat hien',
+          bmp.scope_class('⚠️ PHÂN LOẠI: REVIEW — NỘI BỘ WORKSHOP X')
+          == 'REVIEW — NỘI BỘ',
+          bmp.scope_class('⚠️ PHÂN LOẠI: REVIEW — NỘI BỘ WORKSHOP X'))
+    check('scope_class: mot token SENSITIVE',
+          bmp.scope_class('mức SENSITIVE') == 'SENSITIVE',
+          bmp.scope_class('mức SENSITIVE'))
+    check('scope_class: khong token nao -> CHƯA KHAI',
+          bmp.scope_class('Một câu không có từ phân loại nào.') == 'CHƯA KHAI',
+          bmp.scope_class('Một câu không có từ phân loại nào.'))
+    check('scope_class: SCOPE_FALLBACK luon la CHƯA KHAI du chua chu NỘI BỘ',
+          bmp.scope_class(bmp.SCOPE_FALLBACK) == 'CHƯA KHAI',
+          bmp.scope_class(bmp.SCOPE_FALLBACK))
+
+
 def test_maybe_bad_encoding():
     """F4: maybe() must catch UnicodeDecodeError and return default."""
     # Create a file with invalid UTF-8 bytes (latin-1 bytes that aren't valid UTF-8)
@@ -423,6 +531,9 @@ if __name__ == '__main__':
     test_crossrefs(); test_read_scope(); test_parse_outline(); test_maybe()
     test_scope_never_empty(); test_scope_front_matter_only(); test_scope_wider_forms(); test_maybe_bad_encoding()
     test_scope_blockquote_must_be_adjacent(); test_scope_label_markup_clean()
+    test_scope_label_from_section_body(); test_scope_skips_pipeline_note()
+    test_scope_skips_token_inside_pipeline_example()
+    test_scope_no_token_falls_back(); test_scope_class()
     print()
     if FAILED:
         print('%d FAILED: %s' % (len(FAILED), ', '.join(FAILED)))
