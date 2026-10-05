@@ -263,11 +263,62 @@ def test_read_scope():
           fid5 == 'F2', fid5)
 
 
+# Khuon dan y KHONG nhat quan: do that tren usv-thiet-ke-he-thong, 13/28 chuong
+# dung bullet `- `, 15/28 dung dong `Dạy:`. 22/32 cuon co heading `### `,
+# 10/32 khong co. Lop nay PHAI suy thoai em, khong duoc bia.
+OUTLINE = '\n'.join([
+    '## Phần I — Trước khi vẽ gì',
+    '### Ch.01 — Biên hệ thống',
+    '**Neo** N1 · **Từ** 5.438 (= 5.400 + 38 nhãn nguồn) · **Nguồn** P&B 65%',
+    '',
+    '- Biên hệ thống không phải sự thật mà là **một lựa chọn**; đổi biên thì',
+    '  hàm phụ thành hàm chính (tr.33).',
+    '- Ba biên phải được vẽ và đặt tên.',
+    '',
+    'Hình (3): ba biên lồng nhau · bảng · ô biên',
+    'Rủi ro: chương trừu tượng nhất cuốn sách',
+    '',
+    '### Ch.02 — Bỏ người  ⟵ **CHƯƠNG MỚI**',
+    '**Neo** N2 · **Từ** 6.243 · **Nguồn** P&B 35%',
+    'Dạy: cách dò chức năng không khai báo.',
+    'Rủi ro: 🔴 chương dễ thành khẩu hiệu nhất',
+])
+
+def test_parse_outline():
+    o = bmp.parse_outline(OUTLINE)
+    check('dan y: 2 chuong', sorted(o) == [1, 2], sorted(o))
+    check('dan y: ten chuong', o[1]['title'] == 'Biên hệ thống', o[1]['title'])
+    check('dan y: phan', o[1]['part'] == (1, 'Trước khi vẽ gì'), o[1]['part'])
+    check('dan y: so tu dat ra', o[1]['target'] == 5438, o[1]['target'])
+    check('dan y: neo', o[1]['neo'] == 'N1', o[1]['neo'])
+    check('dan y: so hinh', o[1]['figs'] == 3, o[1]['figs'])
+    check('dan y: 2 bullet, co noi dong tiep', len(o[1]['bullets']) == 2,
+          o[1]['bullets'])
+    check('dan y: bullet noi lien dong thu hai',
+          'hàm chính' in o[1]['bullets'][0], o[1]['bullets'][0])
+    check('dan y: co cho 🔴', o[2]['red'] is True, o[2]['red'])
+    check('dan y: chuong khong 🔴 thi red=False', o[1]['red'] is False, o[1]['red'])
+    check('dan y: nhan CHUONG MOI', o[2]['new'] is True, o[2]['new'])
+    check('dan y: ten chuong moi khong con dau ⟵',
+          '⟵' not in o[2]['title'], o[2]['title'])
+    check('suy thoai em: chuong dung "Dạy:" co 0 bullet, KHONG bia',
+          o[2]['bullets'] == [], o[2]['bullets'])
+
+
+def test_maybe():
+    check('maybe: tep thieu tra mac dinh',
+          bmp.maybe(os.path.join(HERE, 'khong-co-that.md'), bmp.parse_outline, {}) == {},
+          'phai tra {}')
+    check('maybe: tep co thi goi fn',
+          bmp.maybe(os.path.join(HERE, 'book_map_parse.py'), lambda s: len(s) > 0, False)
+          is True)
+
+
 if __name__ == '__main__':
     test_wc(); test_mask(); test_pick_level(); test_crlf(); test_separators()
     test_parse_chapters(); test_mermaid_count(); test_duplicate_numbers()
     test_coverage(); test_negative_control_mask(); test_duplicate_then_next_number(); test_title_separators()
-    test_crossrefs(); test_read_scope()
+    test_crossrefs(); test_read_scope(); test_parse_outline(); test_maybe()
     print()
     if FAILED:
         print('%d FAILED: %s' % (len(FAILED), ', '.join(FAILED)))

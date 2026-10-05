@@ -211,3 +211,68 @@ def read_scope(book_txt, scope_txt=None):
             return m.group(1).strip(), fid, 'sidecar'
 
     return SCOPE_FALLBACK, fid, 'bao-toan'
+
+
+ROMAN = {'I': 1, 'II': 2, 'III': 3, 'IV': 4, 'V': 5,
+         'VI': 6, 'VII': 7, 'VIII': 8, 'IX': 9, 'X': 10}
+
+_OUT_CHAP_RE = r'^#{2,4} +(?:Ch\.|Chương |Chapter )(\d{1,3}) *[—:·-] *(.*)$'
+
+
+def parse_outline(txt):
+    """{num: {...}} tu Phase3-Outline.md. LOP LAM GIAU — thieu truong nao thi
+    de trong, KHONG bia va KHONG suy luan.
+
+    Khuon khong nhat quan: 22/32 cuon co heading `### `, 10/32 khong. Ngay
+    trong usv-thiet-ke-he-thong chi 13/28 chuong dung bullet `- `, so con lai
+    dung dong `Dạy:`. Vi vay o tom tat KHONG thu hoach duoc tu day — xem
+    spec §1.2.
+    """
+    ch, part, cur = {}, None, None
+    for line in txt.splitlines():
+        m = re.match(r'^## +Phần ([IVX]+) *—? *(.*)$', line)
+        if m:
+            part = (ROMAN.get(m.group(1), 0), m.group(2).strip())
+            continue
+        m = re.match(_OUT_CHAP_RE, line)
+        if m:
+            n = int(m.group(1))
+            cur = ch[n] = {
+                'title': re.sub(r'⟵.*$', '', m.group(2)).strip(),
+                'part': part, 'bullets': [], 'risk': '', 'red': False,
+                'figs': 0, 'target': 0, 'neo': '', 'new': '⟵' in m.group(2)}
+            continue
+        if cur is None:
+            continue
+        if line.startswith('**Neo**') or line.startswith('**Trích**'):
+            m = re.search(r'\*\*Từ\*\* *([\d.]+)', line)
+            if m:
+                cur['target'] = int(m.group(1).replace('.', ''))
+            m = re.search(r'\*\*Neo\*\* *(N\d(?: *[·+] *N\d)*)', line)
+            if m:
+                cur['neo'] = m.group(1)
+            continue
+        m = re.match(r'^Hình \((\d+)\)', line)
+        if m:
+            cur['figs'] = int(m.group(1))
+            continue
+        m = re.match(r'^Rủi ro: *(.*)$', line)
+        if m:
+            cur['risk'] = m.group(1).strip()
+            cur['red'] = '🔴' in line
+            continue
+        if line.startswith('- '):
+            cur['bullets'].append(line[2:].strip())
+        elif (line.startswith('  ') and cur['bullets'] and line.strip()
+              and not line.lstrip().startswith('- ')):
+            cur['bullets'][-1] += ' ' + line.strip()
+    return ch
+
+
+def maybe(path, fn, default):
+    """Doc tep neu co, tra `default` neu khong. Lop lam giau khong duoc lam
+    sap ca lan chay chi vi thieu mot tep tuy chon."""
+    try:
+        return fn(rd(path))
+    except (IOError, OSError):
+        return default
