@@ -112,7 +112,7 @@ def parse_chapters(txt):
                 if i in chap_lines
                 or (mask[i] and re.match(r'^#{1,%d} +\S' % (depth - 1), L))]
 
-    chapters, seen, dups = {}, set(), []
+    chapters, seen, dups, dup_count = {}, set(), [], {}
     for ln, num, head in hits:
         nxt = [i for i in stop if i > ln]
         end = nxt[0] if nxt else len(lines)
@@ -122,10 +122,16 @@ def parse_chapters(txt):
             # Khong ghi de im lang: giu ca hai duoi khoa phu, va bao ra.
             if num not in dups:
                 dups.append(num)
-            key = num + 0.5
-            while key in chapters:
-                key += 0.5
+            if num not in dup_count:
+                dup_count[num] = 1
+            else:
+                dup_count[num] += 1
+            # Use fractional offset: k-th dup of num gets num + k/1000.0
+            # This keeps keys strictly inside (num, num+1), so no collision with int chapters
+            key = num + dup_count[num] / 1000.0
         seen.add(num)
+        # Safety: never overwrite an existing key
+        assert key not in chapters, "Key collision at %s — duplicate handling failed" % key
         chapters[key] = {
             'title': re.sub(TITLE_RE, '', head).strip(),
             'words': wc(head) + wc(body),

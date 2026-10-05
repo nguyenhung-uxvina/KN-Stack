@@ -179,6 +179,23 @@ def test_negative_control_mask():
           'tot=%.2f xau=%.2f' % (good, bad))
 
 
+# --- Defect L4: duplicate key scheme loses chapter on collision with next number
+def test_duplicate_then_next_number():
+    """Verify that three duplicates of Ch.05 + real Ch.06 preserves all four chapters."""
+    txt = '\n'.join(
+        ['# Chương 05 — ban A'] + ['filler'] * 40 +
+        ['# Chương 05 — ban B'] + ['filler'] * 40 +
+        ['# Chương 05 — ban C'] + ['filler'] * 40 +
+        ['# Chương 06 — chuong SAU that'] + ['filler'] * 40)
+    p = bmp.parse_chapters(txt)
+    ch = p['chapters']
+    check('defect L4: tong so chuong = 4 (khong mat)', len(ch) == 4, len(ch))
+    titles = sorted(c['title'] for c in ch.values())
+    expected_titles = sorted(['ban A', 'ban B', 'ban C', 'chuong SAU that'])
+    check('defect L4: ca 4 tieu de co mat', titles == expected_titles, titles)
+    check('defect L4: dups = [5] khong co cap', p['dups'] == [5], p['dups'])
+
+
 # --- Extra test for title separator handling
 def test_title_separators():
     """Verify parse_chapters extracts titles cleanly with different separators."""
@@ -202,7 +219,7 @@ def test_title_separators():
 if __name__ == '__main__':
     test_wc(); test_mask(); test_pick_level(); test_crlf(); test_separators()
     test_parse_chapters(); test_mermaid_count(); test_duplicate_numbers()
-    test_coverage(); test_negative_control_mask(); test_title_separators()
+    test_coverage(); test_negative_control_mask(); test_duplicate_then_next_number(); test_title_separators()
     print()
     if FAILED:
         print('%d FAILED: %s' % (len(FAILED), ', '.join(FAILED)))
