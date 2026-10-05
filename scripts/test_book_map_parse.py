@@ -106,8 +106,103 @@ def test_wc():
     check('wc: rong = 0', bmp.wc('   \n ') == 0, bmp.wc('   \n '))
 
 
+# --- BI-2: chuong KHONG duoc chay den het tep
+FIX_BACKMATTER = '\n'.join(
+    ['# Chương 01 — A'] + ['than mot'] * 100 +
+    ['# Chương 02 — B'] + ['than hai'] * 100 +
+    ['# Phụ lục'] + ['phu luc dai'] * 500)
+
+# --- BI-2/L2: H2 dung cho CA chuong LAN tieu muc (principles-ba-tai-san)
+FIX_H2_MIXED = '\n'.join(
+    ['# Tên sách'] +
+    ['## Chương 01: A'] + ['than'] * 40 + ['## Một tiểu mục'] + ['than'] * 40 +
+    ['## Chương 02: B'] + ['than'] * 40 + ['## Tiểu mục nữa'] + ['than'] * 40)
+
+def test_parse_chapters():
+    p = bmp.parse_chapters(FIX_BACKMATTER)
+    ch = p['chapters']
+    check('cat chuong: dung 2 chuong', len(ch) == 2, sorted(ch))
+    check('BI-2: chuong cuoi KHONG hut phu luc',
+          ch[2]['words'] < 250, ch[2]['words'])
+    check('cat chuong: lay dung ten', ch[1]['title'] == 'A', ch[1]['title'])
+
+    p2 = bmp.parse_chapters(FIX_H2_MIXED)
+    ch2 = p2['chapters']
+    check('L2: muc H2 duoc chon', p2['depth'] == 2, p2['depth'])
+    check('L2: dung 2 chuong, tieu muc KHONG thanh chuong', len(ch2) == 2, sorted(ch2))
+    check('L2: tieu muc H2 KHONG cat dut chuong',
+          ch2[1]['words'] > 70, ch2[1]['words'])
+
+
+def test_mermaid_count():
+    txt = '\n'.join(['# Chương 01 — A', '```mermaid', 'graph TD', 'A-->B', '```',
+                     'chu', '```python', 'x = 1', '```',
+                     '# Chương 02 — B', '```mermaid', 'graph LR', '```'])
+    ch = bmp.parse_chapters(txt)['chapters']
+    check('dem so do: Ch.01 co 1', ch[1]['mermaid'] == 1, ch[1]['mermaid'])
+    check('dem so do: Ch.02 co 1', ch[2]['mermaid'] == 1, ch[2]['mermaid'])
+    crlf = bmp.parse_chapters(txt.replace('\n', '\r\n'))['chapters']
+    check('CRLF: dem so do khong doi', crlf[1]['mermaid'] == 1, crlf[1]['mermaid'])
+
+
+# --- Review Focus 3: hai chuong cung so => ghi de IM LANG
+def test_duplicate_numbers():
+    txt = '\n'.join(['# Chương 05 — Bản thật'] + ['than'] * 60 +
+                     ['# Chương 05 — Bản trùng'] + ['than'] * 60)
+    p = bmp.parse_chapters(txt)
+    check('trung so chuong: bao ra danh sach dups', p['dups'] == [5], p['dups'])
+    check('trung so chuong: KHONG mat am tham — giu ca hai',
+          len(p['chapters']) == 2, sorted(p['chapters']))
+
+
+# --- BI-5: cam bien phai so voi mot TONG DOC LAP
+def test_coverage():
+    p = bmp.parse_chapters(FIX_BACKMATTER)
+    cov = bmp.coverage(p, FIX_BACKMATTER)
+    check('BI-5: phu < 1 khi sach co phu luc lon', cov < 0.5, cov)
+    txt = '# Chương 01 — A\n' + 'một hai ba bốn năm'
+    p2 = bmp.parse_chapters(txt)
+    check('BI-5: phu ~1 khi sach chi co chuong',
+          0.95 <= bmp.coverage(p2, txt) <= 1.0, bmp.coverage(p2, txt))
+
+
+# --- DOI CHUNG AM 1: tat mat na khoi ma => phu phai TUT
+def test_negative_control_mask():
+    broken = load('bmp_broken', 'book_map_parse.py')
+    broken.heading_mask = lambda lines: [True] * len(lines)   # tat BI-1
+    txt = '\n'.join(['# Chương 01 — A'] + ['than'] * 100 +
+                     ['```', '# 80% viec', '```'] + ['than'] * 100 +
+                     ['# Chương 02 — B'] + ['than'] * 100)
+    good = bmp.coverage(bmp.parse_chapters(txt), txt)
+    bad = broken.coverage(broken.parse_chapters(txt), txt)
+    check('DOI CHUNG AM: tat mat na lam phu tut', bad < good - 0.1,
+          'tot=%.2f xau=%.2f' % (good, bad))
+
+
+# --- Extra test for title separator handling
+def test_title_separators():
+    """Verify parse_chapters extracts titles cleanly with different separators."""
+    test_cases = [
+        ('# Chương 01 — Tên A', 'Tên A'),
+        ('# Chương 02: Tên B', 'Tên B'),
+        ('# Chương 03 · Tên C', 'Tên C'),
+        ('# Chương 4 — Tên D', 'Tên D'),  # No zero padding
+    ]
+    for i, (heading, expected_title) in enumerate(test_cases, 1):
+        # Create text with enough body lines to avoid table-of-contents warning
+        txt = '\n'.join([heading] + ['filler text line'] * 40 +
+                        ['# Chương %d — Dummy' % (i + 1)] + ['filler'] * 40)
+        p = bmp.parse_chapters(txt)
+        ch = p['chapters']
+        actual_title = ch[i]['title'] if i in ch else None
+        check('title sep test %d: %r' % (i, heading.split(' ', 3)[3]),
+              actual_title == expected_title, actual_title)
+
+
 if __name__ == '__main__':
     test_wc(); test_mask(); test_pick_level(); test_crlf(); test_separators()
+    test_parse_chapters(); test_mermaid_count(); test_duplicate_numbers()
+    test_coverage(); test_negative_control_mask(); test_title_separators()
     print()
     if FAILED:
         print('%d FAILED: %s' % (len(FAILED), ', '.join(FAILED)))

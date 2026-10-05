@@ -81,3 +81,66 @@ def pick_level(lv):
         warn = ('muc H%d cach nhau trung vi %d dong (< %d) — giong MUC LUC '
                 'chu khong phai than chuong' % (depth, med, MIN_GAP))
     return depth, hits, warn
+
+
+TITLE_RE = r'^#+ +(?:Chương|Chapter) +\d{1,3} *[—:·-]? *'
+
+
+def parse_chapters(txt):
+    """{'chapters': {num: {...}}, 'depth', 'warn', 'dups'}.
+
+    BI-2. Chuong dung o tieu de ke tiep theo luat PHU THUOC DO SAU:
+      depth==1: H1 la muc dinh => trong chuong khong the co H1. Dung o H1 ke tiep.
+      depth>1 : co sach dung CUNG muc cho ca chuong lan tieu muc
+                (principles-ba-tai-san: `## Chương 01:` va `## Kinh nghiem...`).
+                Chi dung o tieu de NONG HON, hoac o chuong ke tiep.
+    De chuong cuoi chay den EOF lam no hut ca phu luc: tu-khong-den-mot Ch.19
+    phinh +50%, ghi-de-quy-trach-nhiem Ch.08 +49%.
+    """
+    depth, hits, warn = pick_level(chapter_levels(txt))
+    if not hits:
+        return {'chapters': {}, 'depth': None, 'warn': warn, 'dups': []}
+
+    lines = txt.splitlines()
+    mask = heading_mask(lines)
+    chap_lines = set(h[0] for h in hits)
+    if depth == 1:
+        stop = [i for i, L in enumerate(lines)
+                if mask[i] and re.match(r'^# +\S', L)]
+    else:
+        stop = [i for i, L in enumerate(lines)
+                if i in chap_lines
+                or (mask[i] and re.match(r'^#{1,%d} +\S' % (depth - 1), L))]
+
+    chapters, seen, dups = {}, set(), []
+    for ln, num, head in hits:
+        nxt = [i for i in stop if i > ln]
+        end = nxt[0] if nxt else len(lines)
+        body = '\n'.join(lines[ln + 1:end])
+        key = num
+        if num in seen:
+            # Khong ghi de im lang: giu ca hai duoi khoa phu, va bao ra.
+            if num not in dups:
+                dups.append(num)
+            key = num + 0.5
+            while key in chapters:
+                key += 0.5
+        seen.add(num)
+        chapters[key] = {
+            'title': re.sub(TITLE_RE, '', head).strip(),
+            'words': wc(head) + wc(body),
+            'mermaid': len(re.findall(r'^```mermaid', body, re.M)),
+            'body': body,
+            'line': ln + 1}
+    return {'chapters': chapters, 'depth': depth, 'warn': warn, 'dups': dups}
+
+
+def coverage(parsed, txt):
+    """BI-5. So tong tu trong chuong voi `wc -w` CA TEP — mot tong tinh NGOAI
+    duong ong. Hai cam bien chi so cac chuong voi nhau (trung vi qua nho,
+    chuong cuoi phinh) bo sot 4/5 ca loi L3; cam bien nay bat 5/5.
+    pahl-beitz-tap2 nam o 40% phu ma hai cam bien kia bao 'sach'."""
+    whole = wc(txt)
+    if not whole:
+        return 0.0
+    return sum(c['words'] for c in parsed['chapters'].values()) / float(whole)
