@@ -150,3 +150,21 @@ def coverage(parsed, txt):
     if not whole:
         return 0.0
     return sum(c['words'] for c in parsed['chapters'].values()) / float(whole)
+
+
+REF_RE = r'(?:Chương|Chapter|Ch\.) *(\d{1,3})'
+
+
+def crossrefs(parsed):
+    """{num: [num khac]}. Chi giu canh tro den chuong CO THAT trong sach —
+    `Chương 99` trong mot cuon 28 chuong la mot cach noi, khong phai canh."""
+    ch = parsed['chapters']
+    edges = {}
+    for n, d in ch.items():
+        tgt = set()
+        for m in re.finditer(REF_RE, d['body']):
+            y = int(m.group(1))
+            if y in ch and y != n:
+                tgt.add(y)
+        edges[n] = sorted(tgt)
+    return edges

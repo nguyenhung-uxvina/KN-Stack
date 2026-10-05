@@ -216,10 +216,23 @@ def test_title_separators():
               actual_title == expected_title, actual_title)
 
 
+def test_crossrefs():
+    txt = '\n'.join(
+        ['# Chương 01 — A', 'Chương 02 nói rõ hơn. Ch.03 cũng vậy.'] + ['x'] * 40 +
+        ['# Chương 02 — B', 'Như Chương 01 đã nêu.'] + ['x'] * 40 +
+        ['# Chương 03 — C', 'Không trỏ ai. Chương 99 không tồn tại.'] + ['x'] * 40)
+    e = bmp.crossrefs(bmp.parse_chapters(txt))
+    check('tham chieu: Ch.01 -> 02 va 03', e[1] == [2, 3], e[1])
+    check('tham chieu: Ch.02 -> 01', e[2] == [1], e[2])
+    check('tham chieu: bo chuong KHONG ton tai', e[3] == [], e[3])
+    check('tham chieu: khong tro chinh no', 1 not in e.get(1, []), e[1])
+
+
 if __name__ == '__main__':
     test_wc(); test_mask(); test_pick_level(); test_crlf(); test_separators()
     test_parse_chapters(); test_mermaid_count(); test_duplicate_numbers()
     test_coverage(); test_negative_control_mask(); test_duplicate_then_next_number(); test_title_separators()
+    test_crossrefs()
     print()
     if FAILED:
         print('%d FAILED: %s' % (len(FAILED), ', '.join(FAILED)))
