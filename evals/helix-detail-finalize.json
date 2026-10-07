@@ -23,7 +23,7 @@
       "id": "DF-3",
       "name": "phase4_pahl_beitz",
       "check": "is Pahl-Beitz Phase 4 detail design",
-      "regex": "Phase 4|Pahl-Beitz|P&B|Detail Design|Chapter 9",
+      "regex": "Phase 4|Pahl-Beitz|P&B|Detail Design|Section 7.8",
       "required": true
     },
     {

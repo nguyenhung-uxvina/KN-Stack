@@ -7,7 +7,7 @@ description: "Orchestrator for Pahl-Beitz Phase 4 Detail Design — multi-agent 
 
 > **Role:** Chỉ huy trưởng (Commander) — điều phối 6 block-skills tuần tự, đóng vòng R&D → production
 > **Architecture:** Modular pipeline — đối xứng với P1 (helix-task-clarify), P2 (helix-concept-generate), P3 (helix-embody-realize)
-> **P&B Reference:** Chapter 9 (Detail Design § 9.1-9.7)
+> **P&B Reference:** Section 7.8 *Detail Design* — Figure 7.164, printed pp. 436–438 (3rd English ed.). The English edition has no separate detail-design chapter; Chapter 9 is *Size Ranges and Modular Products*.
 > **VDI 2221:2019:** Blatt 1 — requirements MUST be frozen before detail design begins
 > **AI-Orchestration:** S1 (Schema v3.0) · S2 (Multi-Agent) · S3 (P02 QC) · S5 (Audit Trail)
 > **Closes:** the R&D → production gap. Feeds `forge-fabrication F0`.
@@ -43,14 +43,14 @@ Next:     /helix-quality-gate ... --gate 4  +  /forge-fabrication ...
 
 ## Sub-Skills (6 Block-Skills)
 
-| Block | Skill | P&B § | Purpose | CEO Gate |
+| Block | Skill | P&B Fig 7.164 step | Purpose | CEO Gate |
 |----|----|----|----|----|
-| **B0** | `/helix-p4-preflight` | 9.1 | Verify P3 + Gate 3, **requirements freeze (VDI 2221:2019)**, identify detail-determining components, P03/P04 readiness, ACH detection | Approve freeze + detail-determining list |
-| **BA** | `/helix-p4-drawing` | 9.2-9.3 | **CEO specifies critical GD&T/surface/weld/connector/PCB (CORE)**, AI completes 3D + 2D drawings per ISO 128/TCVN, Gerber prep, drawing index | **CORE — critical spec table** |
-| **BB** | `/helix-p4-bom` | 9.4 | Final BOM (mech/elec/fasteners/COTS), **Vietnam vendor selection ≥60% local**, long-lead order-by, cost rollup vs P3, single-source flags, MIL/TCVN trace | **CORE — vendor selection critical/SS** |
-| **BC** | `/helix-p4-inspection` | 9.5 | Incoming + in-process + FAT plans, Req-ID ↔ Test-ID matrix, serialization, P03 + P04 gates, 5-yr retention | Approve FAT criteria + serial scheme |
-| **BD** | `/helix-p4-assembly` | 9.6 | Final DfX verification, tools/consumables, step-by-step sequence with critical sign-off, time/unit, **routing alignment with erp-master** | Approve critical sign-off + time |
-| **BE** | `/helix-p4-handoff` | 9.7 | **Workshop master review "gia cong duoc?" (CORE)**, ACH Operational Lifecycle (if applicable), customer Tech Spec, compile package, **handoff to forge-fabrication F0** | **CORE — workshop verdict** |
+| **B0** | `/helix-p4-preflight` | input: Definitive layout | Verify P3 + Gate 3, **requirements freeze (VDI 2221:2019)**, identify detail-determining components, P03/P04 readiness, ACH detection | Approve freeze + detail-determining list |
+| **BA** | `/helix-p4-drawing` | Finalise details · complete detail drawings | **CEO specifies critical GD&T/surface/weld/connector/PCB (CORE)**, AI completes 3D + 2D drawings per ISO 128/TCVN, Gerber prep, drawing index | **CORE — critical spec table** |
+| **BB** | `/helix-p4-bom` | Integrate into layout/assembly drawings and parts lists | Final BOM (mech/elec/fasteners/COTS), **Vietnam vendor selection ≥60% local**, long-lead order-by, cost rollup vs P3, single-source flags, MIL/TCVN trace | **CORE — vendor selection critical/SS** |
+| **BC** | `/helix-p4-inspection` | Check all documents (+ quality control, Ch. 10) | Incoming + in-process + FAT plans, Req-ID ↔ Test-ID matrix, serialization, P03 + P04 gates, 5-yr retention | Approve FAT criteria + serial scheme |
+| **BD** | `/helix-p4-assembly` | Complete production documents (assembly instructions) | Final DfX verification, tools/consumables, step-by-step sequence with critical sign-off, time/unit, **routing alignment with erp-master** | Approve critical sign-off + time |
+| **BE** | `/helix-p4-handoff` | output: Documentation → Decision | **Workshop master review "gia cong duoc?" (CORE)**, ACH Operational Lifecycle (if applicable), customer Tech Spec, compile package, **handoff to forge-fabrication F0** | **CORE — workshop verdict** |
 
 ## How to Use
 
@@ -309,7 +309,7 @@ helix-detail-finalize FOLLOW-UP (CEO-triggered):
   - /helix-design-journal → log final decisions
 
 SHARED REFERENCES (in helix-detail-finalize/references/):
-  - pb-detail-design.md → P&B Ch9 complete methodology
+  - pb-detail-design.md → P&B Section 7.8 (Figure 7.164) methodology
   - prompt-templates.md → S1 prompt templates for Phase 4
 ```
 

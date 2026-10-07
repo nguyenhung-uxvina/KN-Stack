@@ -1,8 +1,10 @@
 # Pahl-Beitz Detail Design — Phase 4 Reference
 
-Source: P&B Ch7.6-7.8 (Evaluation, Examples, Detail Design)
+Source: P&B Section 7.8 *Detail Design* (printed pp. 436–438, Figure 7.164). Sections 7.6–7.7 cover evaluation and an example of *embodiment* design, not detail design.
 
-## 5-Step Detail Design Process (P&B Fig 7.164)
+## Detail Design Steps (P&B Fig 7.164)
+
+> Figure 7.164 has **4 working steps** ([1]–[4]) between the input «Definitive layout» and the output «Documentation»; the right-hand column reads Creation → Check → Check → Decision. Step [5] below is that output/decision. Gate 4 and Workshop-master sign-off are Workshop X additions, not P&B.
 
 ```
 [1] Finalize definitive layout
