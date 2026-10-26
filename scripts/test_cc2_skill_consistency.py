@@ -260,14 +260,27 @@ def test_c1_khong_lan_p2():
     assert 'VDI 2225' in c1 and 'nguồn ý' in c1
 
 
+def _unknown_flags(block_text, orch_text):
+    """Co `--x` trong khoi ma orchestrator khong co dung nguyen co `--x` (khop ca tu)."""
+    bad = []
+    for flag in sorted(set(re.findall(r'(?<![\w-])--([a-z][a-z-]*)(?![\w-])', block_text))):
+        if not re.search(r'(?<![\w-])--' + re.escape(flag) + r'(?![\w-])', orch_text):
+            bad.append('--' + flag)
+    return bad
+
+
+def test_co_la_bat_duoc_tien_to():
+    assert _unknown_flags('chay --f <F-id>', 'co --function va --out') == ['--f']
+    assert _unknown_flags('chay --function x', 'co --function va --out') == []
+
+
 def test_khoi_khong_co_co_la():
     orch = _orch()
     for b in BLOCK_OUTPUTS:
         path = os.path.join(HELIX, b, 'SKILL.md')
         if not os.path.isfile(path):
             continue
-        for flag in set(re.findall(r'(?<![\w-])--([a-z][a-z-]*)', _read(path))):
-            assert f'--{flag}' in orch, f'{b}: co `--{flag}` khong co trong orchestrator'
+        assert _unknown_flags(_read(path), orch) == [], f'{b}: co la'
 
 
 def test_c0_bang_mau_qua_lint():
