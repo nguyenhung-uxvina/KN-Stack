@@ -364,6 +364,63 @@ def test_c3_bang_mau_qua_lint():
     assert lint_param_table(table) == []
 
 
+CRIT_START = 'Tiêu chí NHẠY *(quy ước bộ skill)*:'
+CRIT_END = 'lý do «an toàn».'
+EXC = 'lý do «an toàn»'
+
+
+def _crit_paragraph(text):
+    assert CRIT_START in text, 'thieu doan tieu chi NHAY'
+    i = text.index(CRIT_START)
+    j = text.index(CRIT_END, i) + len(CRIT_END)
+    para = text[i:j]
+    for step in ['(1)', '(2)', '(3)', '(4)']:
+        assert step in para, step
+    return para
+
+
+def _nhay_sets(rows):
+    """Buoc (1)-(3) tinh tu cot Nhan + hang; ngoai le (4) chi khi co dung cum EXC va Nhan khac tri thuc."""
+    rank = {}
+    for r in rows:
+        m = re.search(r'hạng (\d+)', r[3])
+        assert m, f'dong thieu hang: {r[3]}'
+        rank[id(r)] = int(m.group(1))
+    cands = sorted((rank[id(r)], id(r)) for r in rows if r[6] != 'tri thức')
+    top = {k for _, k in cands[:3]}
+    exc = {id(r) for r in rows if EXC in r[3] and r[6] != 'tri thức'}
+    expected = {rank[k] for k in top | exc}
+    actual = {rank[id(r)] for r in rows if r[3].startswith('NHẠY')}
+    return actual, expected
+
+
+def test_nhay_sets_dot_bien():
+    hdr = ['p', 'x', 'y']
+
+    def row(chieu, nhan):
+        return ['e', 'p', 'f', chieu, '—', 'k', nhan, 'chưa biết']
+
+    base = [row('NHẠY; hạng 2', 'phỏng đoán'), row('hạng 3', 'phỏng đoán')]
+    tri = row('hạng 1', 'tri thức')
+    # nen: dung theo buoc (1)-(3)
+    a, e = _nhay_sets([tri] + [row('NHẠY; hạng 2', 'phỏng đoán'), row('NHẠY; hạng 3', 'phỏng đoán')])
+    assert a == e == {2, 3}
+    # ca 1: dong tri thuc danh NHAY kem «an toan» phai bi bat
+    a, e = _nhay_sets([row('NHẠY; hạng 1; ' + EXC, 'tri thức')] + base)
+    assert a != e
+    # ca 2: dong co dung cum ngoai le, Nhan phong doan, vuot tran 3 -> hop le
+    rows = [row('NHẠY; hạng %d' % k, 'phỏng đoán') for k in (1, 2, 3)] + [row('NHẠY; hạng 4; ' + EXC, 'phỏng đoán')]
+    a, e = _nhay_sets(rows)
+    assert a == e == {1, 2, 3, 4}
+    # ngoai le khong co cum chuan -> bi bat
+    rows = [row('NHẠY; hạng %d' % k, 'phỏng đoán') for k in (1, 2, 3)] + [row('NHẠY; hạng 4; an toàn', 'phỏng đoán')]
+    a, e = _nhay_sets(rows)
+    assert a != e
+    # dong NHAY thieu nhung nam trong top 3 -> bi bat
+    a, e = _nhay_sets([row('NHẠY; hạng 1', 'phỏng đoán'), row('hạng 2', 'phỏng đoán')])
+    assert a != e
+
+
 def test_c3_nhay_toi_da_3_va_tieu_chi():
     c3 = _block('helix-cc2-param')
     rows = _table_rows(_example(c3))[1:]
@@ -376,20 +433,11 @@ def test_c3_nhay_toi_da_3_va_tieu_chi():
     assert '`tri thức` không đi với `chưa biết`' in c3
     defn = 'NHẠY = ô "Chiều ảnh hưởng" bắt đầu bằng `NHẠY` (quy ước bộ skill); C4 lấy đúng các dòng này'
     assert defn in c3 and defn in _read(PARAM_BRIDGE), 'dinh nghia NHAY khong dong nhat C3 / param-bridge'
-    crit = 'Tiêu chí NHẠY *(quy ước bộ skill)*: (1) ứng viên là tham số có Nhãn không phải `tri thức`'
-    assert crit in c3 and crit in _read(PARAM_BRIDGE), 'tieu chi NHAY khong dong nhat'
-    for ph in ['tối đa 3 tham số có hạng tốt nhất', 'giữ hạng và không `NHẠY`', 'lý do «an toàn»']:
-        assert ph in c3 and ph in _read(PARAM_BRIDGE), ph
-    parsed = []
-    for r in rows:
-        m = re.search(r'hạng (\d+)', r[3])
-        parsed.append((int(m.group(1)), r[6], r[3].startswith('NHẠY'), 'an toàn' in r[3]))
-    assert any(p[1] == 'tri thức' for p in parsed), 'vi du thieu dong tri thuc'
-    cands = sorted(p for p in parsed if p[1] != 'tri thức')
-    expected = {p[0] for p in cands[:3]}
-    actual = {p[0] for p in parsed if p[2] and not p[3]}
+    pb = _read(PARAM_BRIDGE)
+    assert _crit_paragraph(c3) == _crit_paragraph(pb), 'doan tieu chi NHAY khong giong nhau'
+    actual, expected = _nhay_sets(rows)
+    assert any(r[6] == 'tri thức' for r in rows), 'vi du thieu dong tri thuc'
     assert actual == expected, (actual, expected)
-    assert not any(p[2] for p in parsed if p[1] == 'tri thức' and not p[3]), 'dong tri thuc khong duoc NHAY'
 
 
 def test_c2_tro_embodiment_rules():
