@@ -73,7 +73,7 @@ description: "Khối C4 của bộ helix-cc2 — lấy đúng các dòng NHẠY 
    mọi mã khác vẫn chặn):
 
    ```
-   python scripts/cc2_sheet_lint.py {{prefix}}CC2_C4_Hypotheses.md --kind hypo --allow-unsigned
+   python D:/KN-Stack/scripts/cc2_sheet_lint.py {{prefix}}CC2_C4_Hypotheses.md --kind hypo --allow-unsigned
    ```
 
    Exit ≠ 0 → sửa phiếu rồi chạy lại; chưa được trình CEO.
@@ -82,11 +82,11 @@ description: "Khối C4 của bộ helix-cc2 — lấy đúng các dòng NHẠY 
    Ở cổng này CEO cũng ghi phương án đi tiếp `X-n` của chức năng con vào bảng Cổng CEO của `_pipeline_state.md`
    (dạng `phương án đi tiếp: A-1`); AI không chọn thay.
    Dừng. Không chạy bước 6 cho tới khi CEO báo đã ký; lint không cờ ra mã 1 với PRED_UNSIGNED thì báo CEO, không sửa mục 7.
-   Tên người ký là placeholder hay là AI (`{{…}}`, `<…>`, `AI`, `Claude`, `TBD`, `tên`, `n/a`, `chưa ký`) bị lint tính là chưa ký.
+   Tên người ký chứa placeholder hay chỉ AI (`{{`, `<`, chữ `AI` đứng riêng, `Claude`, `trợ lý`, `TBD`, `n/a`, `chưa ký`, hoặc đúng chữ `tên`; không phân biệt hoa thường) bị lint tính là chưa ký.
 6. Sau khi CEO ký, chạy lượt lint không cờ:
 
    ```
-   python scripts/cc2_sheet_lint.py {{prefix}}CC2_C4_Hypotheses.md --kind hypo
+   python D:/KN-Stack/scripts/cc2_sheet_lint.py {{prefix}}CC2_C4_Hypotheses.md --kind hypo
    ```
 
    Exit 0 → ghi tên — ngày ký vào cột *Ký dự đoán* và `lint 0` vào cột C4 của `_pipeline_state.md`; Cổng CEO 3 đóng.
@@ -95,9 +95,11 @@ description: "Khối C4 của bộ helix-cc2 — lấy đúng các dòng NHẠY 
 ## Mã thoát (cả hai lượt)
 
 - Exit 0 → sạch cho lượt ấy.
-- Exit 1 → còn mục thiếu (`MISSING_ITEM`, `NO_BECAUSE`), tác dụng ở mục 2 (`EFFECT_IN_IF`), hơn một biến (`IF_MULTI_VAR`),
-  thiếu ngày thử hay ngày ký không trước ngày thử (`PRED_NOT_BEFORE_TEST`), không có phiếu nào (`NO_SHEETS`), hoặc — chỉ ở
-  lượt không cờ — mục 7 chưa ký (`PRED_UNSIGNED`).
+- Exit 1 → còn mục thiếu (`MISSING_ITEM`, `NO_BECAUSE` — mục chỉ có nhãn như `4 VÌ:` cũng là trống; mục 7 không có dự
+  đoán trước `người ký` cũng là thiếu), tác dụng ở mục 2 (`EFFECT_IN_IF`), hơn một biến (`IF_MULTI_VAR`), mục 2 không có
+  `| Đối chứng:` (`NO_CONTROL`), thiếu ngày thử hay ngày ký không trước ngày thử (`PRED_NOT_BEFORE_TEST`), ngày ký sau hôm nay
+  (`PRED_FUTURE_SIGN`), dòng giống tiêu đề phiếu mà không đúng dạng `PHIẾU GIẢ THUYẾT — GT-nnn` (`HEADER_UNPARSED`), không có
+  phiếu nào (`NO_SHEETS`), hoặc — chỉ ở lượt không cờ — mục 7 chưa ký (`PRED_UNSIGNED`).
 - Exit 2 → lỗi đọc tệp; dừng, báo CEO.
 - Exit ≠ 0 ở lượt nào thì không đóng Cổng CEO 3 và không ghi `lint 0` vào `_pipeline_state.md`.
 - Luật cứng: báo cáo "đã kiểm" không thay output của lệnh. In nguyên output lệnh và mã thoát vào tóm tắt khối; không có
@@ -177,7 +179,7 @@ PHIẾU GIẢ THUYẾT — GT-001
 4 VÌ: mặt vào thoải hơn chia lực ấn thành thành phần đẩy cần móc sang ngang lớn hơn, nên cần uốn đủ để vượt gờ với lực ấn nhỏ hơn
 5 KIỂM: mười nắp mỗi biến thể trên gá ấn thẳng, đo lực đóng bằng lực kế, cùng nhiệt độ phòng, đối chứng đo đầu và cuối loạt; người đọc kết quả Kỹ thuật viên B; ngày thử: 2026-11-20
 6 KẾT QUẢ + khuyến nghị: {{điền SAU}}
-7 DỰ ĐOÁN VIẾT TRƯỚC: lực đóng trung bình của biến thể 30° nhỏ hơn đối chứng ít nhất 15%; người ký Kỹ sư A — ngày 2026-11-10
+7 DỰ ĐOÁN VIẾT TRƯỚC: lực đóng trung bình của biến thể 30° nhỏ hơn đối chứng ít nhất 15%; người ký Kỹ sư A — ngày 2026-10-20
 8 ĐỘ TIN / TẦM ẢNH HƯỞNG: trung (cơ chế mặt nghiêng quen, chưa đo trên vật liệu này) / trung (lực đóng là thứ người dùng cảm nhận trực tiếp)
 9 NẾU BỊ BÁC: lặp trong pha — giữ góc hiện dùng, chuyển sang GT-003; không mở lại quyết định cổng nào
 Dòng C3: A-1:móc//gờ (S2 gài) · góc mặt vào của móc
@@ -192,7 +194,7 @@ PHIẾU GIẢ THUYẾT — GT-002
 4 VÌ: mặt rút dốc hơn làm thành phần lực đẩy cần móc ra ngoài nhỏ đi, nên cần móc phải uốn nhiều hơn mới nhả
 5 KIỂM: mười nắp mỗi biến thể trên gá kéo thẳng, đo lực tháo bằng lực kế, cùng nhiệt độ phòng, đối chứng đo đầu và cuối loạt; người đọc kết quả Kỹ thuật viên B; ngày thử: 2026-11-22
 6 KẾT QUẢ + khuyến nghị: {{điền SAU}}
-7 DỰ ĐOÁN VIẾT TRƯỚC: lực tháo trung bình của biến thể 45° lớn hơn đối chứng ít nhất 20%; người ký Kỹ sư A — ngày 2026-11-10
+7 DỰ ĐOÁN VIẾT TRƯỚC: lực tháo trung bình của biến thể 45° lớn hơn đối chứng ít nhất 20%; người ký Kỹ sư A — ngày 2026-10-20
 8 ĐỘ TIN / TẦM ẢNH HƯỞNG: trung (cơ chế mặt nghiêng quen, chưa đo trên vật liệu này) / thấp (sửa khuôn in rẻ, đảo lại được)
 9 NẾU BỊ BÁC: lặp trong pha — giữ góc hiện dùng; không mở lại quyết định cổng nào
 Dòng C3: A-1:móc//gờ (S3 tháo) · góc mặt rút của móc
@@ -207,7 +209,7 @@ PHIẾU GIẢ THUYẾT — GT-003
 4 VÌ: cần dài hơn đạt cùng độ võng với ứng suất ở chân ngàm nhỏ hơn, nên vật liệu ít chảy dẻo hơn mỗi lần gài
 5 KIỂM: sáu nắp mỗi biến thể trên gá đóng mở lặp, đo độ võng còn lại của móc bằng thước đo độ sâu sau mỗi chặng; người đọc kết quả Kỹ thuật viên B; ngày thử: 2026-11-18
 6 KẾT QUẢ + khuyến nghị: {{điền SAU}}
-7 DỰ ĐOÁN VIẾT TRƯỚC: sau cùng số lần mở, biến dạng còn lại của biến thể 14 mm nhỏ hơn một nửa đối chứng; người ký Kỹ sư A — ngày 2026-11-10
+7 DỰ ĐOÁN VIẾT TRƯỚC: sau cùng số lần mở, biến dạng còn lại của biến thể 14 mm nhỏ hơn một nửa đối chứng; người ký Kỹ sư A — ngày 2026-10-20
 8 ĐỘ TIN / TẦM ẢNH HƯỞNG: thấp (vật liệu cần chưa biết, chưa đo) / cao (cần dài hơn có thể không vừa không gian nắp)
 9 NẾU BỊ BÁC: lặp xuyên cổng → mở lại quyết định Cổng CEO 2 (chọn chuỗi), vì móc đàn hồi không giữ được qua vòng đời; điểm đầu tư gần nhất là ngày đặt khuôn ép
 Dòng C3: A-1:cần đàn hồi (LSS, S2 gài) · chiều dài cần

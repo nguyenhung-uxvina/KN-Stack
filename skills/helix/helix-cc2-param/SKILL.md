@@ -86,12 +86,12 @@ f_id: {{F-id hoặc —}}
 ## Lệnh bắt buộc cuối khối
 
 ```
-python scripts/cc2_sheet_lint.py {{prefix}}CC2_C3_Params.md --kind params
+python D:/KN-Stack/scripts/cc2_sheet_lint.py {{prefix}}CC2_C3_Params.md --kind params
 ```
 
 - Exit 0 → sạch, mới được sang C4.
 - Exit 1 → còn ô thiếu nhãn hay nguồn số, hoặc `tri thức` đi với `chưa biết`, hoặc bảng rỗng (`EMPTY_TABLE`) hay không có
-  bảng nào khớp (`NO_TABLE`): sửa rồi chạy lại.
+  bảng nào khớp (`NO_TABLE`), hoặc bảng chỉ có một trong hai cột Nhãn / Nguồn số (`PARTIAL_HEADER`): sửa rồi chạy lại.
 - Exit 2 → lỗi đọc tệp; dừng, báo CEO.
 - Exit ≠ 0 thì không sang C4 và không đánh dấu C3 `lint 0` trong `_pipeline_state.md`.
 - Luật cứng: báo cáo "đã kiểm" không thay output của lệnh. In nguyên output lệnh và mã thoát vào tóm tắt khối; không có

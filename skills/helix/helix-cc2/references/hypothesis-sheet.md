@@ -89,7 +89,7 @@ PHIẾU GIẢ THUYẾT — GT-001
 4 VÌ: mặt rút dốc hơn làm thành phần lực đẩy cần móc ra ngoài nhỏ đi, nên cần móc phải uốn nhiều hơn mới nhả
 5 KIỂM: mười nắp mỗi biến thể trên gá kéo thẳng, đo lực tháo bằng lực kế, cùng nhiệt độ phòng, đối chứng đo đầu và cuối loạt; người đọc kết quả Kỹ thuật viên B; ngày thử: 2026-11-20
 6 KẾT QUẢ + khuyến nghị: chưa có — điền sau ngày thử, kèm dải đã kiểm
-7 DỰ ĐOÁN VIẾT TRƯỚC: lực tháo trung bình của biến thể 45° lớn hơn đối chứng ít nhất 20%; người ký Kỹ sư A — ngày 2026-11-10
+7 DỰ ĐOÁN VIẾT TRƯỚC: lực tháo trung bình của biến thể 45° lớn hơn đối chứng ít nhất 20%; người ký Kỹ sư A — ngày 2026-10-20
 8 ĐỘ TIN / TẦM ẢNH HƯỞNG: trung (cơ chế mặt nghiêng quen, chưa đo trên vật liệu này) / thấp (sửa khuôn in rẻ, đảo lại được)
 9 NẾU BỊ BÁC: lặp trong pha — đổi chiều dài cần móc ở phiếu GT-002; không mở lại quyết định cổng nào; điểm đầu tư gần nhất là ngày đặt khuôn ép
 ```

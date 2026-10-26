@@ -51,7 +51,7 @@ description: "Khối C6 của bộ helix-cc2 — đọc phương án đi tiếp 
 2. **Chạy lại lint không cờ** trên phiếu C4 (cùng lệnh C4 chạy sau khi CEO ký, không dùng cờ bỏ qua chữ ký):
 
    ```
-   python scripts/cc2_sheet_lint.py {{prefix}}CC2_C4_Hypotheses.md --kind hypo
+   python D:/KN-Stack/scripts/cc2_sheet_lint.py {{prefix}}CC2_C4_Hypotheses.md --kind hypo
    ```
 
    Exit ≠ 0 → dừng, không sinh bàn giao; in nguyên output và mã thoát, báo CEO (PRED_UNSIGNED thì CEO ký; mã khác thì
@@ -81,7 +81,7 @@ description: "Khối C6 của bộ helix-cc2 — đọc phương án đi tiếp 
    - Có phiếu nháp thì kiểm khuôn (phiếu nháp chưa ký nên dùng `--allow-unsigned`; mọi mã khác vẫn chặn):
 
      ```
-     python scripts/cc2_sheet_lint.py {{prefix}}CC2_C6_Crosscheck.md --kind hypo --allow-unsigned
+     python D:/KN-Stack/scripts/cc2_sheet_lint.py {{prefix}}CC2_C6_Crosscheck.md --kind hypo --allow-unsigned
      ```
 
      Exit ≠ 0 → không sinh bàn giao; báo CEO dòng lỗi. Không có phiếu nháp thì không chạy lệnh này (nó ra `NO_SHEETS`).
@@ -166,7 +166,7 @@ khoảng ở bảng trên thì mở hoặc sửa phiếu tương ứng, không t
 
 | Cổng | Ngày | Quyết định | Lý do |
 |---|---|---|---|
-| 3 ký dự đoán | 2026-11-10 | đã ký GT-001…GT-003; phương án đi tiếp: A-1 | một cần, ít dung sai chặt hơn A-2 |
+| 3 ký dự đoán | 2026-10-20 | đã ký GT-001…GT-003; phương án đi tiếp: A-1 | một cần, ít dung sai chặt hơn A-2 |
 
 **Lint lại C4:** lệnh không cờ ra mã 0. **Số GT kế tiếp:** C4 có GT-001…GT-003 nên `<n>` = 4.
 

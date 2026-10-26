@@ -158,6 +158,10 @@ Chỉ CA. Có thể kết thúc bằng C4 nếu CEO muốn lập phiếu: khi �
 
 ### Luật từng khối (orchestrator kiểm trước khi qua khối sau)
 
+**Đường dẫn lint.** Mọi lệnh lint trong bộ skill gọi đường dẫn tuyệt đối `python D:/KN-Stack/scripts/cc2_sheet_lint.py`
+(bản triển khai là nguồn chuẩn), nên chạy được từ gốc vault hay gốc dự án. Khi chạy từ một worktree, thay `D:/KN-Stack`
+bằng gốc của worktree ấy.
+
 - **C1:** ≥3 chuỗi *(quy ước bộ skill)*, khác nhau ở cách sắp WFP/LSS/Connector, không chỉ đổi kích thước
   (`helix-cc2:references:synthesis-moves` §Các nước đi). Mỗi chuỗi có sơ đồ vẽ tay lại được.
   Khi câu chức năng **không nêu nguyên lý vật lý**: C0 ghi `nguyên lý: chưa nêu`, C1 đề xuất chuỗi ở ≥2 miền vật lý
@@ -167,12 +171,12 @@ Chỉ CA. Có thể kết thúc bằng C4 nếu CEO muốn lập phiếu: khi �
   Chuỗi đi vào điện tử/phần mềm phải ghi chỗ C&C² hết dùng được (`helix-cc2:references:multidomain` §Chỗ phải dừng).
 - **C2:** 2–3 phương án mỗi chuỗi *(quy ước bộ skill)*, lý do trỏ quy tắc hiện thân (`helix-cc2:references:embodiment-rules`).
 - **C3:** bảng theo `helix-cc2:references:param-bridge` §Khuôn bảng C3. Cổng máy:
-  `python scripts/cc2_sheet_lint.py <C3> --kind params` — mã 0 mới qua; mã 1 → sửa ô thiếu nhãn rồi chạy lại; mã 2 → báo lỗi đọc, dừng.
+  `python D:/KN-Stack/scripts/cc2_sheet_lint.py <C3> --kind params` — mã 0 mới qua; mã 1 → sửa ô thiếu nhãn rồi chạy lại; mã 2 → báo lỗi đọc, dừng.
 - **C4:** mỗi PHIẾU GIẢ THUYẾT theo `helix-cc2:references:hypothesis-sheet` §Khuôn phiếu; «NẾU» là tham số ghi được
   lên bản vẽ, không phải tác dụng; định tuyến theo `helix-cc2:references:hypothesis-sheet` §Định tuyến độ tin × tầm ảnh hưởng.
-  Cổng máy hai lượt: **trước** Cổng CEO 3 chạy `python scripts/cc2_sheet_lint.py <C4_Hypotheses> --kind hypo --allow-unsigned`
+  Cổng máy hai lượt: **trước** Cổng CEO 3 chạy `python D:/KN-Stack/scripts/cc2_sheet_lint.py <C4_Hypotheses> --kind hypo --allow-unsigned`
   (bỏ qua đúng mã PRED_UNSIGNED, mọi mã khác vẫn chặn) phải ra mã 0; **sau** khi CEO ký, chạy lại
-  `python scripts/cc2_sheet_lint.py <C4_Hypotheses> --kind hypo` (không cờ) — mã 0 mới đóng Cổng CEO 3; C6 chạy lại lệnh
+  `python D:/KN-Stack/scripts/cc2_sheet_lint.py <C4_Hypotheses> --kind hypo` (không cờ) — mã 0 mới đóng Cổng CEO 3; C6 chạy lại lệnh
   không cờ này. Mục 7 (dự đoán) do CEO/kỹ sư ký, ngày ký trước ngày thử; AI không điền chữ ký.
 - **C6:** đối chiếu ngược do **một tác tử con khác** làm, chỉ nhận C0 + C2/C3, không thấy lý lẽ C1. Mỗi chỗ lệch thành
   phiếu mới hoặc một dòng sửa C2. `CC2_Handoff` ghi rõ đây là *đối chiếu mức mô tả* và kèm mục **vòng lặp P3**: khi P3

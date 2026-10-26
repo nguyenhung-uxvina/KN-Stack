@@ -26,7 +26,7 @@ PHIEU_TOT = """PHIẾU GIẢ THUYẾT — GT-001
 4 VÌ: khe hẹp ép tấm về một phía (giả định về tiếp xúc)
 5 Phép thử: bàn thử 3 lần; ngày thử: 2026-11-10
 6 {{điền SAU}}
-7 Dự đoán: lệch < 2 mm; người ký CEO — ngày 2026-11-01
+7 Dự đoán: lệch < 2 mm; người ký CEO — ngày 2026-10-01
 8 ĐỘ TIN / TẦM ẢNH HƯỞNG: trung (cơ chế quen, chưa đo) / thấp (đổi khe rẻ); bác bỏ nếu lệch >= 2 mm
 9 NẾU BỊ BÁC: lặp trong pha — giữ khe 6 mm, không mở lại cổng nào
 """
@@ -264,3 +264,137 @@ def test_nguoi_ky_gia_la_chua_ky():
 def test_nguoi_ky_that_sach():
     t = thay(PHIEU_TOT, '7 ', '7 Dự đoán: x; người ký Nguyễn Văn A — ngày 2026-11-01')
     assert codes(t) == []
+
+
+
+
+# ------------------------------------------------- final-fix wave: C1 + I2
+
+from datetime import date
+
+REF_SHEET = os.path.join(os.path.dirname(HERE), 'skills', 'helix', 'helix-cc2', 'references', 'hypothesis-sheet.md')
+
+KHUNG = """PHIẾU GIẢ THUYẾT — GT-001
+1 Tiêu đề: GT-001 chiều rộng khe dẫn hướng
+2 NẾU: chiều rộng khe w = 3 mm | Đối chứng: w = 6 mm
+3 THÌ:
+4 VÌ:
+5 KIỂM: bàn thử 3 lần; ngày thử: 2026-11-10
+6 KẾT QUẢ + khuyến nghị: {{điền SAU}}
+7 DỰ ĐOÁN VIẾT TRƯỚC: lệch < 2 mm; người ký CEO — ngày 2026-10-01
+8 …:
+9 …:
+"""
+
+
+def test_khung_nhan_trong_bi_chan():
+    cs = codes(KHUNG)
+    assert 'NO_BECAUSE' in cs
+    msgs = [f.msg for f in L.lint_sheets(KHUNG) if f.code == 'MISSING_ITEM']
+    for k in (3, 8, 9):
+        assert any(f'mục {k} ' in m for m in msgs), (k, msgs)
+
+
+def test_cli_khung_exit_1():
+    with tempfile.TemporaryDirectory() as d:
+        p = os.path.join(d, 'khung.md')
+        with open(p, 'w', encoding='utf-8') as f:
+            f.write(KHUNG)
+        r = chay(p, 'hypo')
+        assert r.returncode == 1 and 'NO_BECAUSE' in r.stdout and 'MISSING_ITEM' in r.stdout
+
+
+def test_muc_6_dien_sau_co_nhan_van_sach():
+    t = thay(PHIEU_TOT, '6 ', '6 KẾT QUẢ + khuyến nghị: {{điền SAU}}')
+    assert codes(t) == []
+
+
+def test_muc_7_khong_du_doan_truoc_nguoi_ky():
+    for v in ('7 DỰ ĐOÁN VIẾT TRƯỚC: người ký CEO — ngày 2026-10-01',
+              '7 DỰ ĐOÁN VIẾT TRƯỚC: ; người ký CEO — ngày 2026-10-01',
+              '7 người ký CEO — ngày 2026-10-01'):
+        assert 'MISSING_ITEM' in codes(thay(PHIEU_TOT, '7 ', v)), v
+
+
+def test_phieu_mau_reference_sach():
+    with open(REF_SHEET, encoding='utf-8') as f:
+        text = f.read()
+    sample = text[text.index('## Phiếu mẫu đã điền'):]
+    assert len(L.parse_sheets(sample)) == 1
+    assert L.lint_sheets(sample, today=date.today()) == []
+
+
+def test_tieu_de_markdown_duoc_nhan():
+    for h in ('### PHIẾU GIẢ THUYẾT — GT-001', '**PHIẾU GIẢ THUYẾT — GT-001**', '## PHIẾU GIẢ THUYẾT - GT-001'):
+        t = thay(PHIEU_TOT, 'PHIẾU', h)
+        assert [s['id'] for s in L.parse_sheets(t)] == ['GT-001'], h
+        assert codes(t) == [], h
+
+
+def test_tieu_de_khong_doc_duoc():
+    for h in ('PHIẾU GIẢ THUYẾT GT-002', 'Phiếu giả thuyết: GT-002', '### GT-002 góc móc'):
+        t = PHIEU_TOT + '\n' + h + '\n1 Tiêu đề: x\n'
+        assert 'HEADER_UNPARSED' in codes(t), h
+    # nhac GT-nnn trong muc cua phieu hay trong bang thi khong phai tieu de
+    t = PHIEU_TOT + '\n| GT-001 | 3 |\nXem GT-001 ở trên.\n'
+    assert 'HEADER_UNPARSED' not in codes(t)
+
+
+def test_tieu_de_hong_khong_co_phieu_nao():
+    cs = codes('### Phiếu GT-001\n1 Tiêu đề: x\n')
+    assert 'HEADER_UNPARSED' in cs and 'NO_SHEETS' in cs
+
+
+def test_nguoi_ky_gia_chuoi_con():
+    for ten in ('AI soạn', 'Claude (nháp)', 'trợ lý AI', 'TBD sau', '{{tên — CEO điền}}', '<tên>', 'N/A',
+                'chưa ký, chờ CEO', 'ai'):
+        t = thay(PHIEU_TOT, '7 ', f'7 Dự đoán: x; người ký {ten} — ngày 2026-10-01')
+        assert 'PRED_UNSIGNED' in codes(t), ten
+
+
+def test_ten_that_co_ai_trong_chu_sach():
+    for ten in ('Mai', 'Hải', 'Nguyễn Văn A', 'Trần Thị Mai', 'Lại Văn Bình'):
+        t = thay(PHIEU_TOT, '7 ', f'7 Dự đoán: x; người ký {ten} — ngày 2026-10-01')
+        assert codes(t) == [], ten
+
+
+def test_ngay_ky_tuong_lai():
+    t = thay(PHIEU_TOT, '7 ', '7 Dự đoán: x; người ký CEO — ngày 2026-10-30')
+    assert 'PRED_FUTURE_SIGN' in [f.code for f in L.lint_sheets(t, today=date(2026, 10, 26))]
+    assert 'PRED_FUTURE_SIGN' not in [f.code for f in L.lint_sheets(t, today=date(2026, 10, 30))]
+    assert 'PRED_FUTURE_SIGN' not in codes(t)  # khong truyen today thi khong kiem
+
+
+def test_cli_truyen_today():
+    with tempfile.TemporaryDirectory() as d:
+        p = os.path.join(d, 'tl.md')
+        with open(p, 'w', encoding='utf-8') as f:
+            f.write(thay(PHIEU_TOT, '7 ', '7 Dự đoán: x; người ký CEO — ngày 2999-01-01')
+                    .replace('ngày thử: 2026-11-10', 'ngày thử: 2999-02-01'))
+        r = chay(p, 'hypo')
+        assert r.returncode == 1 and 'PRED_FUTURE_SIGN' in r.stdout, r.stdout
+
+
+def test_khong_doi_chung():
+    for v in ('2 NẾU: chiều rộng khe w = 3 mm', '2 NẾU: w = 3 mm; đối chứng w = 6 mm', '2 NẾU: w = 3 mm | 6 mm'):
+        assert 'NO_CONTROL' in codes(thay(PHIEU_TOT, '2 ', v)), v
+    assert 'NO_CONTROL' not in codes(thay(PHIEU_TOT, '2 ', '2 NẾU: w = 3 mm | đối chứng: w = 6 mm'))
+    assert 'NO_CONTROL' not in codes(PHIEU_TOT)
+
+
+def test_bang_tieu_de_khong_dau_va_hoa():
+    t = BANG.replace('| Tham số | Nhãn | Nguồn số |', '| Tham số | Nhan | Nguon so |')
+    assert L.lint_param_table(t) == []
+    t2 = BANG.replace('| Tham số | Nhãn | Nguồn số |', '| Tham số | **NHÃN** | NGUỒN SỐ |')
+    assert L.lint_param_table(t2) == []
+    import unicodedata
+    t3 = unicodedata.normalize('NFD', BANG)
+    assert L.lint_param_table(t3) == []
+
+
+def test_bang_mot_cot_la_partial():
+    t = "| Tham số | Nhãn | Nguồn |\n|---|---|---|\n| w | tri thức | catalog |\n"
+    cs = [f.code for f in L.lint_param_table(t)]
+    assert 'PARTIAL_HEADER' in cs, cs
+    t2 = BANG + "\n| Tham số | Nguồn số |\n|---|---|\n| k | chưa biết |\n"
+    assert [f.code for f in L.lint_param_table(t2)] == ['PARTIAL_HEADER']

@@ -71,7 +71,7 @@ phần tử nào sẽ giữ nguyên cho chuỗi «sửa tối thiểu» của C1
 ### Bước 7 — Cổng máy
 
 ```bash
-python scripts/cc2_sheet_lint.py <tệp C0> --kind params
+python D:/KN-Stack/scripts/cc2_sheet_lint.py <tệp C0> --kind params
 ```
 
 Mã 0 mới qua; mã 1 → sửa ô thiếu Nhãn / Nguồn số rồi chạy lại; mã 2 → báo lỗi đọc, dừng. Bảng «Thông số chức năng» là bảng

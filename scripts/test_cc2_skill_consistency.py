@@ -346,7 +346,7 @@ def test_c3_cot_khop_param_bridge():
 
 def test_c3_goi_lint():
     c3 = _block('helix-cc2-param')
-    assert 'python scripts/cc2_sheet_lint.py' in c3 and 'CC2_C3_Params.md' in c3
+    assert 'python D:/KN-Stack/scripts/cc2_sheet_lint.py' in c3 and 'CC2_C3_Params.md' in c3
     assert re.search(r'cc2_sheet_lint\.py\s+\S*CC2_C3_Params\.md\s+--kind params', c3), 'lenh lint C3 khong day du'
     assert 'báo cáo "đã kiểm" không thay output của lệnh' in c3
     assert re.search(r'Exit ≠ 0[^\n]*không sang C4', c3), 'thieu luat khong sang C4'
@@ -957,3 +957,36 @@ def test_c6_goi_ca_tac_tu_moi():
     assert '`<thư mục trích>/CA_Crosscheck_<X-n>.md`' in c6
     assert '## Đối chiếu ngược — phương án <X-n>' in c6 and 'CC2_CA_Analysis.md' in c6
     assert re.search(r'không mang ngữ cảnh', c6), 'chua noi tac tu con khong mang ngu canh'
+
+
+# ----------------------------------------------------------------- final-fix wave
+
+LINT_ABS = 'D:/KN-Stack/scripts/cc2_sheet_lint.py'
+REL_LINT_RE = re.compile(r'(?<![\w/:.-])scripts/cc2_sheet_lint\.py')
+LINT_CALL_RE = re.compile(r'python\s+(\S*cc2_sheet_lint\.py)')
+
+
+def _rel_lint_calls(text):
+    return [m.group(0) for m in REL_LINT_RE.finditer(text)]
+
+
+def test_rel_lint_dot_bien():
+    assert _rel_lint_calls('python scripts/cc2_sheet_lint.py a --kind hypo') == ['scripts/cc2_sheet_lint.py']
+    assert _rel_lint_calls('`python scripts/cc2_sheet_lint.py`') != []
+    assert _rel_lint_calls('python ' + LINT_ABS + ' a') == []
+    assert _rel_lint_calls('python D:/KN-Stack-wt-cc2/scripts/cc2_sheet_lint.py') == []
+
+
+def test_lint_goi_duong_dan_tuyet_doi():
+    paths = glob.glob(os.path.join(HELIX, 'helix-cc2*', 'SKILL.md'))
+    calls = 0
+    for p in paths:
+        text = _read(p)
+        assert _rel_lint_calls(text) == [], f'{p}: goi lint bang duong dan tuong doi'
+        for m in LINT_CALL_RE.finditer(text):
+            calls += 1
+            assert m.group(1) == LINT_ABS, f'{p}: {m.group(0)}'
+    assert calls >= 9, calls
+    orch = _orch()
+    assert re.search(r'worktree[^\n]*' + re.escape('D:/KN-Stack'), orch) or \
+        re.search(re.escape('D:/KN-Stack') + r'[^\n]*worktree', orch), 'orchestrator chua noi cach thay goc worktree'

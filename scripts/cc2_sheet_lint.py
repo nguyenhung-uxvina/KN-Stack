@@ -19,12 +19,20 @@ Finding = namedtuple('Finding', 'sheet line code msg')
 EFFECT_WORDS = ('ma sát', 'mòn', 'mài mòn', 'tín hiệu', 'nhiễu', 'độ bền',
                 'rò', 'lỏng', 'friction', 'wear')
 
-HEADER_RE = re.compile(r'^PHIẾU GIẢ THUYẾT\s*[—–-]\s*(GT-\d{3})')
+# Tieu de phieu; chap nhan vo markdown `#`/`**` quanh dong.
+HEADER_RE = re.compile(r'^(?:#{1,6}\s+)?(?:\*\*)?PHIẾU GIẢ THUYẾT\s*[—–-]\s*(GT-\d{3})')
+GT_RE = re.compile(r'GT-\d{3}')
+# Dong "giong tieu de" ma HEADER_RE khong doc duoc: mo dau (sau vo markdown) bang "phieu", hoac la tieu de
+# markdown / chu dam mo dau bang GT-nnn. Nhac GT-nnn trong muc cua phieu, trong bang hay giua cau thi khong tinh.
+HEADER_LIKE_RE = re.compile(r'^[#*>\s]*phiếu\b', re.IGNORECASE)
+HEADER_START_RE = re.compile(r'^(?:#{1,6}\s+|\*\*)\s*GT-\d{3}')
+LABEL_RE = re.compile(r'^[^:]{1,40}:')
+CONTROL_RE = re.compile(r'\|\s*đối chứng', re.IGNORECASE)
 ITEM_RE = re.compile(r'^\s*([1-9])\s+(.+)')
 DASH = r'[—–-]'
 TEST_DATE_RE = re.compile(r'ngày thử:\s*(\d{4}-\d{2}-\d{2})')
 SIGN_RE = re.compile(r'người ký\s+(\S.*?)\s*' + DASH + r'\s*ngày\s+(\d{4}-\d{2}-\d{2})')
-PLACEHOLDER_RE = re.compile(r'^\{\{.*\}\}$')
+PLACEHOLDER_RE = re.compile(r'^\{\{[^{}]*\}\}$')
 LABELS = ('tri thức', 'phỏng đoán', 'giả định')
 SOURCE_PREFIXES = ('đo được', 'suy ra (từ', 'chưa biết')
 
@@ -33,7 +41,8 @@ def _nfc(text):
     return unicodedata.normalize('NFC', text)
 
 
-def parse_sheets(text):
+def parse_sheets(text, unparsed=None):
+    """Tach phieu. `unparsed` (list) nhan (so dong, dong) giong tieu de ma khong doc duoc."""
     sheets = []
     cur = None
     for n, raw in enumerate(_nfc(text).splitlines(), 1):
@@ -46,25 +55,38 @@ def parse_sheets(text):
         if line.startswith('```'):
             cur = None
             continue
-        if cur is None:
+        im = ITEM_RE.match(raw)
+        if cur is not None and im:
+            k = int(im.group(1))
+            cur['items'].setdefault(k, im.group(2).strip())
             continue
-        m = ITEM_RE.match(raw)
-        if m:
-            k = int(m.group(1))
-            cur['items'].setdefault(k, m.group(2).strip())
+        if unparsed is not None and GT_RE.search(line) and not line.startswith('|') and \
+                (HEADER_LIKE_RE.match(line) or HEADER_START_RE.match(line)):
+            unparsed.append((n, line))
     return sheets
 
 
+def _content(v):
+    """Bo nhan dau muc (`VÌ:`, `8 …:`) de chi con noi dung."""
+    if v is None:
+        return None
+    return LABEL_RE.sub('', v.strip(), count=1).strip()
+
+
 def _empty(v):
-    return v is None or not v.strip() or bool(PLACEHOLDER_RE.match(v.strip()))
+    c = _content(v)
+    return c is None or not re.search(r'\w', c) or bool(PLACEHOLDER_RE.match(c))
 
 
-FAKE_SIGNERS = ('tbd', 'tên', 'ai', 'claude', 'n/a', 'chưa ký')
+# Ten nguoi ky la placeholder hoac AI: khop chuoi con, khong phan biet hoa thuong; `ai` khop ca tu.
+FAKE_SIGNER_SUBSTR = ('claude', 'trợ lý', '{{', '<', 'tbd', 'chưa ký', 'n/a')
+FAKE_SIGNER_WORD_RE = re.compile(r'\bai\b', re.IGNORECASE)
 
 
 def _fake_signer(name):
-    n = name.strip()
-    return '{{' in n or '<' in n or n.lower() in FAKE_SIGNERS
+    n = _nfc(name).strip().casefold()
+    return (any(x in n for x in FAKE_SIGNER_SUBSTR) or bool(FAKE_SIGNER_WORD_RE.search(n))
+            or n == 'tên')
 
 
 def _parse_date(s):
@@ -75,10 +97,14 @@ def _parse_date(s):
 
 
 def lint_sheets(text, today=None, allow_unsigned=False):
-    sheets = parse_sheets(text)
+    """today: date; co thi ngay ky muc 7 sau today -> PRED_FUTURE_SIGN (CLI truyen date.today())."""
+    unparsed = []
+    sheets = parse_sheets(text, unparsed)
+    out = [Finding(GT_RE.search(l).group(0), n, 'HEADER_UNPARSED',
+                   'dòng giống tiêu đề phiếu nhưng không đúng dạng "PHIẾU GIẢ THUYẾT — GT-nnn": ' + l[:60])
+           for n, l in unparsed]
     if not sheets:
-        return [Finding('-', 1, 'NO_SHEETS', 'không có PHIẾU GIẢ THUYẾT — GT-nnn nào')]
-    out = []
+        return out + [Finding('-', 1, 'NO_SHEETS', 'không có PHIẾU GIẢ THUYẾT — GT-nnn nào')]
     for s in sheets:
         sid, ln, it = s['id'], s['line'], s['items']
 
@@ -91,7 +117,7 @@ def lint_sheets(text, today=None, allow_unsigned=False):
                 if _empty(v):
                     add('NO_BECAUSE', 'mục 4 (VÌ) trống hoặc placeholder')
                 continue
-            if _empty(v) and not (k == 6 and v is not None and v.strip() == '{{điền SAU}}'):
+            if _empty(v) and not (k == 6 and v is not None and _content(v) == '{{điền SAU}}'):
                 add('MISSING_ITEM', f'mục {k} thiếu hoặc trống')
         v2 = it.get(2)
         if not _empty(v2):
@@ -103,8 +129,13 @@ def lint_sheets(text, today=None, allow_unsigned=False):
                 add('EFFECT_IN_IF', 'mục 2 chứa từ tác dụng: ' + ', '.join(hits))
             if v2.split('|')[0].count('=') > 1:
                 add('IF_MULTI_VAR', 'mục 2 (NẾU) có nhiều hơn một biến')
+            if not CONTROL_RE.search(v2):
+                add('NO_CONTROL', 'mục 2 thiếu "| Đối chứng: …"')
         v5, v7 = it.get(5), it.get(7)
         if not _empty(v7):
+            pre = _content(v7.split('người ký')[0]).strip(' ;,.—–-')
+            if not re.search(r'\w', pre) or PLACEHOLDER_RE.match(pre):
+                add('MISSING_ITEM', 'mục 7 thiếu nội dung dự đoán trước "người ký"')
             sm = SIGN_RE.search(v7)
             pd = _parse_date(sm.group(2)) if sm else None
             if sm and _fake_signer(sm.group(1)):
@@ -118,6 +149,8 @@ def lint_sheets(text, today=None, allow_unsigned=False):
                 add('PRED_NOT_BEFORE_TEST', 'mục 5 thiếu "ngày thử: YYYY-MM-DD"')
             elif pd is not None and pd >= td:
                 add('PRED_NOT_BEFORE_TEST', f'ngày ký dự đoán {pd} không trước ngày thử {td}')
+            if pd is not None and today is not None and pd > today:
+                add('PRED_FUTURE_SIGN', f'ngày ký dự đoán {pd} sau hôm nay {today}')
     return out
 
 
@@ -128,6 +161,14 @@ def _cells(line):
     if s.endswith('|'):
         s = s[:-1]
     return [c.strip() for c in s.split('|')]
+
+
+HEADER_ALIASES = {'nhan': 'nhãn', 'nguon so': 'nguồn số'}
+
+
+def _hdr_key(cell):
+    k = re.sub(r'\s+', ' ', _nfc(cell).strip().strip('*').strip()).casefold()
+    return HEADER_ALIASES.get(k, k)
 
 
 def lint_param_table(text):
@@ -141,8 +182,12 @@ def lint_param_table(text):
             while j < len(lines) and lines[j].lstrip().startswith('|'):
                 j += 1
             block = lines[i:j]
-            hdr = [c.lower() for c in _cells(block[0])]
-            if 'nhãn' in hdr and 'nguồn số' in hdr:
+            hdr = [_hdr_key(c) for c in _cells(block[0])]
+            has_l, has_s = 'nhãn' in hdr, 'nguồn số' in hdr
+            if has_l != has_s:
+                out.append(Finding('BANG', i + 1, 'PARTIAL_HEADER',
+                                   'bảng chỉ có một trong hai cột Nhãn / Nguồn số'))
+            if has_l and has_s:
                 found = True
                 rows = 0
                 ci, si = hdr.index('nhãn'), hdr.index('nguồn số')
@@ -192,7 +237,10 @@ def main(argv=None):
     if a.allow_unsigned and a.kind != 'hypo':
         print('ERROR --allow-unsigned chỉ dùng với --kind hypo', file=sys.stderr)
         return 2
-    fs = lint_sheets(text, allow_unsigned=a.allow_unsigned) if a.kind == 'hypo' else lint_param_table(text)
+    if a.kind == 'hypo':
+        fs = lint_sheets(text, today=date.today(), allow_unsigned=a.allow_unsigned)
+    else:
+        fs = lint_param_table(text)
     for f in fs:
         print(f'{f.sheet}:L{f.line} {f.code} {f.msg}')
     return 1 if fs else 0
