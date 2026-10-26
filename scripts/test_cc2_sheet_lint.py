@@ -208,3 +208,48 @@ def test_cli_utf8_hong_exit_2():
             f.write(b'PHI\xf4U \xff\xfe')
         r = chay(p, 'hypo')
         assert r.returncode == 2 and 'Traceback' not in r.stderr
+
+
+# ------------------------------------------------- --allow-unsigned (truoc Cong CEO 3)
+
+CHUA_KY = '7 DỰ ĐOÁN VIẾT TRƯỚC: lệch < 2 mm; người ký {{tên}} — ngày {{YYYY-MM-DD}}'
+
+
+def test_allow_unsigned_bo_qua_dung_pred_unsigned():
+    t = thay(PHIEU_TOT, '7 ', CHUA_KY)
+    assert codes(t) == ['PRED_UNSIGNED']
+    assert L.lint_sheets(t, allow_unsigned=True) == []
+
+
+def test_ten_placeholder_la_chua_ky():
+    t = thay(PHIEU_TOT, '7 ', '7 Dự đoán: x; người ký {{tên}} — ngày 2026-11-01')
+    assert 'PRED_UNSIGNED' in codes(t)
+
+
+def test_allow_unsigned_van_bat_ma_khac():
+    t = bo_dong(thay(PHIEU_TOT, '7 ', CHUA_KY), '4 ')
+    assert 'MISSING_ITEM' in [f.code for f in L.lint_sheets(t, allow_unsigned=True)]
+    t2 = thay(PHIEU_TOT, '7 ', '7 Dự đoán: x; người ký CEO — ngày 2026-11-10')
+    assert 'PRED_NOT_BEFORE_TEST' in [f.code for f in L.lint_sheets(t2, allow_unsigned=True)]
+    t3 = thay(thay(PHIEU_TOT, '7 ', CHUA_KY), '5 ', '5 Phép thử: bàn thử 3 lần')
+    assert [f.code for f in L.lint_sheets(t3, allow_unsigned=True)] == ['PRED_NOT_BEFORE_TEST']
+
+
+def chay_co(path, *extra):
+    return subprocess.run([sys.executable, SCRIPT, path, '--kind', 'hypo', *extra],
+                          capture_output=True, text=True, encoding='utf-8')
+
+
+def test_cli_allow_unsigned():
+    with tempfile.TemporaryDirectory() as d:
+        p = os.path.join(d, 'chua-ky.md')
+        with open(p, 'w', encoding='utf-8') as f:
+            f.write(thay(PHIEU_TOT, '7 ', CHUA_KY))
+        assert chay_co(p, '--allow-unsigned').returncode == 0
+        r = chay_co(p)
+        assert r.returncode == 1 and 'PRED_UNSIGNED' in r.stdout
+        q = os.path.join(d, 'thieu-muc.md')
+        with open(q, 'w', encoding='utf-8') as f:
+            f.write(bo_dong(thay(PHIEU_TOT, '7 ', CHUA_KY), '3 '))
+        r = chay_co(q, '--allow-unsigned')
+        assert r.returncode == 1 and 'MISSING_ITEM' in r.stdout

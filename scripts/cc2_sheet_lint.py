@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 """cc2_sheet_lint - chan phieu gia thuyet (9 muc) va bang tham so thieu nhan cua helix-cc2.
 
-Usage: python scripts/cc2_sheet_lint.py <tep.md> --kind hypo|params
+Usage: python scripts/cc2_sheet_lint.py <tep.md> --kind hypo|params [--allow-unsigned]
+--allow-unsigned (chi --kind hypo): bo qua DUNG ma PRED_UNSIGNED, de kiem phieu truoc
+Cong CEO 3 khi muc 7 chua ky; moi ma khac van chan. Sau khi ky phai chay lai khong co.
 Exit: 0 sach, 1 co finding, 2 loi doc tep.
 """
 import argparse
@@ -64,7 +66,7 @@ def _parse_date(s):
         return None
 
 
-def lint_sheets(text, today=None):
+def lint_sheets(text, today=None, allow_unsigned=False):
     sheets = parse_sheets(text)
     if not sheets:
         return [Finding('-', 1, 'NO_SHEETS', 'không có PHIẾU GIẢ THUYẾT — GT-nnn nào')]
@@ -97,15 +99,17 @@ def lint_sheets(text, today=None):
         if not _empty(v7):
             sm = SIGN_RE.search(v7)
             pd = _parse_date(sm.group(2)) if sm else None
-            if not sm or pd is None:
-                add('PRED_UNSIGNED', 'mục 7 thiếu "người ký <tên> — ngày YYYY-MM-DD"')
-            else:
-                tm = TEST_DATE_RE.search(v5) if not _empty(v5) else None
-                td = _parse_date(tm.group(1)) if tm else None
-                if td is None:
-                    add('PRED_NOT_BEFORE_TEST', 'mục 5 thiếu "ngày thử: YYYY-MM-DD"')
-                elif pd >= td:
-                    add('PRED_NOT_BEFORE_TEST', f'ngày ký dự đoán {pd} không trước ngày thử {td}')
+            if sm and '{{' in sm.group(1):
+                pd = None  # ten nguoi ky con la placeholder -> chua ky
+            tm = TEST_DATE_RE.search(v5) if not _empty(v5) else None
+            td = _parse_date(tm.group(1)) if tm else None
+            if pd is None:
+                if not allow_unsigned:
+                    add('PRED_UNSIGNED', 'mục 7 thiếu "người ký <tên> — ngày YYYY-MM-DD"')
+            if td is None:
+                add('PRED_NOT_BEFORE_TEST', 'mục 5 thiếu "ngày thử: YYYY-MM-DD"')
+            elif pd is not None and pd >= td:
+                add('PRED_NOT_BEFORE_TEST', f'ngày ký dự đoán {pd} không trước ngày thử {td}')
     return out
 
 
@@ -168,6 +172,8 @@ def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument('path')
     ap.add_argument('--kind', choices=('hypo', 'params'), required=True)
+    ap.add_argument('--allow-unsigned', action='store_true',
+                    help='chỉ --kind hypo: bỏ qua đúng mã PRED_UNSIGNED (trước Cổng CEO 3)')
     a = ap.parse_args(argv)
     try:
         with open(a.path, encoding='utf-8-sig') as f:
@@ -175,7 +181,10 @@ def main(argv=None):
     except (OSError, UnicodeDecodeError) as e:
         print(f'ERROR không đọc được tệp: {e}', file=sys.stderr)
         return 2
-    fs = lint_sheets(text) if a.kind == 'hypo' else lint_param_table(text)
+    if a.allow_unsigned and a.kind != 'hypo':
+        print('ERROR --allow-unsigned chỉ dùng với --kind hypo', file=sys.stderr)
+        return 2
+    fs = lint_sheets(text, allow_unsigned=a.allow_unsigned) if a.kind == 'hypo' else lint_param_table(text)
     for f in fs:
         print(f'{f.sheet}:L{f.line} {f.code} {f.msg}')
     return 1 if fs else 0
