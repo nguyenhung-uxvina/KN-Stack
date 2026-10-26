@@ -34,7 +34,6 @@ ORCH_OUTPUTS = ['_pipeline_state.md']
 
 # Khoi chua viet (Task 5-8). Moi task xoa ten khoi cua minh khoi tap nay.
 PENDING = {
-    'helix-cc2-form', 'helix-cc2-param',
     'helix-cc2-hypo', 'helix-cc2-analyze', 'helix-cc2-handoff',
 }
 
@@ -306,3 +305,103 @@ def test_c1_vi_du_chua_neu_hai_mien():
     assert ex.count('Khác chuỗi') >= len(chains)
     ex1 = c1[c1.index('### Ví dụ 1'):c1.index('### Ví dụ 2')]
     assert 'đã nêu: quang→điện' in ex1 and ex1.count('Khác chuỗi') >= 3
+
+
+# ----------------------------------------------------------------- Task 6: C2 + C3
+
+PARAM_BRIDGE = os.path.join(REF_DIR, 'param-bridge.md')
+EMBODIMENT = os.path.join(REF_DIR, 'embodiment-rules.md')
+
+
+def _table_rows(text):
+    """Khoi dong `|` dau tien -> danh sach hang (moi hang la list o), bo dong ---."""
+    rows, started = [], False
+    for line in text.splitlines():
+        if line.lstrip().startswith('|'):
+            started = True
+            cells = [c.strip() for c in line.strip().strip('|').split('|')]
+            if all(re.fullmatch(r':?-{2,}:?', c) for c in cells):
+                continue
+            rows.append(cells)
+        elif started:
+            break
+    return rows
+
+
+def _example(text):
+    assert '## Ví dụ ngắn' in text, 'thieu muc "## Ví dụ ngắn"'
+    tail = text[text.index('## Ví dụ ngắn'):]
+    return tail[:tail.index('## Chạy riêng')]
+
+
+def test_c3_cot_khop_param_bridge():
+    ref = _read(PARAM_BRIDGE)
+    ref_sec = ref[ref.index('## Khuôn bảng C3'):]
+    ref_hdr = _table_rows(ref_sec)[0]
+    assert len(ref_hdr) == 8 and ref_hdr[0] == 'Phần tử' and ref_hdr[-1] == 'Nguồn số', ref_hdr
+    c3_hdr = _table_rows(_example(_block('helix-cc2-param')))[0]
+    assert c3_hdr == ref_hdr, f'C3={c3_hdr} param-bridge={ref_hdr}'
+    tpl = _block('helix-cc2-param')
+    tpl = tpl[tpl.index('## Khuôn đầu ra'):tpl.index('## Ví dụ ngắn')]
+    assert _table_rows(tpl)[0] == ref_hdr, 'bang trong khuon dau ra khong khop param-bridge'
+
+
+def test_c3_goi_lint():
+    c3 = _block('helix-cc2-param')
+    assert 'python scripts/cc2_sheet_lint.py' in c3 and 'CC2_C3_Params.md' in c3
+    assert re.search(r'cc2_sheet_lint\.py\s+\S*CC2_C3_Params\.md\s+--kind params', c3), 'lenh lint C3 khong day du'
+    assert 'báo cáo "đã kiểm" không thay output của lệnh' in c3
+    assert re.search(r'Exit ≠ 0[^\n]*không sang C4', c3), 'thieu luat khong sang C4'
+
+
+def test_c3_bang_mau_qua_lint():
+    import sys
+    sys.path.insert(0, HERE)
+    from cc2_sheet_lint import lint_param_table
+    ex = _example(_block('helix-cc2-param'))
+    table = chr(10).join(l for l in ex.splitlines() if l.startswith('|'))
+    assert len(_table_rows(table)) >= 3, 'bang mau qua it hang'
+    assert lint_param_table(table) == []
+
+
+def test_c3_nhay_toi_da_3_va_tieu_chi():
+    c3 = _block('helix-cc2-param')
+    rows = _table_rows(_example(c3))[1:]
+    flagged = [r for r in rows if 'NHẠY' in r[3]]
+    assert 1 <= len(flagged) <= 3, len(flagged)
+    assert all('NHẠY' not in c for r in rows for i, c in enumerate(r) if i != 3), 'NHAY chi o cot Chieu anh huong'
+    for phrase in ['≤3', 'quy ước bộ skill', 'thứ hạng cao nhất', 'độ tin thấp nhất', 'trạng thái tới hạn',
+                   'helix-cc2:references:param-bridge']:
+        assert phrase in c3, f'C3 thieu cum: {phrase}'
+    assert re.search(r'suy ra \(từ', c3)
+    assert 'không có `tri thức` đi với `chưa biết`' in c3 or 'tri thức` không đi với `chưa biết' in c3
+
+
+def test_c2_tro_embodiment_rules():
+    c2 = _block('helix-cc2-form')
+    assert 'helix-cc2:references:embodiment-rules' in c2
+    assert '| Quy tắc TK | Câu hỏi kiểm | Kết quả | Nhãn |' in c2
+    rules = {r[0] for r in _table_rows('| Quy tắc |' + _read(EMBODIMENT).split('| Quy tắc |', 1)[1])[1:]}
+    assert len(rules) > 20
+    ex = _example(c2)
+    used = []
+    for l in ex.splitlines():
+        if l.startswith('|'):
+            first = l.strip().strip('|').split('|')[0].strip()
+            if first != 'Quy tắc TK' and not re.fullmatch(r':?-{2,}:?', first):
+                used.append(first)
+    assert len(used) >= 4, used
+    assert used, 'bang vi du C2 trong'
+    for u in used:
+        assert u in rules, f'quy tac "{u}" khong co trong embodiment-rules'
+
+
+def test_c2_cau_truc():
+    c2 = _block('helix-cc2-form')
+    for phrase in ['2–3', 'quy ước bộ skill', 'A-1', 'A-2', 'Mermaid', '## Phép nên làm tiếp', '## Chạy riêng',
+                   'Cổng CEO', 'Chuỗi chọn', 'phỏng đoán', 'helix-cc2:references:view-ops', 'CC2_C2_Forms.md',
+                   'CC2_C1_Chains.md', '<F-id>/']:
+        assert phrase in c2, f'C2 thieu cum: {phrase}'
+    ex = _example(c2)
+    assert len(re.findall(r'^### Phương án A-\d', ex, re.MULTILINE)) >= 2
+    assert 'mermaid' in ex
