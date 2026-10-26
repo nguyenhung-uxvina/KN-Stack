@@ -1,6 +1,6 @@
 ---
 name: helix-cc2-handoff
-description: "Khối C6 của bộ helix-cc2 — đọc phương án đi tiếp CEO ghi ở Cổng CEO 3, chạy lại lint phiếu C4 không cờ, cắt bản trích C0 + C2/C3 của đúng phương án ấy rồi gọi CA đối chiếu ngược trong một tác tử con mới (--crosscheck), gộp danh sách lệch thành CC2_C6_Crosscheck.md (mỗi chỗ lệch một phiếu nháp GT-nnn hoặc một dòng sửa C2), nối mục đối chiếu ngược vào CC2_CA_Analysis.md, và — chỉ khi có thư mục dự án — viết bàn giao P3 CC2_Handoff.md vào Phase3-Embodiment/ cho helix-embody-realize và helix-p3-layout, kèm vòng lặp P3 đối chiếu mức hình học trên cad_extract.json. Triggers on: 'C&C2 handoff', 'handoff to embodiment', 'cross-check form variant', 'back-check embodiment', 'P3 handoff', 'bàn giao P3', 'đối chiếu ngược', 'bàn giao C&C2', 'chuyển sang thiết kế hiện thân', 'helix-cc2-handoff'."
+description: "Khối C6 của bộ helix-cc2 — đọc phương án đi tiếp CEO ghi ở Cổng CEO 3, chạy lại lint phiếu C4 không cờ, cắt bản trích C0 + C2/C3 của đúng phương án ấy rồi gọi CA đối chiếu ngược trong một tác tử con mới (--crosscheck), gộp danh sách lệch thành CC2_C6_Crosscheck.md (mỗi chỗ lệch một phiếu nháp GT-nnn hoặc một dòng sửa C2), nối mục đối chiếu ngược vào CC2_CA_Analysis.md, và — chỉ khi có thư mục dự án — viết bàn giao P3 CC2_Handoff.md vào thư mục P3 (Phase3-Embodiment/ hoặc Phase3-Embody/, hoặc thư mục biến thể) cho helix-embody-realize và helix-p3-layout, kèm vòng lặp P3 đối chiếu mức hình học trên cad_extract.json qua --crosscheck. Triggers on: 'C&C2 handoff', 'handoff to embodiment', 'cross-check form variant', 'back-check embodiment', 'P3 handoff', 'bàn giao P3', 'đối chiếu ngược', 'bàn giao C&C2', 'chuyển sang thiết kế hiện thân', 'helix-cc2-handoff'."
 ---
 
 # helix-cc2-handoff — Khối C6: đối chiếu ngược + bàn giao P3
@@ -37,8 +37,8 @@ description: "Khối C6 của bộ helix-cc2 — đọc phương án đi tiếp 
    lệch nào; dòng sửa C2 chờ CEO quyết, C6 không tự sửa `{{prefix}}CC2_C2_Forms.md`.
 5. **Mức đối chiếu là mô tả.** Crosscheck và Handoff đều ghi ở đầu tệp `Mức đối chiếu: mô tả (chưa có hình học)`. Đối chiếu
    mức hình học chỉ có ở vòng lặp P3, khi đã có `cad_extract.json`.
-6. **Nơi ghi Handoff.** `{{prefix}}CC2_Handoff.md` ghi vào `Phase3-Embodiment/` (hoặc `Phase3-Embodiment/<biến thể>/`), là chỗ P3 đọc; không ghi vào `<nơi ghi>` (mặc định `Phase3-Embodiment/CC2/`). Chế độ dự án gộp mọi chức năng con vào một tệp.
-7. **Chỉ trong dự án.** «Trong dự án» đúng như orchestrator định nghĩa ở nơi ghi và tiền tố: chế độ `--project`, hoặc thư mục làm việc là gốc một dự án có `Phase3-Embodiment/`.
+6. **Nơi ghi Handoff.** `{{prefix}}CC2_Handoff.md` ghi vào `<thư mục P3>/` (`Phase3-Embodiment/` hoặc `Phase3-Embody/`, theo orchestrator; có `--variant <V>` thì `<thư mục P3>/<V>/`), là chỗ P3 đọc; không ghi vào `<nơi ghi>` (mặc định `<thư mục P3>/CC2/`). Có cả hai thư mục P3 → dừng, hỏi CEO. Chế độ dự án gộp mọi chức năng con vào một tệp.
+7. **Chỉ trong dự án.** «Trong dự án» đúng như orchestrator định nghĩa ở nơi ghi và tiền tố: chế độ `--project`, hoặc thư mục làm việc là gốc một dự án có `Phase3-Embodiment/` hoặc `Phase3-Embody/`.
    Ngoài dự án thì không có Handoff (bước 7).
 8. Không thêm số: Handoff chép khoảng chọn, nhãn và nguồn số từ C3 nguyên dạng; không ngoại suy ra ngoài dải đã kiểm
    (`param-bridge` §Dải đã kiểm), không đổi nhãn `phỏng đoán` thành `tri thức`.
@@ -155,9 +155,12 @@ Khoảng chọn, Nhãn, Nguồn số; chức năng con ở ô `chỉ bảng tham
 (chức năng con ở ô `không áp dụng` của C0 kèm lý do; chỗ dừng theo multidomain §Chỗ phải dừng; dòng NHẠY chưa có mô hình)
 
 ## Vòng lặp P3
-Khi BA hay `helix-cad-bridge` có `cad_extract.json` cho phần mang các tham số trên, chạy
-`/helix-cc2 --analyze <cad_extract.json>` để đối chiếu mức hình học. Lệch mới thành phiếu hoặc dòng sửa C2 như ở C6; đổi một
-khoảng ở bảng trên thì mở hoặc sửa phiếu tương ứng, không tự chọn lại.
+Khi BA có `cad_extract.json` (từ `helix-cad-bridge` hoặc `helix-cad-ingest`) cho phần mang các tham số trên, đối chiếu
+mức hình học bằng `--crosscheck` của CA, không bằng `--analyze`: người gọi (P3 hoặc CEO) dựng một `<thư mục trích>` mới gồm bản
+trích C0, bản trích C2 và C3 của phương án đi tiếp `<X-n>` và `cad_extract.json`, rồi trong tác tử con mới chạy
+`/helix-cc2-analyze --crosscheck <thư mục trích> <X-n> <n>` (`<n>` = số GT lớn nhất ở mục Phiếu giả thuyết đang mở cộng 1).
+Mọi đầu ra ở lại trong `<thư mục trích>`, không ghi `_pipeline_state.md`. Lệch mới thành phiếu hoặc dòng sửa C2 như ở C6;
+đổi một khoảng ở bảng trên thì mở hoặc sửa phiếu tương ứng, không tự chọn lại.
 ````
 
 ## Ví dụ ngắn (nắp gài bằng móc đàn hồi, tiếp ví dụ C3/C4; chế độ `--function`, số và ngày là minh hoạ)
@@ -194,7 +197,7 @@ CEO; ngày thử sớm nhất 2026-11-18 (GT-003).
 
 Đầu vào tối thiểu: C0 ở gốc nơi ghi, C2, C3, C4 (đã ký, lint không cờ mã 0) và hàng Cổng CEO 3 có phương án đi tiếp trong
 `_pipeline_state.md`. Chế độ dự án: truyền `--out <nơi ghi>/<F-id>` hoặc để C6 đọc `current_f`; Handoff vẫn ghi vào
-`Phase3-Embodiment/`.
+`<thư mục P3>/` (hoặc `<thư mục P3>/<V>/` khi có `--variant <V>`).
 
 ## COD
 

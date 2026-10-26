@@ -167,7 +167,7 @@ OPTIONAL INPUTS:
 ```
 
 Glob for each in `Phase2-Concept/{{variant}}/`, `Phase1-Task/{{variant}}/`, `Phase0-Forge/ (or FORGE/)`, `Phase0-Plan/{{variant}}/`.
-Glob `{{prefix}}CC2_Handoff.md` in `Phase3-Embodiment/{{variant}}/` and `Phase3-Embodiment/`.
+Glob `{{prefix}}CC2_Handoff.md` in `Phase3-Embodiment/{{variant}}/`, `Phase3-Embodiment/`, `Phase3-Embody/{{variant}}/` and `Phase3-Embody/`.
 
 #### 1.5b: Present Input Checklist to CEO
 
@@ -358,6 +358,7 @@ When variant is specified, all filenames are prefixed with `{{prefix}}` (e.g. `V
 | `{{prefix}}Embodiment_Evaluation.md` | BE | Gate 3 | Rt/Re scores, S-diagram, weak spots |
 | `{{prefix}}P02_QC_Gate.md` | BE | Gate 3 | QC gate results |
 | `{{prefix}}Deliverables_Index.md` | BE | Phase 4 | Complete deliverable list |
+| `{{prefix}}CC2_Handoff.md` | `/helix-cc2` (C6, external — not written by this pipeline) | B0, BA | C&C² chains, form-parameter ranges, sensitive parameters, open hypothesis sheets (description-level cross-check) |
 
 **Example (with variant):** `Phase3-Embody/V5-MOTORIZED/VN_MGM_V5_BOM_Draft.md`
 **Example (no variant):** `Phase3-Embody/VN_XUONG_UUV_BOM_Draft.md`

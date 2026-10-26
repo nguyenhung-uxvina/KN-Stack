@@ -40,10 +40,11 @@ Chế độ (chọn đúng một):
   --analyze <hình thể>                     chỉ phân tích (bản vẽ, cad_extract.json, ảnh, mô tả)
 Cờ phụ:
   --out <thư mục>     nơi ghi (ưu tiên cao nhất)
+  --variant <V>       biến thể dự án kiểu HELIX: tiền tố thành <PROJECT>_<V>_, nơi ghi mặc định và Handoff vào thư mục biến thể <thư mục P3>/<V>/
   --from <khối>       chạy tiếp từ C0|C1|C2|C3|C4|CA|C6
   --only <khối>       chỉ chạy một khối
   --op <phép> <đích>  phép biến đổi góc nhìn trên một chuỗi (xem mục dưới); không chạy khối nào khác
-  --crosscheck <thư mục trích> <X-n> <n>   chỉ C6 dùng, để gọi CA đối chiếu ngược trong tác tử con mới (CA chỉ đọc bản trích C0 + C2/C3 của phương án X-n, không đọc C1/C4; GT mới đánh từ n)
+  --crosscheck <thư mục trích> <X-n> <n>   chỉ C6 và vòng lặp P3 dùng, để gọi CA đối chiếu ngược trong tác tử con mới (CA chỉ đọc bản trích C0 + C2/C3 của phương án X-n, cộng cad_extract.json nếu có, không đọc C1/C4; GT mới đánh từ n)
 ```
 
 Có hơn một cờ chế độ → dừng, hỏi CEO. Thiếu cờ chế độ mà **không** có `--op`/`--from`/`--only` → dừng, hỏi CEO.
@@ -57,20 +58,26 @@ Có hơn một cờ chế độ → dừng, hỏi CEO. Thiếu cờ chế độ 
 khối ấy. Thiếu tệp nào → liệt kê tệp thiếu và dừng. Không bao giờ dựng giả tệp thượng nguồn; đề nghị CEO chạy khối
 thượng nguồn ghi tệp đó (`--from <khối ghi>`).
 
+**Thư mục P3** (`<thư mục P3>`): thư mục Phase 3 của dự án, `<dự án>/Phase3-Embodiment/` hoặc `<dự án>/Phase3-Embody/`
+(HELIX dùng cả hai tên). Dùng tên đang có; có **cả hai** → dừng, hỏi CEO dùng thư mục nào; chưa có cái nào (chế độ
+`--project`) → `Phase3-Embodiment/`.
+
 **Nơi ghi và tiền tố** (spec §8 R4):
 1. `--out <thư mục>` nếu có.
 2. Không có `--out` mà đang chạy trong dự án (chế độ `--project`, hoặc thư mục làm việc là gốc một dự án có
-   `Phase3-Embodiment/`) → `<dự án>/Phase3-Embodiment/CC2/` (hoặc `Phase3-Embodiment/<biến thể>/CC2/`).
+   `Phase3-Embodiment/` hoặc `Phase3-Embody/`) → `<thư mục P3>/CC2/`; có `--variant <V>` → `<thư mục P3>/<V>/CC2/`.
 3. Còn lại → `./_cc2/<slug>/`, `<slug>` = câu chức năng hoặc tên hình thể viết thường, không dấu, nối `-`.
 
-`{{prefix}}` = tiền tố dự án/biến thể kiểu HELIX (`VN_ABC_V2_`) khi trong dự án, ngược lại `<slug>_`.
+`{{prefix}}` = tiền tố dự án kiểu HELIX khi trong dự án: `<PROJECT>_` (vd. `VN_ABC_`), có `--variant <V>` thì
+`<PROJECT>_<V>_` (vd. `VN_ABC_V2_`; `<PROJECT>` và `<V>` đổi `-` thành `_`). `<V>` là đúng mã thư mục biến thể mà
+`helix-embody-realize` dùng, để glob `{{prefix}}CC2_Handoff.md` của P3 tìm thấy tệp. Ngoài dự án: `<slug>_`.
 **Thư mục theo chức năng con (chế độ `--project`):** tên tệp Data Bus giữ nguyên; mỗi chức năng con có thư mục riêng
 `<nơi ghi>/<F-id>/` (`F-id` = mã chức năng con trong Function_Structure, vd. `F3`) chứa C1, C2, C3, C4, CA và
 `CC2_C6_Crosscheck.md` của nó. Ở gốc `<nơi ghi>/` chỉ có `{{prefix}}CC2_C0_Frame.md` (danh sách sàng + khung của
 từng `F-id`) và `_pipeline_state.md`. Các chế độ khác không có thư mục `<F-id>/`.
 
-Bàn giao P3 (`{{prefix}}CC2_Handoff.md`, một tệp gộp mọi `F-id`, không nằm trong thư mục `<F-id>/`) **chỉ sinh khi có thư mục dự án**, ghi vào `Phase3-Embodiment/` (hoặc `Phase3-Embodiment/<biến thể>/`, thư mục
-`helix-embody-realize` đọc), không ghi vào `<nơi ghi>` (mặc định `Phase3-Embodiment/CC2/`). Ngoài dự án, C6 dừng ở `{{prefix}}CC2_C6_Crosscheck.md` + kế hoạch thử C4.
+Bàn giao P3 (`{{prefix}}CC2_Handoff.md`, một tệp gộp mọi `F-id`, không nằm trong thư mục `<F-id>/`) **chỉ sinh khi có thư mục dự án**, ghi vào `<thư mục P3>/` (có `--variant <V>` thì `<thư mục P3>/<V>/`, thư mục
+`helix-embody-realize` đọc), không ghi vào `<nơi ghi>` (mặc định `<thư mục P3>/CC2/`). Ngoài dự án, C6 dừng ở `{{prefix}}CC2_C6_Crosscheck.md` + kế hoạch thử C4.
 
 ## Bước 2 — Kiểm đầu vào
 
@@ -179,8 +186,19 @@ bằng gốc của worktree ấy.
   `python D:/KN-Stack/scripts/cc2_sheet_lint.py <C4_Hypotheses> --kind hypo` (không cờ) — mã 0 mới đóng Cổng CEO 3; C6 chạy lại lệnh
   không cờ này. Mục 7 (dự đoán) do CEO/kỹ sư ký, ngày ký trước ngày thử; AI không điền chữ ký.
 - **C6:** đối chiếu ngược do **một tác tử con khác** làm, chỉ nhận C0 + C2/C3, không thấy lý lẽ C1. Mỗi chỗ lệch thành
-  phiếu mới hoặc một dòng sửa C2. `CC2_Handoff` ghi rõ đây là *đối chiếu mức mô tả* và kèm mục **vòng lặp P3**: khi P3
-  có `cad_extract.json`, chạy `/helix-cc2 --analyze` lên đó để đối chiếu mức hình học.
+  phiếu mới hoặc một dòng sửa C2. `CC2_Handoff` ghi rõ đây là *đối chiếu mức mô tả* và kèm mục **vòng lặp P3** (dưới).
+
+### Vòng lặp P3 (đối chiếu mức hình học)
+
+Khi P3 có `cad_extract.json` cho phần mang các tham số của Handoff, vòng lặp **dùng lại `--crosscheck` của CA**, không
+chạy `--analyze` (phân tích mới không so với gì, và trong dự án sẽ đụng `_pipeline_state.md` của `<thư mục P3>/CC2/`):
+1. Người gọi (P3 hoặc CEO) dựng một `<thư mục trích>` mới, ngoài `<nơi ghi>`, gồm: bản trích C0 của chức năng con,
+   bản trích C3 của phương án đi tiếp `<X-n>` (bảng ở Handoff hay ở C3), bản trích C2 của `<X-n>`, và `cad_extract.json`.
+2. `<n>` = số GT lớn nhất trong mục `## Phiếu giả thuyết đang mở` của Handoff cộng 1.
+3. Mở tác tử con mới: `/helix-cc2-analyze --crosscheck <thư mục trích> <X-n> <n>`. CA so hình học trong
+   `cad_extract.json` với khoảng chọn của C3.
+4. Mọi đầu ra nằm trong `<thư mục trích>` (`CA_Crosscheck_<X-n>.md`); không ghi `_pipeline_state.md` hay tệp nào ở
+   `<nơi ghi>`. CEO đọc bảng lệch và quyết: đưa phiếu nháp vào C4, nhận dòng sửa C2, hay sửa khoảng ở Handoff.
 
 Sau mỗi khối: cập nhật `_pipeline_state.md`, in tóm tắt 3–5 dòng, hỏi CEO «tiếp / sửa / dừng».
 
@@ -229,11 +247,11 @@ rào cản quan sát của chuỗi: quá nhanh / quá chậm → `state`; bị c
 | `{{prefix}}CC2_C4_Test_Plan.md` | helix-cc2-hypo (C4) | C6, bàn thử |
 | `{{prefix}}CC2_CA_Analysis.md` | helix-cc2-analyze (CA); helix-cc2-handoff (C6) nối mục `## Đối chiếu ngược — phương án <X-n>` | C0 (`--improve`), C4 (`--analyze`), C6 |
 | `{{prefix}}CC2_C6_Crosscheck.md` | helix-cc2-handoff (C6) | CEO |
-| `{{prefix}}CC2_Handoff.md` | helix-cc2-handoff (C6), ghi vào `<dự án>/Phase3-Embodiment/` (hoặc thư mục biến thể), không vào `<nơi ghi>` | helix-embody-realize, helix-p3-layout |
+| `{{prefix}}CC2_Handoff.md` | helix-cc2-handoff (C6), ghi vào `<thư mục P3>/` (`Phase3-Embodiment/` hoặc `Phase3-Embody/`; có `--variant <V>` thì `<thư mục P3>/<V>/`), không vào `<nơi ghi>` | helix-embody-realize, helix-p3-layout |
 | `_pipeline_state.md` | helix-cc2 (orchestrator) | mọi khối, `--from` |
 
 Chế độ `--project`: tệp C1, C2, C3, C4, CA và `CC2_C6_Crosscheck.md` nằm trong `<nơi ghi>/<F-id>/`; C0 và
-`_pipeline_state.md` ở gốc `<nơi ghi>/`; `CC2_Handoff.md` ở `Phase3-Embodiment/`, một tệp cho mọi `F-id`.
+`_pipeline_state.md` ở gốc `<nơi ghi>/`; `CC2_Handoff.md` ở `<thư mục P3>/` (hoặc `<thư mục P3>/<V>/`), một tệp cho mọi `F-id`.
 
 ## Tích hợp
 
@@ -245,7 +263,7 @@ Chế độ `--project`: tệp C1, C2, C3, C4, CA và `CC2_C6_Crosscheck.md` n�
 
 **WRITES TO**
 - `<nơi ghi>/` (xem Bước 1): mọi tệp `{{prefix}}CC2_*` và `_pipeline_state.md`
-- `<dự án>/Phase3-Embodiment/{{prefix}}CC2_Handoff.md` → đầu vào khuyến nghị của `/helix-embody-realize` (P3)
+- `<thư mục P3>/[<V>/]{{prefix}}CC2_Handoff.md` → đầu vào khuyến nghị của `/helix-embody-realize` (P3)
 
 ## COD
 

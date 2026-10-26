@@ -1,6 +1,6 @@
 ---
 name: helix-cc2-analyze
-description: "Khối CA của bộ helix-cc2 — chiều phân tích độc lập: hình thể có sẵn của chính Xưởng (bản vẽ, cad_extract.json từ helix-cad-ingest, ảnh, mô tả) → mô hình C&C² một trang (WFP/LSS/Connector theo trạng thái) → bảng «Vì sao hình học này» có nhãn tri thức/phỏng đoán/giả định → rào cản quan sát và phép phá đề xuất → «Phép nên làm tiếp» → giả thuyết nháp khuôn 9 mục chuyển được sang C4. Có chế độ --crosscheck cho C6: chỉ đọc thư mục trích (C0 + C2/C3 của đúng một phương án), không đọc C1 hay C4, ra danh sách lệch thành phiếu nháp hoặc dòng sửa C2. Triggers on: 'C&C2 analysis', 'analyze existing form', 'why this geometry', 'form to function', 'cross-check embodiment', 'phân tích C&C2', 'vì sao hình học này', 'từ hình thể về chức năng', 'đối chiếu ngược', 'helix-cc2-analyze'."
+description: "Khối CA của bộ helix-cc2 — chiều phân tích độc lập: hình thể có sẵn của chính Xưởng (bản vẽ, cad_extract.json từ helix-cad-ingest, ảnh, mô tả) → mô hình C&C² một trang (WFP/LSS/Connector theo trạng thái) → bảng «Vì sao hình học này» có nhãn tri thức/phỏng đoán/giả định → rào cản quan sát và phép phá đề xuất → «Phép nên làm tiếp» → giả thuyết nháp khuôn 9 mục chuyển được sang C4. Có chế độ --crosscheck cho C6 và vòng lặp P3: chỉ đọc thư mục trích (C0 + C2/C3 của đúng một phương án, cộng cad_extract.json nếu có thì so hình học với khoảng chọn C3), không đọc C1 hay C4, ra danh sách lệch thành phiếu nháp hoặc dòng sửa C2. Triggers on: 'C&C2 analysis', 'analyze existing form', 'why this geometry', 'form to function', 'cross-check embodiment', 'phân tích C&C2', 'vì sao hình học này', 'từ hình thể về chức năng', 'đối chiếu ngược', 'helix-cc2-analyze'."
 ---
 
 # helix-cc2-analyze — Khối CA: hình thể có sẵn → mô hình C&C² → giả thuyết chức năng
@@ -99,13 +99,14 @@ hình thể: {{đường dẫn hoặc mô tả}}
 (bảng lệch, xem mục dưới)
 ````
 
-## Chế độ `--crosscheck` (chỉ C6 gọi)
+## Chế độ `--crosscheck` (C6 và vòng lặp P3 gọi)
 
 Gọi: `/helix-cc2-analyze --crosscheck <thư mục trích> <X-n> <n>` — ba tham số của `--crosscheck`, không có cờ riêng:
-`<thư mục trích>` là thư mục nháp chỉ chứa ba bản trích dưới đây; `<X-n>` là mã phương án (vd. `A-1`); `<n>` là số GT
-đầu tiên được dùng cho phiếu nháp mới (C6 tính từ C4 rồi truyền vào). Đối chiếu ở mức mô tả.
+`<thư mục trích>` là thư mục nháp chỉ chứa ba bản trích dưới đây (cộng `cad_extract.json` nếu có); `<X-n>` là mã phương án
+(vd. `A-1`); `<n>` là số GT đầu tiên được dùng cho phiếu nháp mới (người gọi tính rồi truyền vào). Không có
+`cad_extract.json` thì đối chiếu ở mức mô tả; có thì ở mức hình học.
 
-Ai làm: C6 cắt ba bản trích vào `<thư mục trích>` rồi mở một tác tử con mới chỉ với các đường dẫn ấy, không mang ngữ cảnh
+Ai làm: C6 (hoặc, ở vòng lặp P3, P3 / CEO) cắt ba bản trích vào `<thư mục trích>` rồi mở một tác tử con mới chỉ với các đường dẫn ấy, không mang ngữ cảnh
 phiên lập C1–C3: người đọc ≠ người lập, vì người lập hay đọc bằng chứng phản bác thành xác nhận. CA không đọc gì ngoài `<thư mục trích>`.
 
 Đầu vào được đọc:
@@ -113,18 +114,26 @@ phiên lập C1–C3: người đọc ≠ người lập, vì người lập hay
 - `<thư mục trích>/CC2_C2_Forms.md`: chỉ mục của phương án `<X-n>` (mô tả, phác, bảng quy tắc)
 - `<thư mục trích>/CC2_C3_Params.md`: chỉ bảng của phương án `<X-n>`
 
+Tuỳ chọn (vòng lặp P3): `<thư mục trích>/cad_extract.json` từ `helix-cad-ingest` hoặc `helix-cad-bridge`, hình học của phần
+mang phương án `<X-n>`. Có tệp này thì bước 2 so thêm từng giá trị hình học trong tệp với cột *Khoảng chọn* của bản trích C3
+(giá trị ngoài khoảng là một chỗ lệch `L6`); nhãn nguồn `đo được (cad_extract.json)` chỉ dùng cho giá trị hình học đọc từ tệp,
+không cho thông số chức năng hay quan hệ hình thể → chức năng (những thứ ấy vẫn `phỏng đoán` cho tới khi qua bàn thử). Không
+có tệp thì đối chiếu ở mức mô tả như C6.
+
 Cấm đọc: `CC2_C1_Chains.md`, `CC2_C4_Hypotheses.md`, mọi tệp ở gốc `<nơi ghi>/` hay trong `<nơi ghi>/<F-id>/`, các phương án khác, và mọi lý lẽ chọn chuỗi (kể cả phần chép lại lý lẽ ấy nếu lọt vào bản trích C2 — gặp thì bỏ qua và ghi một dòng cảnh báo).
 
 Bước:
 1. Từ mô tả và phác của phương án `<X-n>`, dựng lại mô hình C&C² một trang **độc lập**, như với một hình thể có sẵn.
 2. So với bản trích C0 và C3, ghi mỗi chỗ lệch một dòng, theo năm loại: `L1` phần tử CA thấy mà C3 không có dòng tham số;
    `L2` dòng C3 mà CA không gắn được vào phần tử nào trên hình thể; `L3` thông số chức năng C0 không phần tử nào phục vụ;
-   `L4` Connector CA thấy mà C0 không ghi; `L5` chiều ảnh hưởng CA suy ra ngược dấu C3.
+   `L4` Connector CA thấy mà C0 không ghi; `L5` chiều ảnh hưởng CA suy ra ngược dấu C3; `L6` (chỉ khi có
+   `cad_extract.json`) giá trị hình học trong tệp nằm ngoài khoảng chọn của C3, hoặc tham số C3 mà tệp không có.
 3. Mỗi chỗ lệch thành **đúng một** trong hai: `phiếu nháp GT-nnn` (quan hệ hình thể → chức năng cần thử; đánh số từ `<n>`,
    tăng dần) hoặc `dòng sửa C2: …` (mô tả hay phác thiếu, mâu thuẫn).
-4. Ghi bảng lệch và các phiếu nháp vào `<thư mục trích>/CA_Crosscheck_<X-n>.md`, mục `## Đối chiếu ngược — phương án <X-n>`.
-   C6 đọc tệp ấy vào `{{prefix}}CC2_C6_Crosscheck.md` và nối mục này vào `{{prefix}}CC2_CA_Analysis.md`; CA không tự mở các
-   tệp ở nơi ghi.
+4. Ghi bảng lệch và các phiếu nháp vào `<thư mục trích>/CA_Crosscheck_<X-n>.md`, mục `## Đối chiếu ngược — phương án <X-n>`,
+   dòng đầu mục ghi `Mức đối chiếu: mô tả (chưa có hình học)` hoặc `Mức đối chiếu: hình học (cad_extract.json)`.
+   C6 đọc tệp ấy vào `{{prefix}}CC2_C6_Crosscheck.md` và nối mục này vào `{{prefix}}CC2_CA_Analysis.md`; ở vòng lặp P3 tệp ở
+   lại trong `<thư mục trích>` cho CEO đọc. CA không tự mở các tệp ở nơi ghi và không ghi `_pipeline_state.md`.
 
 Ví dụ (nắp gài bằng móc đàn hồi, gọi với `<X-n>` = `A-1`, `<n>` = 4; minh hoạ):
 
@@ -208,11 +217,11 @@ Phép thử nhỏ nhất để bác bỏ: hai kẹp tự làm mỗi biến thể
 
 ```
 /helix-cc2-analyze <hình thể> [--out <thư mục>]
-/helix-cc2-analyze --crosscheck <thư mục trích> <X-n> <n>     (chỉ C6 gọi, trong tác tử con mới)
+/helix-cc2-analyze --crosscheck <thư mục trích> <X-n> <n>     (C6 hoặc vòng lặp P3 gọi, trong tác tử con mới)
 ```
 
 `<hình thể>` là đường dẫn `cad_extract.json`, bản vẽ, ảnh, hoặc mô tả trong ngoặc kép. Không cần C0–C3 khi chạy riêng;
-`--crosscheck` chỉ cần ba bản trích trong `<thư mục trích>` (xem mục trên).
+`--crosscheck` chỉ cần ba bản trích trong `<thư mục trích>`, cộng `cad_extract.json` nếu đối chiếu mức hình học (xem mục trên).
 
 ## COD
 

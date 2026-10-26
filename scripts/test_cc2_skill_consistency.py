@@ -819,6 +819,7 @@ def test_orch_co_crosscheck():
 # ----------------------------------------------------------------- Task 8: C6 + P3
 
 EMBODY = os.path.join(HELIX, 'helix-embody-realize', 'SKILL.md')
+LOOP_CMD = '/helix-cc2-analyze --crosscheck <thư mục trích> <X-n> <n>'
 P3_LAYOUT = os.path.join(HELIX, 'helix-p3-layout', 'SKILL.md')
 HANDOFF_SECTIONS = ['## Chuỗi đã chọn theo chức năng con', '## Tham số hình thể và khoảng chọn', '## Tham số nhạy',
                     '## Phiếu giả thuyết đang mở', '## Kế hoạch thử', '## Chỗ C&C² không áp dụng', '## Vòng lặp P3']
@@ -874,7 +875,17 @@ def test_handoff_hai_phia():
     assert sec is not None, 'helix-p3-layout thieu muc `## Khi có CC2_Handoff.md`'
     assert 'khoảng' in sec and 'phiếu giả thuyết' in sec, 'muc P3 chua noi lay khoang tham so tu phieu'
     assert 'không tự chọn lại' in sec, 'muc P3 chua cam tu chon lai khoang'
-    assert '/helix-cc2 --analyze' in sec and 'cad_extract.json' in sec, 'muc P3 chua noi vong lap P3'
+    assert 'cad_extract.json' in sec, 'muc P3 chua noi vong lap P3'
+    assert LOOP_CMD in sec, 'muc P3: vong lap P3 phai dung --crosscheck cua CA'
+    assert not re.search(r'chạy[^\n]{0,40}`/helix-cc2 --analyze', sec), 'muc P3 con chay /helix-cc2 --analyze'
+    assert 'Phase3-Embody/' in sec and 'Phase3-Embodiment/' in sec, 'muc P3 chua nhan ca hai ten thu muc P3'
+    # Data Bus cua embody-realize co dong Handoff
+    bus = _section(em, r'^Data Bus\b', 2)
+    assert bus is not None
+    rows = [r for t in _all_tables(bus) for r in t if r and r[0] == '`{{prefix}}CC2_Handoff.md`']
+    assert len(rows) == 1 and 'helix-cc2' in rows[0][1], rows
+    glob_l = [l for l in em.splitlines() if l.startswith('Glob `{{prefix}}CC2_Handoff.md`')]
+    assert glob_l and 'Phase3-Embody/{{variant}}/' in glob_l[0] and 'Phase3-Embodiment/{{variant}}/' in glob_l[0], glob_l
 
 
 def test_handoff_vong_lap_p3():
@@ -885,7 +896,9 @@ def test_handoff_vong_lap_p3():
     assert MUC_DOI_CHIEU in tpl, 'Handoff thieu dong muc doi chieu'
     loop = tpl[tpl.index('## Vòng lặp P3'):]
     assert 'helix-cad-bridge' in loop and 'cad_extract.json' in loop
-    assert '/helix-cc2 --analyze <cad_extract.json>' in loop
+    assert LOOP_CMD in loop, 'vong lap P3 phai dung lai --crosscheck cua CA'
+    assert '/helix-cc2 --analyze' not in loop, 'vong lap P3 khong duoc chay --analyze (khong doi chieu)'
+    assert '_pipeline_state.md' in loop, 'vong lap P3 chua noi khong ghi trang thai du an'
     assert 'mức hình học' in loop
     xtpl = _between(c6, C6_TPL_X, C6_TPL_H)
     assert MUC_DOI_CHIEU in xtpl, 'Crosscheck thieu dong muc doi chieu'
@@ -897,8 +910,9 @@ def test_handoff_chi_khi_co_du_an():
     assert '«' + NO_PROJECT + '»' in c6, 'thieu dung cau in khi ngoai du an'
     # dinh nghia "trong du an" chep dung orchestrator, khong luat moi
     defn = 'chế độ `--project`, hoặc thư mục làm việc là gốc một dự án có'
-    assert re.search(re.escape(defn) + r'\s+`Phase3-Embodiment/`', _orch()), 'orchestrator doi dinh nghia trong du an'
-    assert defn + ' `Phase3-Embodiment/`' in c6, 'C6 khong chep dung dinh nghia trong du an cua orchestrator'
+    tail = r'\s+`Phase3-Embodiment/` hoặc `Phase3-Embody/`'
+    assert re.search(re.escape(defn) + tail, _orch()), 'orchestrator doi dinh nghia trong du an'
+    assert re.search(re.escape(defn) + tail, c6), 'C6 khong chep dung dinh nghia trong du an cua orchestrator'
     line = [l for l in c6.splitlines() if NO_PROJECT in l][0]
     assert 'Crosscheck' in line and 'Test_Plan' in line, 'ngoai du an phai dung o Crosscheck + Test_Plan'
 
@@ -990,3 +1004,41 @@ def test_lint_goi_duong_dan_tuyet_doi():
     orch = _orch()
     assert re.search(r'worktree[^\n]*' + re.escape('D:/KN-Stack'), orch) or \
         re.search(re.escape('D:/KN-Stack') + r'[^\n]*worktree', orch), 'orchestrator chua noi cach thay goc worktree'
+
+
+def test_variant_va_thu_muc_p3():
+    orch = _orch()
+    start = orch.index('Cờ phụ:')
+    flags = orch[start:orch.index('```', start)]
+    m = re.search(r'^\s*--variant <V>\s+(.+)$', flags, re.MULTILINE)
+    assert m and '<PROJECT>_<V>_' in m.group(1), 'Cờ phụ thieu --variant <V> voi tien to <PROJECT>_<V>_'
+    assert '`<PROJECT>_<V>_`' in orch
+    p3 = _between(orch, '**Thư mục P3**', '**Nơi ghi và tiền tố**')
+    assert 'Phase3-Embodiment/' in p3 and 'Phase3-Embody/' in p3
+    assert re.search(r'cả hai\*\*[^.]*dừng, hỏi CEO', p3), 'thieu luat co ca hai thu muc P3 -> dung'
+    rows = {r[0]: r for r in _data_bus_rows(orch)}
+    w = rows['{{prefix}}CC2_Handoff.md'][1]
+    assert 'Phase3-Embody/' in w and '<V>/' in w, w
+    c6 = _block('helix-cc2-handoff')
+    assert re.search(r'Có cả hai thư mục P3 → dừng, hỏi CEO', c6)
+
+
+def test_vong_lap_p3_orchestrator():
+    orch = _orch()
+    sec = _section(orch, r'^Vòng lặp P3', 3)
+    assert sec is not None, 'orchestrator thieu muc ### Vòng lặp P3'
+    assert LOOP_CMD in sec and 'cad_extract.json' in sec
+    assert '_pipeline_state.md' in sec and '<thư mục trích>' in sec
+    assert not re.search(r'chạy\s+`/helix-cc2 --analyze', orch), 'orchestrator con huong dan chay --analyze cho vong lap'
+
+
+def test_ca_crosscheck_cad_extract_tuy_chon():
+    ca = _block('helix-cc2-analyze')
+    sec = _section(ca, r'--crosscheck', 2)
+    opt = [l for l in sec.splitlines() if l.startswith('Tuỳ chọn (vòng lặp P3):')]
+    assert opt and '`<thư mục trích>/cad_extract.json`' in opt[0], 'CA chua nhan cad_extract.json tuy chon'
+    para = _between(sec, 'Tuỳ chọn (vòng lặp P3):', '\n\n')
+    assert 'Khoảng chọn' in para and 'đo được' in para and 'chỉ dùng cho giá trị hình học' in para
+    assert re.search(r'Không\s+có tệp thì đối chiếu ở mức mô tả', para)
+    assert 'L6' in sec and 'Mức đối chiếu: hình học (cad_extract.json)' in sec
+    assert 'không ghi `_pipeline_state.md`' in sec
