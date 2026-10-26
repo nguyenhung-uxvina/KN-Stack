@@ -41,6 +41,10 @@ description: "Khối C1 của bộ helix-cc2 — từ khung C0 sinh ≥3 chuỗi
 7. Chuỗi đi vào điện tử / phần mềm: ghi chỗ C&C² hết dùng được; phần tử cuối trong miền vật lý thành Connector có tên
    (`multidomain` §Chỗ phải dừng).
 8. Mọi câu «do X nên Y» mang nhãn **tri thức / phỏng đoán / giả định**; không bịa số. Chưa có số thì không ghi số.
+9. **Ví dụ là minh hoạ, không phải đầu ra mặc định** *(quy ước bộ skill)*: nếu miền của câu đầu vào trùng miền của một ví
+   dụ, ít nhất một chuỗi phải nằm ngoài các cách sắp trong ví dụ.
+10. **C1 không có cổng máy.** CEO kiểm ≥3 chuỗi, Mermaid, dòng Khác chuỗi ở Cổng 2; lint `--kind params` không áp cho
+    tệp C1 (nó ra `NO_TABLE`).
 
 ## Bước
 
@@ -49,8 +53,9 @@ description: "Khối C1 của bộ helix-cc2 — từ khung C0 sinh ≥3 chuỗi
 3. Với từng chuỗi: vẽ Mermaid; điền bảng phần tử; nêu trạng thái logic (nhánh do kích hoạt nào chọn); liệt kê mặt biên;
    viết dòng `Vì sao chuỗi này hợp thông số C0:` có nhãn.
 4. Viết 1–3 dòng `## Phép nên làm tiếp` chọn theo rào cản quan sát của chuỗi (`view-ops` §Rào cản quan sát).
-5. ⛔ **Cổng CEO 2 — chọn chuỗi.** Dừng; ghi chuỗi chọn (vd. `B.1`) vào bảng Cổng CEO, rồi mới sang C2. Các chuỗi
-   `--op` sau này nối thành `B.1`, `B.2` vào cuối tệp này (orchestrator làm, không ghi đè).
+5. ⛔ **Cổng CEO 2 — chọn chuỗi.** Dừng. Trong khi chờ, hàng Cổng 2 của bảng Cổng CEO ghi `⏳ chờ CEO` ở cột Quyết định
+   (chưa phải quyết định, theo khuôn trạng thái của orchestrator). CEO trả lời thì thay hàng ấy bằng ngày, `chuỗi chọn: B.1`
+   và lý do, rồi mới sang C2. Các chuỗi `--op` sau này nối thành `B.1`, `B.2` vào cuối tệp này (orchestrator làm, không ghi đè).
 
 ## Khuôn đầu ra: `{{prefix}}CC2_C1_Chains.md`
 
@@ -95,14 +100,15 @@ flowchart LR
 
 ### Ví dụ 1 — nguyên lý đã nêu
 
-C0: câu chức năng «biến sự che khuất của đạn thành tín hiệu biên [quang→điện]», `Nguyên lý: đã nêu: quang→điện`.
+C0: câu chức năng «phát hiện vật che cắt một lối đi [quang→điện]» (rào sáng ở cửa hay băng chuyền), `Nguyên lý: đã nêu: quang→điện`.
 Ba chuỗi cùng miền quang, khác cách sắp (cơ sở: `multidomain` ví dụ quang → điện):
 
-- **A — rào sáng xuyên tia**: phát và thu hai phía, vật che cắt LSS giữa hai bên. Khác chuỗi: — (chuỗi gốc). `giả định`
-- **B — rào sáng phản xạ ngược**: phát và thu cùng phía, thêm WFP ở mặt phản xạ, LSS đi hai lượt.
-  Khác chuỗi A ở: (a) thêm một WFP, LSS đi hai lượt; (c) Connector nguồn và mạch đọc cùng phía. `giả định`
-- **C — bóng đổ lên mảng thu**: một nguồn, nhiều mặt thu; trạng thái mang cả vị trí vật che.
-  Khác chuỗi A ở: (a) nhiều WFP thu; (d) nhánh logic theo vị trí bị che. `giả định`
+- **A — rào sáng xuyên tia**: phát và thu hai bên lối đi, vật che cắt LSS giữa hai bên. Khác chuỗi: — (chuỗi gốc). `giả định`
+- **B — rào sáng phản xạ ngược**: phát và thu cùng một bên, thêm WFP ở mặt phản xạ bên kia, LSS đi hai lượt.
+  Khác chuỗi A ở: (a) thêm một WFP, LSS đi hai lượt; (c) Connector nguồn và mạch đọc cùng một bên. `giả định`
+- **C — phản xạ khuếch tán từ chính vật**: phát và thu cùng một bên, không có mặt phản xạ riêng; mặt vật thành WFP trả sáng về.
+  Khác chuỗi A ở: (a) WFP phản xạ là mặt vật, không thuộc hệ; (c) Connector cùng một bên; (d) logic đảo — có vật thì có
+  sáng về. `giả định`
 
 ```mermaid
 flowchart LR
@@ -116,14 +122,18 @@ Phía sau mặt thu là mạch điện tử: C&C² dừng, Connector «mạch đ
 
 ### Ví dụ 2 — nguyên lý chưa nêu
 
-C0: câu chức năng «phát hiện đạn đi qua mặt bia», `Nguyên lý: chưa nêu`. Ba chuỗi ở ba miền (≥2 miền), là nguồn ý,
+C0: câu chức năng «phát hiện nắp hộp đã đóng kín», `Nguyên lý: chưa nêu`. Ba chuỗi ở ba miền (≥2 miền), là nguồn ý,
 không phải quyết định concept:
 
-- **A — bóng đổ quang**: LSS là khoảng không khí có chùm tia; hợp vì không chạm vật. Khác chuỗi: — (chuỗi gốc). `giả định`
-- **B — sóng xung kích (âm)**: LSS là không khí dẫn sóng tới mặt thu áp điện.
-  Khác chuỗi A ở: (b) LSS dẫn sóng áp suất thay vì chùm sáng; (c) Connector ra ở mặt thu áp điện. `giả định`
-- **C — tiếp xúc cơ / màn đứt mạch**: đạn làm đứt hoặc chạm một lớp dẫn; LSS là lớp rắn.
-  Khác chuỗi A ở: (a) bớt một WFP không khí; (b) LSS là vật rắn; (d) trạng thái «đứt» không hồi lại. `giả định`
+- **A — tiếp xúc cơ**: mép nắp ấn cần đàn hồi của một công tắc trên thân hộp; LSS là cần đàn hồi; hợp vì trạng thái
+  «đóng» chính là chạm. Khác chuỗi: — (chuỗi gốc). `giả định`
+- **B — từ**: nam châm gắn trên nắp, phần tử cảm từ gắn trên thân; LSS là khe không khí mà từ trường đi qua.
+  Khác chuỗi A ở: (a) bớt WFP chạm nắp//cần; (b) LSS là trường từ qua khe thay vì cần rắn. `giả định`
+- **C — quang**: nắp đóng chặn chùm sáng giữa nguồn và mặt thu đặt trên thân; LSS là khoảng không khí có chùm tia.
+  Khác chuỗi A ở: (b) LSS là chùm sáng; (d) logic đảo — nắp đóng thì mất tín hiệu sáng. `giả định`
+
+Cả ba chuỗi chỉ báo nắp ở vị trí đóng. «Kín» (không lọt bụi, nước) là một chức năng khác; C0 phải tách nó ra, không gộp
+vào chuỗi phát hiện.
 
 Chuỗi lệch P2 (nếu có P2) ghi `lệch P2 — CEO quyết`.
 
@@ -134,7 +144,7 @@ Chuỗi lệch P2 (nếu có P2) ghi `lệch P2 — CEO quyết`.
 ```
 
 Đầu vào tối thiểu: `{{prefix}}CC2_C0_Frame.md` ở nơi ghi (chạy `/helix-cc2-frame` trước nếu chưa có). Chế độ dự án: truyền
-`--out <nơi ghi>/<F-id>` hoặc để C1 đọc `current_f` trong `_pipeline_state.md`.
+`--out <nơi ghi>` (gốc, nơi có C0 và `_pipeline_state.md`), kèm chức năng con hiện hành: `current_f` trong `_pipeline_state.md` hoặc tiền tố `<F-id>/` như ở `--op`; C1 đọc và ghi trong `<nơi ghi>/<F-id>/`.
 
 ## COD
 
