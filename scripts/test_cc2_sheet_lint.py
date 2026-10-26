@@ -1,0 +1,155 @@
+"""Test cho cc2_sheet_lint.py - chan phieu gia thuyet va bang tham so thieu nhan."""
+import importlib.util
+import os
+import subprocess
+import sys
+import tempfile
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+SCRIPT = os.path.join(HERE, 'cc2_sheet_lint.py')
+
+
+def load():
+    spec = importlib.util.spec_from_file_location('cc2_sheet_lint', SCRIPT)
+    mod = importlib.util.module_from_spec(spec)
+    sys.modules['cc2_sheet_lint'] = mod
+    spec.loader.exec_module(mod)
+    return mod
+
+
+L = load()
+
+PHIEU_TOT = """PHIẾU GIẢ THUYẾT — GT-001
+1 Hiện tượng: bia lệch điểm chạm khi khe hẹp
+2 NẾU: chiều rộng khe w = 3 mm | Đối chứng: w = 6 mm
+3 THÌ: điểm chạm lệch dưới 2 mm
+4 VÌ: khe hẹp ép tấm về một phía (giả định về tiếp xúc)
+5 Phép thử: bàn thử 3 lần; ngày thử: 2026-11-10
+6 {{điền SAU}}
+7 Dự đoán: lệch < 2 mm; người ký CEO — ngày 2026-11-01
+8 Bác bỏ nếu: lệch >= 2 mm
+9 Hệ quả: đổi khe sang 3 mm
+"""
+
+
+def codes(text):
+    return [f.code for f in L.lint_sheets(text)]
+
+
+def bo_dong(text, prefix):
+    return ''.join(l + '\n' for l in text.splitlines() if not l.startswith(prefix))
+
+
+def thay(text, prefix, moi):
+    return ''.join((moi if l.startswith(prefix) else l) + '\n' for l in text.splitlines())
+
+
+def test_phieu_tot_sach():
+    assert L.lint_sheets(PHIEU_TOT) == []
+
+
+def test_lint_tep_rong_la_loi():
+    assert [f.code for f in L.lint_sheets("# không có gì")] == ['NO_SHEETS']
+
+
+def test_thieu_muc_4():
+    t = bo_dong(PHIEU_TOT, '4 ')
+    assert 'MISSING_ITEM' in codes(t) or 'NO_BECAUSE' in codes(t)
+    assert 'MISSING_ITEM' in codes(t)
+
+
+def test_muc_4_placeholder_la_no_because():
+    assert 'NO_BECAUSE' in codes(thay(PHIEU_TOT, '4 ', '4 {{điền}}'))
+
+
+def test_muc_khac_placeholder_la_missing():
+    assert 'MISSING_ITEM' in codes(thay(PHIEU_TOT, '8 ', '8 {{điền}}'))
+
+
+def test_tac_dung_o_neu():
+    assert 'EFFECT_IN_IF' in codes(thay(PHIEU_TOT, '2 ', '2 NẾU: ma sát giảm | Đối chứng: w = 6 mm'))
+
+
+def test_hai_bien():
+    assert 'IF_MULTI_VAR' in codes(thay(PHIEU_TOT, '2 ', '2 NẾU: w = 3 mm, d = 20 mm | Đối chứng: w = 6 mm'))
+
+
+def test_lint_du_doan_cung_ngay_thu():
+    t = thay(PHIEU_TOT, '7 ', '7 Dự đoán: x; người ký CEO — ngày 2026-11-10')
+    assert 'PRED_NOT_BEFORE_TEST' in codes(t)
+    t2 = thay(PHIEU_TOT, '5 ', '5 Phép thử: bàn thử 3 lần')
+    assert 'PRED_NOT_BEFORE_TEST' in codes(t2)
+
+
+def test_du_doan_khong_ky():
+    assert 'PRED_UNSIGNED' in codes(thay(PHIEU_TOT, '7 ', '7 Dự đoán: lệch < 2 mm'))
+
+
+def test_lint_nhan_phieu_voi_gach_khac():
+    for dash in ('-', '–', '—'):
+        t = PHIEU_TOT.replace('—', dash, 1)
+        t = ''.join('  ' + l + '\n' if l[:1].isdigit() else l + '\n' for l in t.splitlines())
+        s = L.parse_sheets(t)
+        assert len(s) == 1 and sorted(s[0]['items']) == list(range(1, 10)), dash
+        assert L.lint_sheets(t) == [], dash
+
+
+def test_phieu_trong_fence():
+    t = "```\n" + PHIEU_TOT + "```\n7 khong thuoc phieu\n"
+    s = L.parse_sheets(t)
+    assert len(s) == 1 and 'khong thuoc' not in s[0]['items'][7]
+
+
+def test_hai_phieu_tach_nhau():
+    t = PHIEU_TOT + "\n" + PHIEU_TOT.replace('GT-001', 'GT-002')
+    assert [s['id'] for s in L.parse_sheets(t)] == ['GT-001', 'GT-002']
+
+
+BANG = """| Tham số | Nhãn | Nguồn số |
+|---|---|---|
+| w | tri thức | đo được (bàn thử 2026-10-01) |
+| d | phỏng đoán | suy ra (từ w) |
+| h | giả định | chưa biết |
+"""
+
+
+def test_bang_tot_sach():
+    assert L.lint_param_table(BANG) == []
+
+
+def test_bang_thieu_nhan():
+    t = BANG + "| k |  | đo được (x) |\n"
+    assert 'LABEL_MISSING' in [f.code for f in L.lint_param_table(t)]
+
+
+def test_bang_nguon_sai():
+    t = BANG + "| k | giả định | theo catalog |\n"
+    assert 'SOURCE_MISSING' in [f.code for f in L.lint_param_table(t)]
+
+
+def test_tri_thuc_chua_biet():
+    t = BANG + "| k | tri thức | chưa biết |\n"
+    assert 'KNOWLEDGE_NO_EVIDENCE' in [f.code for f in L.lint_param_table(t)]
+
+
+def test_bang_khac_bi_bo_qua():
+    assert L.lint_param_table("| a | b |\n|---|---|\n| 1 | 2 |\n") == []
+
+
+def chay(path, kind):
+    return subprocess.run([sys.executable, SCRIPT, path, '--kind', kind],
+                          capture_output=True, text=True, encoding='utf-8')
+
+
+def test_cli_exit_code():
+    with tempfile.TemporaryDirectory() as d:
+        sach = os.path.join(d, 'a.md')
+        rong = os.path.join(d, 'b.md')
+        with open(sach, 'w', encoding='utf-8') as f:
+            f.write(PHIEU_TOT)
+        with open(rong, 'w', encoding='utf-8') as f:
+            f.write('')
+        assert chay(sach, 'hypo').returncode == 0
+        r = chay(rong, 'hypo')
+        assert r.returncode == 1 and 'NO_SHEETS' in r.stdout
+        assert chay(os.path.join(d, 'khong-co.md'), 'hypo').returncode == 2
