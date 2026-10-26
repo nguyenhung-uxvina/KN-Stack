@@ -34,7 +34,7 @@ ORCH_OUTPUTS = ['_pipeline_state.md']
 
 # Khoi chua viet (Task 5-8). Moi task xoa ten khoi cua minh khoi tap nay.
 PENDING = {
-    'helix-cc2-frame', 'helix-cc2-chain', 'helix-cc2-form', 'helix-cc2-param',
+    'helix-cc2-form', 'helix-cc2-param',
     'helix-cc2-hypo', 'helix-cc2-analyze', 'helix-cc2-handoff',
 }
 
@@ -232,3 +232,29 @@ def test_cong_va_chay_tiep():
         re.search(r'--op`, `--from`, `--only` không cần cờ chế độ', text), 'thieu luat co phu doc trang thai'
     assert re.search(r'Không bao giờ dựng giả tệp thượng nguồn', text), 'thieu luat --from khi thieu tep thuong nguon'
     assert '<nơi ghi>/<F-id>/' in text, 'thieu thu muc theo chuc nang con'
+
+
+def _block(name):
+    path = os.path.join(HELIX, name, 'SKILL.md')
+    assert os.path.isfile(path), f'thieu {path}'
+    return _read(path)
+
+
+def test_c0_c1_tieu_de():
+    c0 = _block('helix-cc2-frame')
+    for h in ['## Chức năng', '## Thông số chức năng', '## Connector biên', '## Nguyên lý',
+              '## Sàng chức năng con', '## Hình thể hiện có']:
+        assert h in c0, f'C0 thieu tieu de {h}'
+    assert '## Chạy riêng' in c0
+    assert 'Nhãn' in c0 and 'Nguồn số' in c0
+    assert 'cc2_sheet_lint.py' in c0 and '--kind params' in c0
+    c1 = _block('helix-cc2-chain')
+    for phrase in ['≥3', '≥2 miền', 'lệch P2', 'sửa tối thiểu', '## Phép nên làm tiếp', 'Mermaid',
+                   '## Chạy riêng']:
+        assert phrase in c1, f'C1 thieu cum: {phrase}'
+
+
+def test_c1_khong_lan_p2():
+    c1 = _block('helix-cc2-chain')
+    assert 'không dựng ma trận hình thái' in c1
+    assert 'VDI 2225' in c1 and 'nguồn ý' in c1
