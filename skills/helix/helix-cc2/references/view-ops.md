@@ -4,7 +4,7 @@
 > *khi nào* (câu hỏi kích hoạt), *làm gì với mô hình*, *dấu hiệu dùng sai*. Mỗi lần dùng sinh một phiên bản chuỗi mới
 > (`A.1`, `A.2`…), không ghi đè. Nguồn: CC = *Mô hình C&C² và giả thuyết kết cấu*.
 
-Bốn phép đầu không chạm vào mẫu; chúng đổi mức chi tiết, biên, thời gian và hướng nhìn của mô hình (CC Ch04 §04.3).
+Zoom, shift, state, view không chạm mẫu; chúng đổi mức chi tiết, biên, thời gian và hướng nhìn của mô hình (CC Ch04 §04.3). Chỉ observe tác động lên mẫu.
 Bảng kỹ thuật là *một lựa chọn*, không phải danh mục phải chạy hết (CC Ch04 §04.2).
 
 Bốn câu hỏi dẫn đường dùng như danh sách kiểm, không như thứ tự bắt buộc: nghi một tham số mà không thấy vì mức chi
@@ -27,7 +27,7 @@ tiết → zoom-in; nghi một tương tác → shift hoặc zoom-out; trạng t
 
 - Khi nào: hệ con nghi vấn khó quan sát; hoặc có một tác dụng mà mô hình hiện tại không giải thích được (CC Ch04 §04.3).
 - Làm gì với mô hình: dời trọng tâm dọc lưới làm việc — tách một Connector thành WFP và LSS để mở biên, hoặc gộp ngược thành Connector mới; hai bước là dời nghi vấn rồi mở biên. Ví dụ sách: «Shift dời trọng tâm từ WFP1 sang WFP2, và biên không gian được mở» (CC Ch04 §04.3).
-- Dấu hiệu dùng sai: không ai ký cho mở biên sang dụng cụ, đồ gá, quy trình lắp, nên cuộc tìm dừng ở chi tiết dễ đổ lỗi nhất; hoặc tháo phần ngoài biên để «mở» làm mất chính trạng thái lắp cần xem (CC Ch04 §04.2).
+- Dấu hiệu dùng sai: không ai ký cho mở biên sang dụng cụ, đồ gá, quy trình lắp, nên cuộc tìm dừng ở chi tiết dễ đổ lỗi nhất (CC Ch04 §04.3); hoặc tháo phần ngoài biên để «mở» làm mất chính trạng thái lắp cần xem (CC Ch04 §04.2).
 
 ### state
 

@@ -20,15 +20,15 @@ def load():
 L = load()
 
 PHIEU_TOT = """PHIẾU GIẢ THUYẾT — GT-001
-1 Hiện tượng: bia lệch điểm chạm khi khe hẹp
+1 Tiêu đề: GT-001 chiều rộng khe dẫn hướng — điểm chạm lệch khi khe hẹp
 2 NẾU: chiều rộng khe w = 3 mm | Đối chứng: w = 6 mm
 3 THÌ: điểm chạm lệch dưới 2 mm
 4 VÌ: khe hẹp ép tấm về một phía (giả định về tiếp xúc)
 5 Phép thử: bàn thử 3 lần; ngày thử: 2026-11-10
 6 {{điền SAU}}
 7 Dự đoán: lệch < 2 mm; người ký CEO — ngày 2026-11-01
-8 Bác bỏ nếu: lệch >= 2 mm
-9 Hệ quả: đổi khe sang 3 mm
+8 ĐỘ TIN / TẦM ẢNH HƯỞNG: trung (cơ chế quen, chưa đo) / thấp (đổi khe rẻ); bác bỏ nếu lệch >= 2 mm
+9 NẾU BỊ BÁC: lặp trong pha — giữ khe 6 mm, không mở lại cổng nào
 """
 
 

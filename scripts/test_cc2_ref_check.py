@@ -102,6 +102,38 @@ def test_chuong_hau_to_chu(tmp_path):
     assert _codes(fs) == ['CHAPTER_NOT_FOUND'] and 'Ch05' in fs[0].msg and fs[0].line == 2
 
 
+def _sectioned(tmp_path):
+    cc = tmp_path / 'cc.md'
+    cc.write_text('# Chương 04 — Phân tích\n\n## 04.3 Bốn cách nhìn\n\nNội dung chương bốn.\n\n'
+                  '# Chương 05 — Chuỗi\n\n## 05.1 Trạng thái\n\nTrong chương này, ' + CAU + '.\n',
+                  encoding='utf-8')
+    tk = tmp_path / 'tk.md'
+    tk.write_text('# Chương 06 — Truyền lực\n\n## 06.2 Dòng lực\n', encoding='utf-8')
+    return {'CC': str(cc), 'TK': str(tk)}
+
+
+def test_trich_dung_sai_chuong(tmp_path):
+    bk = _sectioned(tmp_path)
+    d = _ref(tmp_path, f'- «{CAU}» (CC Ch04)\n' + BA_TRICH_THEM)
+    assert _codes(R.check_refs(d, bk)) == ['QUOTE_NOT_FOUND']
+    d = _ref(tmp_path, f'- «{CAU}» (CC Ch05 §05.1)\n' + BA_TRICH_THEM)
+    assert R.check_refs(d, bk) == []
+
+
+def test_section_tien_to_lech_chuong(tmp_path):
+    bk = _sectioned(tmp_path)
+    d = _ref(tmp_path, '- quy tắc (CC Ch04 §05.1)\n' + BA_TRICH_THEM)
+    fs = R.check_refs(d, bk)
+    assert _codes(fs) == ['SECTION_MISMATCH'] and fs[0].line == 1
+
+
+def test_section_khong_co_trong_chuong(tmp_path):
+    bk = _sectioned(tmp_path)
+    d = _ref(tmp_path, '- quy tắc (CC Ch04 §04.9)\n- b (TK Ch06 §06.2)\n' + BA_TRICH_THEM)
+    fs = R.check_refs(d, bk)
+    assert _codes(fs) == ['SECTION_MISMATCH'] and '04.9' in fs[0].msg
+
+
 def test_it_trich(tmp_path, books):
     d = _ref(tmp_path, '- a (CC Ch04)\n- b (TK Ch06)\n')
     assert _codes(R.check_refs(d, books)) == ['NO_CITATION']

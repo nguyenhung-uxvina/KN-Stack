@@ -23,7 +23,7 @@
 - Một biến điều khiển *được lượng hoá* cần bốn thông tin: **dấu** (tăng thì chức năng tốt lên hay xấu đi), **thứ hạng** trong các tham số nghi, **trạng thái** mà dấu và thứ hạng ấy đúng, **công sức đổi** trên sản phẩm. Thiếu ô thứ tư thì đội đổi cái dễ đổi, không phải cái đáng đổi (CC Ch13 §13.6).
 - Con số chuyên gia ghi trong ma trận ảnh hưởng chỉ xếp thứ tự giả thuyết, không phản ánh độ mạnh thật (CC Ch13 §13.6).
 - Một ngưỡng tham số lượng hoá đúng chỉ là điều kiện *cần* cho chức năng con của nó, không *đủ* cho chức năng tổng (CC Ch13 §13.1).
-- «Tham số nhạy nhất» của C3 là tham số có thứ hạng cao nhất *và* độ tin thấp nhất ở trạng thái tới hạn; đó là tham số đi tiếp sang phiếu C4 (CC Ch06 §06.2).
+- Sau khi đánh nhãn, xếp hạng xem quan hệ nào đang gánh quyết định lớn nhất (CC Ch06 §06.1). «Tham số nhạy nhất» của C3 là tham số có thứ hạng cao nhất *và* độ tin thấp nhất ở trạng thái tới hạn; đó là tham số đi tiếp sang phiếu C4 *(quy ước bộ skill, sách không định nghĩa chữ này)*.
 - Dưới sai lệch: cùng một thay đổi đặc điểm có thể tốt dưới sai lệch này mà vô ích dưới sai lệch khác; ghi sai lệch tới hạn (dung sai, mòn, nhiệt) cạnh mỗi tham số nhạy (CC Ch14 §14.3).
 - Ba loại nhiễu gắn với phần tử: nhiễu ngoài (nhiệt độ) ở Connector, nhiễu trong (mòn) ở WFP đổi theo thời gian, nhiễu giữa các sản phẩm ở dung sai và độ phân tán của LSS (CC Ch14 §14.2).
 - Mỗi dung sai trên bản vẽ là một giả thuyết rằng WFP đã chế tạo đủ gần WFP đã thiết kế để chức năng không đổi (CC Ch04 §04.7).

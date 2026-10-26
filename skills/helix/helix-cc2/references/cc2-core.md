@@ -40,11 +40,11 @@ Sau (g), tổng hợp dùng đúng danh sách tham số mà (f) đã tìm, rồi
 
 - **Bằng chứng hiệu quả C&C² yếu, đọc như kỷ luật tư duy chứ không như phương pháp đã chứng minh.** Sách tự kết: dạy phân tích C&C² như một kỷ luật tư duy có lý do vật lý, «không như phương pháp đã được chứng minh hiệu quả» (CC Ch04 §04.12).
 - Bậc bằng chứng cao nhất là II trên thang năm bậc, gần như toàn bộ do cùng một trục nghiên cứu tự đo, phần lớn trên sinh viên; chưa có nghiên cứu đối chứng độc lập, chưa có lần làm lại giữ nguyên điều kiện (CC Ch11 §11.9).
-- Ở mức chi tiết, người mới bị ép dùng trọn quy trình có kết quả kém hơn làm theo trực giác; không giao người mới dựng mô hình mức chi tiết khi không có người kèm (CC Ch11 §11.1).
+- Ở mức chi tiết, người mới bị ép dùng trọn quy trình có kết quả kém hơn làm theo trực giác; không giao người mới dựng mô hình mức chi tiết khi không có người kèm (CC Ch11 §11.3).
 - Không chạy kỹ thuật nào nếu chưa viết được câu hỏi mà kỹ thuật ấy trả lời; đã chạy thì chạy đúng điều kiện của nó (CC Ch04 §04.11).
 - Mô hình phải vẽ tay được; cần phần mềm mới vẽ nổi là đã vượt câu hỏi (CC Ch05 §05.5).
 - Không chọn C&C² khi câu hỏi đã định lượng và mô hình tính đã đúng, hoặc khi chức năng nằm chủ yếu ở điện, phần mềm (CC Ch02 §02.12).
-- Mỗi phiên của bộ skill mở bằng một dòng nhắc giới hạn này; mọi gợi ý ra đời dưới dạng giả thuyết có nhãn (CC Ch06 §06.1).
+- Mỗi phiên của bộ skill mở bằng một dòng nhắc giới hạn này; mọi gợi ý ra đời dưới dạng giả thuyết có nhãn *(quy ước bộ skill)*.
 
 ## Phạm vi cứng
 

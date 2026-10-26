@@ -62,15 +62,18 @@ Kế hoạch có dòng «đổi tham số X giữa các mẫu» thì không th�
 ## Định tuyến độ tin × tầm ảnh hưởng
 
 Độ tin là lòng tin chủ quan; tầm ảnh hưởng là việc phỏng đoán bị bác sẽ có nghĩa gì cho thiết kế. Hai trục độc lập,
-không cộng thành một số. «chỉ khi tầm ảnh hưởng thấp và/hoặc độ tin cao thì mới có thể hợp lý khi thiết kế trên những phỏng đoán chưa kiểm» (CC Ch06 §06.2).
+không cộng thành một số. Sách cho điều kiện và ba đường: «chỉ khi tầm ảnh hưởng thấp và/hoặc độ tin cao thì mới có thể hợp lý khi thiết kế trên những phỏng đoán chưa kiểm» (CC Ch06 §06.2).
+
+Ma trận dưới là cách bộ skill sắp ba đường của sách vào hai trục *(quy ước bộ skill, sách không lập ma trận này)*. Hàng tầm ảnh hưởng cao mặc định đi đường 3 ở cả hai ô, vì khi tầm ảnh hưởng tối đa, độ tin cao không phải lý do bỏ kiểm — độ tin là chủ quan (CC Ch06 §06.2).
 
 | | Độ tin cao | Độ tin thấp |
 |---|---|---|
 | **Tầm ảnh hưởng thấp** | Đường 1–2: dùng phỏng đoán, ghi nhãn | Đường 2: lý giải nhóm, có một người được giao vai phản biện |
-| **Tầm ảnh hưởng cao** | Đường 2, kèm một phép tính đúng chỗ nếu có | **Đường 3: phiếu 9 mục + phép thử trên bàn thử** |
+| **Tầm ảnh hưởng cao** | **Đường 3 (mặc định): phiếu 9 mục + phép thử**; chỉ hạ xuống đường 2 khi CEO ký lý do trên phiếu | **Đường 3: phiếu 9 mục + phép thử trên bàn thử** |
 
 - Ba đường lấy từ sách; đường 1 (phỏng đoán chưa nghĩ lại) gần như không nên, vì sai rồi thì không học được gì (CC Ch06 §06.2).
-- Phỏng đoán chạm an toàn con người hoặc khi bị bác sẽ mở lại một quyết định cổng thì lên trước, bất kể trục kia (CC Ch09 §09.6).
+- Phỏng đoán chạm an toàn con người mặc định đi đường 3, bất kể độ tin (CC Ch06 §06.2).
+- Phiếu nào nếu bị bác sẽ mở lại một quyết định cổng thì lên trước trong thứ tự kiểm, bất kể trục kia (CC Ch09 §09.6).
 - Thứ tự kiểm khi cải tiến: chỗ đổi hình thể hay đổi nguyên lý trước, rồi phần mang sang đã chỉnh, rồi phần mang sang nguyên mà Connector đã đổi (CC Ch09 §09.6).
 
 ## Phiếu mẫu đã điền

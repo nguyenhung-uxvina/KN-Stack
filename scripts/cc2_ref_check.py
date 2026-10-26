@@ -7,8 +7,9 @@ Exit: 0 sach, 1 co finding, 2 loi doc tep, 3 thieu sach (khong kiem duoc).
 
 Ma loi:
   CHAPTER_NOT_FOUND  trich (CC Ch04 ...) ma book.md khong co tieu de chuong 04
-  QUOTE_NOT_FOUND    doan «...» >= 8 tu khong co nguyen van trong sach dong do trich
+  QUOTE_NOT_FOUND    doan «...» >= 8 tu khong co nguyen van trong CHUONG ma dong do trich
                      (chuan hoa khoang trang + NFC, GIU dau)
+  SECTION_MISMATCH   §NN.x co tien to NN khac ChNN, hoac chuong khong co tieu de muc NN.x
   NO_CITATION        tep reference co < 5 trich nguon
 """
 import os
@@ -25,8 +26,10 @@ DEFAULT_BOOKS = {
 }
 ENV = {'CC': 'CC2_BOOK_CC', 'TK': 'CC2_BOOK_TK'}
 
-CITE_RE = re.compile(r'(?<![A-Za-z])(CC|TK)\s+Ch(\d{2}[a-z]?)(?![0-9a-z])')
+CITE_RE = re.compile(r'(?<![A-Za-z])(CC|TK)\s+Ch(\d{2}[a-z]?)(?![0-9a-z])'
+                     r'(?:\s*§\s*(\d{2}[a-z]?\.\d+[a-z]?))?')
 HEAD_RE = re.compile(r'^#{1,6}\s+Chương\s+(\d{2}[a-z]?)(?![0-9a-z])', re.M)
+SEC_RE = re.compile(r'^#{2,4}\s+(\d{2}[a-z]?\.\d+[a-z]?)(?=[\s—–:-]|$)', re.M)
 QUOTE_RE = re.compile(r'«([^«»\n]+)»')
 MIN_QUOTE_WORDS = 8
 MIN_CITATIONS = 5
@@ -38,9 +41,18 @@ def norm(text):
 
 
 def load_book(path):
+    """Cat sach theo tieu de chuong; moi chuong giu van ban da chuan hoa va tap muc."""
     with open(path, encoding='utf-8-sig') as f:
         raw = unicodedata.normalize('NFC', f.read())
-    return {'chapters': set(HEAD_RE.findall(raw)), 'text': norm(raw)}
+    heads = list(HEAD_RE.finditer(raw))
+    chapters = {}
+    for i, m in enumerate(heads):
+        end = heads[i + 1].start() if i + 1 < len(heads) else len(raw)
+        body = raw[m.start():end]
+        ch = chapters.setdefault(m.group(1), {'text': '', 'sections': set()})
+        ch['text'] += ' ' + norm(body)
+        ch['sections'].update(SEC_RE.findall(body))
+    return {'chapters': chapters}
 
 
 def check_file(path, books):
@@ -52,21 +64,34 @@ def check_file(path, books):
     for ln, line in enumerate(lines, 1):
         cites = CITE_RE.findall(line)
         n_cite += len(cites)
-        for book, ch in cites:
-            if ch not in books[book]['chapters']:
+        for book, ch, sec in cites:
+            chap = books[book]['chapters'].get(ch)
+            if chap is None:
                 out.append(Finding(rel, ln, 'CHAPTER_NOT_FOUND',
                                    f'({book} Ch{ch}): sách {book} không có tiêu đề «Chương {ch}»'))
-        cited = sorted({b for b, _ in cites})
+                continue
+            if sec:
+                if sec.split('.')[0] != ch:
+                    out.append(Finding(rel, ln, 'SECTION_MISMATCH',
+                                       f'({book} Ch{ch} §{sec}): tiền tố mục khác số chương'))
+                elif sec not in chap['sections']:
+                    out.append(Finding(rel, ln, 'SECTION_MISMATCH',
+                                       f'({book} Ch{ch} §{sec}): chương không có tiêu đề mục {sec}'))
+        pairs = sorted({(b, c) for b, c, _ in cites})
         for q in QUOTE_RE.findall(line):
             qn = norm(q)
             if len(qn.split()) < MIN_QUOTE_WORDS:
                 continue
-            if not cited:
+            if not pairs:
                 out.append(Finding(rel, ln, 'QUOTE_NOT_FOUND',
                                    f'trích «{qn[:40]}…» không có (CC/TK ChNN) trên cùng dòng'))
-            elif not any(qn in books[b]['text'] for b in cited):
+                continue
+            texts = [books[b]['chapters'][c]['text'] for b, c in pairs
+                     if c in books[b]['chapters']]
+            if not any(qn in tx for tx in texts):
+                where = ', '.join(f'{b} Ch{c}' for b, c in pairs)
                 out.append(Finding(rel, ln, 'QUOTE_NOT_FOUND',
-                                   f'«{qn[:50]}…» không có nguyên văn trong {"/".join(cited)}'))
+                                   f'«{qn[:50]}…» không có nguyên văn trong {where}'))
     if n_cite < MIN_CITATIONS:
         out.append(Finding(rel, 1, 'NO_CITATION',
                            f'chỉ có {n_cite} trích nguồn, cần ≥ {MIN_CITATIONS}'))

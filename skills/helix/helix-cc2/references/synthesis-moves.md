@@ -15,7 +15,7 @@
 - Định *tính chất* của WFP mới (truyền lực hay thông tin gì, chuyển động tương đối, hướng lực so với mặt) trước khi vẽ hình dạng, và đánh dấu trước *mặt nào cấm* (CC Ch08 §08.7).
 - Mỗi nước đi sinh một hình thể mới, tức một giả thuyết mới; nó lại phải qua phiếu và phép thử (CC Ch08 §08.7).
 - Mỗi nguyên tắc hiện thân chỉ *gợi ra* một thay đổi ứng viên; nguyên tắc là chiến lược để chọn, đúng trong điều kiện nhất định (TK Ch06 §06.1).
-- Ba chuỗi trong C1 phải khác nhau ở cách sắp WFP/LSS/Connector, không chỉ khác kích thước; đổi một con số là việc của C3, không phải một chuỗi mới (CC Ch08 §08.7).
+- C1 sinh ít nhất ba chuỗi *(quy ước bộ skill)*. Các chuỗi phải khác nhau ở cách sắp WFP/LSS/Connector, tức ở chỗ thêm, bỏ hay đổi phần tử, không chỉ khác kích thước (CC Ch08 §08.7); đổi một con số là việc của C3, không phải một chuỗi mới *(quy ước bộ skill)*.
 
 ## Các nước đi
 
@@ -36,5 +36,5 @@
 - Mỗi lần **bỏ** hay **gộp**, ghi một dòng: chức năng của phần tử bị bỏ chuyển sang đâu, hay được chấp nhận mất (CC Ch15 §15.2).
 - Khi hai nguyên tắc kéo ngược nhau (tách vai làm dài đường dung sai; thêm chỗ chỉnh làm thêm tham số), quyết bằng sai lệch tới hạn của chính sản phẩm, không bằng cộng điểm (CC Ch14 §14.4).
 - Khi cải tiến thế hệ sau, giữ một chuỗi «hình thể hiện có, sửa tối thiểu»; chỉ đổi những tham số cần cho chức năng mới hay đã đổi (CC Ch09 §09.6).
-- Mô hình loại trừ hình thể sai rất tốt (*mặt này cấm*); chọn trong các hình thể còn lại vẫn là việc của kinh nghiệm và phép thử, nên C2 trả 2–3 phương án, không trả một đáp án (CC Ch08 §08.7).
+- Mô hình loại trừ hình thể sai rất tốt (*mặt này cấm*); từ chức năng không suy ra được một hình thể duy nhất, và chọn trong các hình thể còn lại vẫn là việc của kinh nghiệm (CC Ch08 §08.7). Vì vậy C2 trả 2–3 phương án *(quy ước bộ skill)*, không trả một đáp án.
 - Đổi tính chất (góc, chiều dày, vật liệu) cần ít nhất biết chiều và thứ tự ảnh hưởng; chỉ thêm hay bỏ WFP thì mô hình định tính là đủ (CC Ch13 §13.1).
