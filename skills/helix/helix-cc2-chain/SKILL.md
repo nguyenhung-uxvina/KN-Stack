@@ -15,7 +15,8 @@ description: "Khối C1 của bộ helix-cc2 — từ khung C0 sinh ≥3 chuỗi
 ## Đầu vào
 
 - Bắt buộc: `{{prefix}}CC2_C0_Frame.md`. Thiếu → liệt kê tệp thiếu và dừng, không dựng giả C0.
-- Chế độ dự án: chạy theo từng `F-id` ở ô `dựng C&C²`, chức năng tới hạn trước; tệp ghi vào `<nơi ghi>/<F-id>/`.
+- Chế độ dự án: chạy theo từng `F-id` ở ô `dựng C&C²`, chức năng tới hạn trước. C1 đọc C0 ở **gốc** `<nơi ghi>/` và ghi
+  tệp C1 vào `<nơi ghi>/<F-id>/`.
 - Nếu `Phase2-Concept/` có `Concept_Selection.md` / `Morphological_Matrix.md`: đọc để biết nguyên lý P2 đã chọn.
 
 ## Luật cứng
@@ -23,6 +24,10 @@ description: "Khối C1 của bộ helix-cc2 — từ khung C0 sinh ≥3 chuỗi
 1. **≥3 chuỗi** *(quy ước bộ skill)*, đặt tên `A`, `B`, `C`…. Khác nhau ở cách sắp WFP/LSS/Connector (thêm, bớt, tách, gộp,
    đổi LSS / tính chất WFP / Connector / trạng thái / miền — `synthesis-moves` §Các nước đi), không chỉ đổi kích thước.
    Đổi một con số là việc của C3, không phải một chuỗi mới.
+   **Tiêu chí kiểm được** *(quy ước bộ skill)*: hai chuỗi chỉ tính là khác nhau khi khác ở ít nhất một trong bốn điểm:
+   (a) số hoặc thứ tự phần tử WFP/LSS; (b) hiệu ứng vật lý hay miền của một LSS; (c) vị trí hoặc loại Connector;
+   (d) trạng thái logic hay cấu trúc nhánh. Chỉ khác giá trị tham số thì không tính. Mỗi chuỗi mang một dòng
+   `Khác chuỗi <X> ở: (a|b|c|d) …` (chuỗi đầu tiên ghi `Khác chuỗi: — (chuỗi gốc)`).
 2. **Nguyên lý `chưa nêu`** (C0): đề xuất chuỗi ở **≥2 miền vật lý khác nhau** (≥2 miền, *quy ước bộ skill*). Mỗi chuỗi một
    dòng «vì sao miền này hợp với thông số C0», có nhãn. Đề xuất đa miền là **nguồn ý, không phải quyết định concept**.
 3. **Có P2:** ưu tiên nguyên lý P2 đã chọn. Chuỗi khác miền với P2 ghi nhãn **«lệch P2 — CEO quyết»**; không loại, không
@@ -75,6 +80,7 @@ flowchart LR
 
 - Trạng thái logic: {{nhánh, kích hoạt chọn nhánh}}
 - Mặt biên: {{…}}
+- Khác chuỗi {{X}} ở: {{(a|b|c|d) …}}
 - Chỗ C&C² hết dùng được: {{… | không có}}
 - Vì sao chuỗi này hợp thông số C0: {{…}} ({{nhãn}})
 
@@ -85,14 +91,18 @@ flowchart LR
 - {{phép}} · {{phần tử}} · {{câu hỏi kích hoạt}}
 ````
 
-## Ví dụ ngắn: quang → điện, mức nguyên lý (giả định, không số, không tên sản phẩm)
+## Ví dụ ngắn (mức nguyên lý, giả định, không số, không tên sản phẩm)
 
-C0 ghi nguyên lý `chưa nêu`, chức năng «phát hiện vật đi qua một lối». Ba chuỗi cùng miền quang nhưng khác cách sắp
-(cơ sở: `multidomain` ví dụ quang → điện); thêm một chuỗi miền cơ nếu muốn đủ ≥2 miền khi C0 chưa chốt miền.
+### Ví dụ 1 — nguyên lý đã nêu
 
-- **A — rào sáng xuyên tia** (quang): phát và thu hai phía, vật che cắt LSS giữa hai bên.
-- **B — rào sáng phản xạ ngược** (quang): phát và thu cùng phía, thêm WFP ở mặt phản xạ, LSS đi hai lượt.
-- **C — bóng đổ lên mảng thu** (quang): một nguồn, nhiều mặt thu; trạng thái mang cả vị trí vật che.
+C0: câu chức năng «biến sự che khuất của đạn thành tín hiệu biên [quang→điện]», `Nguyên lý: đã nêu: quang→điện`.
+Ba chuỗi cùng miền quang, khác cách sắp (cơ sở: `multidomain` ví dụ quang → điện):
+
+- **A — rào sáng xuyên tia**: phát và thu hai phía, vật che cắt LSS giữa hai bên. Khác chuỗi: — (chuỗi gốc). `giả định`
+- **B — rào sáng phản xạ ngược**: phát và thu cùng phía, thêm WFP ở mặt phản xạ, LSS đi hai lượt.
+  Khác chuỗi A ở: (a) thêm một WFP, LSS đi hai lượt; (c) Connector nguồn và mạch đọc cùng phía. `giả định`
+- **C — bóng đổ lên mảng thu**: một nguồn, nhiều mặt thu; trạng thái mang cả vị trí vật che.
+  Khác chuỗi A ở: (a) nhiều WFP thu; (d) nhánh logic theo vị trí bị che. `giả định`
 
 ```mermaid
 flowchart LR
@@ -102,7 +112,20 @@ flowchart LR
   P2 --> R([Connector mạch đọc])
 ```
 
-Nhãn cả ba: `giả định`. Phía sau mặt thu là mạch điện tử: C&C² dừng, Connector «mạch đọc» chuyển sang thiết kế mạch.
+Phía sau mặt thu là mạch điện tử: C&C² dừng, Connector «mạch đọc» chuyển sang thiết kế mạch.
+
+### Ví dụ 2 — nguyên lý chưa nêu
+
+C0: câu chức năng «phát hiện đạn đi qua mặt bia», `Nguyên lý: chưa nêu`. Ba chuỗi ở ba miền (≥2 miền), là nguồn ý,
+không phải quyết định concept:
+
+- **A — bóng đổ quang**: LSS là khoảng không khí có chùm tia; hợp vì không chạm vật. Khác chuỗi: — (chuỗi gốc). `giả định`
+- **B — sóng xung kích (âm)**: LSS là không khí dẫn sóng tới mặt thu áp điện.
+  Khác chuỗi A ở: (b) LSS dẫn sóng áp suất thay vì chùm sáng; (c) Connector ra ở mặt thu áp điện. `giả định`
+- **C — tiếp xúc cơ / màn đứt mạch**: đạn làm đứt hoặc chạm một lớp dẫn; LSS là lớp rắn.
+  Khác chuỗi A ở: (a) bớt một WFP không khí; (b) LSS là vật rắn; (d) trạng thái «đứt» không hồi lại. `giả định`
+
+Chuỗi lệch P2 (nếu có P2) ghi `lệch P2 — CEO quyết`.
 
 ## Chạy riêng
 
@@ -110,8 +133,8 @@ Nhãn cả ba: `giả định`. Phía sau mặt thu là mạch điện tử: C&C
 /helix-cc2-chain [--function "<câu>" | --improve <hình thể> "<câu>" | --project <dự án>] [--out <thư mục>]
 ```
 
-Đầu vào tối thiểu: `{{prefix}}CC2_C0_Frame.md` ở nơi ghi (chạy `/helix-cc2-frame` trước nếu chưa có). Chế độ dự án thêm
-`--f <F-id>` để chọn chức năng con; thiếu thì dùng `current_f` trong `_pipeline_state.md`.
+Đầu vào tối thiểu: `{{prefix}}CC2_C0_Frame.md` ở nơi ghi (chạy `/helix-cc2-frame` trước nếu chưa có). Chế độ dự án: truyền
+`--out <nơi ghi>/<F-id>` hoặc để C1 đọc `current_f` trong `_pipeline_state.md`.
 
 ## COD
 

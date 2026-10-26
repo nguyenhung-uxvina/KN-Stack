@@ -41,7 +41,7 @@ Bảng bắt buộc có đúng hai cột `Nhãn` và `Nguồn số`:
 ### Bước 3 — Connector biên
 
 Mỗi đầu vào/ra giao với môi trường là một Connector kèm lời hứa «phần ngoài không liên quan». Ghi mỗi Connector một dòng:
-tên, hứa gì, kiểm lời hứa bằng gì. Chỗ chức năng đi vào điện tử / phần mềm: ghi chỗ dừng bằng câu khuôn của
+tên, hứa gì, kiểm lời hứa bằng gì. Ràng buộc môi trường (nhiệt, rung, ẩm, bụi, điện từ…) ghi ngay dưới bảng Connector. Chỗ chức năng đi vào điện tử / phần mềm: ghi chỗ dừng bằng câu khuôn của
 `helix-cc2:references:multidomain` §Câu khuôn.
 
 ### Bước 4 — Nguyên lý
@@ -59,7 +59,8 @@ Liệt kê **đủ** mọi chức năng con trong `Function_Structure.md`, xếp
 - Trần mặc định: chức năng quyết định giải pháp + **≤3 chức năng tới hạn** *(quy ước bộ skill)*; xếp tới hạn trước.
 - Ô `không áp dụng` ghi câu khuôn «C&C²: không áp dụng, vì …» (`multidomain` §Câu khuôn).
 - ⛔ **Cổng CEO 1 — duyệt danh sách sàng.** Dừng, chờ CEO. CEO có thể đẩy thêm vào ô `dựng C&C²` và vượt trần, **phải
-  ghi lý do bằng văn bản** vào bảng Cổng CEO của `_pipeline_state.md`. Chưa duyệt thì không chạy C1.
+  ghi lý do bằng văn bản**. Quyết định của CEO, dù duyệt nguyên trạng hay có vượt trần, được ghi vào bảng Cổng CEO của
+  `_pipeline_state.md` **trước khi** C1 chạy (không chạy khối kế khi chưa ghi quyết định).
 - Với mỗi `F-id` ở ô `dựng C&C²`, Bước 1–4 chạy riêng; khung của từng `F-id` nằm trong cùng tệp C0 ở gốc nơi ghi.
 
 ### Bước 6 — Hình thể hiện có (chỉ `--improve`)
@@ -96,6 +97,9 @@ mode: project | function | improve
 ## Connector biên
 | Connector | Lời hứa «ngoài không liên quan» | Kiểm bằng |
 |---|---|---|
+
+### Ràng buộc môi trường
+{{nhiệt độ, rung, ẩm, bụi, điện từ… — nhãn tri thức/phỏng đoán/giả định; không số thì ghi chưa biết}}
 
 ## Nguyên lý
 đã nêu: {{…}}  |  chưa nêu

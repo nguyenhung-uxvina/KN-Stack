@@ -249,7 +249,7 @@ def test_c0_c1_tieu_de():
     assert 'Nhãn' in c0 and 'Nguồn số' in c0
     assert 'cc2_sheet_lint.py' in c0 and '--kind params' in c0
     c1 = _block('helix-cc2-chain')
-    for phrase in ['≥3', '≥2 miền', 'lệch P2', 'sửa tối thiểu', '## Phép nên làm tiếp', 'Mermaid',
+    for phrase in ['≥3', '≥2 miền', 'lệch P2 — CEO quyết', 'sửa tối thiểu', 'Khác chuỗi', '## Phép nên làm tiếp', 'Mermaid',
                    '## Chạy riêng']:
         assert phrase in c1, f'C1 thieu cum: {phrase}'
 
@@ -258,3 +258,38 @@ def test_c1_khong_lan_p2():
     c1 = _block('helix-cc2-chain')
     assert 'không dựng ma trận hình thái' in c1
     assert 'VDI 2225' in c1 and 'nguồn ý' in c1
+
+
+def test_khoi_khong_co_co_la():
+    orch = _orch()
+    for b in BLOCK_OUTPUTS:
+        path = os.path.join(HELIX, b, 'SKILL.md')
+        if not os.path.isfile(path):
+            continue
+        for flag in set(re.findall(r'(?<![\w-])--([a-z][a-z-]*)', _read(path))):
+            assert f'--{flag}' in orch, f'{b}: co `--{flag}` khong co trong orchestrator'
+
+
+def test_c0_bang_mau_qua_lint():
+    import sys
+    sys.path.insert(0, HERE)
+    from cc2_sheet_lint import lint_param_table
+    c0 = _block('helix-cc2-frame')
+    sec = c0[c0.index('## Ví dụ ngắn'):c0.index('## Chạy riêng')]
+    table = chr(10).join(l for l in sec.splitlines() if l.startswith('|'))
+    assert 'Nhãn' in table
+    assert lint_param_table(table) == []
+
+
+def test_c1_vi_du_chua_neu_hai_mien():
+    c1 = _block('helix-cc2-chain')
+    ex = c1[c1.index('### Ví dụ 2'):c1.index('## Chạy riêng')]
+    assert 'chưa nêu' in ex
+    doms = {d for d in ['quang', 'âm', 'cơ', 'áp điện', 'điện', 'từ']
+            if re.search(r'(?<!\w)' + d + r'(?!\w)', ex)}
+    assert len(doms) >= 2, doms
+    chains = re.findall(r'^- \*\*[A-Z] —', ex, re.MULTILINE)
+    assert len(chains) >= 3
+    assert ex.count('Khác chuỗi') >= len(chains)
+    ex1 = c1[c1.index('### Ví dụ 1'):c1.index('### Ví dụ 2')]
+    assert 'đã nêu: quang→điện' in ex1 and ex1.count('Khác chuỗi') >= 3
