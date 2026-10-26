@@ -35,8 +35,8 @@ description: "Khối C3 của bộ helix-cc2 — mỗi phương án hình thể 
    với đối chứng (nấc 3 của thang lượng hoá), hoặc `—` ở nấc 0. Không ngoại suy ra ngoài dải đã kiểm
    (`param-bridge` §Dải đã kiểm). Trước khi lượng hoá, ghi đủ ba ô: một đại lượng chức năng đo được, một tham số hình thể
    nghi ngờ, một phương án đối chứng.
-5. **Đánh dấu `NHẠY`: ≤3 tham số mỗi phương án** *(quy ước bộ skill)*. Ghi chữ `NHẠY` ở đầu ô *Chiều ảnh hưởng* (không thêm
-   cột). **Tiêu chí chọn** *(quy ước bộ skill, sách không định nghĩa chữ này; xem `param-bridge` §Độ nhạy và thứ hạng)*:
+5. **Đánh dấu `NHẠY`: ≤3 tham số mỗi phương án** *(quy ước bộ skill)*. NHẠY = ô "Chiều ảnh hưởng" bắt đầu bằng `NHẠY` (quy ước bộ skill); C4 lấy đúng các dòng này. Không thêm
+   cột. **Tiêu chí chọn** *(quy ước bộ skill, sách không định nghĩa chữ này; xem `param-bridge` §Độ nhạy và thứ hạng)*:
    tham số nhạy là tham số có **thứ hạng cao nhất *và* độ tin thấp nhất ở trạng thái tới hạn**. Nhiều hơn ba ứng viên thì giữ
    ba tham số có thứ hạng cao nhất, các tham số còn lại ghi thứ hạng bình thường, không `NHẠY`. Mỗi tham số `NHẠY` ghi thêm
    sai lệch tới hạn (dung sai, mòn, nhiệt) trong ô *Chiều ảnh hưởng*.
@@ -79,7 +79,7 @@ f_id: {{F-id hoặc —}}
 
 | Phần tử | Tham số hình thể | Thông số chức năng | Chiều ảnh hưởng | Ước lượng | Khoảng chọn | Nhãn | Nguồn số |
 |---|---|---|---|---|---|---|---|
-| A-1:móc//gờ (S2 gài) | góc mặt vào của móc | lực đóng nắp bằng tay | góc tăng → lực đóng tăng; hạng 2 | — | chọn sau phép so | phỏng đoán | chưa biết |
+| A-1:móc//gờ (S2 gài) | góc mặt vào của móc | lực đóng nắp bằng tay | NHẠY; góc tăng → lực đóng tăng; hạng 2; sai lệch tới hạn: dung sai móc | — | chọn sau phép so | phỏng đoán | chưa biết |
 | A-1:móc//gờ (S3 tháo) | góc mặt rút của móc | lực tháo nắp | NHẠY; góc tăng → lực tháo tăng; hạng 1; sai lệch tới hạn: dung sai gờ | so tương đối với góc hiện dùng | quanh góc hiện dùng | phỏng đoán | suy ra (từ phân tích lực trên mặt nghiêng) |
 | A-1:cần đàn hồi (LSS, S2 gài) | chiều dài cần | lực đóng, biến dạng còn lại sau nhiều lần mở | NHẠY; dài hơn → lực đóng giảm; hạng 3; sai lệch tới hạn: mòn sau nhiều lần mở | so tương đối với cần hiện dùng | giới hạn bởi không gian nắp | giả định | suy ra (từ công thức dầm ngàm một đầu) |
 | A-1:cần đàn hồi (LSS) | vật liệu cần | biến dạng còn lại sau nhiều lần mở | vật liệu đàn hồi hơn → biến dạng còn lại giảm; hạng 4 | — | chọn trong vật liệu xưởng gia công được | giả định | chưa biết |

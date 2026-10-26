@@ -23,9 +23,11 @@ description: "Khối C2 của bộ helix-cc2 — từ chuỗi C&C² CEO đã ch�
 1. **2–3 phương án mỗi chuỗi** *(quy ước bộ skill)*, đặt `A-1`, `A-2`, `A-3` (chuỗi `B` thì `B-1`…). Khác nhau ở **hình học
    hay vật liệu** của WFP và LSS đã nêu trong chuỗi — không đổi chuỗi (đổi chuỗi là việc của C1) và không chỉ đổi một con số
    (việc của C3). Mỗi phương án ghi một dòng `Khác phương án <X> ở:` nêu tham số hình thể nào khác.
-2. **Mỗi phương án có lý do từ quy tắc hiện thân:** bảng `| Quy tắc TK | Câu hỏi kiểm | Kết quả | Nhãn |`, mỗi dòng lấy
-   *nguyên văn tên quy tắc* ở cột «Quy tắc» của `helix-cc2:references:embodiment-rules`, **ít nhất một dòng**. Không bịa quy
-   tắc ngoài bảng; thiếu quy tắc hợp thì ghi `Quy tắc: chưa có trong embodiment-rules` và nhãn `giả định`.
+2. **Mỗi phương án kiểm ≥2 quy tắc hiện thân** *(quy ước bộ skill)*: bảng `| Quy tắc TK | Câu hỏi kiểm | Kết quả | Nhãn |`,
+   mỗi dòng lấy *nguyên văn tên quy tắc* ở cột «Quy tắc» của `helix-cc2:references:embodiment-rules`. Mỗi quy tắc gắn với
+   **một phần tử có tên** của chuỗi (WFP, LSS hay Connector), và ô «Kết quả» **nêu tên phần tử đó kèm lý do**. Cấm ô chỉ
+   ghi «đạt» hoặc «OK» không kèm lý do. Không bịa quy tắc ngoài bảng; thiếu quy tắc hợp thì ghi
+   `Quy tắc: chưa có trong embodiment-rules` và nhãn `giả định`.
 3. **Cột «Kết quả»** trả lời câu hỏi kiểm của quy tắc bằng lời (đạt / chưa đạt / chưa biết + vì sao), không số bịa. Cột
    **«Nhãn»** là `tri thức` / `phỏng đoán` / `giả định` (`helix-cc2:references:cc2-core` §Hai loại nhãn). Lý do hình thể
    mặc định là `phỏng đoán` cho tới khi có phép thử; `tri thức` chỉ khi nguồn công khai kiểm được và ghi nguồn.
@@ -98,17 +100,25 @@ flowchart LR
 
 | Quy tắc TK | Câu hỏi kiểm | Kết quả | Nhãn |
 |---|---|---|---|
-| Đơn giản — hình học tính được | So sánh «đơn giản hơn» đã ghi pha (chế tạo, lắp, dùng)? Có đối xứng khi không có lý do lệch? | Cần là dầm một đầu, tính được; không đối xứng, một phía chịu lực | phỏng đoán |
-| An toàn — hỏng an toàn | Năng lượng đưa hệ về trạng thái an toàn có nằm sẵn trong hệ (lò xo, trọng lực)? | Cần đàn hồi tự đưa nắp về trạng thái gài; chưa biết sau nhiều lần mở | phỏng đoán |
+| Đơn giản — hình học tính được | So sánh «đơn giản hơn» đã ghi pha (chế tạo, lắp, dùng)? Có đối xứng khi không có lý do lệch? | LSS cần đàn hồi là dầm một đầu nên tính được; không đối xứng, một phía chịu lực | phỏng đoán |
+| An toàn — hỏng an toàn | Năng lượng đưa hệ về trạng thái an toàn có nằm sẵn trong hệ (lò xo, trọng lực)? | LSS cần đàn hồi tự đưa nắp về trạng thái gài; chưa biết WFP móc // gờ còn giữ sau nhiều lần mở | phỏng đoán |
 
 ### Phương án A-2 — hai cần đối xứng
 
 Hai cần đàn hồi đặt đối xứng hai bên, mỗi cần một móc và một gờ. Khác phương án A-1 ở: số cần (2), bố trí đối xứng.
 
+```mermaid
+flowchart LR
+  H([Tay người]) --> W1[WFP mặt vào của hai móc]
+  W1 --> L1[LSS hai cần đàn hồi đối xứng]
+  L1 --> W2[WFP hai móc // hai gờ giữ]
+  W2 --> K([Connector khung thân])
+```
+
 | Quy tắc TK | Câu hỏi kiểm | Kết quả | Nhãn |
 |---|---|---|---|
-| Thiết kế ít lỗi — bất biến, bù, chống lắp sai | Kích thước dung sai chặt nào bỏ được, làm bất biến được, chỉnh sau lắp được? Người không thiết kế có lắp sai được không? | Hai gờ phải khớp cùng lúc nên dung sai chặt hơn; chưa biết cách bù | giả định |
-| Đơn giản — hình học tính được | So sánh «đơn giản hơn» đã ghi pha (chế tạo, lắp, dùng)? Có đối xứng khi không có lý do lệch? | Đối xứng, lực gài chia hai bên; chia đều chưa kiểm | phỏng đoán |
+| Thiết kế ít lỗi — bất biến, bù, chống lắp sai | Kích thước dung sai chặt nào bỏ được, làm bất biến được, chỉnh sau lắp được? Người không thiết kế có lắp sai được không? | Hai WFP móc // gờ phải khớp cùng lúc nên dung sai chặt hơn; chưa biết cách bù | giả định |
+| Đơn giản — hình học tính được | So sánh «đơn giản hơn» đã ghi pha (chế tạo, lắp, dùng)? Có đối xứng khi không có lý do lệch? | Hai LSS cần đàn hồi đối xứng nên lực gài chia hai bên; chia đều chưa kiểm | phỏng đoán |
 
 ## Phép nên làm tiếp
 - `zoom-in` · A-2:cần đàn hồi · mỗi cần có chịu cùng tải khi dung sai khác nhau không?

@@ -367,14 +367,23 @@ def test_c3_bang_mau_qua_lint():
 def test_c3_nhay_toi_da_3_va_tieu_chi():
     c3 = _block('helix-cc2-param')
     rows = _table_rows(_example(c3))[1:]
-    flagged = [r for r in rows if 'NHẠY' in r[3]]
+    flagged = [r for r in rows if r[3].startswith('NHẠY')]
     assert 1 <= len(flagged) <= 3, len(flagged)
     assert all('NHẠY' not in c for r in rows for i, c in enumerate(r) if i != 3), 'NHAY chi o cot Chieu anh huong'
     for phrase in ['≤3', 'quy ước bộ skill', 'thứ hạng cao nhất', 'độ tin thấp nhất', 'trạng thái tới hạn',
                    'helix-cc2:references:param-bridge']:
         assert phrase in c3, f'C3 thieu cum: {phrase}'
     assert re.search(r'suy ra \(từ', c3)
-    assert 'không có `tri thức` đi với `chưa biết`' in c3 or 'tri thức` không đi với `chưa biết' in c3
+    assert '`tri thức` không đi với `chưa biết`' in c3
+    defn = 'NHẠY = ô "Chiều ảnh hưởng" bắt đầu bằng `NHẠY` (quy ước bộ skill); C4 lấy đúng các dòng này'
+    assert defn in c3 and defn in _read(PARAM_BRIDGE), 'dinh nghia NHAY khong dong nhat C3 / param-bridge'
+    ranks = {}
+    for r in rows:
+        m = re.search(r'hạng (\d+)', r[3])
+        ranks[int(m.group(1))] = r[3].startswith('NHẠY')
+    top = sorted(ranks)[:3]
+    assert all(ranks[k] for k in top), f'vi du phai danh dau NHAY ca 3 hang cao nhat: {ranks}'
+    assert not any(v for k, v in ranks.items() if k not in top), ranks
 
 
 def test_c2_tro_embodiment_rules():
@@ -404,4 +413,31 @@ def test_c2_cau_truc():
         assert phrase in c2, f'C2 thieu cum: {phrase}'
     ex = _example(c2)
     assert len(re.findall(r'^### Phương án A-\d', ex, re.MULTILINE)) >= 2
-    assert 'mermaid' in ex
+    heads = re.findall(r'^### Phương án A-\d', ex, re.MULTILINE)
+    sketches = len(re.findall(r'^```(?:mermaid|text)\s*$', ex, re.MULTILINE))
+    assert sketches >= len(heads) >= 2, (sketches, heads)
+    # moi phuong an co phac rieng: tach theo tieu de
+    for part in re.split(r'^### Phương án ', ex, flags=re.MULTILINE)[1:]:
+        assert re.search(r'^```(?:mermaid|text)\s*$', part, re.MULTILINE), 'phuong an thieu phac: ' + part[:20]
+
+
+def test_c2_moi_phuong_an_kiem_it_nhat_2_quy_tac_theo_phan_tu():
+    ex = _example(_block('helix-cc2-form'))
+    parts = re.split(r'^### Phương án ', ex, flags=re.MULTILINE)[1:]
+    assert len(parts) >= 2
+    for part in parts:
+        rows = []
+        for l in part.splitlines():
+            if l.startswith('|'):
+                cells = [c.strip() for c in l.strip().strip('|').split('|')]
+                if cells[0] == 'Quy tắc TK' or re.fullmatch(r':?-{2,}:?', cells[0]):
+                    continue
+                rows.append(cells)
+        assert len(rows) >= 2, part[:20]
+        for cells in rows:
+            kq = cells[2]
+            assert re.search(r'\b(WFP|LSS|Connector|C\d)\b', kq), f'Ket qua khong nho phan tu chuoi: {kq}'
+            assert kq.strip().strip('.').lower() not in ('đạt', 'ok'), kq
+            assert len(kq.split()) >= 6, f'Ket qua qua ngan, thieu ly do: {kq}'
+    c2 = _block('helix-cc2-form')
+    assert '≥2 quy tắc' in c2 and 'Cấm ô chỉ' in c2

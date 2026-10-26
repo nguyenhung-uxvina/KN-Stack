@@ -53,6 +53,8 @@ Mỗi dòng một tham số gắn với đúng một phần tử (WFP, LSS hay C
 là một trong `tri thức` / `phỏng đoán` / `giả định`; ô *Nguồn số* bắt đầu bằng `đo được` / `suy ra (từ …)` /
 `chưa biết` (xem `cc2-core.md`). Nhãn `tri thức` không đi với `chưa biết` (CC Ch06 §06.1).
 
+NHẠY = ô "Chiều ảnh hưởng" bắt đầu bằng `NHẠY` (quy ước bộ skill); C4 lấy đúng các dòng này.
+
 | Phần tử | Tham số hình thể | Thông số chức năng | Chiều ảnh hưởng | Ước lượng | Khoảng chọn | Nhãn | Nguồn số |
 |---|---|---|---|---|---|---|---|
 | {{A:WFP1 (S2)}} | {{góc, chiều dài, khe…}} | {{đại lượng đo được}} | {{↑/↓, thứ hạng}} | {{giá trị hoặc —}} | {{min–max}} | {{tri thức/phỏng đoán/giả định}} | {{đo được / suy ra (từ …) / chưa biết}} |
