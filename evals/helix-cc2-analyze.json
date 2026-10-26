@@ -1,9 +1,9 @@
 {
-  "skill": "helix-cc2",
+  "skill": "helix-cc2-analyze",
   "version": "1.0",
   "description": "Runtime assertions for /helix-cc2 --analyze on a public steel spring paper clip",
   "mode": "runtime",
-  "test_input": "Phân tích C&C² một kẹp giấy lò xo bằng thép (cơ cấu công khai, kẹp giấy kiểu dây thép uốn hai vòng). Chạy --analyze trên hình thể này: nêu chuỗi WFP -> LSS -> WFP và Connector, gán nhãn tri thức/phỏng đoán/giả định cho từng khẳng định, kèm Phép thử nhỏ nhất để bác bỏ, rồi in Phép nên làm tiếp.",
+  "test_input": "phân tích vì sao hình học của chiếc kẹp giấy lò xo bằng thép (dây thép uốn hai vòng) giữ được tập giấy",
   "assertions": [
     {
       "id": "CC2A-WFP",
