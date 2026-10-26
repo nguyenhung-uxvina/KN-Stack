@@ -203,3 +203,32 @@ def test_cum_tu_eval_tinh():
         assert phrase in text, f'orchestrator thieu cum: {phrase}'
     assert re.search(r'bằng chứng[^\n]{0,80}yếu', text, re.IGNORECASE), 'thieu cau canh bao bang chung yeu'
     assert re.search(r'≥3 chuỗi[^\n]{0,120}quy ước bộ skill', text), '≥3 chuỗi chua gan nhan quy ước bộ skill'
+
+
+def test_analyze_khong_phai_re():
+    """--analyze chi cho hinh the cua chinh Xuong, khong Purpose Gate/ACCESS LEVEL; doi thu -> /reverse-engineering."""
+    sec = _section(_orch(), r'^`--analyze`', 3)
+    assert sec is not None, 'thieu muc `### --analyze`'
+    assert re.search(r'chính Xưởng', sec), '--analyze chua gioi han vao hinh the cua chinh Xuong'
+    assert 'Purpose Gate' in sec and 'ACCESS LEVEL' in sec, '--analyze chua noi khong co Purpose Gate / ACCESS LEVEL'
+    assert re.search(r'đối thủ[^\n]*/reverse-engineering', sec), 'thieu tro doi thu/ben khac -> /reverse-engineering'
+    assert 'CC2_CA_Analysis.md' in sec, '--analyze -> C4 chua noi C4 doc gia thuyet nhap trong CA'
+
+
+def test_op_tien_to_f_id():
+    """Cu phap dich --op co tien to <F-id>/ tuy chon, bat buoc o che do du an khi >1 chuc nang con mo."""
+    sec = _section(_orch(), r'--op', 2)
+    assert sec is not None
+    assert '[<F-id>/]<chuỗi>[:<phần tử>[→<phần tử>]]' in sec, 'cu phap dich thieu tien to [<F-id>/]'
+    assert re.search(r'--op \S+ F\d+/[A-Z]', sec), 'thieu vi du --op voi tien to F-id'
+    assert re.search(r'`<F-id>/`[^\n]*bắt buộc', sec), 'chua noi tien to F-id bat buoc o che do du an'
+    assert 'current_f' in _orch(), '_pipeline_state.md chua theo doi F-id hien hanh'
+
+
+def test_cong_va_chay_tiep():
+    text = _orch()
+    assert '⛔ = dừng, chờ CEO trả lời' in text, 'thieu luat dung o cong'
+    assert re.search(r'`--op`, `--from`, `--only`[^\n]*_pipeline_state', text, re.DOTALL) or \
+        re.search(r'--op`, `--from`, `--only` không cần cờ chế độ', text), 'thieu luat co phu doc trang thai'
+    assert re.search(r'Không bao giờ dựng giả tệp thượng nguồn', text), 'thieu luat --from khi thieu tep thuong nguon'
+    assert '<nơi ghi>/<F-id>/' in text, 'thieu thu muc theo chuc nang con'

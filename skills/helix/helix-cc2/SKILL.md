@@ -45,7 +45,16 @@ Cờ phụ:
   --op <phép> <đích>  phép biến đổi góc nhìn trên một chuỗi (xem mục dưới); không chạy khối nào khác
 ```
 
-Thiếu chế độ, hoặc có hơn một → dừng, hỏi CEO. `<hình thể>` là đường dẫn tệp hoặc mô tả trong ngoặc kép.
+Có hơn một cờ chế độ → dừng, hỏi CEO. Thiếu cờ chế độ mà **không** có `--op`/`--from`/`--only` → dừng, hỏi CEO.
+`<hình thể>` là đường dẫn tệp hoặc mô tả trong ngoặc kép.
+
+**`--op`, `--from`, `--only` không cần cờ chế độ:** chúng đọc chế độ, nơi ghi và chức năng con hiện hành (`F-id`) từ
+`_pipeline_state.md` (tìm ở `--out`, nếu không có thì ở các nơi ghi mặc định dưới đây). Không tìm thấy tệp trạng thái
+→ dừng, hỏi CEO; không tự đoán chế độ.
+
+**Đầu vào khi chạy tiếp (`--from` / `--only`):** trước khối bắt đầu, kiểm mọi tệp mà cột «Đọc bởi» của Data Bus ghi
+khối ấy. Thiếu tệp nào → liệt kê tệp thiếu và dừng. Không bao giờ dựng giả tệp thượng nguồn; đề nghị CEO chạy khối
+thượng nguồn ghi tệp đó (`--from <khối ghi>`).
 
 **Nơi ghi và tiền tố** (spec §8 R4):
 1. `--out <thư mục>` nếu có.
@@ -54,7 +63,12 @@ Thiếu chế độ, hoặc có hơn một → dừng, hỏi CEO. `<hình thể>
 3. Còn lại → `./_cc2/<slug>/`, `<slug>` = câu chức năng hoặc tên hình thể viết thường, không dấu, nối `-`.
 
 `{{prefix}}` = tiền tố dự án/biến thể kiểu HELIX (`VN_ABC_V2_`) khi trong dự án, ngược lại `<slug>_`.
-Bàn giao P3 (`{{prefix}}CC2_Handoff.md`) **chỉ sinh khi có thư mục dự án**, ghi vào `Phase3-Embodiment/` (thư mục
+**Thư mục theo chức năng con (chế độ `--project`):** tên tệp Data Bus giữ nguyên; mỗi chức năng con có thư mục riêng
+`<nơi ghi>/<F-id>/` (`F-id` = mã chức năng con trong Function_Structure, vd. `F3`) chứa C1, C2, C3, C4, CA và
+`CC2_C6_Crosscheck.md` của nó. Ở gốc `<nơi ghi>/` chỉ có `{{prefix}}CC2_C0_Frame.md` (danh sách sàng + khung của
+từng `F-id`), `_pipeline_state.md` và bàn giao cuối. Các chế độ khác không có thư mục `<F-id>/`.
+
+Bàn giao P3 (`{{prefix}}CC2_Handoff.md`, một tệp gộp mọi `F-id`, không nằm trong thư mục `<F-id>/`) **chỉ sinh khi có thư mục dự án**, ghi vào `Phase3-Embodiment/` (thư mục
 `helix-embody-realize` đọc). Ngoài dự án, C6 dừng ở `{{prefix}}CC2_C6_Crosscheck.md` + kế hoạch thử C4.
 
 ## Bước 2 — Kiểm đầu vào
@@ -81,6 +95,8 @@ Tạo hoặc đọc `<nơi ghi>/_pipeline_state.md`. Có tệp → hỏi tiếp 
 updated: YYYY-MM-DD
 mode: project | function | improve | analyze
 prefix: {{prefix}}
+out: {{nơi ghi}}
+current_f: {{F-id hiện hành, vd. F3 — chỉ chế độ project}}
 ---
 # CC2 Pipeline — {{dự án hoặc slug}}
 
@@ -96,7 +112,7 @@ prefix: {{prefix}}
 ## Nhật ký phép biến đổi
 | Ngày | Phép | Đích | Phiên bản mới | Câu hỏi kích hoạt | Ai gọi |
 |---|---|---|---|---|---|
-| YYYY-MM-DD | zoom-in | B:WFP2 | B.1 | {{câu hỏi}} | đề xuất / CEO |
+| YYYY-MM-DD | zoom-in | F3/B:WFP2 | B.1 | {{câu hỏi}} | đề xuất / CEO |
 ```
 
 Cập nhật sau mỗi khối, mỗi cổng, mỗi `--op`.
@@ -106,15 +122,18 @@ Cập nhật sau mỗi khối, mỗi cổng, mỗi `--op`.
 **Phạm vi cứng.** Chỉ dựng C&C² cho chức năng quyết định giải pháp + ≤3 chức năng tới hạn *(con số 3 là quy ước bộ
 skill)*, không mô hình hoá cả sản phẩm (`helix-cc2:references:cc2-core` §Phạm vi cứng).
 
+**Cổng.** ⛔ = dừng, chờ CEO trả lời; không chạy khối kế khi chưa ghi quyết định vào bảng Cổng CEO.
+
 ### `--project`
 
 1. **C0** liệt kê đủ mọi chức năng con rồi xếp mỗi cái vào một ô sàng: `dựng C&C²` · `chỉ bảng tham số` ·
    `không áp dụng`, mỗi ô một câu lý do.
    **⛔ Cổng CEO 1 — duyệt danh sách sàng.** CEO có thể đẩy thêm vào ô `dựng C&C²` và vượt trần 3, phải ghi lý do.
-2. Với từng chức năng con ở ô `dựng C&C²`, lần lượt, chức năng tới hạn trước:
+2. Với từng chức năng con ở ô `dựng C&C²`, lần lượt, chức năng tới hạn trước (ghi `current_f` vào trạng thái,
+   tệp vào `<nơi ghi>/<F-id>/`):
    C1 → **⛔ Cổng CEO 2 — chọn chuỗi** → C2 → C3 → C4 → **⛔ Cổng CEO 3 — ký dự đoán** → C6.
    Ô `chỉ bảng tham số` chỉ chạy C3. Ô `không áp dụng` ghi `C&C²: không áp dụng, vì …` và dừng.
-3. C6 gộp một `{{prefix}}CC2_Handoff.md` cho cả dự án.
+3. C6 gộp một `{{prefix}}CC2_Handoff.md` cho cả dự án, đủ mọi `F-id`.
 
 ### `--function`
 
@@ -127,7 +146,12 @@ C1 phải có ít nhất một chuỗi «hình thể hiện có, sửa tối thi
 
 ### `--analyze`
 
-Chỉ CA. Có thể kết thúc bằng C4 nếu CEO muốn lập phiếu cho giả thuyết vừa tìm.
+Chỉ dùng cho **hình thể của chính Xưởng** (bản vẽ, CAD, ảnh, hiện vật của mình). Không có Purpose Gate, không có
+ACCESS LEVEL, không OSINT. Phân tích sản phẩm của bên khác hay của đối thủ → dùng `/reverse-engineering`, không dùng
+chế độ này.
+
+Chỉ CA. Có thể kết thúc bằng C4 nếu CEO muốn lập phiếu: khi ấy C4 lấy các **giả thuyết nháp trong
+`{{prefix}}CC2_CA_Analysis.md`** làm đầu vào, thay cho các tham số đánh dấu NHẠY của C3 (không có C3 ở luồng này).
 
 ### Luật từng khối (orchestrator kiểm trước khi qua khối sau)
 
@@ -154,10 +178,14 @@ Sau mỗi khối: cập nhật `_pipeline_state.md`, in tóm tắt 3–5 dòng, 
 ## Phép biến đổi giữa phiên (`--op`)
 
 ```
-/helix-cc2 --op <phép> <đích>        đích: <chuỗi>[:<phần tử>[→<phần tử>]]
+/helix-cc2 --op <phép> <đích>        đích: [<F-id>/]<chuỗi>[:<phần tử>[→<phần tử>]]
 vd.  --op zoom-in B:WFP2   --op zoom-out A   --op shift B:WFP1→WFP2
      --op state B          --op view B:bệ-thử   --op observe B:WFP2
+     --op zoom-in F3/B:WFP2                     (chế độ dự án)
 ```
+
+Tiền tố `<F-id>/` **bắt buộc** ở chế độ `--project` khi có hơn một chức năng con đang mở; còn lại tuỳ chọn (thiếu thì
+dùng `current_f` trong `_pipeline_state.md`). Chuỗi `B` của `F3` và chuỗi `B` của `F5` là hai chuỗi khác nhau.
 
 | Phép | Đổi gì trên mô hình | Định nghĩa |
 |---|---|---|
@@ -169,13 +197,15 @@ vd.  --op zoom-in B:WFP2   --op zoom-out A   --op shift B:WFP1→WFP2
 | `observe` | Chọn phương tiện quan sát tác động lên mẫu | `helix-cc2:references:view-ops` §observe |
 
 Xử lý một `--op`:
-1. Phép ngoài sáu phép trên, hoặc đích không khớp cú pháp / không có trong `{{prefix}}CC2_C1_Chains.md` → từ chối, liệt kê chuỗi và phần tử hiện có.
+1. Phép ngoài sáu phép trên, hoặc đích không khớp cú pháp / không có trong `{{prefix}}CC2_C1_Chains.md` (của `<F-id>/` nếu có) → từ chối, liệt kê chuỗi và phần tử hiện có.
 2. Yêu cầu một **câu hỏi kích hoạt** (dòng «Khi nào:» của phép trong view-ops). Không có câu hỏi thì không chạy phép.
 3. Ghi **phiên bản chuỗi mới** `B.1`, `B.2`… nối vào tệp C1 (hoặc CA), không ghi đè phiên bản cũ.
 4. Thêm một dòng vào `## Nhật ký phép biến đổi` của `_pipeline_state.md`.
 5. Khối sau (C2…) dùng phiên bản CEO chỉ định; mặc định là phiên bản đã chọn ở cổng 2.
 
-Cuối C1, C2 và CA, khối in **«Phép nên làm tiếp»**: 1–3 dòng `phép · phần tử · câu hỏi kích hoạt`, chọn theo bảng
+Cuối C1, C2 và CA, khối in **«Phép nên làm tiếp»**: 1–3 dòng `phép · phần tử · câu hỏi kích hoạt`. Chọn phép theo
+rào cản quan sát của chuỗi: quá nhanh / quá chậm → `state`; bị che → `observe` hoặc `shift`; quá nhỏ / quá lớn →
+`zoom-in` hoặc mẫu tỉ lệ; sai góc nhìn → `view`; nguyên cớ ngoài biên → `shift`, `zoom-out` — xem
 `helix-cc2:references:view-ops` §Rào cản quan sát. Skill tự đề xuất; CEO vẫn gọi tay được.
 
 ## Data Bus
