@@ -196,7 +196,7 @@ CEO; ngày thử sớm nhất 2026-11-18 (GT-003).
 ```
 
 Đầu vào tối thiểu: C0 ở gốc nơi ghi, C2, C3, C4 (đã ký, lint không cờ mã 0) và hàng Cổng CEO 3 có phương án đi tiếp trong
-`_pipeline_state.md`. Chế độ dự án: truyền `--out <nơi ghi>/<F-id>` hoặc để C6 đọc `current_f`; Handoff vẫn ghi vào
+`_pipeline_state.md`. Chế độ dự án: truyền `--out <nơi ghi>` (gốc, nơi có C0 và `_pipeline_state.md`), kèm chức năng con hiện hành: `current_f` trong `_pipeline_state.md` hoặc tiền tố `<F-id>/` như ở `--op`; C6 đọc và ghi trong `<nơi ghi>/<F-id>/`; Handoff vẫn ghi vào
 `<thư mục P3>/` (hoặc `<thư mục P3>/<V>/` khi có `--variant <V>`).
 
 ## COD

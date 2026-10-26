@@ -29,7 +29,7 @@ description: "Khối C3 của bộ helix-cc2 — mỗi phương án hình thể 
    đứng sau (`param-bridge` §Tham số, không phải tác dụng). Mối ghép ma sát luôn kèm một dòng `giả định` cho hệ số ma sát
    và tham số đứng sau nó (cặp vật liệu, lớp phủ, độ nhám).
 3. **Nhãn và Nguồn số** (`cc2-core` §Hai loại nhãn): *Nhãn* là `tri thức` / `phỏng đoán` / `giả định`. *Nguồn số* bắt đầu bằng
-   `đo được` / `suy ra (từ …)` / `chưa biết`. `tri thức` không đi với `chưa biết`. Con số không nguồn là `chưa biết` hoặc
+   `đo được` / `suy ra (từ …)` / `chưa biết`. `tri thức` không đi với `chưa biết` *(quy ước bộ skill)*. Con số không nguồn là `chưa biết` hoặc
    `giả định`, không bao giờ `tri thức`.
 4. **Ước lượng giải tích** luôn ghi `suy ra (từ <công thức hoặc nguồn>)` ở cột Nguồn số; ô *Ước lượng* mặc định là so tương đối
    với đối chứng (nấc 3 của thang lượng hoá), hoặc `—` ở nấc 0. Không ngoại suy ra ngoài dải đã kiểm
@@ -107,7 +107,7 @@ Sau lệnh: ghi mã lint vào cột C3 của `_pipeline_state.md`, in tóm tắt
 ```
 
 Đầu vào tối thiểu: `{{prefix}}CC2_C2_Forms.md` ở nơi ghi và `{{prefix}}CC2_C0_Frame.md` ở gốc (chạy `/helix-cc2-form` trước
-nếu chưa có). Chế độ dự án: truyền `--out <nơi ghi>/<F-id>` hoặc để C3 đọc `current_f`.
+nếu chưa có). Chế độ dự án: truyền `--out <nơi ghi>` (gốc, nơi có C0 và `_pipeline_state.md`), kèm chức năng con hiện hành: `current_f` trong `_pipeline_state.md` hoặc tiền tố `<F-id>/` như ở `--op`; C3 đọc và ghi trong `<nơi ghi>/<F-id>/`.
 
 ## COD
 

@@ -35,7 +35,7 @@ Câu nào hỏi *sửa thế nào* thay vì *đặc điểm nào quyết định
 Bảng bắt buộc có đúng hai cột `Nhãn` và `Nguồn số`:
 
 - `Nhãn` ∈ `tri thức` / `phỏng đoán` / `giả định` (`cc2-core` §Hai loại nhãn, loại a).
-- `Nguồn số` bắt đầu bằng `đo được` / `suy ra (từ …)` / `chưa biết` (loại b). `tri thức` không đi với `chưa biết`.
+- `Nguồn số` bắt đầu bằng `đo được` / `suy ra (từ …)` / `chưa biết` (loại b). `tri thức` không đi với `chưa biết` *(quy ước bộ skill)*.
 - Thiếu số thì để `—` ở cột giá trị và ghi `chưa biết`; không bịa số cho đủ bảng.
 
 ### Bước 3 — Connector biên

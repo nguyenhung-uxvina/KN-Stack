@@ -57,6 +57,10 @@ Có hơn một cờ chế độ → dừng, hỏi CEO. Thiếu cờ chế độ 
 **Đầu vào khi chạy tiếp (`--from` / `--only`):** trước khối bắt đầu, kiểm mọi tệp mà cột «Đọc bởi» của Data Bus ghi
 khối ấy. Thiếu tệp nào → liệt kê tệp thiếu và dừng. Không bao giờ dựng giả tệp thượng nguồn; đề nghị CEO chạy khối
 thượng nguồn ghi tệp đó (`--from <khối ghi>`).
+Có tệp chưa đủ: kiểm thêm bảng Cổng CEO của `_pipeline_state.md`. Mọi cổng đứng trước khối bắt đầu (Cổng 1 trước C1 ở
+chế độ `--project`; Cổng 2 trước C2, C3, C4; Cổng 3 trước C6) phải có hàng mang **quyết định đã ghi**. Hàng có
+`⏳ chờ CEO` ở cột Quyết định, hoặc không có hàng, nghĩa là cổng chưa đóng → liệt kê cổng còn chờ và dừng.
+Chế độ `--analyze` không có cổng nào trước CA hay C4.
 
 **Thư mục P3** (`<thư mục P3>`): thư mục Phase 3 của dự án, `<dự án>/Phase3-Embodiment/` hoặc `<dự án>/Phase3-Embody/`
 (HELIX dùng cả hai tên). Dùng tên đang có; có **cả hai** → dừng, hỏi CEO dùng thư mục nào; chưa có cái nào (chế độ
@@ -109,14 +113,17 @@ current_f: {{F-id hiện hành, vd. F3 — chỉ chế độ project}}
 # CC2 Pipeline — {{dự án hoặc slug}}
 
 ## Khối
-| Chức năng con | C0 | C1 | Chuỗi chọn | C2 | C3 | C4 | Ký dự đoán | CA | C6 |
-|---|---|---|---|---|---|---|---|---|---|
-| {{F1}} | ✓ | ✓ | B.1 | ✓ | ✓ lint 0 | ✓ lint 0 | {{tên — ngày}} | — | ⏳ |
+| Chức năng con | C0 | C1 | C2 | C3 | C4 | Ký dự đoán | CA | C6 |
+|---|---|---|---|---|---|---|---|---|
+| {{F1}} | ✓ | ✓ | ✓ | ✓ lint 0 | ✓ lint 0 | {{tên — ngày}} | — | chưa chạy |
 
 ## Cổng CEO
 | Cổng | Ngày | Quyết định | Lý do |
 |---|---|---|---|
+| 1 duyệt sàng | YYYY-MM-DD | duyệt nguyên trạng {{| thêm F5 vào dựng C&C², vượt trần}} | {{…}} |
+| 2 chọn chuỗi · {{F1}} | YYYY-MM-DD | chuỗi chọn: {{B.1}} | {{…}} |
 | 3 ký dự đoán · {{F1}} | YYYY-MM-DD | đã ký {{GT-001…GT-003}}; phương án đi tiếp: {{A-1}} | {{…}} |
+| 2 chọn chuỗi · {{F2}} | — | ⏳ chờ CEO | — |
 
 ## Nhật ký phép biến đổi
 | Ngày | Phép | Đích | Phiên bản mới | Câu hỏi kích hoạt | Ai gọi |
@@ -125,6 +132,11 @@ current_f: {{F-id hiện hành, vd. F3 — chỉ chế độ project}}
 ```
 
 Cập nhật sau mỗi khối, mỗi cổng, mỗi `--op`.
+
+**Bảng Cổng CEO là nơi duy nhất ghi quyết định cổng**, kể cả chuỗi chọn của Cổng 2 (dạng `chuỗi chọn: B.1`) và phương
+án đi tiếp của Cổng 3; bảng Khối chỉ ghi tiến độ. Khi khối dừng ở một cổng mà CEO chưa trả lời, hàng của cổng ấy ghi
+`⏳ chờ CEO` ở cột Quyết định, cột Ngày và Lý do để `—`. `⏳ chờ CEO` **chưa phải quyết định**: khối kế không chạy, và
+`--from` / `--only` coi cổng ấy là chưa đóng. CEO trả lời thì thay cả hàng bằng ngày, quyết định và lý do.
 
 ## Bước 4 — Chạy khối theo chế độ
 
@@ -141,6 +153,7 @@ skill)*, không mô hình hoá cả sản phẩm (`helix-cc2:references:cc2-core
 2. Với từng chức năng con ở ô `dựng C&C²`, lần lượt, chức năng tới hạn trước (ghi `current_f` vào trạng thái,
    tệp vào `<nơi ghi>/<F-id>/`):
    C1 → **⛔ Cổng CEO 2 — chọn chuỗi** → C2 → C3 → C4 → **⛔ Cổng CEO 3 — ký dự đoán** → C6.
+   Ở Cổng CEO 2 (mọi chế độ có C1), CEO ghi chuỗi chọn vào bảng Cổng CEO (dạng `chuỗi chọn: B.1`); C2 đọc từ đó.
    Ở Cổng CEO 3 (mọi chế độ có C6), CEO ghi thêm vào bảng Cổng CEO phương án đi tiếp `X-n` của chức năng con ấy (dạng `phương án đi tiếp: A-1`); C6 đọc từ đó, không tự chọn.
    Ô `chỉ bảng tham số` chỉ chạy C3. Ô `không áp dụng` ghi `C&C²: không áp dụng, vì …` và dừng.
 3. C6 gộp một `{{prefix}}CC2_Handoff.md` cho cả dự án, đủ mọi `F-id`.
@@ -162,6 +175,9 @@ chế độ này.
 
 Chỉ CA. Có thể kết thúc bằng C4 nếu CEO muốn lập phiếu: khi ấy C4 lấy các **giả thuyết nháp trong
 `{{prefix}}CC2_CA_Analysis.md`** làm đầu vào, thay cho các tham số đánh dấu NHẠY của C3 (không có C3 ở luồng này).
+Luồng này cũng không có C0: C4 ở `--analyze` **được miễn** `{{prefix}}CC2_C0_Frame.md` và chỉ đòi
+`{{prefix}}CC2_CA_Analysis.md` (kể cả khi kiểm đầu vào của `--from C4` / `--only C4` với `mode: analyze`); đại lượng
+chức năng của phiếu lấy từ câu hỏi phân tích và bảng `Vì sao hình học này` của CA.
 
 ### Luật từng khối (orchestrator kiểm trước khi qua khối sau)
 
@@ -176,6 +192,7 @@ bằng gốc của worktree ấy.
   quyết định concept**. Đã có P2 thì ưu tiên nguyên lý P2 chọn; chuỗi khác miền ghi «lệch P2 — CEO quyết».
   helix-cc2 **không** dựng ma trận hình thái, **không** chấm DSO/VDI 2225 (việc của `helix-p2-search`).
   Chuỗi đi vào điện tử/phần mềm phải ghi chỗ C&C² hết dùng được (`helix-cc2:references:multidomain` §Chỗ phải dừng).
+  C1 không có cổng máy; CEO kiểm ≥3 chuỗi, Mermaid, dòng Khác chuỗi ở Cổng 2 (lint `--kind params` không áp cho C1).
 - **C2:** 2–3 phương án mỗi chuỗi *(quy ước bộ skill)*, lý do trỏ quy tắc hiện thân (`helix-cc2:references:embodiment-rules`).
 - **C3:** bảng theo `helix-cc2:references:param-bridge` §Khuôn bảng C3. Cổng máy:
   `python D:/KN-Stack/scripts/cc2_sheet_lint.py <C3> --kind params` — mã 0 mới qua; mã 1 → sửa ô thiếu nhãn rồi chạy lại; mã 2 → báo lỗi đọc, dừng.
@@ -231,7 +248,7 @@ Xử lý một `--op`:
 5. Khối sau (C2…) dùng phiên bản CEO chỉ định; mặc định là phiên bản đã chọn ở cổng 2.
 
 Cuối C1, C2 và CA, khối in **«Phép nên làm tiếp»**: 1–3 dòng `phép · phần tử · câu hỏi kích hoạt`. Chọn phép theo
-rào cản quan sát của chuỗi: quá nhanh / quá chậm → `state`; bị che → `observe` hoặc `shift`; quá nhỏ / quá lớn →
+rào cản quan sát của chuỗi: quá nhanh → `state`; quá chậm → `state` + `observe`; bị che → `observe` hoặc `shift`; quá nhỏ / quá lớn →
 `zoom-in` hoặc mẫu tỉ lệ; sai góc nhìn → `view`; nguyên cớ ngoài biên → `shift`, `zoom-out` — xem
 `helix-cc2:references:view-ops` §Rào cản quan sát. Skill tự đề xuất; CEO vẫn gọi tay được.
 
@@ -239,7 +256,7 @@ rào cản quan sát của chuỗi: quá nhanh / quá chậm → `state`; bị c
 
 | Tệp | Ghi bởi | Đọc bởi |
 |---|---|---|
-| `{{prefix}}CC2_C0_Frame.md` | helix-cc2-frame (C0) | C1, C3, C6 |
+| `{{prefix}}CC2_C0_Frame.md` | helix-cc2-frame (C0) | C1, C3, C4 (trừ `--analyze`), C6 |
 | `{{prefix}}CC2_C1_Chains.md` | helix-cc2-chain (C1); phiên bản `--op` do helix-cc2 nối | C2, orchestrator `--op` |
 | `{{prefix}}CC2_C2_Forms.md` | helix-cc2-form (C2) | C3, C6 |
 | `{{prefix}}CC2_C3_Params.md` | helix-cc2-param (C3) | C4, C6 |
@@ -262,7 +279,7 @@ Chế độ `--project`: tệp C1, C2, C3, C4, CA và `CC2_C6_Crosscheck.md` n�
 - `helix-cc2:references:*` (cc2-core, view-ops, synthesis-moves, embodiment-rules, param-bridge, hypothesis-sheet, multidomain)
 
 **WRITES TO**
-- `<nơi ghi>/` (xem Bước 1): mọi tệp `{{prefix}}CC2_*` và `_pipeline_state.md`
+- `<nơi ghi>/` (xem Bước 1): mọi tệp `{{prefix}}CC2_*` trừ `CC2_Handoff.md`, và `_pipeline_state.md`
 - `<thư mục P3>/[<V>/]{{prefix}}CC2_Handoff.md` → đầu vào khuyến nghị của `/helix-embody-realize` (P3)
 
 ## COD

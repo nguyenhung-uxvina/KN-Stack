@@ -1042,3 +1042,133 @@ def test_ca_crosscheck_cad_extract_tuy_chon():
     assert re.search(r'Không\s+có tệp thì đối chiếu ở mức mô tả', para)
     assert 'L6' in sec and 'Mức đối chiếu: hình học (cad_extract.json)' in sec
     assert 'không ghi `_pipeline_state.md`' in sec
+
+
+# ----------------------------------------------------------------- final-fix wave: vi du, mau thuan
+
+TARGET_WORDS_RE = re.compile(r'(?<!\w)(đạn|bia|che khuất)(?!\w)', re.IGNORECASE)
+
+
+def _target_words(text):
+    import unicodedata
+    return TARGET_WORDS_RE.findall(unicodedata.normalize('NFC', text))
+
+
+def test_target_words_dot_bien():
+    assert _target_words('phát hiện đạn đi qua mặt bia') == ['đạn', 'bia']
+    assert _target_words('sự che khuất của vật') == ['che khuất']
+    assert _target_words('bịa số, biased, đạnx') == []
+
+
+def test_vi_du_ngoai_mien_bia_dan():
+    files = glob.glob(os.path.join(HELIX, 'helix-cc2*', 'SKILL.md')) + glob.glob(os.path.join(REF_DIR, '*.md'))
+    assert len(files) >= 8 + 7, files
+    for p in files:
+        assert _target_words(_read(p)) == [], f'{p}: con tu mien bia/dan'
+
+
+def test_c1_vi_du_trung_tinh_va_luat_mien():
+    c1 = _block('helix-cc2-chain')
+    ex1 = _between(c1, '### Ví dụ 1', '### Ví dụ 2')
+    ex2 = _between(c1, '### Ví dụ 2', '## Chạy riêng')
+    assert '«phát hiện vật che cắt một lối đi [quang→điện]»' in ex1
+    assert '«phát hiện nắp hộp đã đóng kín»' in ex2
+    for ex in (ex1, ex2):
+        chains = '\n'.join(l for l in ex.splitlines() if re.match(r'^(- \*\*[A-Z] —|  \S)', l))
+        assert chains and not re.search(r'(?<![\w≥])\d', chains), 'vi du C1 khong duoc co so'
+        assert ex.count('`giả định`') >= 3
+    rule = [l for l in c1.splitlines() if 'nếu miền của câu đầu vào trùng miền của một ví' in l]
+    assert rule, 'C1 thieu luat mien vi du'
+    i = c1.index(rule[0])
+    para = c1[c1.rfind('\n', 0, i - 1):c1.index('\n10. ', i)]
+    assert 'quy ước bộ skill' in para and 'ít nhất một chuỗi phải nằm ngoài các cách sắp trong ví dụ' in para
+
+
+F5_RE = r'C1 không có cổng máy\W+CEO kiểm ≥3 chuỗi, Mermaid, dòng Khác chuỗi ở Cổng 2'
+
+
+def test_c1_khong_co_cong_may():
+    assert re.search(F5_RE, _orch()), 'orchestrator thieu cau C1 khong co cong may'
+    assert re.search(F5_RE, _block('helix-cc2-chain')), 'C1 thieu cau khong co cong may'
+    assert not re.search(F5_RE, 'C1 có cổng máy; CEO kiểm ≥3 chuỗi')
+
+
+def test_cong_cho_ceo_dinh_dang():
+    orch = _orch()
+    tpl = _between(orch, '## Bước 3 — Trạng thái pipeline', '## Bước 4')
+    gates = _table_rows(_between(tpl, '## Cổng CEO', '## Nhật ký phép biến đổi'))
+    assert gates[0] == ['Cổng', 'Ngày', 'Quyết định', 'Lý do']
+    assert any(r[2] == '⏳ chờ CEO' for r in gates[1:]), 'khuon trang thai thieu hang ⏳ chờ CEO'
+    assert any(r[2].startswith('chuỗi chọn:') and r[0].startswith('2 ') for r in gates[1:]), 'cong 2 chua ghi chuỗi chọn:'
+    khoi = _table_rows(_between(tpl, '## Khối', '## Cổng CEO'))
+    assert 'Chuỗi chọn' not in khoi[0], 'chuoi chon chi ghi o bang Cổng CEO (M2)'
+    assert re.search(r'`⏳ chờ CEO` \*\*chưa phải quyết định\*\*', tpl), 'chua dinh nghia ⏳ chờ CEO la chua phai quyet dinh'
+    run = _between(orch, '**Đầu vào khi chạy tiếp (`--from` / `--only`):**', '**Thư mục P3**')
+    assert 'quyết định đã ghi' in run and '`⏳ chờ CEO`' in run and 'dừng' in run, '--from/--only chua kiem hang cong'
+    c1 = _block('helix-cc2-chain')
+    step = c1[c1.index('⛔ **Cổng CEO 2'):c1.index('## Khuôn đầu ra')]
+    assert '`⏳ chờ CEO`' in step and 'chưa phải quyết định' in step and '`chuỗi chọn: B.1`' in step
+    c2 = _block('helix-cc2-form')
+    head = c2[:c2.index('## Luật cứng')]
+    assert 'hàng Cổng 2' in head and '`chuỗi chọn: B.1`' in head and '«Chuỗi chọn»' not in head
+    assert '`⏳ chờ CEO`' in head
+
+
+def test_analyze_c4_mien_c0():
+    orch = _orch()
+    rows = {r[0]: r for r in _data_bus_rows(orch)}
+    assert re.search(r'(?<!\w)C4(?!\w)', rows['{{prefix}}CC2_C0_Frame.md'][2]), 'Data Bus: C0 chua co C4 o Đọc bởi'
+    assert '--analyze' in rows['{{prefix}}CC2_C0_Frame.md'][2]
+    sec = _section(orch, r'^`--analyze`', 3)
+    assert re.search(r'C4 ở `--analyze` \*\*được miễn\*\* `\{\{prefix\}\}CC2_C0_Frame\.md`', sec)
+    c4 = _block('helix-cc2-hypo')
+    inp = _between(c4, '## Đầu vào', '## Luật cứng')
+    assert re.search(r'`--analyze`[^\n]*\*\*được miễn\*\* `\{\{prefix\}\}CC2_C0_Frame\.md`', inp)
+    assert 'Bắt buộc (trừ `--analyze`)' in inp
+
+
+def test_writes_to_tru_handoff():
+    orch = _orch()
+    line = [l for l in orch.splitlines() if l.startswith('- `<nơi ghi>/` (xem Bước 1)')]
+    assert line and 'mọi tệp `{{prefix}}CC2_*` trừ `CC2_Handoff.md`' in line[0], line
+
+
+def test_chay_rieng_out_goc():
+    for b in ('helix-cc2-chain', 'helix-cc2-form', 'helix-cc2-param', 'helix-cc2-hypo', 'helix-cc2-handoff'):
+        t = _block(b)
+        assert '--out <nơi ghi>/<F-id>' not in t, f'{b}: --out tro vao <F-id>'
+        sec = _section(t, r'^Chạy riêng$', 2)
+        assert '`--out <nơi ghi>` (gốc' in sec and 'current_f' in sec and '`<F-id>/`' in sec, b
+
+
+def test_ca_tran_hai_chinh_co_y():
+    ca = _block('helix-cc2-analyze')
+    r1 = _between(ca, '1. **Phạm vi một trang.**', '\n2. ')
+    assert 'quy ước bộ skill' in r1 and 'cố ý khác' in r1 and 'hai chức năng chính' in r1
+
+
+def test_orch_rao_can_qua_cham():
+    orch = _orch()
+    assert 'quá chậm → `state` + `observe`' in orch
+    assert 'quá nhanh / quá chậm → `state`' not in orch
+
+
+def test_c4_dong_phep_thu_la_quy_uoc():
+    c4 = _block('helix-cc2-hypo')
+    r4 = _between(c4, '4. **Phép thử nhỏ nhất để bác bỏ.**', '\n5. ')
+    assert 'quy ước bộ skill' in r4
+
+
+def test_tri_thuc_chua_biet_la_quy_uoc():
+    for p in (PARAM_BRIDGE, os.path.join(HELIX, 'helix-cc2-frame', 'SKILL.md'),
+              os.path.join(HELIX, 'helix-cc2-param', 'SKILL.md')):
+        hits = [l for l in _read(p).splitlines() if 'không đi với `chưa biết`' in l]
+        assert hits, p
+        for l in hits:
+            assert 'quy ước bộ skill' in l and 'CC Ch06 §06.1' not in l, (p, l)
+
+
+def test_c4_vi_du_qua_lint_hom_nay():
+    from datetime import date
+    ex = _example(_block('helix-cc2-hypo'))
+    assert _lint().lint_sheets(ex, today=date.today()) == []

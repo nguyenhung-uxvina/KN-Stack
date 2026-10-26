@@ -51,7 +51,7 @@ Trước khi lượng hoá, ghi ba ô: một đại lượng chức năng đo đ
 
 Mỗi dòng một tham số gắn với đúng một phần tử (WFP, LSS hay Connector) kèm mã trạng thái (CC Ch13 §13.7). Ô *Nhãn*
 là một trong `tri thức` / `phỏng đoán` / `giả định`; ô *Nguồn số* bắt đầu bằng `đo được` / `suy ra (từ …)` /
-`chưa biết` (xem `cc2-core.md`). Nhãn `tri thức` không đi với `chưa biết` (CC Ch06 §06.1).
+`chưa biết` (xem `cc2-core.md`). Nhãn `tri thức` không đi với `chưa biết` *(quy ước bộ skill)*.
 
 NHẠY = ô "Chiều ảnh hưởng" bắt đầu bằng `NHẠY` (quy ước bộ skill); C4 lấy đúng các dòng này.
 

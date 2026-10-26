@@ -27,8 +27,9 @@ description: "Khối CA của bộ helix-cc2 — chiều phân tích độc lậ
 
 ## Luật cứng
 
-1. **Phạm vi một trang.** Mô hình chỉ gồm ≤ 2 chức năng con chính + ≤ 3 tới hạn *(quy ước bộ skill, theo `cc2-core` §Phạm vi cứng)*;
-   không mô hình hoá cả sản phẩm. Mỗi hình vẽ tay lại được trên một trang A4; không vừa thì vẽ thô hơn.
+1. **Phạm vi một trang.** Mô hình chỉ gồm ≤ 2 chức năng con chính + ≤ 3 tới hạn *(quy ước bộ skill)*; không mô hình hoá cả
+   sản phẩm. Trần này **cố ý khác** trần sàng khi tổng hợp (1 chức năng quyết định giải pháp + ≤3 tới hạn, ở orchestrator và
+   `cc2-core` §Phạm vi cứng): một hình thể có sẵn đang phân tích có thể phục vụ hai chức năng chính cùng lúc. Mỗi hình vẽ tay lại được trên một trang A4; không vừa thì vẽ thô hơn.
 2. **Bảy bước là danh mục việc phải xong** (`cc2-core` §Bảy bước dựng mô hình): mục đích là câu hỏi *đặc điểm nào*, không hỏi
    *sửa thế nào*; ảnh hệ ở trạng thái đang làm chức năng; WFP, LSS, Connector gắn lên ảnh, mỗi phần tử ghi trạng thái.
 3. **Nhãn** (`cc2-core` §Hai loại nhãn): mọi câu «do X nên Y» mang `tri thức` / `phỏng đoán` / `giả định`. `tri thức` chỉ khi

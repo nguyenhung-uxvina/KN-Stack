@@ -6,15 +6,16 @@ description: "Khối C2 của bộ helix-cc2 — từ chuỗi C&C² CEO đã ch�
 # helix-cc2-form — Khối C2: 2–3 phương án hình thể mỗi chuỗi
 
 > **Vai:** sau Cổng CEO 2, trước C3. Biến chuỗi đã chọn thành vài hình thể cụ thể kèm lý do; không xếp hạng, không chọn.
-> **Đầu vào:** `{{prefix}}CC2_C1_Chains.md` (chuỗi đã chọn ghi ở bảng **Cổng CEO** của `_pipeline_state.md`, cột «Chuỗi chọn») |
+> **Đầu vào:** `{{prefix}}CC2_C1_Chains.md` (chuỗi đã chọn ghi ở bảng **Cổng CEO** của `_pipeline_state.md`, hàng Cổng 2, dạng `chuỗi chọn: B.1`) |
 > **Đầu ra:** `{{prefix}}CC2_C2_Forms.md` | **Đọc bởi:** C3, C6
 > **Nguồn dùng chung:** `helix-cc2:references:embodiment-rules` (bảng quy tắc), `helix-cc2:references:cc2-core`
 > (§Hai loại nhãn), `helix-cc2:references:view-ops` (§Rào cản quan sát).
 
 ## Đầu vào
 
-- Bắt buộc: `{{prefix}}CC2_C1_Chains.md` và chuỗi chọn trong `_pipeline_state.md` (vd. `B.1`). Thiếu tệp nào → liệt kê tệp
-  thiếu và dừng; không tự chọn chuỗi, không dựng giả C1.
+- Bắt buộc: `{{prefix}}CC2_C1_Chains.md` và hàng Cổng 2 trong bảng Cổng CEO của `_pipeline_state.md` mang `chuỗi chọn: <X>`
+  (vd. `B.1`). Thiếu tệp nào → liệt kê tệp thiếu và dừng; hàng ghi `⏳ chờ CEO` hay không có hàng là CEO chưa chọn → dừng,
+  hỏi CEO. Không tự chọn chuỗi, không dựng giả C1.
 - Chế độ dự án: chạy theo từng `F-id`; đọc và ghi trong `<nơi ghi>/<F-id>/` (C0 nằm ở gốc `<nơi ghi>/`).
 - Chuỗi chọn có phiên bản `--op` (`B.1`, `B.2`…): dùng đúng phiên bản CEO chỉ định.
 
@@ -130,7 +131,7 @@ flowchart LR
 ```
 
 Đầu vào tối thiểu: `{{prefix}}CC2_C1_Chains.md` và chuỗi chọn trong `_pipeline_state.md` ở nơi ghi (chạy `/helix-cc2-chain`
-trước nếu chưa có). Chế độ dự án: truyền `--out <nơi ghi>/<F-id>` hoặc để C2 đọc `current_f`.
+trước nếu chưa có). Chế độ dự án: truyền `--out <nơi ghi>` (gốc, nơi có C0 và `_pipeline_state.md`), kèm chức năng con hiện hành: `current_f` trong `_pipeline_state.md` hoặc tiền tố `<F-id>/` như ở `--op`; C2 đọc và ghi trong `<nơi ghi>/<F-id>/`.
 
 ## COD
 

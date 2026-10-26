@@ -8,7 +8,7 @@ description: "Khối C4 của bộ helix-cc2 — lấy đúng các dòng NHẠY 
 > **Vai:** sau C3 (hoặc sau CA ở `--analyze`), trước C6. Biến mỗi tham số nhạy thành một phỏng đoán kiểm được, kèm phép
 > thử rẻ nhất có thể bác nó, rồi xếp thứ tự thử. Không ký thay CEO.
 > **Đầu vào:** `{{prefix}}CC2_C3_Params.md` (dòng `NHẠY`), `{{prefix}}CC2_C0_Frame.md` (thông số chức năng, ở **gốc** nơi ghi);
-> chế độ `--analyze`: `{{prefix}}CC2_CA_Analysis.md` |
+> chế độ `--analyze`: chỉ `{{prefix}}CC2_CA_Analysis.md` (miễn C0 và C3) |
 > **Đầu ra:** `{{prefix}}CC2_C4_Hypotheses.md`, `{{prefix}}CC2_C4_Test_Plan.md` | **Đọc bởi:** C6, CEO (ký dự đoán), bàn thử
 > **Nguồn dùng chung:** `helix-cc2:references:hypothesis-sheet` (§Khuôn phiếu, §Điều kiện hợp lệ, §Khuôn kế hoạch thử trên
 > bàn thử, §Định tuyến độ tin × tầm ảnh hưởng, §Phiếu mẫu đã điền), `helix-cc2:references:param-bridge` (§Khuôn bảng C3,
@@ -17,9 +17,9 @@ description: "Khối C4 của bộ helix-cc2 — lấy đúng các dòng NHẠY 
 
 ## Đầu vào
 
-- Bắt buộc: `{{prefix}}CC2_C3_Params.md` và `{{prefix}}CC2_C0_Frame.md`. Thiếu tệp nào → liệt kê tệp thiếu và dừng; không
+- Bắt buộc (trừ `--analyze`): `{{prefix}}CC2_C3_Params.md` và `{{prefix}}CC2_C0_Frame.md`. Thiếu tệp nào → liệt kê tệp thiếu và dừng; không
   dựng giả tệp thượng nguồn (`--from C3` hoặc `--from C0` để chạy lại khối ghi tệp đó).
-- Chế độ `--analyze`: không có C3; C4 lấy mục `## Giả thuyết nháp` của `{{prefix}}CC2_CA_Analysis.md` làm đầu vào, mỗi phiếu nháp thành một phiếu C4, giữ nguyên mã GT nếu CA đã đánh; dòng truy ngược của mỗi phiếu là `Nguồn CA:` (dạng `Nguồn CA: <mục CA> · <đặc điểm hình học>`) thay cho `Dòng C3:` (không có C3 ở luồng này).
+- Chế độ `--analyze`: không có C3 và không có C0 — C4 **được miễn** `{{prefix}}CC2_C0_Frame.md`, chỉ đòi `{{prefix}}CC2_CA_Analysis.md` (thiếu thì liệt kê và dừng); đại lượng chức năng của mục 3 lấy từ câu hỏi phân tích và bảng `Vì sao hình học này` của CA. C4 lấy mục `## Giả thuyết nháp` của `{{prefix}}CC2_CA_Analysis.md` làm đầu vào, mỗi phiếu nháp thành một phiếu C4, giữ nguyên mã GT nếu CA đã đánh; dòng truy ngược của mỗi phiếu là `Nguồn CA:` (dạng `Nguồn CA: <mục CA> · <đặc điểm hình học>`) thay cho `Dòng C3:` (không có C3 ở luồng này).
 - Chế độ dự án: chạy theo từng `F-id`; đọc C3 và ghi C4 trong `<nơi ghi>/<F-id>/`, đọc C0 ở gốc `<nơi ghi>/`. Chức năng con
   ở ô `chỉ bảng tham số` dừng ở C3, không có phiếu.
 
@@ -44,7 +44,8 @@ description: "Khối C4 của bộ helix-cc2 — lấy đúng các dòng NHẠY 
    - Mục 8 ghi hai nấc `thấp`/`trung`/`cao`, mỗi nấc một lý do trong ngoặc: độ tin trước, tầm ảnh hưởng sau. Phỏng đoán
      chạm an toàn con người ghi chữ `an toàn` ở mục 8.
    - Mục 9 ghi `lặp trong pha` hoặc `lặp xuyên cổng → mở lại quyết định <cổng nào>`.
-4. **Phép thử nhỏ nhất để bác bỏ.** Mỗi phiếu thêm một dòng `Phép thử nhỏ nhất để bác bỏ: …` ngay sau mục 9: quan sát rẻ
+4. **Phép thử nhỏ nhất để bác bỏ.** Mỗi phiếu thêm một dòng `Phép thử nhỏ nhất để bác bỏ: …` ngay sau mục 9 *(định dạng dòng
+   này là quy ước bộ skill)*: quan sát rẻ
    nhất, ít mẫu nhất, mà nếu thấy thì phiếu bị bác. Ghi rõ quan sát nào sẽ khác đi nếu giả thuyết sai. Phép này không lớn
    hơn mục 5; nếu không nghĩ ra phép nào rẻ hơn mục 5 thì chép tóm tắt mục 5 và ghi `(= mục 5)`.
 5. **Không ngoại suy** ra ngoài dải đã kiểm của C3 (`param-bridge` §Dải đã kiểm); dải tham số và dải điều kiện biên ghi ở mục 5.
@@ -66,7 +67,7 @@ description: "Khối C4 của bộ helix-cc2 — lấy đúng các dòng NHẠY 
 
 ## Bước
 
-1. Đọc C3 (hoặc CA ở `--analyze`) và các thông số chức năng của C0. Lọc đúng các dòng `NHẠY` (luật 1).
+1. Đọc C3 và các thông số chức năng của C0 (ở `--analyze`: chỉ đọc CA). Lọc đúng các dòng `NHẠY` (luật 1).
 2. Với mỗi dòng: viết phiếu 9 mục (luật 2–3), dòng `Dòng C3:` và dòng `Phép thử nhỏ nhất để bác bỏ:` (luật 4).
 3. Tính đường và thứ tự từ mục 8, 9 (luật 7); lập `{{prefix}}CC2_C4_Test_Plan.md` một hàng mỗi phiếu (luật 8).
 4. Ghi `{{prefix}}CC2_C4_Hypotheses.md` với mục 7 chưa ký, rồi chạy lượt lint trước cổng (bỏ qua đúng mã `PRED_UNSIGNED`,
@@ -234,7 +235,7 @@ GT-003 lên đầu vì nếu bị bác sẽ mở lại Cổng CEO 2; GT-001 đư
 
 Đầu vào tối thiểu: `{{prefix}}CC2_C3_Params.md` ở nơi ghi và `{{prefix}}CC2_C0_Frame.md` ở gốc (chạy `/helix-cc2-param` trước
 nếu chưa có); với `--analyze`: `{{prefix}}CC2_CA_Analysis.md` (chạy `/helix-cc2-analyze` trước). Chế độ dự án: truyền
-`--out <nơi ghi>/<F-id>` hoặc để C4 đọc `current_f` trong `_pipeline_state.md`.
+`--out <nơi ghi>` (gốc, nơi có C0 và `_pipeline_state.md`), kèm chức năng con hiện hành: `current_f` trong `_pipeline_state.md` hoặc tiền tố `<F-id>/` như ở `--op`; C4 đọc và ghi trong `<nơi ghi>/<F-id>/`.
 
 ## COD
 
