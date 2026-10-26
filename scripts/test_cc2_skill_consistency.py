@@ -33,9 +33,7 @@ BLOCK_OUTPUTS = {
 ORCH_OUTPUTS = ['_pipeline_state.md']
 
 # Khoi chua viet (Task 5-8). Moi task xoa ten khoi cua minh khoi tap nay.
-PENDING = {
-    'helix-cc2-handoff',
-}
+PENDING = set()
 
 VN_CHAR = re.compile(
     '[àáạảãâầấậẩẫăằắặẳẵèéẹẻẽêềếệểễìíịỉĩòóọỏõôồốộổỗơờớợởỡùúụủũưừứựửữỳýỵỷỹđ]',
@@ -816,3 +814,146 @@ def test_orch_co_crosscheck():
     flags = orch[start:orch.index('```', start)]
     m = re.search(r'^\s*--crosscheck\s+(.+)$', flags, re.MULTILINE)
     assert m and 'C6' in m.group(1) and 'CA' in m.group(1), 'Cờ phụ thieu --crosscheck (chi C6 goi CA)'
+
+
+# ----------------------------------------------------------------- Task 8: C6 + P3
+
+EMBODY = os.path.join(HELIX, 'helix-embody-realize', 'SKILL.md')
+P3_LAYOUT = os.path.join(HELIX, 'helix-p3-layout', 'SKILL.md')
+HANDOFF_SECTIONS = ['## Chuỗi đã chọn theo chức năng con', '## Tham số hình thể và khoảng chọn', '## Tham số nhạy',
+                    '## Phiếu giả thuyết đang mở', '## Kế hoạch thử', '## Chỗ C&C² không áp dụng', '## Vòng lặp P3']
+RI_LINE = '□ {{prefix}}CC2_Handoff.md → chuỗi C&C², khoảng tham số, phiếu mở (from /helix-cc2)'
+RF_LINE = '- helix-cc2 → CC2_Handoff (khoảng tham số, phiếu giả thuyết mở)'
+NO_PROJECT = 'không sinh bàn giao P3 vì không có thư mục dự án'
+MUC_DOI_CHIEU = 'Mức đối chiếu: mô tả (chưa có hình học)'
+C6_TPL_X = '## Khuôn đầu ra: `{{prefix}}CC2_C6_Crosscheck.md`'
+C6_TPL_H = '## Khuôn đầu ra: `{{prefix}}CC2_Handoff.md`'
+
+
+def _blocks_after(text, start_re, stop_re):
+    """Moi khoi: cac dong sau mot dong khop start_re (khong gom) toi dong dau tien khop stop_re."""
+    lines = text.splitlines()
+    out = []
+    for i, l in enumerate(lines):
+        if re.search(start_re, l):
+            blk = []
+            for l2 in lines[i + 1:]:
+                if re.search(stop_re, l2):
+                    break
+                blk.append(l2)
+            out.append(blk)
+    return out
+
+
+def test_blocks_after_khong_lot():
+    t = 'A:\n  x\nB:\n  y\n\nz'
+    assert _blocks_after(t, r'^A:', r'^\S') == [['  x']]
+    assert _blocks_after(t, r'^B:', r'^\s*$') == [['  y']]
+    assert _blocks_after(t, r'^C:', r'^\S') == []
+
+
+def test_handoff_hai_phia():
+    c6 = _block('helix-cc2-handoff')
+    assert 'CC2_Handoff' in c6
+    em = _read(EMBODY)
+    # RECOMMENDED INPUTS: moi khoi bat dau bang dong `RECOMMENDED INPUTS`, dung o dong trong
+    ri = [l for b in _blocks_after(em, r'^RECOMMENDED INPUTS', r'^\s*$') for l in b]
+    assert ri, 'helix-embody-realize thieu khoi RECOMMENDED INPUTS'
+    assert any(l.strip() == RI_LINE for l in ri), 'dong CC2_Handoff khong nam TRONG khoi RECOMMENDED INPUTS'
+    outside = [l for l in em.splitlines() if l.strip() == RI_LINE]
+    assert len(outside) == 1, 'dong CC2_Handoff phai xuat hien dung mot lan'
+    rfs = _blocks_after(em, r'^helix-embody-realize READS FROM:', r'^\s*$')
+    assert len(rfs) == 1, 'helix-embody-realize phai co dung mot khoi READS FROM'
+    rf = rfs[0]
+    assert any(l.strip() == RF_LINE for l in rf), 'dong helix-cc2 khong nam TRONG khoi READS FROM'
+    # dong cu cua hai khoi van con (chi them dong)
+    assert any('Cost_Envelope_v*.md' in l for l in ri)
+    assert any(l.strip().startswith('- helix-cad-roundtrip → BA Geometry Source Gate') for l in rf)
+    lay = _read(P3_LAYOUT)
+    sec = _section(lay, r'^Khi có CC2_Handoff\.md$', 2)
+    assert sec is not None, 'helix-p3-layout thieu muc `## Khi có CC2_Handoff.md`'
+    assert 'khoảng' in sec and 'phiếu giả thuyết' in sec, 'muc P3 chua noi lay khoang tham so tu phieu'
+    assert 'không tự chọn lại' in sec, 'muc P3 chua cam tu chon lai khoang'
+    assert '/helix-cc2 --analyze' in sec and 'cad_extract.json' in sec, 'muc P3 chua noi vong lap P3'
+
+
+def test_handoff_vong_lap_p3():
+    c6 = _block('helix-cc2-handoff')
+    tpl = _between(c6, C6_TPL_H, '## Ví dụ ngắn')[len(C6_TPL_H):]
+    heads = [l.strip() for l in tpl.splitlines() if l.startswith('## ')]
+    assert heads == HANDOFF_SECTIONS, heads
+    assert MUC_DOI_CHIEU in tpl, 'Handoff thieu dong muc doi chieu'
+    loop = tpl[tpl.index('## Vòng lặp P3'):]
+    assert 'helix-cad-bridge' in loop and 'cad_extract.json' in loop
+    assert '/helix-cc2 --analyze <cad_extract.json>' in loop
+    assert 'mức hình học' in loop
+    xtpl = _between(c6, C6_TPL_X, C6_TPL_H)
+    assert MUC_DOI_CHIEU in xtpl, 'Crosscheck thieu dong muc doi chieu'
+    assert 'gộp mọi chức năng con vào một tệp' in c6, 'chua noi che do du an gop mot tep'
+
+
+def test_handoff_chi_khi_co_du_an():
+    c6 = _block('helix-cc2-handoff')
+    assert '«' + NO_PROJECT + '»' in c6, 'thieu dung cau in khi ngoai du an'
+    # dinh nghia "trong du an" chep dung orchestrator, khong luat moi
+    defn = 'chế độ `--project`, hoặc thư mục làm việc là gốc một dự án có'
+    assert re.search(re.escape(defn) + r'\s+`Phase3-Embodiment/`', _orch()), 'orchestrator doi dinh nghia trong du an'
+    assert defn + ' `Phase3-Embodiment/`' in c6, 'C6 khong chep dung dinh nghia trong du an cua orchestrator'
+    line = [l for l in c6.splitlines() if NO_PROJECT in l][0]
+    assert 'Crosscheck' in line and 'Test_Plan' in line, 'ngoai du an phai dung o Crosscheck + Test_Plan'
+
+
+def test_handoff_vi_tri():
+    orch = _orch()
+    rows = {r[0]: r for r in _data_bus_rows(orch)}
+    assert 'Phase3-Embodiment/' in rows['{{prefix}}CC2_Handoff.md'][1], 'Data Bus: Handoff thieu duong dan'
+    assert 'helix-cc2-handoff' in rows['{{prefix}}CC2_CA_Analysis.md'][1], 'Data Bus: C6 chua la nguoi noi CA'
+    root = [l for l in orch.splitlines() if 'Ở gốc `<nơi ghi>/` chỉ có' in l]
+    assert root, 'thieu cau goc <noi ghi>'
+    i = orch.index(root[0])
+    para = orch[i:orch.index('\n\n', i)]
+    assert 'bàn giao' not in para and 'Handoff' not in para, 'goc <noi ghi> khong chua ban giao'
+    bus = _section(orch, r'^Data Bus\b', 2)
+    assert '<F-id>/' in bus, 'Data Bus chua noi C1-C4 nam trong <F-id>/'
+    c6 = _block('helix-cc2-handoff')
+    assert re.search(r'`Phase3-Embodiment/`[^\n]*không[^\n]*`<nơi ghi>`', c6), 'C6 chua noi Handoff khong vao <noi ghi>'
+
+
+def test_c6_dung_khi_thieu_phuong_an():
+    c6 = _block('helix-cc2-handoff')
+    m = re.search(r'^.*Thiếu phương án đi tiếp.*$', c6, re.MULTILINE)
+    assert m, 'C6 thieu luat khi thieu phuong an'
+    assert 'dừng, hỏi CEO' in m.group(0) and 'không tự chọn' in m.group(0), m.group(0)
+    assert 'Cổng CEO' in c6 and '_pipeline_state.md' in c6
+    orch = _orch()
+    g = [l for l in orch.splitlines() if 'Cổng CEO 3' in l and 'phương án đi tiếp' in l]
+    assert g, 'orchestrator: cong 3 chua ghi phuong an di tiep'
+    c4 = _block('helix-cc2-hypo')
+    i = c4.index('⛔ **Cổng CEO 3')
+    step = c4[i:c4.index('\n6. ', i)]
+    assert 'phương án đi tiếp' in step, 'C4: cong 3 chua ghi phuong an di tiep'
+
+
+def test_c6_lint_lai_khong_co():
+    c6 = _block('helix-cc2-handoff')
+    assert re.search(r'cc2_sheet_lint\.py\s+\S*CC2_C4_Hypotheses\.md\s+--kind hypo[ \t]*$', c6, re.MULTILINE), \
+        'C6 thieu lenh lint khong co'
+    for l in c6.splitlines():
+        if 'CC2_C4_Hypotheses' in l and 'cc2_sheet_lint' in l:
+            assert '--allow-unsigned' not in l, f'C6 lint C4 khong duoc --allow-unsigned: {l}'
+    assert re.search(r'Exit ≠ 0[^\n]*không sinh bàn giao', c6), 'thieu luat exit != 0 -> khong ban giao'
+    assert 'báo cáo "đã kiểm" không thay output của lệnh' in c6
+
+
+def test_c6_goi_ca_tac_tu_moi():
+    c6 = _block('helix-cc2-handoff')
+    assert '/helix-cc2-analyze --crosscheck <thư mục trích> <X-n> <n>' in c6
+    assert 'tác tử con mới' in c6
+    cut = _between(c6, 'Bản trích:', '\n\n')
+    files = set(re.findall(r'`<thư mục trích>/(CC2_[A-Za-z0-9_]+\.md)`', cut))
+    assert files == {'CC2_C0_Frame.md', 'CC2_C2_Forms.md', 'CC2_C3_Params.md'}, files
+    for bad in ('CC2_C1', 'CC2_C4'):
+        assert bad not in cut, f'{bad} trong ban trich'
+    assert '`<thư mục trích>/CA_Crosscheck_<X-n>.md`' in c6
+    assert '## Đối chiếu ngược — phương án <X-n>' in c6 and 'CC2_CA_Analysis.md' in c6
+    assert re.search(r'không mang ngữ cảnh', c6), 'chua noi tac tu con khong mang ngu canh'

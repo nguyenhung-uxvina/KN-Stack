@@ -67,10 +67,10 @@ thượng nguồn ghi tệp đó (`--from <khối ghi>`).
 **Thư mục theo chức năng con (chế độ `--project`):** tên tệp Data Bus giữ nguyên; mỗi chức năng con có thư mục riêng
 `<nơi ghi>/<F-id>/` (`F-id` = mã chức năng con trong Function_Structure, vd. `F3`) chứa C1, C2, C3, C4, CA và
 `CC2_C6_Crosscheck.md` của nó. Ở gốc `<nơi ghi>/` chỉ có `{{prefix}}CC2_C0_Frame.md` (danh sách sàng + khung của
-từng `F-id`), `_pipeline_state.md` và bàn giao cuối. Các chế độ khác không có thư mục `<F-id>/`.
+từng `F-id`) và `_pipeline_state.md`. Các chế độ khác không có thư mục `<F-id>/`.
 
-Bàn giao P3 (`{{prefix}}CC2_Handoff.md`, một tệp gộp mọi `F-id`, không nằm trong thư mục `<F-id>/`) **chỉ sinh khi có thư mục dự án**, ghi vào `Phase3-Embodiment/` (thư mục
-`helix-embody-realize` đọc). Ngoài dự án, C6 dừng ở `{{prefix}}CC2_C6_Crosscheck.md` + kế hoạch thử C4.
+Bàn giao P3 (`{{prefix}}CC2_Handoff.md`, một tệp gộp mọi `F-id`, không nằm trong thư mục `<F-id>/`) **chỉ sinh khi có thư mục dự án**, ghi vào `Phase3-Embodiment/` (hoặc `Phase3-Embodiment/<biến thể>/`, thư mục
+`helix-embody-realize` đọc), không ghi vào `<nơi ghi>` (mặc định `Phase3-Embodiment/CC2/`). Ngoài dự án, C6 dừng ở `{{prefix}}CC2_C6_Crosscheck.md` + kế hoạch thử C4.
 
 ## Bước 2 — Kiểm đầu vào
 
@@ -109,6 +109,7 @@ current_f: {{F-id hiện hành, vd. F3 — chỉ chế độ project}}
 ## Cổng CEO
 | Cổng | Ngày | Quyết định | Lý do |
 |---|---|---|---|
+| 3 ký dự đoán · {{F1}} | YYYY-MM-DD | đã ký {{GT-001…GT-003}}; phương án đi tiếp: {{A-1}} | {{…}} |
 
 ## Nhật ký phép biến đổi
 | Ngày | Phép | Đích | Phiên bản mới | Câu hỏi kích hoạt | Ai gọi |
@@ -133,6 +134,7 @@ skill)*, không mô hình hoá cả sản phẩm (`helix-cc2:references:cc2-core
 2. Với từng chức năng con ở ô `dựng C&C²`, lần lượt, chức năng tới hạn trước (ghi `current_f` vào trạng thái,
    tệp vào `<nơi ghi>/<F-id>/`):
    C1 → **⛔ Cổng CEO 2 — chọn chuỗi** → C2 → C3 → C4 → **⛔ Cổng CEO 3 — ký dự đoán** → C6.
+   Ở Cổng CEO 3 (mọi chế độ có C6), CEO ghi thêm vào bảng Cổng CEO phương án đi tiếp `X-n` của chức năng con ấy (dạng `phương án đi tiếp: A-1`); C6 đọc từ đó, không tự chọn.
    Ô `chỉ bảng tham số` chỉ chạy C3. Ô `không áp dụng` ghi `C&C²: không áp dụng, vì …` và dừng.
 3. C6 gộp một `{{prefix}}CC2_Handoff.md` cho cả dự án, đủ mọi `F-id`.
 
@@ -221,10 +223,13 @@ rào cản quan sát của chuỗi: quá nhanh / quá chậm → `state`; bị c
 | `{{prefix}}CC2_C3_Params.md` | helix-cc2-param (C3) | C4, C6 |
 | `{{prefix}}CC2_C4_Hypotheses.md` | helix-cc2-hypo (C4) | C6, CEO (ký dự đoán) |
 | `{{prefix}}CC2_C4_Test_Plan.md` | helix-cc2-hypo (C4) | C6, bàn thử |
-| `{{prefix}}CC2_CA_Analysis.md` | helix-cc2-analyze (CA) | C0 (`--improve`), C4 (`--analyze`), C6 |
+| `{{prefix}}CC2_CA_Analysis.md` | helix-cc2-analyze (CA); helix-cc2-handoff (C6) nối mục `## Đối chiếu ngược — phương án <X-n>` | C0 (`--improve`), C4 (`--analyze`), C6 |
 | `{{prefix}}CC2_C6_Crosscheck.md` | helix-cc2-handoff (C6) | CEO |
-| `{{prefix}}CC2_Handoff.md` | helix-cc2-handoff (C6) | helix-embody-realize, helix-p3-layout |
+| `{{prefix}}CC2_Handoff.md` | helix-cc2-handoff (C6), ghi vào `<dự án>/Phase3-Embodiment/` (hoặc thư mục biến thể), không vào `<nơi ghi>` | helix-embody-realize, helix-p3-layout |
 | `_pipeline_state.md` | helix-cc2 (orchestrator) | mọi khối, `--from` |
+
+Chế độ `--project`: tệp C1, C2, C3, C4, CA và `CC2_C6_Crosscheck.md` nằm trong `<nơi ghi>/<F-id>/`; C0 và
+`_pipeline_state.md` ở gốc `<nơi ghi>/`; `CC2_Handoff.md` ở `Phase3-Embodiment/`, một tệp cho mọi `F-id`.
 
 ## Tích hợp
 

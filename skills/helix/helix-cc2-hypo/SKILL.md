@@ -79,6 +79,8 @@ description: "Khối C4 của bộ helix-cc2 — lấy đúng các dòng NHẠY 
    Exit ≠ 0 → sửa phiếu rồi chạy lại; chưa được trình CEO.
 5. ⛔ **Cổng CEO 3 — ký dự đoán.** Trình phiếu và kế hoạch thử. CEO/kỹ sư đọc, sửa dự đoán nếu cần, rồi điền
    `người ký <tên> — ngày YYYY-MM-DD` ở mục 7 của từng phiếu, ngày ký trước ngày thử. AI không điền chữ ký thay.
+   Ở cổng này CEO cũng ghi phương án đi tiếp `X-n` của chức năng con vào bảng Cổng CEO của `_pipeline_state.md`
+   (dạng `phương án đi tiếp: A-1`); AI không chọn thay.
    Dừng. Không chạy bước 6 cho tới khi CEO báo đã ký; lint không cờ ra mã 1 với PRED_UNSIGNED thì báo CEO, không sửa mục 7.
    Tên người ký là placeholder hay là AI (`{{…}}`, `<…>`, `AI`, `Claude`, `TBD`, `tên`, `n/a`, `chưa ký`) bị lint tính là chưa ký.
 6. Sau khi CEO ký, chạy lượt lint không cờ:
