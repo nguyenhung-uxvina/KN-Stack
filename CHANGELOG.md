@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.11.0] - 2026-10-26
+
+### Added
+- **`/helix-cc2` — bộ skill phân tích ⇄ tổng hợp chức năng–hình thể qua C&C²** (PR #29). Orchestrator + 7 khối: `helix-cc2-frame` (C0 khung chức năng, sàng chức năng con), `-chain` (C1 ≥3 chuỗi WFP/LSS/Connector khác nhau thật theo tiêu chí (a)–(d)), `-form` (C2 2–3 phương án hình thể kiểm theo quy tắc hiện thân), `-param` (C3 bảng tham số hình thể ↔ thông số chức năng, đánh dấu NHẠY), `-hypo` (C4 phiếu giả thuyết 9 mục + phép thử nhỏ nhất để bác bỏ + kế hoạch thử), `-analyze` (CA chiều phân tích độc lập, không cần Purpose Gate/ACCESS LEVEL của RE), `-handoff` (C6 đối chiếu ngược do tác tử tách biệt + bàn giao P3). Bốn chế độ `--project/--function/--improve/--analyze`, sáu phép `--op` (zoom-in/zoom-out/shift/state/view/observe), ba cổng CEO. Tri thức rút từ «Thiết kế hiện thân» và «Mô hình C&C² và giả thuyết kết cấu» thành 7 references; số/luật của bộ skill ghi «quy ước bộ skill».
+- **`scripts/cc2_sheet_lint.py`** — cổng chặn phiếu giả thuyết (`--kind hypo`: thiếu mục, «NẾU» là tác dụng, hai biến, không đối chứng, người ký là AI/chữ giữ chỗ, ngày ký không trước ngày thử hoặc ở tương lai) và bảng tham số thiếu nhãn (`--kind params`). `--allow-unsigned` cho lượt chạy trước cổng ký.
+- **`scripts/cc2_ref_check.py`** — kiểm mọi trích nguồn của references: chương tồn tại, §NN.x có thật trong chương, trích «…» ≥ 8 từ có nguyên văn trong **đúng chương được trích**.
+- Eval `helix-cc2` (static, 11 assertion, kiểm đột biến từng assertion) và `helix-cc2-analyze` (runtime, chưa chạy — cần junction).
+
+### Changed
+- **`helix-embody-realize`, `helix-p3-layout` đọc `CC2_Handoff.md`** (chỉ thêm dòng): RECOMMENDED INPUTS, READS FROM, Data Bus; layout lấy khoảng tham số từ bàn giao, đổi khoảng phải mở/sửa phiếu giả thuyết tương ứng, có vòng lặp P3 đối chiếu hình học qua `--crosscheck`.
+
+### Hạn chế đã biết
+- C2–C6 chưa chạy trọn vòng (chạy khói tới Cổng 2). Ba lỗi lint/hợp đồng R1–R3 ghi trong PR #29, sửa ở PR sau.
+
 ## [1.10.0] - 2026-09-20
 
 ### Added
