@@ -158,12 +158,16 @@ RECOMMENDED INPUTS (FORGE):
   □ ACH_Assessment_v*.md                → ACH/fallback constraints for DfU (from /forge-shift)
   □ HOQ_Design_Parameters_v*.md         → weighted DPs (from /forge-job-map)
 
+RECOMMENDED INPUTS (C&C²):
+  □ {{prefix}}CC2_Handoff.md → chuỗi C&C², khoảng tham số, phiếu mở (from /helix-cc2)
+
 OPTIONAL INPUTS:
   □ Product_Proposal_v*.md              → sacred constraints
   □ Bench test / prototype results      → empirical data for layout
 ```
 
 Glob for each in `Phase2-Concept/{{variant}}/`, `Phase1-Task/{{variant}}/`, `Phase0-Forge/ (or FORGE/)`, `Phase0-Plan/{{variant}}/`.
+Glob `{{prefix}}CC2_Handoff.md` in `Phase3-Embodiment/{{variant}}/`, `Phase3-Embodiment/`, `Phase3-Embody/{{variant}}/` and `Phase3-Embody/`.
 
 #### 1.5b: Present Input Checklist to CEO
 
@@ -354,6 +358,7 @@ When variant is specified, all filenames are prefixed with `{{prefix}}` (e.g. `V
 | `{{prefix}}Embodiment_Evaluation.md` | BE | Gate 3 | Rt/Re scores, S-diagram, weak spots |
 | `{{prefix}}P02_QC_Gate.md` | BE | Gate 3 | QC gate results |
 | `{{prefix}}Deliverables_Index.md` | BE | Phase 4 | Complete deliverable list |
+| `{{prefix}}CC2_Handoff.md` | `/helix-cc2` (C6, external — not written by this pipeline) | B0, BA | C&C² chains, form-parameter ranges, sensitive parameters, open hypothesis sheets (description-level cross-check) |
 
 **Example (with variant):** `Phase3-Embody/V5-MOTORIZED/VN_MGM_V5_BOM_Draft.md`
 **Example (no variant):** `Phase3-Embody/VN_XUONG_UUV_BOM_Draft.md`
@@ -444,6 +449,7 @@ helix-embody-realize READS FROM:
   - helix-cad-bridge → BA per-part STEP+code (AI-parametric geometry)
   - helix-cad-ingest → BA ingested cad_extract.json (human-drawn imported parts)
   - helix-cad-roundtrip → BA Geometry Source Gate orchestration (Flow B / Flow D)
+  - helix-cc2 → CC2_Handoff (khoảng tham số, phiếu giả thuyết mở)
 
 helix-embody-realize WRITES TO:
   - 1_Projects/{{project}}/Phase3-Embodiment/ → all deliverables

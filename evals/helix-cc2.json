@@ -1,0 +1,90 @@
+{
+  "skill": "helix-cc2",
+  "version": "1.0",
+  "description": "Static assertions for /helix-cc2 orchestrator (SKILL.md + references/*.md)",
+  "mode": "static",
+  "include_references": true,
+  "test_input": "static audit of helix-cc2 SKILL.md and references",
+  "assertions": [
+    {
+      "id": "CC2-MODES",
+      "name": "four_mode_flags",
+      "check": "skill declares the four mode flags",
+      "regex": "--project.*--function.*--improve.*--analyze",
+      "required": true
+    },
+    {
+      "id": "CC2-CHAINS3",
+      "name": "min_three_chains",
+      "check": "requires >=3 chains",
+      "regex": "≥ ?3 chuỗi",
+      "required": true
+    },
+    {
+      "id": "CC2-LABELS",
+      "name": "knowledge_labels",
+      "check": "three knowledge labels",
+      "regex": "tri thức.*phỏng đoán.*giả định",
+      "required": true
+    },
+    {
+      "id": "CC2-SHEET9",
+      "name": "hypothesis_sheet",
+      "check": "9-item hypothesis sheet",
+      "regex": "PHIẾU GIẢ THUYẾT",
+      "required": true
+    },
+    {
+      "id": "CC2-FALSIFY",
+      "name": "falsification",
+      "check": "smallest falsifying test",
+      "regex": "Phép thử nhỏ nhất để bác bỏ",
+      "required": true
+    },
+    {
+      "id": "CC2-VIEWOPS",
+      "name": "view_ops",
+      "check": "view operations zoom-in/zoom-out/shift",
+      "regex": "zoom-in.*zoom-out.*shift",
+      "required": true
+    },
+    {
+      "id": "CC2-OBSERVE",
+      "name": "observation_barrier",
+      "check": "observation barrier",
+      "regex": "Rào cản quan sát",
+      "required": true
+    },
+    {
+      "id": "CC2-HANDOFF",
+      "name": "handoff",
+      "check": "CC2_Handoff to P3",
+      "regex": "CC2_Handoff",
+      "required": true
+    },
+    {
+      "id": "CC2-EVIDENCE",
+      "name": "weak_evidence",
+      "check": "weak evidence flagged",
+      "regex": "bằng chứng.*yếu",
+      "required": true
+    },
+    {
+      "id": "CC2-SCOPE",
+      "name": "scope_cap",
+      "check": "max 3 critical functions",
+      "regex": "≤ ?3 chức năng tới hạn",
+      "required": true
+    },
+    {
+      "id": "CC2-LINT",
+      "name": "sheet_lint",
+      "check": "sheet lint script",
+      "regex": "cc2_sheet_lint",
+      "required": true
+    }
+  ],
+  "passing_score": 11,
+  "total_required": 11,
+  "total_optional": 0
+}
