@@ -370,20 +370,26 @@ def test_c3_nhay_toi_da_3_va_tieu_chi():
     flagged = [r for r in rows if r[3].startswith('NHẠY')]
     assert 1 <= len(flagged) <= 3, len(flagged)
     assert all('NHẠY' not in c for r in rows for i, c in enumerate(r) if i != 3), 'NHAY chi o cot Chieu anh huong'
-    for phrase in ['≤3', 'quy ước bộ skill', 'thứ hạng cao nhất', 'độ tin thấp nhất', 'trạng thái tới hạn',
-                   'helix-cc2:references:param-bridge']:
+    for phrase in ['≤3', 'quy ước bộ skill', 'helix-cc2:references:param-bridge']:
         assert phrase in c3, f'C3 thieu cum: {phrase}'
     assert re.search(r'suy ra \(từ', c3)
     assert '`tri thức` không đi với `chưa biết`' in c3
     defn = 'NHẠY = ô "Chiều ảnh hưởng" bắt đầu bằng `NHẠY` (quy ước bộ skill); C4 lấy đúng các dòng này'
     assert defn in c3 and defn in _read(PARAM_BRIDGE), 'dinh nghia NHAY khong dong nhat C3 / param-bridge'
-    ranks = {}
+    crit = 'Tiêu chí NHẠY *(quy ước bộ skill)*: (1) ứng viên là tham số có Nhãn không phải `tri thức`'
+    assert crit in c3 and crit in _read(PARAM_BRIDGE), 'tieu chi NHAY khong dong nhat'
+    for ph in ['tối đa 3 tham số có hạng tốt nhất', 'giữ hạng và không `NHẠY`', 'lý do «an toàn»']:
+        assert ph in c3 and ph in _read(PARAM_BRIDGE), ph
+    parsed = []
     for r in rows:
         m = re.search(r'hạng (\d+)', r[3])
-        ranks[int(m.group(1))] = r[3].startswith('NHẠY')
-    top = sorted(ranks)[:3]
-    assert all(ranks[k] for k in top), f'vi du phai danh dau NHAY ca 3 hang cao nhat: {ranks}'
-    assert not any(v for k, v in ranks.items() if k not in top), ranks
+        parsed.append((int(m.group(1)), r[6], r[3].startswith('NHẠY'), 'an toàn' in r[3]))
+    assert any(p[1] == 'tri thức' for p in parsed), 'vi du thieu dong tri thuc'
+    cands = sorted(p for p in parsed if p[1] != 'tri thức')
+    expected = {p[0] for p in cands[:3]}
+    actual = {p[0] for p in parsed if p[2] and not p[3]}
+    assert actual == expected, (actual, expected)
+    assert not any(p[2] for p in parsed if p[1] == 'tri thức' and not p[3]), 'dong tri thuc khong duoc NHAY'
 
 
 def test_c2_tro_embodiment_rules():

@@ -36,9 +36,7 @@ description: "Khối C3 của bộ helix-cc2 — mỗi phương án hình thể 
    (`param-bridge` §Dải đã kiểm). Trước khi lượng hoá, ghi đủ ba ô: một đại lượng chức năng đo được, một tham số hình thể
    nghi ngờ, một phương án đối chứng.
 5. **Đánh dấu `NHẠY`: ≤3 tham số mỗi phương án** *(quy ước bộ skill)*. NHẠY = ô "Chiều ảnh hưởng" bắt đầu bằng `NHẠY` (quy ước bộ skill); C4 lấy đúng các dòng này. Không thêm
-   cột. **Tiêu chí chọn** *(quy ước bộ skill, sách không định nghĩa chữ này; xem `param-bridge` §Độ nhạy và thứ hạng)*:
-   tham số nhạy là tham số có **thứ hạng cao nhất *và* độ tin thấp nhất ở trạng thái tới hạn**. Nhiều hơn ba ứng viên thì giữ
-   ba tham số có thứ hạng cao nhất, các tham số còn lại ghi thứ hạng bình thường, không `NHẠY`. Mỗi tham số `NHẠY` ghi thêm
+   cột. **Tiêu chí chọn** (xem `param-bridge` §Độ nhạy và thứ hạng): Tiêu chí NHẠY *(quy ước bộ skill)*: (1) ứng viên là tham số có Nhãn không phải `tri thức`, vì quan hệ `tri thức` đã được chứng minh và không cần phiếu giả thuyết; (2) trong các ứng viên, tối đa 3 tham số có hạng tốt nhất (hạng 1 là tốt nhất) là `NHẠY`; (3) nếu có hơn 3 ứng viên thì phần còn lại giữ hạng và không `NHẠY`; (4) ngoại lệ: tham số mà giá trị sai làm mất an toàn được thêm `NHẠY` ngoài trần 3 và phải ghi lý do «an toàn». Mỗi tham số `NHẠY` ghi thêm
    sai lệch tới hạn (dung sai, mòn, nhiệt) trong ô *Chiều ảnh hưởng*.
 6. **Ô *Chiều ảnh hưởng*** ghi dấu (tăng thì chức năng tốt lên hay xấu đi), thứ hạng trong các tham số nghi, mã trạng thái;
    ô *Khoảng chọn* ghi dải và công sức đổi trên sản phẩm. Thiếu công sức đổi thì đội đổi cái dễ đổi, không phải cái đáng đổi.
@@ -79,10 +77,11 @@ f_id: {{F-id hoặc —}}
 
 | Phần tử | Tham số hình thể | Thông số chức năng | Chiều ảnh hưởng | Ước lượng | Khoảng chọn | Nhãn | Nguồn số |
 |---|---|---|---|---|---|---|---|
-| A-1:móc//gờ (S2 gài) | góc mặt vào của móc | lực đóng nắp bằng tay | NHẠY; góc tăng → lực đóng tăng; hạng 2; sai lệch tới hạn: dung sai móc | — | chọn sau phép so | phỏng đoán | chưa biết |
-| A-1:móc//gờ (S3 tháo) | góc mặt rút của móc | lực tháo nắp | NHẠY; góc tăng → lực tháo tăng; hạng 1; sai lệch tới hạn: dung sai gờ | so tương đối với góc hiện dùng | quanh góc hiện dùng | phỏng đoán | suy ra (từ phân tích lực trên mặt nghiêng) |
-| A-1:cần đàn hồi (LSS, S2 gài) | chiều dài cần | lực đóng, biến dạng còn lại sau nhiều lần mở | NHẠY; dài hơn → lực đóng giảm; hạng 3; sai lệch tới hạn: mòn sau nhiều lần mở | so tương đối với cần hiện dùng | giới hạn bởi không gian nắp | giả định | suy ra (từ công thức dầm ngàm một đầu) |
-| A-1:cần đàn hồi (LSS) | vật liệu cần | biến dạng còn lại sau nhiều lần mở | vật liệu đàn hồi hơn → biến dạng còn lại giảm; hạng 4 | — | chọn trong vật liệu xưởng gia công được | giả định | chưa biết |
+| A-1:móc//gờ (S2 gài) | góc mặt vào của móc | lực đóng nắp bằng tay | NHẠY; góc tăng → lực đóng tăng; hạng 3; sai lệch tới hạn: dung sai móc | — | chọn sau phép so | phỏng đoán | chưa biết |
+| A-1:móc//gờ (S3 tháo) | góc mặt rút của móc | lực tháo nắp | NHẠY; góc tăng → lực tháo tăng; hạng 2; sai lệch tới hạn: dung sai gờ | so tương đối với góc hiện dùng | quanh góc hiện dùng | phỏng đoán | suy ra (từ phân tích lực trên mặt nghiêng) |
+| A-1:cần đàn hồi (LSS, S2 gài) | chiều dài cần | lực đóng, biến dạng còn lại sau nhiều lần mở | NHẠY; dài hơn → lực đóng giảm; hạng 4; sai lệch tới hạn: mòn sau nhiều lần mở | so tương đối với cần hiện dùng | giới hạn bởi không gian nắp | giả định | suy ra (từ công thức dầm ngàm một đầu) |
+| A-1:cần đàn hồi (LSS) | bề dày cần | lực đóng nắp bằng tay | dày hơn → lực đóng tăng; hạng 1 | — | trong dải đã đo trên mẫu | tri thức | đo được (mẫu cần ba bề dày, cùng vật liệu, ghi ngày đo) |
+| A-1:cần đàn hồi (LSS) | vật liệu cần | biến dạng còn lại sau nhiều lần mở | vật liệu đàn hồi hơn → biến dạng còn lại giảm; hạng 5 | — | chọn trong vật liệu xưởng gia công được | giả định | chưa biết |
 
 ## Lệnh bắt buộc cuối khối
 
