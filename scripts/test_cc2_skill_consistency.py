@@ -1011,8 +1011,8 @@ def test_variant_va_thu_muc_p3():
     start = orch.index('Cờ phụ:')
     flags = orch[start:orch.index('```', start)]
     m = re.search(r'^\s*--variant <V>\s+(.+)$', flags, re.MULTILINE)
-    assert m and '<PROJECT>_<V>_' in m.group(1), 'Cờ phụ thieu --variant <V> voi tien to <PROJECT>_<V>_'
-    assert '`<PROJECT>_<V>_`' in orch
+    assert m and '<PROJECT>_<V0>_' in m.group(1), 'Cờ phụ thieu --variant <V> voi tien to <PROJECT>_<V0>_'
+    assert '`<PROJECT>_<V0>_`' in orch
     p3 = _between(orch, '**Thư mục P3**', '**Nơi ghi và tiền tố**')
     assert 'Phase3-Embodiment/' in p3 and 'Phase3-Embody/' in p3
     assert re.search(r'cả hai\*\*[^.]*dừng, hỏi CEO', p3), 'thieu luat co ca hai thu muc P3 -> dung'

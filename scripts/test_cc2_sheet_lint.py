@@ -398,3 +398,86 @@ def test_bang_mot_cot_la_partial():
     assert 'PARTIAL_HEADER' in cs, cs
     t2 = BANG + "\n| Tham số | Nguồn số |\n|---|---|\n| k | chưa biết |\n"
     assert [f.code for f in L.lint_param_table(t2)] == ['PARTIAL_HEADER']
+
+
+# ------------------------------------------------- R1-R3 (PR #29 re-review)
+
+SKEL = "\n1 Tiêu đề:\n2 NẾU:\n3 THÌ:\n4 VÌ:\n5 :\n6 :\n7 :\n8 :\n9 :\n"
+HEADERS_HONG = ['PHIEU GIA THUYET GT-002', '- PHIẾU GIẢ THUYẾT — GT-002', '* PHIẾU GIẢ THUYẾT — GT-002',
+                '1. PHIẾU GIẢ THUYẾT — GT-002', '> PHIẾU GIẢ THUYẾT — GT-002', '__PHIẾU GIẢ THUYẾT — GT-002__',
+                'PHIẾU GIẢ THUYẾT — GT-02', 'GT-002 PHIẾU GIẢ THUYẾT']
+
+
+def test_r1_tieu_de_hong_khong_nuot_im_lang():
+    for h in HEADERS_HONG:
+        fs = L.lint_sheets(PHIEU_TOT + '\n' + h + SKEL)
+        assert fs, h
+
+
+def test_r1_tieu_de_dung_dang_bien_the_duoc_tach():
+    for h in ('PHIEU GIA THUYET — GT-002', '- PHIẾU GIẢ THUYẾT — GT-002', '1. PHIẾU GIẢ THUYẾT — GT-002',
+              '__PHIẾU GIẢ THUYẾT — GT-002__', '> PHIẾU GIẢ THUYẾT — GT-002', '* PHIẾU GIẢ THUYẾT — GT-002'):
+        t = PHIEU_TOT + '\n' + h + SKEL
+        assert [s['id'] for s in L.parse_sheets(t)] == ['GT-001', 'GT-002'], h
+        assert any(f.sheet == 'GT-002' and f.code == 'MISSING_ITEM' for f in L.lint_sheets(t)), h
+
+
+def test_r1_gt_02_va_gt_dau_la_header_unparsed():
+    for h in ('PHIẾU GIẢ THUYẾT — GT-02', 'GT-002 PHIẾU GIẢ THUYẾT', 'GT-2 phieu gia thuyet'):
+        assert 'HEADER_UNPARSED' in codes(PHIEU_TOT + '\n' + h + SKEL), h
+
+
+def test_r1_trung_muc_trong_mot_phieu():
+    t = PHIEU_TOT + '3 THÌ: lần hai\n'
+    assert 'DUP_ITEM' in codes(t)
+    assert 'DUP_ITEM' not in codes(PHIEU_TOT)
+
+
+def test_r1_mau_va_vi_du_c4_van_sach():
+    with open(REF_SHEET, encoding='utf-8') as f:
+        text = f.read()
+    sample = text[text.index('## Phiếu mẫu đã điền'):]
+    assert L.lint_sheets(sample, today=date.today()) == []
+    hypo = os.path.join(os.path.dirname(REF_SHEET), '..', '..', 'helix-cc2-hypo', 'SKILL.md')
+    with open(hypo, encoding='utf-8') as f:
+        txt = f.read()
+    blocks = [b for b in re.findall(r'```text\n(.*?)```', txt, re.S) if 'PHIẾU GIẢ THUYẾT — GT-0' in b]
+    assert len(blocks) >= 3
+    for b in blocks:
+        assert L.lint_sheets(b, allow_unsigned=True) == [], b[:40]
+
+
+def test_r2_placeholder_nhieu_cum_la_trong():
+    for k, v in ((1, '1 Tiêu đề: {{a}} {{b}}'), (2, '2 NẾU: {{biến}} = {{giá trị}}'),
+                 (3, '3 THÌ: {{đại lượng}} {{hơn/kém}}'), (8, '8 ĐỘ TIN: {{a}} / {{b}}'),
+                 (9, '9 NẾU BỊ BÁC: {{a}}{{b}}')):
+        t = thay(PHIEU_TOT, f'{k} ', v)
+        assert any(f.code == 'MISSING_ITEM' and f'mục {k} ' in f.msg for f in L.lint_sheets(t)), k
+
+
+def test_r2_muc_7_chi_placeholder_truoc_nguoi_ky():
+    t = thay(PHIEU_TOT, '7 ', '7 Dự đoán: {{a}} {{b}}; người ký CEO — ngày 2026-10-01')
+    assert 'MISSING_ITEM' in codes(t)
+
+
+def test_r2_muc_6_dien_sau_van_sach_va_chi_muc_6():
+    assert codes(thay(PHIEU_TOT, '6 ', '6 {{điền SAU}}')) == []
+    assert 'MISSING_ITEM' in codes(thay(PHIEU_TOT, '3 ', '3 THÌ: {{điền SAU}}'))
+
+
+import re
+
+
+def test_r3_tien_to_bien_the_khop_p3():
+    orch_p = os.path.join(os.path.dirname(HERE), 'skills', 'helix', 'helix-cc2', 'SKILL.md')
+    p3_p = os.path.join(os.path.dirname(HERE), 'skills', 'helix', 'helix-embody-realize', 'SKILL.md')
+    with open(p3_p, encoding='utf-8') as f:
+        p3 = f.read()
+    with open(orch_p, encoding='utf-8') as f:
+        orch = f.read()
+    want = re.search(r'File prefix = .*\(e\.g\. `([A-Z0-9_]+_)`\)', p3).group(1)
+    assert want == 'VN_MGM_V5_'
+    m = re.search(r'`V5-MOTORIZED`\s*(?:→|->)\s*`([A-Z0-9_]+_)`', orch)
+    assert m and m.group(1) == want, 'orchestrator thieu vi du V5-MOTORIZED -> VN_MGM_V5_'
+    assert 'VN_ABC_V2_' not in orch
+    assert '<PROJECT>_<V>_' not in orch
