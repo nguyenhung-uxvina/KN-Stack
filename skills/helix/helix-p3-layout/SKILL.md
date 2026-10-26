@@ -114,6 +114,13 @@ Trim freeboard minimum: ≥ 0.3m
 
 **Gate:** GM < 0.5m → STOP [STABILITY-FAIL]. Weight > SWL → [OVERWEIGHT-RISK].
 
+## Khi có CC2_Handoff.md
+
+Nếu `Phase3-Embodiment/` (hoặc thư mục biến thể) có `{{prefix}}CC2_Handoff.md` từ `/helix-cc2`:
+- Layout lấy khoảng tham số hình thể từ mục `## Tham số hình thể và khoảng chọn` của Handoff; tham số nhạy và phiếu giả thuyết đang mở ghi kèm trong `BA_Preliminary_Layout.md`.
+- Muốn đổi một khoảng thì mở hoặc sửa phiếu giả thuyết tương ứng (qua `/helix-cc2`), không tự chọn lại khoảng trong layout.
+- Handoff là đối chiếu mức mô tả. Khi đã có hình học (`cad_extract.json` từ `helix-cad-bridge` hoặc `helix-cad-ingest`), chạy vòng lặp P3: `/helix-cc2 --analyze <cad_extract.json>`.
+
 ## Output
 Save to `1_Projects/{{project}}/Phase3-Embodiment/`:
 - `BA_Preliminary_Layout.md`

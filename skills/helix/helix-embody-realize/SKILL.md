@@ -158,12 +158,16 @@ RECOMMENDED INPUTS (FORGE):
   □ ACH_Assessment_v*.md                → ACH/fallback constraints for DfU (from /forge-shift)
   □ HOQ_Design_Parameters_v*.md         → weighted DPs (from /forge-job-map)
 
+RECOMMENDED INPUTS (C&C²):
+  □ {{prefix}}CC2_Handoff.md → chuỗi C&C², khoảng tham số, phiếu mở (from /helix-cc2)
+
 OPTIONAL INPUTS:
   □ Product_Proposal_v*.md              → sacred constraints
   □ Bench test / prototype results      → empirical data for layout
 ```
 
 Glob for each in `Phase2-Concept/{{variant}}/`, `Phase1-Task/{{variant}}/`, `Phase0-Forge/ (or FORGE/)`, `Phase0-Plan/{{variant}}/`.
+Glob `{{prefix}}CC2_Handoff.md` in `Phase3-Embodiment/{{variant}}/` and `Phase3-Embodiment/`.
 
 #### 1.5b: Present Input Checklist to CEO
 
@@ -444,6 +448,7 @@ helix-embody-realize READS FROM:
   - helix-cad-bridge → BA per-part STEP+code (AI-parametric geometry)
   - helix-cad-ingest → BA ingested cad_extract.json (human-drawn imported parts)
   - helix-cad-roundtrip → BA Geometry Source Gate orchestration (Flow B / Flow D)
+  - helix-cc2 → CC2_Handoff (khoảng tham số, phiếu giả thuyết mở)
 
 helix-embody-realize WRITES TO:
   - 1_Projects/{{project}}/Phase3-Embodiment/ → all deliverables
