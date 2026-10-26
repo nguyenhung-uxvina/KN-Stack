@@ -20,7 +20,11 @@ EFFECT_WORDS = ('ma sát', 'mòn', 'mài mòn', 'tín hiệu', 'nhiễu', 'độ
                 'rò', 'lỏng', 'friction', 'wear')
 
 # Tieu de phieu; chap nhan vo markdown `#`/`**` quanh dong.
-HEADER_RE = re.compile(r'^(?:#{1,6}\s+)?(?:\*\*)?PHIẾU GIẢ THUYẾT\s*[—–-]\s*(GT-\d{3})')
+# Khop tren dong DA bo vo markdown va DA bo dau (chi de nhan tieu de, khong dung cho kiem noi dung).
+HEADER_RE = re.compile(r'^phieu gia thuyet\s*[—–-]\s*(gt-\d{3})(?!\d)')
+WRAP_RE = re.compile(r'^(?:#{1,6}\s+|>\s*|[-*+]\s+|\d+[.)]\s+|\*\*|__)')
+# Dong giong tieu de sau khi bo dau: mo dau bang "phieu gia thuyet" hoac "GT-n phieu".
+HEADER_FOLD_LIKE_RE = re.compile(r'^(?:phieu gia thuyet|gt-\d+\s*[—–:-]?\s*phieu)')
 GT_RE = re.compile(r'GT-\d{3}')
 # Dong "giong tieu de" ma HEADER_RE khong doc duoc: mo dau (sau vo markdown) bang "phieu", hoac la tieu de
 # markdown / chu dam mo dau bang GT-nnn. Nhac GT-nnn trong muc cua phieu, trong bang hay giua cau thi khong tinh.
@@ -32,7 +36,7 @@ ITEM_RE = re.compile(r'^\s*([1-9])\s+(.+)')
 DASH = r'[—–-]'
 TEST_DATE_RE = re.compile(r'ngày thử:\s*(\d{4}-\d{2}-\d{2})')
 SIGN_RE = re.compile(r'người ký\s+(\S.*?)\s*' + DASH + r'\s*ngày\s+(\d{4}-\d{2}-\d{2})')
-PLACEHOLDER_RE = re.compile(r'^\{\{[^{}]*\}\}$')
+PLACEHOLDER_ANY_RE = re.compile(r'\{\{[^{}]*\}\}')
 LABELS = ('tri thức', 'phỏng đoán', 'giả định')
 SOURCE_PREFIXES = ('đo được', 'suy ra (từ', 'chưa biết')
 
@@ -41,15 +45,33 @@ def _nfc(text):
     return unicodedata.normalize('NFC', text)
 
 
+def _fold(text):
+    """Bo dau + ha chu thuong, chi de nhan tieu de phieu."""
+    d = unicodedata.normalize('NFD', text).replace('đ', 'd').replace('Đ', 'D')
+    return ''.join(c for c in d if unicodedata.category(c) != 'Mn').casefold()
+
+
+def _unwrap(line):
+    """Bo vo markdown quanh tieu de: `#`, `>`, dau danh sach, `1.`, `**..**`, `__..__`."""
+    s = line.strip()
+    while True:
+        t = WRAP_RE.sub('', s, count=1).strip()
+        if t == s:
+            break
+        s = t
+    return re.sub(r'(?:\*\*|__)\s*$', '', s).strip()
+
+
 def parse_sheets(text, unparsed=None):
     """Tach phieu. `unparsed` (list) nhan (so dong, dong) giong tieu de ma khong doc duoc."""
     sheets = []
     cur = None
     for n, raw in enumerate(_nfc(text).splitlines(), 1):
         line = raw.strip()
-        m = HEADER_RE.match(line)
+        folded = _fold(_unwrap(line))
+        m = HEADER_RE.match(folded)
         if m:
-            cur = {'id': m.group(1), 'items': {}, 'line': n}
+            cur = {'id': m.group(1).upper(), 'items': {}, 'dups': [], 'line': n}
             sheets.append(cur)
             continue
         if line.startswith('```'):
@@ -58,10 +80,14 @@ def parse_sheets(text, unparsed=None):
         im = ITEM_RE.match(raw)
         if cur is not None and im:
             k = int(im.group(1))
-            cur['items'].setdefault(k, im.group(2).strip())
+            if k in cur['items']:
+                cur['dups'].append((k, n))
+            else:
+                cur['items'][k] = im.group(2).strip()
             continue
-        if unparsed is not None and GT_RE.search(line) and not line.startswith('|') and \
-                (HEADER_LIKE_RE.match(line) or HEADER_START_RE.match(line)):
+        if unparsed is not None and not line.startswith('|') and (
+                HEADER_FOLD_LIKE_RE.match(folded) or
+                (GT_RE.search(line) and (HEADER_LIKE_RE.match(line) or HEADER_START_RE.match(line)))):
             unparsed.append((n, line))
     return sheets
 
@@ -75,7 +101,10 @@ def _content(v):
 
 def _empty(v):
     c = _content(v)
-    return c is None or not re.search(r'\w', c) or bool(PLACEHOLDER_RE.match(c))
+    if c is None:
+        return True
+    c = _content(PLACEHOLDER_ANY_RE.sub('', v.strip()))
+    return not re.search(r'\w', c)
 
 
 # Ten nguoi ky la placeholder hoac AI: khop chuoi con, khong phan biet hoa thuong; `ai` khop ca tu.
@@ -100,7 +129,7 @@ def lint_sheets(text, today=None, allow_unsigned=False):
     """today: date; co thi ngay ky muc 7 sau today -> PRED_FUTURE_SIGN (CLI truyen date.today())."""
     unparsed = []
     sheets = parse_sheets(text, unparsed)
-    out = [Finding(GT_RE.search(l).group(0), n, 'HEADER_UNPARSED',
+    out = [Finding((re.search(r'GT-\d+', l) or [None])[0] or '-', n, 'HEADER_UNPARSED',
                    'dòng giống tiêu đề phiếu nhưng không đúng dạng "PHIẾU GIẢ THUYẾT — GT-nnn": ' + l[:60])
            for n, l in unparsed]
     if not sheets:
@@ -111,6 +140,8 @@ def lint_sheets(text, today=None, allow_unsigned=False):
         def add(code, msg):
             out.append(Finding(sid, ln, code, msg))
 
+        for k, dn in s['dups']:
+            out.append(Finding(sid, dn, 'DUP_ITEM', f'mục {k} xuất hiện lần thứ hai trong cùng một phiếu'))
         for k in range(1, 10):
             v = it.get(k)
             if k == 4 and v is not None:
@@ -133,8 +164,8 @@ def lint_sheets(text, today=None, allow_unsigned=False):
                 add('NO_CONTROL', 'mục 2 thiếu "| Đối chứng: …"')
         v5, v7 = it.get(5), it.get(7)
         if not _empty(v7):
-            pre = _content(v7.split('người ký')[0]).strip(' ;,.—–-')
-            if not re.search(r'\w', pre) or PLACEHOLDER_RE.match(pre):
+            pre = _content(PLACEHOLDER_ANY_RE.sub('', v7.split('người ký')[0])).strip(' ;,.—–-')
+            if not re.search(r'\w', pre):
                 add('MISSING_ITEM', 'mục 7 thiếu nội dung dự đoán trước "người ký"')
             sm = SIGN_RE.search(v7)
             pd = _parse_date(sm.group(2)) if sm else None

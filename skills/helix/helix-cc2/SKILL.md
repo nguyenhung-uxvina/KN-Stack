@@ -40,7 +40,7 @@ Chế độ (chọn đúng một):
   --analyze <hình thể>                     chỉ phân tích (bản vẽ, cad_extract.json, ảnh, mô tả)
 Cờ phụ:
   --out <thư mục>     nơi ghi (ưu tiên cao nhất)
-  --variant <V>       biến thể dự án kiểu HELIX: tiền tố thành <PROJECT>_<V>_, nơi ghi mặc định và Handoff vào thư mục biến thể <thư mục P3>/<V>/
+  --variant <V>       biến thể dự án kiểu HELIX: tiền tố thành <PROJECT>_<V0>_ (<V0> = <V> cắt tại dấu `-` đầu tiên; `V5-MOTORIZED` → `VN_MGM_V5_`), nơi ghi mặc định và Handoff vào thư mục biến thể <thư mục P3>/<V>/
   --from <khối>       chạy tiếp từ C0|C1|C2|C3|C4|CA|C6
   --only <khối>       chỉ chạy một khối
   --op <phép> <đích>  phép biến đổi góc nhìn trên một chuỗi (xem mục dưới); không chạy khối nào khác
@@ -72,9 +72,10 @@ Chế độ `--analyze` không có cổng nào trước CA hay C4.
    `Phase3-Embodiment/` hoặc `Phase3-Embody/`) → `<thư mục P3>/CC2/`; có `--variant <V>` → `<thư mục P3>/<V>/CC2/`.
 3. Còn lại → `./_cc2/<slug>/`, `<slug>` = câu chức năng hoặc tên hình thể viết thường, không dấu, nối `-`.
 
-`{{prefix}}` = tiền tố dự án kiểu HELIX khi trong dự án: `<PROJECT>_` (vd. `VN_ABC_`), có `--variant <V>` thì
-`<PROJECT>_<V>_` (vd. `VN_ABC_V2_`; `<PROJECT>` và `<V>` đổi `-` thành `_`). `<V>` là đúng mã thư mục biến thể mà
-`helix-embody-realize` dùng, để glob `{{prefix}}CC2_Handoff.md` của P3 tìm thấy tệp. Ngoài dự án: `<slug>_`.
+`{{prefix}}` = tiền tố dự án kiểu HELIX khi trong dự án: `<PROJECT>_` (vd. `VN_MGM_`), có `--variant <V>` thì
+`<PROJECT>_<V0>_`, với `<V0>` = `<V>` cắt tại dấu `-` đầu tiên (VARIANT_SHORT của P3), vd. `V5-MOTORIZED` → `VN_MGM_V5_`,
+`N12-RETROFIT-KIT` → `VN_MGM_N12_`; `<PROJECT>` đổi `-` thành `_`. **Thư mục biến thể giữ NGUYÊN `<V>`** (`<thư mục P3>/V5-MOTORIZED/`),
+chỉ tiền tố tệp dùng `<V0>` — đúng luật của `helix-embody-realize`, để glob `{{prefix}}CC2_Handoff.md` của P3 tìm thấy tệp. Ngoài dự án: `<slug>_`.
 **Thư mục theo chức năng con (chế độ `--project`):** tên tệp Data Bus giữ nguyên; mỗi chức năng con có thư mục riêng
 `<nơi ghi>/<F-id>/` (`F-id` = mã chức năng con trong Function_Structure, vd. `F3`) chứa C1, C2, C3, C4, CA và
 `CC2_C6_Crosscheck.md` của nó. Ở gốc `<nơi ghi>/` chỉ có `{{prefix}}CC2_C0_Frame.md` (danh sách sàng + khung của
@@ -264,7 +265,7 @@ rào cản quan sát của chuỗi: quá nhanh → `state`; quá chậm → `sta
 | `{{prefix}}CC2_C4_Test_Plan.md` | helix-cc2-hypo (C4) | C6, bàn thử |
 | `{{prefix}}CC2_CA_Analysis.md` | helix-cc2-analyze (CA); helix-cc2-handoff (C6) nối mục `## Đối chiếu ngược — phương án <X-n>` | C0 (`--improve`), C4 (`--analyze`), C6 |
 | `{{prefix}}CC2_C6_Crosscheck.md` | helix-cc2-handoff (C6) | CEO |
-| `{{prefix}}CC2_Handoff.md` | helix-cc2-handoff (C6), ghi vào `<thư mục P3>/` (`Phase3-Embodiment/` hoặc `Phase3-Embody/`; có `--variant <V>` thì `<thư mục P3>/<V>/`), không vào `<nơi ghi>` | helix-embody-realize, helix-p3-layout |
+| `{{prefix}}CC2_Handoff.md` | helix-cc2-handoff (C6), ghi vào `<thư mục P3>/` (`Phase3-Embodiment/` hoặc `Phase3-Embody/`; có `--variant <V>` thì `<thư mục P3>/<V>/`, tiền tố tệp dùng `<V0>`), không vào `<nơi ghi>` | helix-embody-realize, helix-p3-layout |
 | `_pipeline_state.md` | helix-cc2 (orchestrator) | mọi khối, `--from` |
 
 Chế độ `--project`: tệp C1, C2, C3, C4, CA và `CC2_C6_Crosscheck.md` nằm trong `<nơi ghi>/<F-id>/`; C0 và
