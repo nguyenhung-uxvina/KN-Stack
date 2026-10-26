@@ -1,0 +1,47 @@
+{
+  "skill": "helix-cc2",
+  "version": "1.0",
+  "description": "Runtime assertions for /helix-cc2 --analyze on a public steel spring paper clip",
+  "mode": "runtime",
+  "test_input": "Phân tích C&C² một kẹp giấy lò xo bằng thép (cơ cấu công khai, kẹp giấy kiểu dây thép uốn hai vòng). Chạy --analyze trên hình thể này: nêu chuỗi WFP -> LSS -> WFP và Connector, gán nhãn tri thức/phỏng đoán/giả định cho từng khẳng định, kèm Phép thử nhỏ nhất để bác bỏ, rồi in Phép nên làm tiếp.",
+  "assertions": [
+    {
+      "id": "CC2A-WFP",
+      "name": "wfp",
+      "check": "output names Working Surface Pair (WFP)",
+      "regex": "WFP",
+      "required": true
+    },
+    {
+      "id": "CC2A-LSS",
+      "name": "lss",
+      "check": "output names Leading Support Structure (LSS)",
+      "regex": "LSS",
+      "required": true
+    },
+    {
+      "id": "CC2A-CONN",
+      "name": "connector",
+      "check": "output names Connector",
+      "regex": "Connector",
+      "required": true
+    },
+    {
+      "id": "CC2A-LABEL",
+      "name": "labels",
+      "check": "output uses knowledge labels",
+      "regex": "tri thức|phỏng đoán|giả định",
+      "required": true
+    },
+    {
+      "id": "CC2A-NEXT",
+      "name": "next_move",
+      "check": "output prints next-move block",
+      "regex": "Phép nên làm tiếp",
+      "required": true
+    }
+  ],
+  "passing_score": 5,
+  "total_required": 5,
+  "total_optional": 0
+}
