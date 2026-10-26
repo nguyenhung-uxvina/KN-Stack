@@ -34,7 +34,7 @@ ORCH_OUTPUTS = ['_pipeline_state.md']
 
 # Khoi chua viet (Task 5-8). Moi task xoa ten khoi cua minh khoi tap nay.
 PENDING = {
-    'helix-cc2-hypo', 'helix-cc2-analyze', 'helix-cc2-handoff',
+    'helix-cc2-handoff',
 }
 
 VN_CHAR = re.compile(
@@ -495,3 +495,303 @@ def test_c2_moi_phuong_an_kiem_it_nhat_2_quy_tac_theo_phan_tu():
             assert len(kq.split()) >= 6, f'Ket qua qua ngan, thieu ly do: {kq}'
     c2 = _block('helix-cc2-form')
     assert '≥2 quy tắc' in c2 and 'Cấm ô chỉ' in c2
+
+
+# ----------------------------------------------------------------- Task 7: C4 + CA
+
+LABELS = ('tri thức', 'phỏng đoán', 'giả định')
+
+
+def _lint():
+    import sys
+    sys.path.insert(0, HERE)
+    import cc2_sheet_lint
+    return cc2_sheet_lint
+
+
+def _between(text, start, end):
+    assert start in text, f'thieu "{start}"'
+    tail = text[text.index(start):]
+    assert end in tail, f'thieu "{end}" sau "{start}"'
+    return tail[:tail.index(end)]
+
+
+def _sheet_chunks(text):
+    """Tach van ban thanh tung khoi phieu: tu dong tieu de PHIEU toi fence/tieu de ke tiep."""
+    chunks, cur = [], None
+    for line in text.splitlines():
+        if re.match(r'^PHIẾU GIẢ THUYẾT\s*[—–-]\s*GT-\d{3}', line.strip()):
+            cur = [line]
+            chunks.append(cur)
+            continue
+        if line.strip().startswith('```'):
+            cur = None
+            continue
+        if cur is not None:
+            cur.append(line)
+    return ['\n'.join(c) for c in chunks]
+
+
+def _all_tables(text):
+    """Moi khoi dong `|` -> list hang (list o), bo dong ---."""
+    out, cur = [], None
+    for line in text.splitlines():
+        if line.lstrip().startswith('|'):
+            cells = [c.strip() for c in line.strip().strip('|').split('|')]
+            if cur is None:
+                cur = []
+                out.append(cur)
+            if not all(re.fullmatch(r':?-{2,}:?', c) for c in cells):
+                cur.append(cells)
+        else:
+            cur = None
+    return out
+
+
+def _route(tin, tam, an_toan=False):
+    if an_toan or tam in ('cao', 'trung'):
+        return '3'
+    return '1–2' if tin == 'cao' else '2'
+
+
+def _plan_key(mo_cong, duong, tin, tam, gt):
+    return (0 if mo_cong else 1, {'3': 0, '2': 1, '1–2': 2}[duong],
+            {'cao': 0, 'trung': 1, 'thấp': 2}[tam], {'thấp': 0, 'trung': 1, 'cao': 2}[tin], gt)
+
+
+def _sheet_meta(chunk):
+    gt = re.search(r'GT-\d{3}', chunk).group(0)
+    m8 = re.search(r'^\s*8\s+[^:\n]*:\s*(thấp|trung|cao)\s*\([^)]*\)\s*/\s*(thấp|trung|cao)(?!\w)',
+                   chunk, re.MULTILINE)
+    assert m8, f'{gt}: muc 8 khong doc duoc hai nac'
+    m9 = re.search(r'^\s*9\s+(.*)$', chunk, re.MULTILINE)
+    assert m9, f'{gt}: thieu muc 9'
+    m8line = re.search(r'^\s*8\s+.*$', chunk, re.MULTILINE).group(0)
+    return {'gt': gt, 'tin': m8.group(1), 'tam': m8.group(2),
+            'mo_cong': 'lặp xuyên cổng' in m9.group(1), 'an_toan': 'an toàn' in m8line}
+
+
+def test_route_va_thu_tu_dot_bien():
+    assert _route('cao', 'thấp') == '1–2' and _route('trung', 'thấp') == '2'
+    assert _route('cao', 'trung') == '3' and _route('cao', 'thấp', an_toan=True) == '3'
+    a = _plan_key(False, '3', 'trung', 'trung', 'GT-001')
+    b = _plan_key(True, '2', 'cao', 'thấp', 'GT-009')
+    assert b < a, 'phieu mo lai cong phai len truoc bat ke truc kia'
+
+
+C4_TPL_H = '## Khuôn đầu ra: `{{prefix}}CC2_C4_Hypotheses.md`'
+C4_TPL_P = '## Khuôn đầu ra: `{{prefix}}CC2_C4_Test_Plan.md`'
+
+
+def test_c4_goi_lint_hypo():
+    c4 = _block('helix-cc2-hypo')
+    pre = re.search(r'cc2_sheet_lint\.py\s+\S*CC2_C4_Hypotheses\.md\s+--kind hypo --allow-unsigned', c4)
+    post = re.search(r'cc2_sheet_lint\.py\s+\S*CC2_C4_Hypotheses\.md\s+--kind hypo[ \t]*$', c4, re.MULTILINE)
+    assert pre and post, 'C4 thieu hai luot lint (--allow-unsigned truoc cong, khong co sau ky)'
+    gate = c4.find('⛔ **Cổng CEO 3')
+    assert gate != -1, 'C4 thieu Cong CEO 3'
+    assert pre.start() < gate < post.start(), 'thu tu: lint --allow-unsigned -> Cong CEO 3 -> lint khong co'
+    assert 'PRED_UNSIGNED' in c4 and 'AI không điền chữ ký' in c4
+    assert re.search(r'Exit ≠ 0[^\n]*không đóng Cổng CEO 3', c4), 'thieu luat exit != 0 khong dong cong 3'
+    assert 'báo cáo "đã kiểm" không thay output của lệnh' in c4
+    # orchestrator: dong C4 noi dung hai luot
+    orch = _orch()
+    line = [l for l in orch.splitlines() if l.startswith('- **C4:**')]
+    assert line, 'orchestrator thieu dong luat C4'
+    i = orch.index(line[0])
+    c4rule = orch[i:orch.index('- **C6:**', i)]
+    assert '--kind hypo --allow-unsigned' in c4rule and 'PRED_UNSIGNED' in c4rule
+    assert re.search(r'--kind hypo`[^\n]*không cờ', c4rule), 'orchestrator chua noi luot lint khong co sau khi ky'
+    # khuon: muc 7 de CEO dien
+    tpl = _between(c4, C4_TPL_H, C4_TPL_P)
+    t7 = re.search(r'^7 .*$', tpl, re.MULTILINE)
+    assert t7 and re.search(r'người ký \{\{[^}]*\}\} — ngày \{\{[^}]*\}\}', t7.group(0)), \
+        'muc 7 khuon phai de trong cho CEO'
+    # ma phieu trong khuon la placeholder -> thay bang ma that de parser nhan phieu
+    filled = tpl.replace('GT-{{nnn}}', 'GT-001')
+    assert len(_lint().parse_sheets(filled)) == 1
+    assert 'PRED_UNSIGNED' in [f.code for f in _lint().lint_sheets(filled)]
+
+
+def test_c4_phep_thu_bac_bo():
+    c4 = _block('helix-cc2-hypo')
+    tpl = _between(c4, C4_TPL_H, C4_TPL_P)
+    assert re.search(r'^Phép thử nhỏ nhất để bác bỏ: ', tpl, re.MULTILINE)
+    ex = _example(c4)
+    assert 'minh hoạ đã ký' in ex, 'vi du phai ghi ro la minh hoa da ky'
+    chunks = _sheet_chunks(ex)
+    assert len(chunks) >= 2
+    for ch in chunks:
+        m = re.search(r'^Phép thử nhỏ nhất để bác bỏ: (.+)$', ch, re.MULTILINE)
+        assert m and len(m.group(1).split()) >= 8, 'phieu thieu dong Phép thử nhỏ nhất để bác bỏ: ' + ch[:30]
+    # vi du da ky phai qua lint KHONG co
+    assert _lint().lint_sheets(ex) == []
+
+
+def test_c4_mot_phieu_moi_dong_nhay():
+    c4 = _block('helix-cc2-hypo')
+    ex = _example(c4)
+    inp = _between(ex, '### Đầu vào', '### Phiếu')
+    rows = _table_rows(inp)
+    pb = _read(PARAM_BRIDGE)
+    assert rows[0] == _table_rows(pb[pb.index('## Khuôn bảng C3'):])[0], 'bang dau vao khong theo khuon C3'
+    body = rows[1:]
+    nhay = {(r[0], r[1]) for r in body if r[3].startswith('NHẠY')}
+    assert nhay and len(nhay) < len(body), 'bang dau vao phai co ca dong NHAY va dong khong NHAY'
+    chunks = _sheet_chunks(_between(ex, '### Phiếu', '### Kế hoạch thử'))
+    refs = []
+    for ch in chunks:
+        m = re.search(r'^Dòng C3: (.+?) · (.+)$', ch, re.MULTILINE)
+        assert m, 'phieu thieu dong "Dòng C3:"'
+        refs.append((m.group(1).strip(), m.group(2).strip()))
+    assert len(chunks) == len(nhay), (len(chunks), len(nhay))
+    assert set(refs) == nhay, (refs, nhay)
+    assert 'mỗi dòng `NHẠY` đúng một phiếu' in c4
+
+
+def test_c4_ke_hoach_thu_theo_dinh_tuyen():
+    c4 = _block('helix-cc2-hypo')
+    assert 'helix-cc2:references:hypothesis-sheet' in c4 and '§Định tuyến độ tin × tầm ảnh hưởng' in c4
+    assert re.search(r'Định tuyến kiểm được \*\(quy ước bộ skill\)\*', c4)
+    tplp = _between(c4, C4_TPL_P, '## Ví dụ ngắn')
+    ex = _example(c4)
+    sheets = _sheet_chunks(_between(ex, '### Phiếu', '### Kế hoạch thử'))
+    metas = {m['gt']: m for m in map(_sheet_meta, sheets)}
+    plan = _table_rows(ex[ex.index('### Kế hoạch thử'):])
+    hdr = plan[0]
+    assert _table_rows(tplp)[0] == hdr, 'cot ke hoach vi du khac khuon'
+    for col in ['Thứ tự', 'Phiếu', 'Mở lại cổng', 'Đường', 'Độ tin / Tầm ảnh hưởng', 'Loại thử', 'Ngày thử',
+                'Người đọc kết quả']:
+        assert col in hdr, f'ke hoach thieu cot {col}'
+    ix = {c: hdr.index(c) for c in hdr}
+    body = plan[1:]
+    assert sorted(r[ix['Phiếu']] for r in body) == sorted(metas), 'moi phieu dung mot hang thu'
+    keys = []
+    for n, r in enumerate(body, 1):
+        m = metas[r[ix['Phiếu']]]
+        assert r[ix['Thứ tự']] == str(n)
+        assert r[ix['Mở lại cổng']].startswith('có') == m['mo_cong'], r
+        duong = _route(m['tin'], m['tam'], m['an_toan'])
+        assert r[ix['Đường']] == duong, (r, duong)
+        assert r[ix['Độ tin / Tầm ảnh hưởng']] == f"{m['tin']} / {m['tam']}", r
+        if duong == '3':
+            assert r[ix['Loại thử']].startswith('thực nghiệm'), r
+        keys.append(_plan_key(m['mo_cong'], duong, m['tin'], m['tam'], m['gt']))
+    assert keys == sorted(keys), 'ke hoach khong xep theo dinh tuyen'
+    assert [r[ix['Phiếu']] for r in body] != sorted(metas), 'vi du nen co thu tu khac thu tu ma phieu'
+    # ngay thu trong ke hoach = ngay thu o muc 5
+    for ch in sheets:
+        gt = re.search(r'GT-\d{3}', ch).group(0)
+        d5 = re.search(r'ngày thử: (\d{4}-\d{2}-\d{2})', ch).group(1)
+        row = [r for r in body if r[ix['Phiếu']] == gt][0]
+        assert row[ix['Ngày thử']] == d5, (gt, row[ix['Ngày thử']], d5)
+
+
+def test_c4_analyze_lay_gia_thuyet_ca():
+    c4 = _block('helix-cc2-hypo')
+    assert 'CC2_C3_Params.md' in c4 and 'CC2_CA_Analysis.md' in c4
+    assert re.search(r'`--analyze`[^\n]*## Giả thuyết nháp', c4), 'C4 --analyze chua noi lay muc Giả thuyết nháp cua CA'
+
+
+def test_ca_khong_purpose_gate():
+    ca = _block('helix-cc2-analyze')
+    hits = [l for l in ca.splitlines() if 'ACCESS LEVEL' in l]
+    assert len(hits) == 1, f'ACCESS LEVEL chi duoc o dung mot cau tro RE: {hits}'
+    assert '/reverse-engineering' in hits[0] and re.search(r'bên khác|đối thủ', hits[0]), hits[0]
+    for l in ca.splitlines():
+        if 'Purpose Gate' in l or 'OSINT' in l:
+            assert l == hits[0], f'Purpose Gate/OSINT ngoai cau tro RE: {l}'
+
+
+def test_ca_crosscheck_khong_doc_c1():
+    ca = _block('helix-cc2-analyze')
+    sec = _section(ca, r'--crosscheck', 2)
+    assert sec is not None, 'CA thieu muc ## ... --crosscheck'
+    inp = _between(sec, 'Đầu vào được đọc:', '\n\n')
+    files = set(re.findall(r'`(?:\{\{prefix\}\})?(CC2_[A-Za-z0-9_]+\.md)`', inp))
+    assert files == {'CC2_C0_Frame.md', 'CC2_C2_Forms.md', 'CC2_C3_Params.md'}, files
+    assert 'CC2_C1_Chains' not in inp
+    for l in sec.splitlines():
+        if 'CC2_C1_Chains' in l:
+            assert l.lstrip().startswith('Cấm đọc:'), f'C1 xuat hien ngoai dong cam: {l}'
+    assert 'người đọc ≠ người lập' in sec
+    tables = [t for t in _all_tables(sec) if t and 'Xử lý' in t[0]]
+    assert tables, 'crosscheck thieu bang lech co cot Xử lý'
+    t = tables[0]
+    xi = t[0].index('Xử lý')
+    assert len(t) >= 3
+    kinds = set()
+    for r in t[1:]:
+        m = re.match(r'(phiếu nháp GT-\d{3}|dòng sửa C2:)', r[xi])
+        assert m, r[xi]
+        kinds.add(m.group(1)[:5])
+    assert len(kinds) == 2, 'vi du nen co ca phieu nhap va dong sua C2'
+
+
+def test_ca_dau_ra_va_quy_uoc():
+    ca = _block('helix-cc2-analyze')
+    for f in ['cad_extract.json', 'helix-cad-ingest', 'CC2_CA_Analysis.md']:
+        assert f in ca, f
+    assert re.search(r'≤ 2 chức năng con chính[^\n]*≤ 3 tới hạn[^\n]*quy ước bộ skill', ca)
+    assert re.search(r'`Vì sao hình học này`[^\n]*quy ước bộ skill', ca)
+    ex = _example(ca)
+    for h in ['### Mô hình C&C² một trang', '### Vì sao hình học này', '### Rào cản quan sát gặp phải',
+              '### Phép nên làm tiếp', '### Giả thuyết nháp']:
+        assert h in ex, f'vi du CA thieu {h}'
+    model = _between(ex, '### Mô hình C&C² một trang', '### Vì sao hình học này')
+    chinh = re.findall(r'^- Chính: ', model, re.MULTILINE)
+    toihan = re.findall(r'^- Tới hạn: ', model, re.MULTILINE)
+    assert 1 <= len(chinh) <= 2 and len(toihan) <= 3, (chinh, toihan)
+    assert re.search(r'^```mermaid\s*$', model, re.MULTILINE)
+    vs = _table_rows(_between(ex, '### Vì sao hình học này', '### Rào cản quan sát gặp phải'))
+    hdr = vs[0]
+    assert 'Nhãn' in hdr and 'Phần tử' in hdr and 'Phép thử nhỏ nhất để bác bỏ' in hdr
+    ni, pi = hdr.index('Nhãn'), hdr.index('Phần tử')
+    assert len(vs) >= 4
+    for r in vs[1:]:
+        assert r[ni] in LABELS, r
+        assert r[ni] != 'tri thức', 'vi du khong co bang chung -> khong duoc tri thuc'
+        assert re.search(r'\b(WFP\d*|LSS\d*|C\d+)\b', r[pi]), r
+
+
+BARRIER_OPS = {
+    'quá nhanh': {'state'}, 'quá chậm': {'state', 'observe'}, 'bị che': {'observe', 'shift'},
+    'quá nhỏ / quá lớn': {'zoom-in', 'observe'}, 'sai góc nhìn': {'view'}, 'ngoài biên': {'shift', 'zoom-out'},
+}
+
+
+def test_ca_rao_can_va_phep():
+    vo = _read(VIEW_OPS)
+    ref_barriers = {r[0] for r in _table_rows(vo[vo.index('## Rào cản quan sát'):])[1:]}
+    assert ref_barriers == set(BARRIER_OPS), ref_barriers
+    ex = _example(_block('helix-cc2-analyze'))
+    rc = _table_rows(_between(ex, '### Rào cản quan sát gặp phải', '### Phép nên làm tiếp'))
+    assert rc[0][:3] == ['Rào cản', 'Phần tử', 'Phép phá đề xuất'], rc[0]
+    assert len(rc) >= 3
+    for r in rc[1:]:
+        assert r[0] in BARRIER_OPS, r[0]
+        ops = set(re.findall(r'`([a-z-]+)`', r[2]))
+        assert ops and ops <= BARRIER_OPS[r[0]], (r[0], ops)
+    nxt = _between(ex, '### Phép nên làm tiếp', '### Giả thuyết nháp')
+    lines = re.findall(r'^- `?([a-z-]+)`? · ([^·]+) · (.+)$', nxt, re.MULTILINE)
+    assert 1 <= len(lines) <= 3
+    assert all(op in OPS for op, _, _ in lines)
+
+
+def test_ca_gia_thuyet_nhap_qua_lint_chua_ky():
+    ex = _example(_block('helix-cc2-analyze'))
+    draft = ex[ex.index('### Giả thuyết nháp'):]
+    L = _lint()
+    assert len(L.parse_sheets(draft)) >= 1
+    assert L.lint_sheets(draft, allow_unsigned=True) == []
+    assert {f.code for f in L.lint_sheets(draft)} == {'PRED_UNSIGNED'}, 'AI khong ky phieu nhap'
+    for ch in _sheet_chunks(draft):
+        assert re.search(r'^Phép thử nhỏ nhất để bác bỏ: ', ch, re.MULTILINE)
+
+
+def test_orch_co_crosscheck():
+    orch = _orch()
+    start = orch.index('Cờ phụ:')
+    flags = orch[start:orch.index('```', start)]
+    m = re.search(r'^\s*--crosscheck\s+(.+)$', flags, re.MULTILINE)
+    assert m and 'C6' in m.group(1) and 'CA' in m.group(1), 'Cờ phụ thieu --crosscheck (chi C6 goi CA)'

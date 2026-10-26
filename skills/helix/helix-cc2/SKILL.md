@@ -43,6 +43,7 @@ Cờ phụ:
   --from <khối>       chạy tiếp từ C0|C1|C2|C3|C4|CA|C6
   --only <khối>       chỉ chạy một khối
   --op <phép> <đích>  phép biến đổi góc nhìn trên một chuỗi (xem mục dưới); không chạy khối nào khác
+  --crosscheck        chỉ C6 dùng, để gọi CA đối chiếu ngược (CA đọc C0 + C2/C3 của phương án chọn, không đọc C1)
 ```
 
 Có hơn một cờ chế độ → dừng, hỏi CEO. Thiếu cờ chế độ mà **không** có `--op`/`--from`/`--only` → dừng, hỏi CEO.
@@ -167,8 +168,10 @@ Chỉ CA. Có thể kết thúc bằng C4 nếu CEO muốn lập phiếu: khi �
   `python scripts/cc2_sheet_lint.py <C3> --kind params` — mã 0 mới qua; mã 1 → sửa ô thiếu nhãn rồi chạy lại; mã 2 → báo lỗi đọc, dừng.
 - **C4:** mỗi PHIẾU GIẢ THUYẾT theo `helix-cc2:references:hypothesis-sheet` §Khuôn phiếu; «NẾU» là tham số ghi được
   lên bản vẽ, không phải tác dụng; định tuyến theo `helix-cc2:references:hypothesis-sheet` §Định tuyến độ tin × tầm ảnh hưởng.
-  Cổng máy: `python scripts/cc2_sheet_lint.py <C4_Hypotheses> --kind hypo` phải ra mã 0 **trước** Cổng CEO 3 và
-  chạy lại ở C6. Mục 7 (dự đoán) do CEO/kỹ sư ký, ngày ký trước ngày thử; AI không điền chữ ký.
+  Cổng máy hai lượt: **trước** Cổng CEO 3 chạy `python scripts/cc2_sheet_lint.py <C4_Hypotheses> --kind hypo --allow-unsigned`
+  (bỏ qua đúng mã PRED_UNSIGNED, mọi mã khác vẫn chặn) phải ra mã 0; **sau** khi CEO ký, chạy lại
+  `python scripts/cc2_sheet_lint.py <C4_Hypotheses> --kind hypo` (không cờ) — mã 0 mới đóng Cổng CEO 3; C6 chạy lại lệnh
+  không cờ này. Mục 7 (dự đoán) do CEO/kỹ sư ký, ngày ký trước ngày thử; AI không điền chữ ký.
 - **C6:** đối chiếu ngược do **một tác tử con khác** làm, chỉ nhận C0 + C2/C3, không thấy lý lẽ C1. Mỗi chỗ lệch thành
   phiếu mới hoặc một dòng sửa C2. `CC2_Handoff` ghi rõ đây là *đối chiếu mức mô tả* và kèm mục **vòng lặp P3**: khi P3
   có `cad_extract.json`, chạy `/helix-cc2 --analyze` lên đó để đối chiếu mức hình học.
