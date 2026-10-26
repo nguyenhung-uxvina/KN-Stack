@@ -19,7 +19,7 @@ description: "Khối C4 của bộ helix-cc2 — lấy đúng các dòng NHẠY 
 
 - Bắt buộc: `{{prefix}}CC2_C3_Params.md` và `{{prefix}}CC2_C0_Frame.md`. Thiếu tệp nào → liệt kê tệp thiếu và dừng; không
   dựng giả tệp thượng nguồn (`--from C3` hoặc `--from C0` để chạy lại khối ghi tệp đó).
-- Chế độ `--analyze`: không có C3; C4 lấy mục `## Giả thuyết nháp` của `{{prefix}}CC2_CA_Analysis.md` làm đầu vào, mỗi phiếu nháp thành một phiếu C4, giữ nguyên mã GT nếu CA đã đánh.
+- Chế độ `--analyze`: không có C3; C4 lấy mục `## Giả thuyết nháp` của `{{prefix}}CC2_CA_Analysis.md` làm đầu vào, mỗi phiếu nháp thành một phiếu C4, giữ nguyên mã GT nếu CA đã đánh; dòng truy ngược của mỗi phiếu là `Nguồn CA:` (dạng `Nguồn CA: <mục CA> · <đặc điểm hình học>`) thay cho `Dòng C3:` (không có C3 ở luồng này).
 - Chế độ dự án: chạy theo từng `F-id`; đọc C3 và ghi C4 trong `<nơi ghi>/<F-id>/`, đọc C0 ở gốc `<nơi ghi>/`. Chức năng con
   ở ô `chỉ bảng tham số` dừng ở C3, không có phiếu.
 
@@ -79,6 +79,8 @@ description: "Khối C4 của bộ helix-cc2 — lấy đúng các dòng NHẠY 
    Exit ≠ 0 → sửa phiếu rồi chạy lại; chưa được trình CEO.
 5. ⛔ **Cổng CEO 3 — ký dự đoán.** Trình phiếu và kế hoạch thử. CEO/kỹ sư đọc, sửa dự đoán nếu cần, rồi điền
    `người ký <tên> — ngày YYYY-MM-DD` ở mục 7 của từng phiếu, ngày ký trước ngày thử. AI không điền chữ ký thay.
+   Dừng. Không chạy bước 6 cho tới khi CEO báo đã ký; lint không cờ ra mã 1 với PRED_UNSIGNED thì báo CEO, không sửa mục 7.
+   Tên người ký là placeholder hay là AI (`{{…}}`, `<…>`, `AI`, `Claude`, `TBD`, `tên`, `n/a`, `chưa ký`) bị lint tính là chưa ký.
 6. Sau khi CEO ký, chạy lượt lint không cờ:
 
    ```

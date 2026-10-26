@@ -1,6 +1,6 @@
 ---
 name: helix-cc2-analyze
-description: "Khối CA của bộ helix-cc2 — chiều phân tích độc lập: hình thể có sẵn của chính Xưởng (bản vẽ, cad_extract.json từ helix-cad-ingest, ảnh, mô tả) → mô hình C&C² một trang (WFP/LSS/Connector theo trạng thái) → bảng «Vì sao hình học này» có nhãn tri thức/phỏng đoán/giả định → rào cản quan sát và phép phá đề xuất → «Phép nên làm tiếp» → giả thuyết nháp khuôn 9 mục chuyển được sang C4. Có chế độ --crosscheck cho C6: chỉ đọc C0 + C2/C3 của phương án chọn, không đọc C1, ra danh sách lệch thành phiếu nháp hoặc dòng sửa C2. Triggers on: 'C&C2 analysis', 'analyze existing form', 'why this geometry', 'form to function', 'cross-check embodiment', 'phân tích C&C2', 'vì sao hình học này', 'từ hình thể về chức năng', 'đối chiếu ngược', 'helix-cc2-analyze'."
+description: "Khối CA của bộ helix-cc2 — chiều phân tích độc lập: hình thể có sẵn của chính Xưởng (bản vẽ, cad_extract.json từ helix-cad-ingest, ảnh, mô tả) → mô hình C&C² một trang (WFP/LSS/Connector theo trạng thái) → bảng «Vì sao hình học này» có nhãn tri thức/phỏng đoán/giả định → rào cản quan sát và phép phá đề xuất → «Phép nên làm tiếp» → giả thuyết nháp khuôn 9 mục chuyển được sang C4. Có chế độ --crosscheck cho C6: chỉ đọc thư mục trích (C0 + C2/C3 của đúng một phương án), không đọc C1 hay C4, ra danh sách lệch thành phiếu nháp hoặc dòng sửa C2. Triggers on: 'C&C2 analysis', 'analyze existing form', 'why this geometry', 'form to function', 'cross-check embodiment', 'phân tích C&C2', 'vì sao hình học này', 'từ hình thể về chức năng', 'đối chiếu ngược', 'helix-cc2-analyze'."
 ---
 
 # helix-cc2-analyze — Khối CA: hình thể có sẵn → mô hình C&C² → giả thuyết chức năng
@@ -101,27 +101,32 @@ hình thể: {{đường dẫn hoặc mô tả}}
 
 ## Chế độ `--crosscheck` (chỉ C6 gọi)
 
-C6 gọi `/helix-cc2-analyze --crosscheck <phương án>` (vd. `A-1`) để đối chiếu ngược mức mô tả. Việc này do **một tác tử con
-khác** người dựng C1–C3 làm: người đọc ≠ người lập, vì người lập hay đọc bằng chứng phản bác thành xác nhận.
+Gọi: `/helix-cc2-analyze --crosscheck <thư mục trích> <X-n> <n>` — ba tham số của `--crosscheck`, không có cờ riêng:
+`<thư mục trích>` là thư mục nháp chỉ chứa ba bản trích dưới đây; `<X-n>` là mã phương án (vd. `A-1`); `<n>` là số GT
+đầu tiên được dùng cho phiếu nháp mới (C6 tính từ C4 rồi truyền vào). Đối chiếu ở mức mô tả.
+
+Ai làm: C6 cắt ba bản trích vào `<thư mục trích>` rồi mở một tác tử con mới chỉ với các đường dẫn ấy, không mang ngữ cảnh
+phiên lập C1–C3: người đọc ≠ người lập, vì người lập hay đọc bằng chứng phản bác thành xác nhận. CA không đọc gì ngoài `<thư mục trích>`.
 
 Đầu vào được đọc:
-- `{{prefix}}CC2_C0_Frame.md` (ở gốc nơi ghi): thông số chức năng, Connector biên, ràng buộc môi trường
-- `{{prefix}}CC2_C2_Forms.md`: chỉ mục của phương án được chỉ định (mô tả, phác, bảng quy tắc)
-- `{{prefix}}CC2_C3_Params.md`: chỉ bảng của phương án được chỉ định
+- `<thư mục trích>/CC2_C0_Frame.md`: chỉ khung của chức năng con đang xét (thông số chức năng, Connector biên, ràng buộc môi trường)
+- `<thư mục trích>/CC2_C2_Forms.md`: chỉ mục của phương án `<X-n>` (mô tả, phác, bảng quy tắc)
+- `<thư mục trích>/CC2_C3_Params.md`: chỉ bảng của phương án `<X-n>`
 
-Cấm đọc: `{{prefix}}CC2_C1_Chains.md` và mọi lý lẽ chọn chuỗi (kể cả phần chép lại lý lẽ ấy nếu có trong C2).
+Cấm đọc: `CC2_C1_Chains.md`, `CC2_C4_Hypotheses.md`, mọi tệp ở gốc `<nơi ghi>/` hay trong `<nơi ghi>/<F-id>/`, các phương án khác, và mọi lý lẽ chọn chuỗi (kể cả phần chép lại lý lẽ ấy nếu lọt vào bản trích C2 — gặp thì bỏ qua và ghi một dòng cảnh báo).
 
 Bước:
-1. Từ mô tả và phác của phương án trong C2, dựng lại mô hình C&C² một trang **độc lập**, như với một hình thể có sẵn.
-2. So với C0 và C3, ghi mỗi chỗ lệch một dòng, theo năm loại: `L1` phần tử CA thấy mà C3 không có dòng tham số; `L2` dòng
-   C3 mà CA không gắn được vào phần tử nào trên hình thể; `L3` thông số chức năng C0 không phần tử nào phục vụ; `L4`
-   Connector CA thấy mà C0 không ghi; `L5` chiều ảnh hưởng CA suy ra ngược dấu C3.
-3. Mỗi chỗ lệch thành **đúng một** trong hai: `phiếu nháp GT-nnn` (quan hệ hình thể → chức năng cần thử; số tiếp sau số
-   lớn nhất trong C4) hoặc `dòng sửa C2: …` (mô tả hay phác thiếu, mâu thuẫn).
-4. Nối mục `## Đối chiếu ngược — phương án <X-n>` vào cuối `{{prefix}}CC2_CA_Analysis.md` (tạo tệp nếu chưa có, không ghi
-   đè phân tích cũ). C6 đọc mục này vào `{{prefix}}CC2_C6_Crosscheck.md`. Đây là đối chiếu mức mô tả, chưa phải mức hình học.
+1. Từ mô tả và phác của phương án `<X-n>`, dựng lại mô hình C&C² một trang **độc lập**, như với một hình thể có sẵn.
+2. So với bản trích C0 và C3, ghi mỗi chỗ lệch một dòng, theo năm loại: `L1` phần tử CA thấy mà C3 không có dòng tham số;
+   `L2` dòng C3 mà CA không gắn được vào phần tử nào trên hình thể; `L3` thông số chức năng C0 không phần tử nào phục vụ;
+   `L4` Connector CA thấy mà C0 không ghi; `L5` chiều ảnh hưởng CA suy ra ngược dấu C3.
+3. Mỗi chỗ lệch thành **đúng một** trong hai: `phiếu nháp GT-nnn` (quan hệ hình thể → chức năng cần thử; đánh số từ `<n>`,
+   tăng dần) hoặc `dòng sửa C2: …` (mô tả hay phác thiếu, mâu thuẫn).
+4. Ghi bảng lệch và các phiếu nháp vào `<thư mục trích>/CA_Crosscheck_<X-n>.md`, mục `## Đối chiếu ngược — phương án <X-n>`.
+   C6 đọc tệp ấy vào `{{prefix}}CC2_C6_Crosscheck.md` và nối mục này vào `{{prefix}}CC2_CA_Analysis.md`; CA không tự mở các
+   tệp ở nơi ghi.
 
-Ví dụ (nắp gài bằng móc đàn hồi, phương án A-1 của ví dụ C3; minh hoạ):
+Ví dụ (nắp gài bằng móc đàn hồi, gọi với `<X-n>` = `A-1`, `<n>` = 4; minh hoạ):
 
 | Lệch | Loại | Thấy ở | Xử lý |
 |---|---|---|---|
@@ -203,11 +208,11 @@ Phép thử nhỏ nhất để bác bỏ: hai kẹp tự làm mỗi biến thể
 
 ```
 /helix-cc2-analyze <hình thể> [--out <thư mục>]
-/helix-cc2-analyze --crosscheck <phương án> [--out <nơi ghi>/<F-id>]     (chỉ C6 gọi)
+/helix-cc2-analyze --crosscheck <thư mục trích> <X-n> <n>     (chỉ C6 gọi, trong tác tử con mới)
 ```
 
 `<hình thể>` là đường dẫn `cad_extract.json`, bản vẽ, ảnh, hoặc mô tả trong ngoặc kép. Không cần C0–C3 khi chạy riêng;
-`--crosscheck` cần C0, C2, C3 ở nơi ghi.
+`--crosscheck` chỉ cần ba bản trích trong `<thư mục trích>` (xem mục trên).
 
 ## COD
 

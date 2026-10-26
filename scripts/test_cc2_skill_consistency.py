@@ -691,6 +691,16 @@ def test_c4_analyze_lay_gia_thuyet_ca():
     c4 = _block('helix-cc2-hypo')
     assert 'CC2_C3_Params.md' in c4 and 'CC2_CA_Analysis.md' in c4
     assert re.search(r'`--analyze`[^\n]*## Giả thuyết nháp', c4), 'C4 --analyze chua noi lay muc Giả thuyết nháp cua CA'
+    assert re.search(r'`--analyze`[^\n]*`Nguồn CA:`[^\n]*thay cho `Dòng C3:`', c4), \
+        'C4 --analyze chua noi dong truy nguoc Nguồn CA:'
+
+
+def test_c4_cong_3_dung_that():
+    c4 = _block('helix-cc2-hypo')
+    i = c4.index('⛔ **Cổng CEO 3')
+    step = c4[i:c4.index('\n6. ', i)]
+    assert 'Dừng. Không chạy bước 6 cho tới khi CEO báo đã ký' in step, 'cong 3 thieu lenh Dung'
+    assert re.search(r'PRED_UNSIGNED[^\n]*báo CEO, không sửa mục 7', step)
 
 
 def test_ca_khong_purpose_gate():
@@ -708,12 +718,23 @@ def test_ca_crosscheck_khong_doc_c1():
     sec = _section(ca, r'--crosscheck', 2)
     assert sec is not None, 'CA thieu muc ## ... --crosscheck'
     inp = _between(sec, 'Đầu vào được đọc:', '\n\n')
-    files = set(re.findall(r'`(?:\{\{prefix\}\})?(CC2_[A-Za-z0-9_]+\.md)`', inp))
+    files = set(re.findall(r'`<thư mục trích>/(CC2_[A-Za-z0-9_]+\.md)`', inp))
     assert files == {'CC2_C0_Frame.md', 'CC2_C2_Forms.md', 'CC2_C3_Params.md'}, files
-    assert 'CC2_C1_Chains' not in inp
+    # moi dong dau vao la ban trich trong thu muc trich, khong phai tep o <noi ghi>
+    bullets = [l for l in inp.splitlines() if l.startswith('- ')]
+    assert len(bullets) == 3 and all('`<thư mục trích>/' in b for b in bullets), bullets
+    for bad in ('CC2_C1_Chains', 'CC2_C4_Hypotheses', '{{prefix}}'):
+        assert bad not in inp, f'{bad} trong dau vao crosscheck'
     for l in sec.splitlines():
-        if 'CC2_C1_Chains' in l:
-            assert l.lstrip().startswith('Cấm đọc:'), f'C1 xuat hien ngoai dong cam: {l}'
+        if 'CC2_C1_Chains' in l or 'CC2_C4_Hypotheses' in l:
+            assert l.lstrip().startswith('Cấm đọc:'), f'C1/C4 xuat hien ngoai dong cam: {l}'
+    cam = [l for l in sec.splitlines() if l.lstrip().startswith('Cấm đọc:')]
+    assert cam and 'CC2_C1_Chains' in cam[0] and 'CC2_C4_Hypotheses' in cam[0] and '<nơi ghi>' in cam[0]
+    # tham so tuong minh: thu muc trich, X-n, so GT bat dau; C6 cat trich va mo tac tu con moi
+    assert '--crosscheck <thư mục trích> <X-n> <n>' in sec
+    assert re.search(r'đánh số từ `<n>`', sec) and 'số lớn nhất trong C4' not in sec
+    assert re.search(r'C6[^\n]*cắt[^\n]*tác tử con mới', sec), 'chua noi C6 cat ban trich va mo tac tu con moi'
+    assert 'không đọc gì ngoài `<thư mục trích>`' in sec
     assert 'người đọc ≠ người lập' in sec
     tables = [t for t in _all_tables(sec) if t and 'Xử lý' in t[0]]
     assert tables, 'crosscheck thieu bang lech co cot Xử lý'

@@ -43,7 +43,7 @@ Cờ phụ:
   --from <khối>       chạy tiếp từ C0|C1|C2|C3|C4|CA|C6
   --only <khối>       chỉ chạy một khối
   --op <phép> <đích>  phép biến đổi góc nhìn trên một chuỗi (xem mục dưới); không chạy khối nào khác
-  --crosscheck        chỉ C6 dùng, để gọi CA đối chiếu ngược (CA đọc C0 + C2/C3 của phương án chọn, không đọc C1)
+  --crosscheck <thư mục trích> <X-n> <n>   chỉ C6 dùng, để gọi CA đối chiếu ngược trong tác tử con mới (CA chỉ đọc bản trích C0 + C2/C3 của phương án X-n, không đọc C1/C4; GT mới đánh từ n)
 ```
 
 Có hơn một cờ chế độ → dừng, hỏi CEO. Thiếu cờ chế độ mà **không** có `--op`/`--from`/`--only` → dừng, hỏi CEO.

@@ -253,3 +253,14 @@ def test_cli_allow_unsigned():
             f.write(bo_dong(thay(PHIEU_TOT, '7 ', CHUA_KY), '3 '))
         r = chay_co(q, '--allow-unsigned')
         assert r.returncode == 1 and 'MISSING_ITEM' in r.stdout
+
+
+def test_nguoi_ky_gia_la_chua_ky():
+    for ten in ('AI', 'ai', ' Claude ', 'TBD', 'tên', 'n/a', 'chưa ký', '<tên>', '{{tên}}'):
+        t = thay(PHIEU_TOT, '7 ', f'7 Dự đoán: x; người ký {ten} — ngày 2026-11-01')
+        assert 'PRED_UNSIGNED' in codes(t), ten
+
+
+def test_nguoi_ky_that_sach():
+    t = thay(PHIEU_TOT, '7 ', '7 Dự đoán: x; người ký Nguyễn Văn A — ngày 2026-11-01')
+    assert codes(t) == []

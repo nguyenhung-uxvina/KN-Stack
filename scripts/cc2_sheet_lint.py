@@ -59,6 +59,14 @@ def _empty(v):
     return v is None or not v.strip() or bool(PLACEHOLDER_RE.match(v.strip()))
 
 
+FAKE_SIGNERS = ('tbd', 'tên', 'ai', 'claude', 'n/a', 'chưa ký')
+
+
+def _fake_signer(name):
+    n = name.strip()
+    return '{{' in n or '<' in n or n.lower() in FAKE_SIGNERS
+
+
 def _parse_date(s):
     try:
         return date.fromisoformat(s)
@@ -99,8 +107,8 @@ def lint_sheets(text, today=None, allow_unsigned=False):
         if not _empty(v7):
             sm = SIGN_RE.search(v7)
             pd = _parse_date(sm.group(2)) if sm else None
-            if sm and '{{' in sm.group(1):
-                pd = None  # ten nguoi ky con la placeholder -> chua ky
+            if sm and _fake_signer(sm.group(1)):
+                pd = None  # ten nguoi ky la placeholder hoac AI -> chua ky
             tm = TEST_DATE_RE.search(v5) if not _empty(v5) else None
             td = _parse_date(tm.group(1)) if tm else None
             if pd is None:
