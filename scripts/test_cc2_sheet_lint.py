@@ -133,7 +133,8 @@ def test_tri_thuc_chua_biet():
 
 
 def test_bang_khac_bi_bo_qua():
-    assert L.lint_param_table("| a | b |\n|---|---|\n| 1 | 2 |\n") == []
+    t = "| a | b |\n|---|---|\n| 1 | 2 |\n"
+    assert [f.code for f in L.lint_param_table(t)] == ["NO_TABLE"]
 
 
 def chay(path, kind):
@@ -153,3 +154,57 @@ def test_cli_exit_code():
         r = chay(rong, 'hypo')
         assert r.returncode == 1 and 'NO_SHEETS' in r.stdout
         assert chay(os.path.join(d, 'khong-co.md'), 'hypo').returncode == 2
+
+
+def test_tron_khong_phai_tac_dung():
+    t = thay(PHIEU_TOT, '2 ', '2 NẾU: đường kính lỗ tròn d = 5 mm | Đối chứng: d = 8 mm')
+    assert 'EFFECT_IN_IF' not in codes(t)
+
+
+def test_wear_trong_swear_khong_tinh():
+    t = thay(PHIEU_TOT, '2 ', '2 NẾU: wearable d = 5 mm')
+    assert 'EFFECT_IN_IF' not in codes(t)
+
+
+def test_mon_va_mai_mon_mot_finding():
+    t = thay(PHIEU_TOT, '2 ', '2 NẾU: mài mòn giảm | Đối chứng: w = 6 mm')
+    assert codes(t).count('EFFECT_IN_IF') == 1
+
+
+def test_mot_bang_o_neu_mot_bang_o_doi_chung_sach():
+    assert 'IF_MULTI_VAR' not in codes(PHIEU_TOT)
+
+
+def test_params_khong_co_bang():
+    assert [f.code for f in L.lint_param_table("# trống\n")] == ['NO_TABLE']
+    assert [f.code for f in L.lint_param_table("")] == ['NO_TABLE']
+    assert [f.code for f in L.lint_param_table("| a | b |\n|---|---|\n| 1 | 2 |\n")] == ['NO_TABLE']
+
+
+def test_params_bang_khong_du_lieu():
+    t = "| Tham số | Nhãn | Nguồn số |\n|---|---|---|\n"
+    assert [f.code for f in L.lint_param_table(t)] == ['EMPTY_TABLE']
+
+
+def test_cli_params_tep_rong_exit_1():
+    with tempfile.TemporaryDirectory() as d:
+        p = os.path.join(d, 'r.md')
+        open(p, 'w', encoding='utf-8').close()
+        assert chay(p, 'params').returncode == 1
+
+
+def test_cli_bom_exit_0():
+    with tempfile.TemporaryDirectory() as d:
+        p = os.path.join(d, 'bom.md')
+        with open(p, 'w', encoding='utf-8-sig') as f:
+            f.write(PHIEU_TOT)
+        assert chay(p, 'hypo').returncode == 0
+
+
+def test_cli_utf8_hong_exit_2():
+    with tempfile.TemporaryDirectory() as d:
+        p = os.path.join(d, 'bad.md')
+        with open(p, 'wb') as f:
+            f.write(b'PHI\xf4U \xff\xfe')
+        r = chay(p, 'hypo')
+        assert r.returncode == 2 and 'Traceback' not in r.stderr

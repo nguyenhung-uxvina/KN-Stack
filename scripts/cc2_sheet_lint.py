@@ -86,7 +86,9 @@ def lint_sheets(text, today=None):
         v2 = it.get(2)
         if not _empty(v2):
             low = v2.lower()
-            hits = [w for w in EFFECT_WORDS if w in low]
+            hits = [w for w in EFFECT_WORDS
+                    if re.search(r'(?<!\w)' + re.escape(w) + r'(?!\w)', low)]
+            hits = [w for w in hits if not any(w != o and w in o for o in hits)]
             if hits:
                 add('EFFECT_IN_IF', 'mục 2 chứa từ tác dụng: ' + ', '.join(hits))
             if v2.split('|')[0].count('=') > 1:
@@ -119,6 +121,7 @@ def _cells(line):
 def lint_param_table(text):
     lines = _nfc(text).splitlines()
     out = []
+    found = False
     i = 0
     while i < len(lines):
         if lines[i].lstrip().startswith('|'):
@@ -128,11 +131,14 @@ def lint_param_table(text):
             block = lines[i:j]
             hdr = [c.lower() for c in _cells(block[0])]
             if 'nhãn' in hdr and 'nguồn số' in hdr:
+                found = True
+                rows = 0
                 ci, si = hdr.index('nhãn'), hdr.index('nguồn số')
                 for off, row in enumerate(block[1:], 1):
                     cells = _cells(row)
                     if all(re.fullmatch(r':?-{2,}:?|', c) for c in cells):
                         continue
+                    rows += 1
                     ln = i + off + 1
                     name = cells[0] if cells else '?'
                     lab = (cells[ci] if ci < len(cells) else '').strip().strip('*').lower()
@@ -146,9 +152,15 @@ def lint_param_table(text):
                     elif lab == 'tri thức' and src.startswith('chưa biết'):
                         out.append(Finding('BANG', ln, 'KNOWLEDGE_NO_EVIDENCE',
                                            f'{name}: nhãn tri thức nhưng nguồn chưa biết'))
+                if rows == 0:
+                    out.append(Finding('BANG', i + 1, 'EMPTY_TABLE',
+                                       'bảng có cột Nhãn và Nguồn số nhưng không có dòng dữ liệu'))
             i = j
         else:
             i += 1
+    if not found:
+        out.append(Finding('BANG', 1, 'NO_TABLE',
+                           'không có bảng nào có cả hai cột Nhãn và Nguồn số'))
     return out
 
 
@@ -158,9 +170,9 @@ def main(argv=None):
     ap.add_argument('--kind', choices=('hypo', 'params'), required=True)
     a = ap.parse_args(argv)
     try:
-        with open(a.path, encoding='utf-8') as f:
+        with open(a.path, encoding='utf-8-sig') as f:
             text = f.read()
-    except OSError as e:
+    except (OSError, UnicodeDecodeError) as e:
         print(f'ERROR không đọc được tệp: {e}', file=sys.stderr)
         return 2
     fs = lint_sheets(text) if a.kind == 'hypo' else lint_param_table(text)
