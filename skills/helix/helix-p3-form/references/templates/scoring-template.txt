@@ -1,24 +1,39 @@
 # Bảng chấm
 
+Đang dùng phân loại D/W tạm, chờ CEO duyệt tại Cổng 1.   <!-- bỏ câu này khi CEO đã duyệt và mọi nhãn tạm đã gỡ -->
+
 ## Checklist 14 mục
 
 | # | Mục | Tiêu chí |
 |---|---|---|
-| 1 | <tên mục 1 của checklist 14 mục> | <tiêu chí kiểm> |
-| 2 | <tên mục 2> | <tiêu chí kiểm> |
-| ... | ... | ... |
-| 14 | <tên mục 14> | Bỏ — lý do: <vì sao mục vắng hoặc giống hệt ở mọi phương án> |
+| 1 | Function | <tiêu chí> |
+| 2 | Working principle | <tiêu chí> |
+| 3 | Layout | <tiêu chí> |
+| 4 | Safety | <tiêu chí> |
+| 5 | Ergonomics | <tiêu chí> |
+| 6 | Production | <tiêu chí> |
+| 7 | Quality control | <tiêu chí> |
+| 8 | Assembly | <tiêu chí> |
+| 9 | Transport | <tiêu chí> |
+| 10 | Operation | <tiêu chí> |
+| 11 | Maintenance | <tiêu chí> |
+| 12 | Recycling | <tiêu chí> |
+| 13 | Costs | <tiêu chí> |
+| 14 | Schedules | <tiêu chí> |
+
+(Mục bỏ: thay `<tiêu chí>` bằng `Bỏ — lý do: <lý do>`.)
 
 ## Bảng chấm
 
 ### F-<id>
 
-| Req-ID | D/W | DP | Trọng số | PA-<id>-1 | PA-<id>-2 | HC-<id>-1 | Ghi chú |
-|---|---|---|---|---|---|---|---|
-| R-11 | D | DP-1 | 1 | Đạt | Loại | Đạt | |
-| R-12 | W | DP-2 | 3 | 3 | 4 | 1 | |
-| R-13 | W | DP-3 | 2 | ?(chưa có số liệu) | 2 | 0 | |
-| R-14 | W tạm | DP-4 | | 2 | 3 | 4 | 🔴 CEO chốt trọng số |
+| Req-ID | D/W | DP | Trọng số | PA-<id>-1 | PA-<id>-2 | PA-<id>-3 | HC-<id>-1 | HC-<id>-2 | Ghi chú |
+|---|---|---|---|---|---|---|---|---|---|
+| R-11 | D tạm | DP-1 | 1 | Đạt | Đạt | Loại | Đạt | Đạt | |
+| R-12 | W tạm | DP-2 | 3 | 3 | 4 | 2 | 1 | ?(chưa có số liệu) | |
+| R-13 | W tạm | — | | 2 | 2 | 3 | 0 | 4 | 🔴 CEO gán trọng số (không có DP) |
+
+Tổng điểm: phần có trọng số = <số theo từng cột>; phần cờ đỏ chưa gán = <số dòng 🔴, điểm thô theo từng cột>.
 
 ## Độ nhạy
 

@@ -22,15 +22,17 @@ Ghi chú nguồn: thang 0–4 theo VDI 2225 là cách P&B dùng ở bước đá
 
 ## Ánh xạ yêu cầu → DP
 
-Cột `DP` lấy từ cột nguồn `HOQ-DPx` của bảng yêu cầu (khối B2/HOQ): mỗi yêu cầu `Req-ID` trỏ tới thông số thiết kế `DP-x` mà phương án hình thể phải quyết. Chấm phương án trên đúng DP đó: điểm cho yêu cầu = mức phương án thoả DP ấy, không phải ấn tượng chung. Yêu cầu không ánh xạ được DP nào thì vẫn giữ trong bảng, để ô DP là `—`, và xử lý theo luật Q7 bên dưới.
+Cột `DP` lấy từ cột nguồn `HOQ-DPx` của bảng yêu cầu (khối B2/HOQ): mỗi yêu cầu `Req-ID` trỏ tới thông số thiết kế `DP-x` mà phương án hình thể phải quyết. Chấm phương án trên đúng DP đó: điểm cho yêu cầu = mức phương án thoả DP ấy, không phải ấn tượng chung. Yêu cầu không ánh xạ được DP nào (hoặc HOQ chỉ là bản proxy) thì xử lý theo luật Q7 bên dưới.
 
 ## Luật D/W tạm (Q6)
 
-Khi bảng yêu cầu chưa chốt một yêu cầu là cứng hay mong muốn, ghi `D tạm` hoặc `W tạm` ở cột D/W thay vì tự quyết. Lint chấp nhận hai giá trị này (bỏ chữ «tạm» khi kiểm miền ô). Dòng `D tạm` chấm theo `Đạt`/`Loại`, dòng `W tạm` chấm theo `0`–`4`. Mọi dòng «tạm» phải nằm trong danh sách việc chờ CEO chốt, vì chốt D hay W là quyết định của CEO, không phải của khối BF.
+Khi danh sách yêu cầu chưa phân D/W (hoặc chỉ có `Requirements_Draft`), BF chạy tạm: BF ĐỀ XUẤT D/W và gắn nhãn `D tạm` hoặc `W tạm` cho MỌI dòng, không dòng nào được ghi `D`/`W` trần cho tới khi CEO duyệt. CEO duyệt phân loại tại Cổng 1. Ngay đầu `BF_Scoring.md` (dưới tiêu đề) phải có một câu nói rõ đang dùng phân loại tạm, ví dụ `Đang dùng phân loại D/W tạm, chờ CEO duyệt tại Cổng 1.` Lint chấp nhận hai giá trị tạm (bỏ chữ «tạm» khi kiểm miền ô): dòng `D tạm` chấm `Đạt`/`Loại`, dòng `W tạm` chấm `0`–`4`. BE (`helix-p3-compile`) KHÔNG được khuyến nghị qua Gate 3 khi trong bảng còn bất kỳ nhãn `tạm` nào; chốt D hay W là quyết định của CEO, không phải của khối BF.
 
 ## Luật cờ đỏ trọng số trống (Q7)
 
-Yêu cầu W không có DP, hoặc chưa có trọng số vì CEO chưa chốt: GIỮ dòng, để ô `Trọng số` TRỐNG, và ghi `🔴` trong cột Ghi chú kèm việc cần làm (ví dụ `🔴 CEO chốt trọng số`). Không tự điền trọng số để bảng trông đầy. Lint báo `EMPTY_WEIGHT_NO_FLAG` nếu ô trống mà dòng không có `🔴`. Ô Trọng số có giá trị phải là số (`3`, `2,5`, `15%`).
+Kích hoạt khi yêu cầu W không ánh xạ được DP nào của HOQ, HOẶC khi HOQ chỉ là bản proxy (draft-proxy), nên ánh xạ DP không đáng tin. Khi đó: GIỮ dòng trong bảng, để ô `Trọng số` TRỐNG, ghi `🔴` ở cột Ghi chú kèm việc cần làm (ví dụ `🔴 CEO gán trọng số`), và để ô DP là `—` nếu không có DP. Không tự điền trọng số để bảng trông đầy. Lint cho phép ô trọng số trống chỉ khi dòng có `🔴` (nếu không là `EMPTY_WEIGHT_NO_FLAG`). Ô Trọng số có giá trị phải là số (`3`, `2,5`, `15%`).
+
+Tổng điểm in HAI cột: (1) chỉ phần có trọng số; (2) phần cờ đỏ còn chưa gán, tức các dòng `🔴` để CEO gán. Không cộng gộp hai phần thành một con số duy nhất.
 
 ## Khuôn tệp
 
@@ -38,7 +40,7 @@ Khuôn đầy đủ nằm ở `references/templates/scoring-template.txt` (tách
 
 - Mục `# Bảng chấm`, rồi `## Checklist 14 mục` với tiêu đề bảng `# | Mục | Tiêu chí` (14 dòng), rồi `## Bảng chấm`, rồi `## Độ nhạy`.
 - Mỗi chức năng một mục `### F-<id>` với tiêu đề bảng `Req-ID | D/W | DP | Trọng số | PA-<id>-1 | … | HC-<id>-1 | … | Ghi chú`.
-- Dòng mẫu: D → `R-11 | D | DP-1 | 1 | Đạt | Loại | Đạt`; W → `R-12 | W | DP-2 | 3 | 3 | 4 | 1`; ô chưa biết → `?(chưa có số liệu)`; W tạm không trọng số → ô Trọng số trống và Ghi chú `🔴 CEO chốt trọng số`.
+- Dòng mẫu: D → `R-11 | D | DP-1 | 1 | Đạt | Loại | Đạt`; W → `R-12 | W | DP-2 | 3 | 3 | 4 | 1`; ô chưa biết → `?(chưa có số liệu)`; W không DP → DP `—`, ô Trọng số trống và Ghi chú `🔴 CEO gán trọng số`.
 
 
 Quy ước về cấu trúc, mỗi điều khớp một mã lint:
