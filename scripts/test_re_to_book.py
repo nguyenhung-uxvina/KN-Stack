@@ -52,3 +52,37 @@ def test_headingless_file_is_single_file_unit():
 
 def test_bold_code_in_first_cell_recognised():
     assert 'row:C-3' in [u.id for u in ru.split_units('| **C-3** | cờ IP |\n')]
+
+
+rl = _load('re_labels')
+
+
+def U(text): return ru.Unit(id='x', kind='section', text=text, sha256='')
+
+
+def test_inline_weakest_label_wins():
+    assert rl.resolve(U('đã biết … nhưng phỏng đoán về khe'), None, None).label == 'conjecture'
+
+
+def test_file_cap_inherited_and_caps_inline():
+    cap = rl.file_cap(ru.split_units('Mọi phần tử mang nhãn ≤ phỏng đoán.\n## A\nđã biết: 730 mm\n## B\nkhông nhãn\n'))
+    assert cap == 'conjecture'
+    assert rl.resolve(U('đã biết: 730 mm'), cap, None).label == 'conjecture'
+    l = rl.resolve(U('không nhãn'), cap, None)
+    assert (l.label, l.source) == ('conjecture', 'kế thừa: tệp')
+
+
+def test_no_label_anywhere_is_unassigned():
+    assert rl.resolve(U('730 mm'), None, None).label == 'chưa gán'
+
+
+def test_ceiling_lowest_letter_and_caps_confidence():
+    st = '---\nconfidence_ceiling: theo miền — M hình học; M–H môi trường; L bố trí màn\n---\n'
+    c = rl.ceiling_from_state(st)
+    assert c == 'L'
+    l = rl.resolve(U('phỏng đoán, mức H'), None, c)
+    assert (l.confidence, l.label) == ('L', 'conjecture')
+
+
+def test_ceiling_does_not_create_knowledge_label():
+    assert rl.resolve(U('730 mm'), None, 'M').label == 'chưa gán'
