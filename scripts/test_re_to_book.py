@@ -827,3 +827,131 @@ def test_cli_nfd_chunk_is_normalised_before_redaction(tmp_path):
     assert rr.main(['--book', book, '--src', src, '--out', str(out)]) == 0
     t = (out / 'c1.md').read_text(encoding='utf-8')
     assert 'N-001' not in t and unicodedata.is_normalized('NFC', t)
+
+
+# ---------------------------------------------------------------- re_consolidate (P0)
+rc = _load('re_consolidate')
+
+
+def _vault(tmp_path, status='xem D:\W\1_Projects\BB-02_LOMAH\RE\Demo\a.md\nvà RE/Demo/a.md\n'):
+    proj = tmp_path / 'BB-02_LOMAH'
+    d = proj / 'RE' / 'Demo'
+    d.mkdir(parents=True)
+    (d / 'a.md').write_text('x', encoding='utf-8')
+    (d / '_pipeline_state.md').write_text('---\nproject: BB-02_LOMAH\nx: 1\n---\nbody\n', encoding='utf-8')
+    (proj / 'Status.md').write_bytes(status.encode('utf-8'))
+    return proj, tmp_path / 'RE-X' / 'RE'
+
+
+def _plan(proj, dest, dossiers=('Demo',)):
+    return rc.plan(str(proj / 'RE'), list(dossiers), str(dest), [str(proj)], 'BB-02_LOMAH', 'RE-X')
+
+
+def test_plan_splits_auto_and_manual_refs(tmp_path):
+    proj = tmp_path / 'BB-02_LOMAH'
+    (proj / 'RE' / 'Demo').mkdir(parents=True)
+    (proj / 'RE' / 'Demo' / 'a.md').write_text('x', encoding='utf-8')
+    (proj / 'Status.md').write_text('xem D:\W\1_Projects\BB-02_LOMAH\RE\Demo\a.md\nvà RE/Demo/a.md\n', encoding='utf-8')
+    p = rc.plan(str(proj / 'RE'), ['Demo'], str(tmp_path / 'RE-X' / 'RE'), [str(proj)], 'BB-02_LOMAH', 'RE-X')
+    assert p['auto_rewrites'][0]['new'].endswith('RE-X\RE\Demo\a.md') and p['manual'][0]['line'] == 2
+    assert p['moves'][0]['file_count'] == 1
+
+
+def test_plan_prefix_dossier_not_matched(tmp_path):
+    proj, dest = _vault(tmp_path, 'BB-02_LOMAH/RE/Demo2/x\nRE/Demo2/y\n')
+    p = _plan(proj, dest)
+    assert p['auto_rewrites'] == [] and p['manual'] == []
+
+
+def test_apply_moves_counts_rewrites_only_approved_and_writes_readme(tmp_path):
+    proj, dest = _vault(tmp_path)
+    st = proj / 'Status.md'
+    p = _plan(proj, dest)
+    r = rc.apply(p, [str(st)])
+    assert (dest / 'Demo' / 'a.md').read_text(encoding='utf-8') == 'x'
+    assert not (proj / 'RE' / 'Demo').exists()
+    lines = st.read_text(encoding='utf-8').splitlines()
+    assert lines[0] == 'xem D:\W\1_Projects\RE-X\RE\Demo\a.md' and lines[1] == 'và RE/Demo/a.md'
+    assert 'project: RE-X' in (dest / 'Demo' / '_pipeline_state.md').read_text(encoding='utf-8')
+    readme = proj / 'RE' / 'README.md'
+    assert os.path.exists(r['readme']) and 'Demo' in readme.read_text(encoding='utf-8')
+    assert r['moved'] and r['rewritten']
+
+
+def test_apply_unapproved_file_untouched(tmp_path):
+    proj, dest = _vault(tmp_path)
+    before = (proj / 'Status.md').read_bytes()
+    r = rc.apply(_plan(proj, dest), [])
+    assert (proj / 'Status.md').read_bytes() == before and r['rewritten'] == []
+
+
+def test_apply_refuses_symlinked_src(tmp_path):
+    proj, dest = _vault(tmp_path)
+    link = tmp_path / 'link_RE'
+    try:
+        os.symlink(str(proj / 'RE'), str(link), target_is_directory=True)
+    except (OSError, NotImplementedError):
+        pytest.skip('khong tao duoc symlink')
+    p = _plan(proj, dest)
+    p['src_root'] = str(link)
+    with pytest.raises(rc.RefusedError):
+        rc.apply(p, [])
+    assert (proj / 'RE' / 'Demo' / 'a.md').exists() and not dest.exists()
+
+
+def test_apply_refuses_junction_src(tmp_path, monkeypatch):
+    proj, dest = _vault(tmp_path)
+    p = _plan(proj, dest)
+    src = os.path.abspath(str(proj / 'RE'))
+    monkeypatch.setattr(os.path, 'isjunction',
+                        lambda x: os.path.abspath(x) == src, raising=False)
+    with pytest.raises(rc.RefusedError):
+        rc.apply(p, [])
+    assert (proj / 'RE' / 'Demo' / 'a.md').exists() and not dest.exists()
+
+
+def test_apply_refuses_existing_destination(tmp_path):
+    proj, dest = _vault(tmp_path)
+    (dest / 'Demo').mkdir(parents=True)
+    with pytest.raises(rc.RefusedError):
+        rc.apply(_plan(proj, dest), [])
+    assert (proj / 'RE' / 'Demo' / 'a.md').exists()
+
+
+def test_apply_stale_plan_raises_before_move(tmp_path):
+    proj, dest = _vault(tmp_path)
+    st = proj / 'Status.md'
+    p = _plan(proj, dest)
+    st.write_text('da sua\n', encoding='utf-8')
+    with pytest.raises(rc.StalePlanError):
+        rc.apply(p, [str(st)])
+    assert (proj / 'RE' / 'Demo' / 'a.md').exists() and not dest.exists()
+
+
+def test_apply_crlf_preserved(tmp_path):
+    proj, dest = _vault(tmp_path, 'a BB-02_LOMAH/RE/Demo/x\r\nlast\r\n')
+    st = proj / 'Status.md'
+    rc.apply(_plan(proj, dest), [str(st)])
+    assert st.read_bytes() == 'a RE-X/RE/Demo/x\r\nlast\r\n'.encode('utf-8')
+
+
+def test_apply_readme_appended_when_present(tmp_path):
+    proj, dest = _vault(tmp_path)
+    (proj / 'RE' / 'README.md').write_text('# Cu\n', encoding='utf-8')
+    rc.apply(_plan(proj, dest), [])
+    t = (proj / 'RE' / 'README.md').read_text(encoding='utf-8')
+    assert t.startswith('# Cu\n') and 'Demo' in t
+
+
+def test_cli_apply_requires_approve_flag(tmp_path):
+    proj, dest = _vault(tmp_path)
+    out = tmp_path / 'plan.json'
+    assert rc.main(['plan', '--src-root', str(proj / 'RE'), '--dossiers', 'Demo',
+                    '--dest-root', str(dest), '--scan', str(proj),
+                    '--old-project', 'BB-02_LOMAH', '--new-project', 'RE-X',
+                    '--out', str(out)]) == 0
+    assert not dest.exists()
+    assert rc.main(['apply', '--plan', str(out)]) == 2
+    assert (proj / 'RE' / 'Demo').exists()
+    assert rc.main(['apply', '--plan', str(out), '--no-rewrite']) == 0
+    assert (dest / 'Demo' / 'a.md').exists()
