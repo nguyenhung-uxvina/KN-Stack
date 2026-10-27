@@ -392,6 +392,23 @@ def test_citation_not_in_rule(d, line):
     assert 'CITATION_NOT_IN_RULE' in codes(d)
 
 
+@pytest.mark.parametrize('bad', [
+    '[TKHT Ch99 §99.9, tr.12]',
+    '[TKHT Ch99 §99]',
+    '[TKHT Ch99 § 99.9 ]',
+    '[tkht Ch99 §99.9]',
+    '[TKKTHT Ch99 §1.1; KL9 Ch01 §1.1]',
+])
+def test_citation_malformed(d, bad):
+    mut(d, VAR, RULE_LINE, f'Nguồn quy tắc: PB-R901, PB-M901 [TKKTHT Ch22 §1.2] {bad}')
+    assert 'CITATION_MALFORMED' in codes(d)
+
+
+def test_citation_wellformed_pair_ok(d):
+    mut(d, VAR, RULE_LINE, 'Nguồn quy tắc: PB-R901, PB-M901 [TKKTHT Ch22 §1.2], [TKKTHT2 Ch13]')
+    assert lint(d) == []
+
+
 def test_citation_any_code_on_line_ok(d):
     mut(d, VAR, RULE_LINE, 'Nguồn quy tắc: PB-R901, PB-M901 [TKKTHT Ch22 §1.2] [TKKTHT2 Ch13]')
     assert lint(d) == []

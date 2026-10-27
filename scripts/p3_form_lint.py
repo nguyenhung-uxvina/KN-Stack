@@ -10,6 +10,9 @@ Exit: 0 sach, 1 co finding, 2 loi dung/doc tep.
 <thu muc script>/../skills/helix/helix-p3-form/references). Moi dong «Nguồn quy tắc:»
 phai co >=1 ma (TKHT-R|PB-R|PB-M|KL-R)nnn co trong references, va moi con tro
 [SACH ChNN §x.y] tren dong phai nam trong dong bang cua mot ma tren cung dong.
+Moi «[TKHT|TKKTHT|TKKTHT2|KL9 …]» (khong phan biet hoa thuong) phai khop CHINH XAC khuon
+CITE_RE (vd «[TKHT Ch13b §13b.9]»); sai khuon (thua «, tr.12», «§99» thieu phan thap phan,
+khoang trang thua, viet thuong, nhieu sach trong mot dau []) -> CITATION_MALFORMED.
 
 --draft: Selection nhap truoc Cong CEO 2 — «Chọn: (chờ CEO)», KHONG ghi ma ung vien.
 Mac dinh (chinh thuc, sau Cong CEO 2): «Chọn: <PA-/HC-id> — <ten>», «Lý do CEO:» khong
@@ -27,7 +30,7 @@ Loi ra NO_BENCH co ly do: chuc nang khong co HC nao van sach neu trong khoi
 Ly do rong -> NO_BENCH. Khi khong co HC, bang cham cua F do chi can cot PA.
 
 Ma loi: MISSING_FILE TOO_FEW_VARIANTS VARIANT_NO_RULE VARIANT_NO_PARAM BAD_LABEL
-  RULE_CODE_MISSING RULE_CODE_UNKNOWN CITATION_NOT_IN_RULE ID_BLOCK_MISMATCH
+  RULE_CODE_MISSING RULE_CODE_UNKNOWN CITATION_NOT_IN_RULE CITATION_MALFORMED ID_BLOCK_MISMATCH
   BENCH_NO_SOURCE BENCH_NO_DATE BENCH_NO_CHAIN TOO_MANY_BENCH
   CHECKLIST_INCOMPLETE CHECKLIST_SKIP_NO_REASON CHECKLIST_CANDIDATE_MISSING
   BAD_CELL QUESTION_NO_REASON EMPTY_WEIGHT_NO_FLAG NO_SENSITIVITY CANDIDATE_MISSING
@@ -44,6 +47,7 @@ Finding = namedtuple('Finding', 'file line code msg')
 
 CITE_RE = re.compile(r'\[(TKHT|TKKTHT2|TKKTHT|KL9)\s+Ch(\d{2}[a-z]?)'
                      r'(?:\s*§\s*([0-9]{1,2}[a-z]?(?:\.[0-9]+[a-z]?)+))?\]')
+BOOKISH_RE = re.compile(r'\[(?:TKHT|TKKTHT2?|KL9)\b[^\]]*\]', re.I)
 LABELS = ('tri thức', 'phỏng đoán', 'giả định')
 SRC_RE = re.compile(r'https?://|\b(US|EP|CN|WO|JP|KR|DE)\s?[\d,\s]{5,}\s?[A-Z]\d?\b|[/\\]')
 DATE_RE = re.compile(r'^\d{4}-\d{2}-\d{2}$')
@@ -139,6 +143,10 @@ def _fmt_cite(c):
 
 
 def _check_rule_line(rel, lineno, pid, value, idx, out):
+    for tok in BOOKISH_RE.findall(value):
+        if not CITE_RE.fullmatch(tok):
+            out.append(Finding(rel, lineno, 'CITATION_MALFORMED',
+                               f'{pid}: {tok} sai khuôn, phải là [SÁCH ChNN §x.y]'))
     found = list(dict.fromkeys(CODE_RE.findall(value)))
     if not found:
         out.append(Finding(rel, lineno, 'RULE_CODE_MISSING',
