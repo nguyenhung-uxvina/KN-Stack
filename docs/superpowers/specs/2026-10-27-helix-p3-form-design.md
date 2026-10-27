@@ -193,9 +193,11 @@ Luật chưng cất:
 
 ## 12. Chạy thử nghiệm thu
 
-`/helix-embody-realize VN-TGT-F --variant TGT-10` (tiền tố `VN_TGT_F_TGT10_`, thư mục P3 `Phase3-Embodiment/TGT-10/`) qua B0 → BF đến hết cổng CEO 2; `p3_form_lint.py` sạch; BA đọc được
+`/helix-embody-realize VN-TGT-F --variant TGT-10` (tiền tố `VN_TGT_F_TGT_` theo luật VARIANT_SHORT — `<V0>` = `<V>` cắt tại dấu `-` đầu tiên, phán quyết R13; thư mục P3 `Phase3-Embodiment/TGT-10/`) qua B0 → BF đến hết cổng CEO 2; `p3_form_lint.py --draft` sạch trước cổng CEO 2 và lint chính thức (không `--draft`) sạch sau cổng; BA đọc được
 `BF_Form_Selection.md`. Câu hỏi nhận: CEO đọc `BF_Scoring.md` có quyết được hình thể cho «nhận va chạm đầu đạn» và
 «giữ nổi thẳng đứng» mà không phải hỏi lại không.
+
+**Điều anh sẽ gặp:** chưa có thư mục Phase3 cho TGT-10 (B0 sẽ tạo); Phase 2 chưa đủ (B0 sẽ báo, anh override để chạy tiếp); các dự phòng R15 (thiếu Function_Structure), Q6 (D/W tạm), Q7 (HOQ proxy) đều kích hoạt → mọi dòng W mang 🔴 với ô trọng số trống cho tới khi anh gán trọng số ở Cổng CEO 2.
 
 ## 13. Quyết định CEO vòng 2 (2026-10-27)
 

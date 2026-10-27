@@ -174,7 +174,7 @@
 
 **Interfaces:**
 - Consumes: references Task 2–5; khuôn tệp Task 7; `helix-cc2:references:{cc2-core,view-ops,synthesis-moves,hypothesis-sheet,param-bridge}`.
-- Produces: skill `helix-p3-form`, ID BF; cờ `<project> [--variant <V>] [--function <F-id>] [--quick]`; tiền tố/thư mục theo luật VARIANT_SHORT của P3 (`<PROJECT>_<V0>_`; thư mục `Phase3-Embodiment/<V>/`). Với `VN-TGT-F --variant TGT-10` → `VN_TGT_F_TGT10_`, thư mục `Phase3-Embodiment/TGT-10/`.
+- Produces: skill `helix-p3-form`, ID BF; cờ `<project> [--variant <V>] [--function <F-id>] [--quick]`; tiền tố/thư mục theo luật VARIANT_SHORT của P3 (`<PROJECT>_<V0>_`; thư mục `Phase3-Embodiment/<V>/`). Với `VN-TGT-F --variant TGT-10` → `VN_TGT_F_TGT_` (phán quyết R13), thư mục `Phase3-Embodiment/TGT-10/`.
 - Nội dung SKILL (theo spec §5–§8, §11b, §13): frontmatter `name: helix-p3-form`, description có «Triggers on: …» EN+VI; bảng đầu vào + glob linh hoạt (chấp nhận tệp không tiền tố như `BE_Concept_Selection.md`, `Requirements_Draft`); F1…F7 với hai cổng CEO; D/W tạm (Q6); `🔴` W không DP (Q7); P2 cấp hệ → suy nguyên lý, nhãn *phỏng đoán*; nhập `CC2_Handoff` nếu có, sinh nếu chưa (định dạng C6); khuôn 4 tệp đầu ra dán nguyên từ Task 7; bước cuối bắt buộc `python -X utf8 D:/KN-Stack/scripts/p3_form_lint.py <dir> --prefix <P>` phải exit 0 trước Cổng 2; Analyst Trap: mỗi phương án chọn phải có kế hoạch thử; COD (F1/F7 Core, F2–F6 Offload); chỉ nạp mục reference cần qua `function-index.md`.
 
 - [ ] **Step 1: Eval thất bại** — `evals/helix-p3-form.json` (`mode: "static"`, `include_references: true`), assertions `required: true`, ít nhất: `BF-POSITION` (`B0.*BF.*BA`), `BF-GATES` (2 cổng CEO), `BF-3VAR` (`≥ ?3 phương án`), `BF-3TIER` (`dự án.*web.*sáng chế`), `BF-READ-FIG` (`hình vẽ`), `BF-DFILTER` (`\bD\b.*lọc`), `BF-HOQ` (`HOQ`), `BF-REDFLAG` (`🔴`), `BF-PROVISIONAL` (`D/W tạm`), `BF-CHECKLIST14` (`14 mục`), `BF-LINT` (`p3_form_lint\.py`), `BF-TESTPLAN` (`Kế hoạch thử`), `BF-LABELS` (`tri thức.*phỏng đoán.*giả định`), `BF-BOOKS` (`TKHT.*TKKTHT.*KL9`). Chạy `bash evals/run-eval.sh helix-p3-form` → FAIL (skill chưa có).
@@ -203,8 +203,8 @@
 Ghi vào vault `D:/Workshop_X/1_Projects/VN-TGT-F/Phase3-Embodiment/TGT-10/` (ngoài repo). Skill chưa deploy qua junction (nằm trên worktree) → chạy bằng cách đọc trực tiếp `D:/KN-Stack-wt-p3form/skills/helix/helix-p3-form/SKILL.md`, lint gọi từ worktree.
 
 - [ ] **Step 1:** Kiểm thư mục `Phase3-Embodiment/TGT-10/` chưa có tệp trùng tên (đọc trước khi ghi). Chạy B0 rồi BF đến Cổng 1: trình danh sách chức năng + D/W tạm. **CEO quyết (Core).**
-- [ ] **Step 2:** Chạy F2–F6; `python -X utf8 D:/KN-Stack-wt-p3form/scripts/p3_form_lint.py <dir> --prefix VN_TGT_F_TGT10_` → exit 0. Tự mở 3 nguồn web/sáng chế ngẫu nhiên trong `BF_Benchmark.md` để xác nhận tồn tại và đúng nội dung (báo cáo tác tử không phải bằng chứng).
-- [ ] **Step 3:** Cổng 2: CEO chọn hình thể (ghi bằng TÊN phương án). Kiểm câu nghiệm thu spec §12: CEO quyết được «nhận va chạm đầu đạn» và «giữ nổi thẳng đứng» không cần hỏi lại. Ghi kết quả + chỗ hụt vào `<scratchpad>/BF_pilot_findings.md`; sửa SKILL/references nếu có, commit `[HELIX] helix-p3-form: vá sau chạy thử TGT-10`.
+- [ ] **Step 2:** Chạy F2–F6; `python -X utf8 D:/KN-Stack-wt-p3form/scripts/p3_form_lint.py D:/Workshop_X/1_Projects/VN-TGT-F/Phase3-Embodiment/TGT-10 --prefix VN_TGT_F_TGT_ --draft` → exit 0 (Selection nháp `Chọn: (chờ CEO)`). Tự mở 3 nguồn web/sáng chế ngẫu nhiên trong `BF_Benchmark.md` để xác nhận tồn tại và đúng nội dung (báo cáo tác tử không phải bằng chứng).
+- [ ] **Step 3:** Cổng 2: CEO chọn hình thể (ghi bằng TÊN phương án); ghi Selection chính thức, chạy lại lint không `--draft` → exit 0 trước khi BA đọc. Kiểm câu nghiệm thu spec §12: CEO quyết được «nhận va chạm đầu đạn» và «giữ nổi thẳng đứng» không cần hỏi lại. Ghi kết quả + chỗ hụt vào `<scratchpad>/BF_pilot_findings.md`; sửa SKILL/references nếu có, commit `[HELIX] helix-p3-form: vá sau chạy thử TGT-10`.
 
 ### Task 11: PR
 
