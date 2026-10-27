@@ -10,7 +10,6 @@ import datetime
 import json
 import os
 import re
-import shutil
 import sys
 
 _EXTS = ('.md', '.py', '.json', '.txt')
@@ -32,6 +31,21 @@ class CountMismatchError(Exception):
     pass
 
 
+class PartialMoveError(Exception):
+    pass
+
+
+def _state(moved, rewritten=None, pending=None):
+    out = ['Đã chuyển (%d):' % len(moved)]
+    out += ['  %s -> %s' % (a, b) for a, b in moved] or ['  (không có)']
+    if rewritten is not None:
+        out.append('Đã sửa đường dẫn: %s' % (', '.join(rewritten) or '(không có)'))
+        out.append('Chưa sửa: %s' % (', '.join(pending) or '(không có)'))
+    else:
+        out.append('Chưa sửa đường dẫn / README / project: nào.')
+    return chr(10).join(out)
+
+
 def _abs(p):
     return os.path.abspath(p)
 
@@ -47,8 +61,31 @@ def _is_link(p):
     return bool(ij and ij(p))
 
 
+def _walk(d):
+    for root, dirs, files in os.walk(d):
+        dirs[:] = [x for x in dirs if not _is_link(os.path.join(root, x))]
+        yield root, dirs, files
+
+
 def _count_files(d):
-    return sum(len(fs) for _, _, fs in os.walk(d))
+    return sum(len(fs) for _, _, fs in _walk(d))
+
+
+def _nested_links(d):
+    found = []
+    for root, dirs, files in os.walk(d):
+        for x in list(dirs) + list(files):
+            if _is_link(os.path.join(root, x)):
+                found.append(os.path.join(root, x))
+        dirs[:] = [x for x in dirs if not _is_link(os.path.join(root, x))]
+    return found
+
+
+def _atomic_write(path, data):
+    tmp = path + '.tmp_reconsolidate'
+    with open(tmp, 'wb') as f:
+        f.write(data)
+    os.replace(tmp, path)
 
 
 def _split_lines(text):
@@ -81,7 +118,8 @@ def _scan_files(scan_dirs, skip_trees):
     for sd in scan_dirs:
         for root, dirs, files in os.walk(sd):
             dirs[:] = [d for d in dirs
-                       if d not in _SKIP_DIRS and _key(os.path.join(root, d)) not in skip]
+                       if d not in _SKIP_DIRS and _key(os.path.join(root, d)) not in skip
+                       and not _is_link(os.path.join(root, d))]
             for f in sorted(files):
                 if f.lower().endswith(_EXTS):
                     yield os.path.join(root, f)
@@ -89,14 +127,15 @@ def _scan_files(scan_dirs, skip_trees):
 
 def plan(src_root, dossiers, dest_root, scan_dirs, old_project, new_project):
     src_root, dest_root = _abs(src_root), _abs(dest_root)
-    moves, trees, states = [], [], []
+    moves, trees, states, nested = [], [], [], []
     for d in dossiers:
         s = os.path.join(src_root, d)
         if not os.path.isdir(s):
             raise ValueError('khong co ho so: %s' % s)
         moves.append({'from': s, 'to': os.path.join(dest_root, d), 'file_count': _count_files(s)})
         trees.append(s)
-        for root, _, fs in os.walk(s):
+        nested += _nested_links(s)
+        for root, _, fs in _walk(s):
             if '_pipeline_state.md' in fs:
                 states.append(os.path.join(root, '_pipeline_state.md'))
     autos = [(d, _auto_re(old_project, d)) for d in dossiers]
@@ -121,11 +160,15 @@ def plan(src_root, dossiers, dest_root, scan_dirs, old_project, new_project):
                     hit, new = True, new2
             if hit:
                 auto_rewrites.append({'file': path, 'line': n, 'old': line, 'new': new})
-            elif any(b.search(line) for b in bares):
+            rest = line
+            for d, rx in autos:
+                rest = rx.sub(lambda m: ' ' * len(m.group(0)), rest)
+            if any(b.search(rest) for b in bares):
                 manual.append({'file': path, 'line': n, 'text': line})
     return {'src_root': src_root, 'dest_root': dest_root, 'old_project': old_project,
             'new_project': new_project, 'dossiers': list(dossiers), 'moves': moves,
-            'auto_rewrites': auto_rewrites, 'manual': manual, 'pipeline_states': states}
+            'auto_rewrites': auto_rewrites, 'manual': manual, 'pipeline_states': states,
+            'nested_links': nested}
 
 
 def _nearest_existing(p):
@@ -163,8 +206,7 @@ def _write_rewrites(path, items):
         i = rw['line'] - 1
         lines[i] = rw['new'] + _ending(lines[i])
     out = ''.join(lines).encode('utf-8')
-    with open(path, 'wb') as f:
-        f.write((_BOM if data.startswith(_BOM) else b'') + out)
+    _atomic_write(path, (_BOM if data.startswith(_BOM) else b'') + out)
 
 
 def _fix_project(path, new_project):
@@ -182,8 +224,7 @@ def _fix_project(path, new_project):
     new_fm, n = re.subn(r'(?m)^project:[^\r\n]*', lambda _m: 'project: ' + new_project, fm, count=1)
     if not n:
         return False
-    with open(path, 'wb') as f:
-        f.write((_BOM if data.startswith(_BOM) else b'') + (new_fm + text[fm_end:]).encode('utf-8'))
+    _atomic_write(path, (_BOM if data.startswith(_BOM) else b'') + (new_fm + text[fm_end:]).encode('utf-8'))
     return True
 
 
@@ -197,6 +238,12 @@ def apply(plan, approved_rewrite_files):
     for p in [src_root] + [m['from'] for m in plan['moves']] + [dest_root, _nearest_existing(dest_root)]:
         if _is_link(p):
             raise RefusedError('symlink/junction: %s' % p)
+    nested = list(plan.get('nested_links', []))
+    for m in plan['moves']:
+        if os.path.isdir(m['from']):
+            nested += _nested_links(m['from'])
+    if nested:
+        raise RefusedError('liên kết lồng trong hồ sơ: %s' % ', '.join(sorted(set(nested))))
     for m in plan['moves']:
         if not os.path.isdir(m['from']):
             raise RefusedError('khong co ho so nguon: %s' % m['from'])
@@ -206,15 +253,20 @@ def apply(plan, approved_rewrite_files):
             raise RefusedError('dich da ton tai: %s' % m['to'])
     # (3) chuyen
     os.makedirs(dest_root, exist_ok=True)
-    moved = []
+    moved, done = [], []
     for m in plan['moves']:
-        shutil.move(m['from'], m['to'])
+        try:
+            os.rename(m['from'], m['to'])
+        except OSError as e:
+            raise PartialMoveError('Chuyển hồ sơ %s thất bại: %s\n%s' % (m['from'], e, _state(done)))
         moved.append(m['to'])
+        done.append((m['from'], m['to']))
     # (4) dem lai
     for m in plan['moves']:
         got = _count_files(m['to'])
         if got != m['file_count']:
-            raise CountMismatchError('%s: ke hoach %d tep, o dich %d' % (m['to'], m['file_count'], got))
+            raise CountMismatchError('%s: kế hoạch %d tệp, ở đích %d\n%s'
+                                     % (m['to'], m['file_count'], got, _state(done)))
     # (5) sua duong dan o tep da duyet
     by_file = {}
     for rw in plan['auto_rewrites']:
@@ -222,7 +274,11 @@ def apply(plan, approved_rewrite_files):
             by_file.setdefault(rw['file'], []).append(rw)
     rewritten = []
     for path, items in by_file.items():
-        _write_rewrites(path, items)
+        try:
+            _write_rewrites(path, items)
+        except OSError as e:
+            pend = [x for x in by_file if x not in rewritten]
+            raise PartialMoveError('Sửa đường dẫn %s thất bại: %s\n%s' % (path, e, _state(done, rewritten, pend)))
         rewritten.append(path)
     # (6) project: trong _pipeline_state.md
     no_project = []
@@ -231,8 +287,11 @@ def apply(plan, approved_rewrite_files):
             pre = m['from'] + os.sep
             if st.startswith(pre):
                 dst = os.path.join(m['to'], st[len(pre):])
-                if os.path.exists(dst) and not _fix_project(dst, new_project):
-                    no_project.append(dst)
+                try:
+                    if os.path.exists(dst) and not _fix_project(dst, new_project):
+                        no_project.append(dst)
+                except OSError as e:
+                    raise PartialMoveError('Sửa project: %s thất bại: %s\n%s' % (dst, e, _state(done, rewritten, [])))
                 break
     # (7) README
     readme = os.path.join(src_root, 'README.md')
@@ -317,7 +376,7 @@ def main(argv=None):
         for x in r['pipeline_state_no_project']:
             print('Cảnh báo: không có dòng project: trong %s' % x)
         return 0
-    except (RefusedError, StalePlanError, CountMismatchError, OSError, ValueError, KeyError, TypeError) as e:
+    except (RefusedError, StalePlanError, CountMismatchError, PartialMoveError, OSError, ValueError, KeyError, TypeError) as e:
         print('Lỗi: %s: %s' % (type(e).__name__, e), file=sys.stderr)
         return 2
 

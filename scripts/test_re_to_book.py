@@ -833,7 +833,10 @@ def test_cli_nfd_chunk_is_normalised_before_redaction(tmp_path):
 rc = _load('re_consolidate')
 
 
-def _vault(tmp_path, status='xem D:\W\1_Projects\BB-02_LOMAH\RE\Demo\a.md\nvà RE/Demo/a.md\n'):
+_WIN_STATUS = r'xem D:\W\1_Projects\BB-02_LOMAH\RE\Demo\a.md' + '\nvà RE/Demo/a.md\n'
+
+
+def _vault(tmp_path, status=_WIN_STATUS):
     proj = tmp_path / 'BB-02_LOMAH'
     d = proj / 'RE' / 'Demo'
     d.mkdir(parents=True)
@@ -851,9 +854,9 @@ def test_plan_splits_auto_and_manual_refs(tmp_path):
     proj = tmp_path / 'BB-02_LOMAH'
     (proj / 'RE' / 'Demo').mkdir(parents=True)
     (proj / 'RE' / 'Demo' / 'a.md').write_text('x', encoding='utf-8')
-    (proj / 'Status.md').write_text('xem D:\W\1_Projects\BB-02_LOMAH\RE\Demo\a.md\nvà RE/Demo/a.md\n', encoding='utf-8')
+    (proj / 'Status.md').write_text(_WIN_STATUS, encoding='utf-8')
     p = rc.plan(str(proj / 'RE'), ['Demo'], str(tmp_path / 'RE-X' / 'RE'), [str(proj)], 'BB-02_LOMAH', 'RE-X')
-    assert p['auto_rewrites'][0]['new'].endswith('RE-X\RE\Demo\a.md') and p['manual'][0]['line'] == 2
+    assert p['auto_rewrites'][0]['new'].endswith(r'RE-X\RE\Demo\a.md') and p['manual'][0]['line'] == 2
     assert p['moves'][0]['file_count'] == 1
 
 
@@ -871,7 +874,7 @@ def test_apply_moves_counts_rewrites_only_approved_and_writes_readme(tmp_path):
     assert (dest / 'Demo' / 'a.md').read_text(encoding='utf-8') == 'x'
     assert not (proj / 'RE' / 'Demo').exists()
     lines = st.read_text(encoding='utf-8').splitlines()
-    assert lines[0] == 'xem D:\W\1_Projects\RE-X\RE\Demo\a.md' and lines[1] == 'và RE/Demo/a.md'
+    assert lines[0] == r'xem D:\W\1_Projects\RE-X\RE\Demo\a.md' and lines[1] == 'và RE/Demo/a.md'
     assert 'project: RE-X' in (dest / 'Demo' / '_pipeline_state.md').read_text(encoding='utf-8')
     readme = proj / 'RE' / 'README.md'
     assert os.path.exists(r['readme']) and 'Demo' in readme.read_text(encoding='utf-8')
@@ -955,3 +958,69 @@ def test_cli_apply_requires_approve_flag(tmp_path):
     assert (proj / 'RE' / 'Demo').exists()
     assert rc.main(['apply', '--plan', str(out), '--no-rewrite']) == 0
     assert (dest / 'Demo' / 'a.md').exists()
+
+
+def _vault2(tmp_path):
+    proj, dest = _vault(tmp_path)
+    d2 = proj / 'RE' / 'Other'
+    d2.mkdir()
+    (d2 / 'b.md').write_text('y', encoding='utf-8')
+    return proj, dest
+
+
+def _save(tmp_path, p):
+    f = tmp_path / 'p2.json'
+    f.write_text(json.dumps(p), encoding='utf-8')
+    return str(f)
+
+
+def test_plan_mixed_line_lists_bare_as_manual(tmp_path):
+    proj, dest = _vault(tmp_path, 'BB-02_LOMAH/RE/Demo/a.md et RE/Demo/b.md\n')
+    p = _plan(proj, dest)
+    assert len(p['auto_rewrites']) == 1 and len(p['manual']) == 1 and p['manual'][0]['line'] == 1
+
+
+def test_partial_move_reports_moved_and_failed(tmp_path, monkeypatch):
+    proj, dest = _vault2(tmp_path)
+    p = _plan(proj, dest, ('Demo', 'Other'))
+    real = os.rename
+
+    def fake(a, b, *x, **k):
+        if os.path.basename(a) == 'Other':
+            raise OSError('khoa tep')
+        return real(a, b, *x, **k)
+    monkeypatch.setattr(os, 'rename', fake)
+    with pytest.raises(rc.PartialMoveError) as e:
+        rc.apply(p, [])
+    msg = str(e.value)
+    assert 'Demo' in msg and 'Other' in msg and 'khoa tep' in msg
+    assert not (proj / 'RE' / 'README.md').exists()
+
+
+def test_cli_partial_move_prints_message_exit2(tmp_path, monkeypatch, capsys):
+    proj, dest = _vault2(tmp_path)
+    p = _plan(proj, dest, ('Demo', 'Other'))
+    real = os.rename
+
+    def fake(a, b, *x, **k):
+        if os.path.basename(a) == 'Other':
+            raise OSError('hong')
+        return real(a, b, *x, **k)
+    monkeypatch.setattr(os, 'rename', fake)
+    assert rc.main(['apply', '--plan', _save(tmp_path, p), '--no-rewrite']) == 2
+    err = capsys.readouterr().err
+    assert 'PartialMoveError' in err and 'Demo' in err and 'Other' in err
+
+
+def test_nested_link_refused_nothing_moved(tmp_path, monkeypatch):
+    proj, dest = _vault(tmp_path)
+    sub = proj / 'RE' / 'Demo' / 'sub'
+    sub.mkdir()
+    (sub / 'z.md').write_text('z', encoding='utf-8')
+    target = os.path.abspath(str(sub))
+    monkeypatch.setattr(os.path, 'isjunction', lambda x: os.path.abspath(x) == target, raising=False)
+    p = _plan(proj, dest)
+    assert p['nested_links']
+    with pytest.raises(rc.RefusedError):
+        rc.apply(p, [])
+    assert (proj / 'RE' / 'Demo' / 'a.md').exists() and not dest.exists()
