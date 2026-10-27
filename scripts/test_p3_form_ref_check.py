@@ -166,3 +166,15 @@ def test_sample_writes_file(tmp_path):
     txt = out.read_text(encoding='utf-8')
     assert 'Hình thể của mối nối' in txt
     assert 'valid.md' in txt
+
+
+def test_single_digit_chapter_heading(tmp_path):
+    d = tmp_path / 'tap2'
+    d.mkdir()
+    (d / 'Ch07_z_v2.md').write_text('# Chương 7 — Bảy\n\n## 2.1 Mục\n\nNội dung.\n', encoding='utf-8')
+    (d / 'Ch01_a_v2.md').write_text('# Chương 1 — Một\n\nNội dung.\n', encoding='utf-8')
+    bk = {'TKKTHT2': m.load_book(str(d)), 'TKHT': {}, 'TKKTHT': {}, 'KL9': {}}
+    assert set(bk['TKKTHT2']) == {'01', '07'}
+    pad = ' '.join(['[TKKTHT2 Ch07]'] * 5)
+    assert run(tmp_path, bk, '[TKKTHT2 Ch07 §2.1]\n' + pad, pad=False) == []
+    assert codes(run(tmp_path, bk, '[TKKTHT2 Ch17]\n' + pad, pad=False)) == ['CHAPTER_NOT_FOUND']

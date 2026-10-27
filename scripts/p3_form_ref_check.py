@@ -34,7 +34,7 @@ ENV = {k: 'P3F_BOOK_' + k for k in DEFAULT_BOOKS}
 
 CITE_RE = re.compile(r'\[(TKHT|TKKTHT2|TKKTHT|KL9)\s+Ch(\d{2}[a-z]?)'
                      r'(?:\s*§\s*([0-9]{1,2}[a-z]?(?:\.[0-9]+[a-z]?)+))?\]')
-HEAD_RE = re.compile(r'^#{1,6}\s+Chương\s+(\d{2}[a-z]?)(?![0-9a-z])', re.M)
+HEAD_RE = re.compile(r'^#{1,6}\s+Chương\s+(\d{1,2})([a-z]?)(?![0-9a-z])', re.M)
 SEC_HEAD_RE = re.compile(r'^#{2,4}\s+([0-9]{1,2}[a-z]?(?:\.[0-9]+[a-z]?)*)(?=[\s—–:.-]|$)', re.M)
 QUOTE_RE = re.compile(r'“([^“”\n]+)”|«([^«»\n]+)»')
 SEP_ROW_RE = re.compile(r'^\s*\|[\s:|-]+\|?\s*$')
@@ -70,7 +70,7 @@ def load_book(path):
     for i, h in enumerate(heads):
         end = heads[i + 1].start() if i + 1 < len(heads) else len(raw)
         body = raw[h.start():end]
-        ch = chapters.setdefault(h.group(1), {'text': '', 'sections': set(), 'sec_text': {}})
+        ch = chapters.setdefault(h.group(1).zfill(2) + h.group(2), {'text': '', 'sections': set(), 'sec_text': {}})
         ch['text'] += ' ' + norm(body)
         secs = list(SEC_HEAD_RE.finditer(body))
         for j, s in enumerate(secs):
