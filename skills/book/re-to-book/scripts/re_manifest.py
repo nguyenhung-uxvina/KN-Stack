@@ -15,7 +15,7 @@ import shutil
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from re_units import normalize, split_units  # noqa: E402
+from re_units import normalize, split_units, _FENCE, _GT_HEAD, _HEAD, _ITEM  # noqa: E402
 import re_labels  # noqa: E402
 
 SCHEMA = 1
@@ -143,29 +143,80 @@ def _result_empty(unit_text):
     return not _alnum(body)
 
 
+def _item_spans(lines):
+    """Quet dong goc, phan tich the GT nhu split_units.
+    -> list[(start, end, id)] ; end loai tru dong trong cuoi."""
+    start = 0
+    if lines and lines[0] == '---':
+        for k in range(1, len(lines)):
+            if re.match(r'^---[ \t]*$', lines[k]):
+                start = k + 1
+                break
+    spans, seen = [], {}
+    gt, in_fence, cur = None, False, None  # cur = [start, id]
+
+    def close(end):
+        nonlocal cur
+        if cur is not None:
+            e = end
+            while e > cur[0] + 1 and not lines[e - 1].strip():
+                e -= 1
+            spans.append((cur[0], e, cur[1]))
+            cur = None
+
+    for i in range(start, len(lines)):
+        line = lines[i]
+        if _FENCE.match(line):
+            in_fence = not in_fence
+            continue
+        if in_fence:
+            continue
+        g = _GT_HEAD.match(line)
+        if g:
+            close(i)
+            gt = g.group(1)
+            continue
+        if _HEAD.match(line):
+            close(i)
+            gt = None
+            continue
+        if gt:
+            it = _ITEM.match(line)
+            if it:
+                close(i)
+                uid = '%s.%s' % (gt, it.group(1))
+                n = seen.get(uid, 0) + 1
+                seen[uid] = n
+                cur = [i, uid if n == 1 else '%s~%d' % (uid, n)]
+    close(len(lines))
+    return spans
+
+
 def _apply_cuts(text, units):
-    """-> (snapshot_text, flags{unit_id: {...}}). text da normalize."""
-    flags, out, cur = {}, [], 0
-    for n, u in enumerate(units):
-        # dat moi don vi theo thu tu; khoang giua phai la khoang trang (tru truoc don vi dau)
-        i = text.find(u.text, cur)
-        if i < 0 or (n > 0 and text[cur:i].strip()):
-            raise InputError('khong dat duoc don vi %s' % u.id)
-        marker = None
-        if u.kind == 'gt_item':
-            if _ITEM7.search(u.id):
-                if not _signed(u.text):
-                    flags[u.id] = {'cut': True}
-                    marker = MARK_UNSIGNED
-            elif _ITEM6.search(u.id):
-                if _result_empty(u.text):
-                    flags[u.id] = {'cut': False, 'empty_result': True}
-                    marker = MARK_EMPTY
-        out.append(text[cur:i])
-        out.append(marker if marker is not None else u.text)
-        cur = i + len(u.text)
-    out.append(text[cur:])
-    return ''.join(out), flags
+    """-> (snapshot_text, flags{unit_id: {...}}). text da normalize.
+    Quyet dinh cat theo don vi; ap dung bang quet dong tren van ban goc."""
+    flags, markers = {}, {}
+    for u in units:
+        if u.kind != 'gt_item':
+            continue
+        if _ITEM7.search(u.id):
+            if not _signed(u.text):
+                flags[u.id] = {'cut': True}
+                markers[u.id] = MARK_UNSIGNED
+        elif _ITEM6.search(u.id):
+            if _result_empty(u.text):
+                flags[u.id] = {'cut': False, 'empty_result': True}
+                markers[u.id] = MARK_EMPTY
+    lines = text.split('\n')
+    done = set()
+    for s, e, uid in reversed(_item_spans(lines)):
+        if uid in markers:
+            lines[s:e] = [markers[uid]]
+            done.add(uid)
+    for uid in markers:
+        if uid not in done:
+            raise InputError('khong dat duoc don vi %s' % uid)
+    return '\n'.join(lines), flags
 
 
 # ---------- build ----------
@@ -285,9 +336,20 @@ def write_snapshot(manifest, out_dir):
                 f.write(_snapshot_text(ent, raw) + '\n')
             n += 1
         os.makedirs(tmp_dir, exist_ok=True)
-        if os.path.isdir(out_dir):
-            shutil.rmtree(out_dir)
-        os.replace(tmp_dir, out_dir)
+        old_dir = tmp_dir[:-len('.tmp')] + '.old'
+        if os.path.isdir(old_dir):
+            shutil.rmtree(old_dir)
+        had = os.path.isdir(out_dir)
+        if had:
+            os.replace(out_dir, old_dir)
+        try:
+            os.replace(tmp_dir, out_dir)
+        except BaseException:
+            if had:
+                os.replace(old_dir, out_dir)
+            raise
+        if had:
+            shutil.rmtree(old_dir, ignore_errors=True)
     except BaseException:
         shutil.rmtree(tmp_dir, ignore_errors=True)
         raise
@@ -341,7 +403,12 @@ def main(argv=None):
         m = build_manifest(roots, a.classes)
         staged = _stage_manifest(m, mpath)
         n = write_snapshot(m, os.path.join(a.book, '_re_snapshot'))
-        os.replace(staged, mpath)
+        try:
+            os.replace(staged, mpath)
+        except OSError as e:
+            print('Loi: ban chup da doi nhung manifest chua ghi duoc: %s' % e, file=sys.stderr)
+            os.remove(staged)
+            return 2
         staged = None
     except (OSError, ValueError, KeyError) as e:
         if staged and os.path.exists(staged):

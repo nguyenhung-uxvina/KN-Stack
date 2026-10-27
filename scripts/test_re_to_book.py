@@ -307,3 +307,45 @@ def test_re_dot_uses_abspath_name(tmp_path, monkeypatch):
     monkeypatch.chdir(root)
     assert rm.main(['build', '--re', '.', '--book', str(book)]) == 0
     assert (book / '_re_snapshot' / 'Demo').is_dir()
+
+
+# ---------------- Task 3 fix round 2 ----------------
+def test_read_file_with_coded_table_then_paragraph_snapshot_equals_original(tmp_path):
+    root = make_dossier(tmp_path)
+    body = ('## Bảng\n\n| Mã | Nội dung |\n|---|---|\n| ABC-1 | a |\n| ABC-2 | b |\n\n'
+            'Đoạn văn sau bảng.\n\n## Tiếp\n\nxyz\n')
+    (tmp_path / 'Demo' / 'RE_D_S1B_Table.md').write_text(body, encoding='utf-8')
+    m = rm.build_manifest({'Demo': root}, CLASSES)
+    out = tmp_path / 'snap'; rm.write_snapshot(m, str(out))
+    s = (out / 'Demo' / 'RE_D_S1B_Table.md').read_text(encoding='utf-8')
+    assert s == ru.normalize(body) + '\n'
+
+
+def test_cut_with_coded_row_between_items(tmp_path):
+    body = ('## GT-D-001 — X\n\n1. **Tiêu đề:** a\n| ABC-1 | hàng |\n'
+            '6. **KẾT QUẢ + khuyến nghị:** đã đo 3 mm\n| ABC-2 | hàng hai |\n'
+            '7. **DỰ ĐOÁN VIẾT TRƯỚC:** BÍ_MẬT — người ký ___ — ngày ___\n\nĐuôi.\n\n## Sau\n\ntext\n')
+    root = _hyp(tmp_path, body)
+    m = rm.build_manifest({'Demo': root}, CLASSES)
+    assert m['files']['Demo/RE_D_Hypotheses.md']['units']['GT-D-001.7']['cut'] is True
+    out = tmp_path / 'snap'; rm.write_snapshot(m, str(out))
+    s = (out / 'Demo' / 'RE_D_Hypotheses.md').read_text(encoding='utf-8')
+    assert 'BÍ_MẬT' not in s and '⟨chờ ký⟩' in s and 'ABC-2' in s and 'đã đo 3 mm' in s
+    assert 'Đuôi.' not in s and '## Sau' in s  # doan duoi thuoc muc 7, bi cat cung
+
+
+def test_swap_failure_restores_old_snapshot(tmp_path, monkeypatch):
+    root = make_dossier(tmp_path)
+    book = tmp_path / 'Book'; book.mkdir()
+    old = book / '_re_snapshot'; old.mkdir(); (old / 'keep.txt').write_text('cu', encoding='utf-8')
+    real = os.replace
+
+    def boom(src, dst, *a, **k):
+        if str(src).endswith('.tmp') and str(dst).endswith('_re_snapshot'):
+            raise OSError('swap hong')
+        return real(src, dst, *a, **k)
+    monkeypatch.setattr(rm.os, 'replace', boom)
+    assert rm.main(['build', '--re', root, '--book', str(book)]) == 2
+    assert (old / 'keep.txt').read_text(encoding='utf-8') == 'cu'
+    assert not (book / '_re_manifest.json').exists()
+    assert not (book / '_re_snapshot.tmp').exists() and not (book / '_re_snapshot.old').exists()
