@@ -163,7 +163,7 @@ def test_no_sensitivity(d):
 def test_candidate_missing(d):
     t = rd(d, SCO)
     t = t.replace(' PA-1-3 |', '', 1)
-    # drop matching cell in each F-1 row so only the candidate check fires
+    # header loses PA-1-3 while rows keep the cell: BAD_CELL also fires; only the candidate code is asserted
     wr(d, SCO, t)
     assert 'CANDIDATE_MISSING' in codes(d)
 
@@ -206,3 +206,37 @@ def test_bad_weight_not_number(d):
 def test_selection_must_name_candidate(d):
     mut(d, SEL, '- Chọn: PA-1-2', '- Chọn: cái thứ hai')
     assert 'NO_SELECTION' in codes(d)
+
+
+def test_empty_variants_fails_closed(d):
+    wr(d, VAR, '# Phương án hình thể\n')
+    assert 'TOO_FEW_VARIANTS' in codes(d)
+
+
+def test_empty_benchmark_no_bench(d):
+    wr(d, BEN, '# Chuẩn đối sánh\n')
+    assert 'NO_BENCH' in codes(d)
+
+
+def test_selection_missing_f_block(d):
+    t = rd(d, SEL)
+    wr(d, SEL, re.sub(r'## F-2.*', '', t, flags=re.S))
+    assert 'NO_SELECTION' in codes(d)
+
+
+def test_selection_unknown_candidate(d):
+    mut(d, SEL, '- Chọn: PA-1-2', '- Chọn: PA-2-1')
+    fs = L.lint_dir(d, P)
+    assert any(f.code == 'NO_SELECTION' and 'không tồn tại' in f.msg for f in fs)
+    mut(d, SEL, '- Chọn: PA-2-1', '- Chọn: HC-1-9')
+    assert any(f.code == 'NO_SELECTION' and 'không tồn tại' in f.msg for f in L.lint_dir(d, P))
+
+
+def test_selection_hc_ok(d):
+    mut(d, SEL, '- Chọn: PA-1-2', '- Chọn: HC-1-1')
+    assert L.lint_dir(d, P) == []
+
+
+def test_missing_scoring_section(d):
+    mut(d, SCO, '## Bảng chấm', '## Khác bảng')
+    assert 'NO_SCORING_TABLE' in codes(d)

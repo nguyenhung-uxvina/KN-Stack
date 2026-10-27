@@ -9,7 +9,7 @@ Ma loi: MISSING_FILE TOO_FEW_VARIANTS VARIANT_NO_RULE VARIANT_NO_PARAM BAD_LABEL
   BENCH_NO_SOURCE BENCH_NO_DATE BENCH_NO_CHAIN TOO_MANY_BENCH
   CHECKLIST_INCOMPLETE CHECKLIST_SKIP_NO_REASON BAD_CELL QUESTION_NO_REASON
   EMPTY_WEIGHT_NO_FLAG NO_SENSITIVITY CANDIDATE_MISSING
-  NO_SELECTION NO_TEST_PLAN NO_PARAM_RANGE
+  NO_SELECTION NO_TEST_PLAN NO_PARAM_RANGE NO_BENCH NO_SCORING_TABLE
 """
 import os
 import re
@@ -90,7 +90,10 @@ def lint_variants(path, quick, out):
     lines = _read(path)
     ids = {}
     need = MIN_VARIANTS_QUICK if quick else MIN_VARIANTS
-    for fs, fe, fm in _blocks(lines, F_HEAD):
+    fblocks = _blocks(lines, F_HEAD)
+    if not fblocks:
+        out.append(Finding(rel, 1, 'TOO_FEW_VARIANTS', 'không có khối «## F-<id>» nào — không có phương án'))
+    for fs, fe, fm in fblocks:
         fid = fm.group(1)
         pas = _blocks(lines, PA_HEAD, fs + 1, fe)
         ids[fid] = [m.group(1) for _, _, m in pas]
@@ -113,7 +116,7 @@ def lint_variants(path, quick, out):
     return ids
 
 
-def lint_benchmark(path, out):
+def lint_benchmark(path, f_ids, out):
     rel = os.path.basename(path)
     lines = _read(path)
     ids = {}
@@ -134,6 +137,9 @@ def lint_benchmark(path, out):
         r = _field(lines, s, e, 'Chuỗi C&C²')
         if not r or not r[1]:
             out.append(Finding(rel, s + 1, 'BENCH_NO_CHAIN', f'{hid}: «Chuỗi C&C²:» rỗng'))
+    for fid in f_ids:
+        if not ids.get(fid):
+            out.append(Finding(rel, 1, 'NO_BENCH', f'F-{fid} không có HC nào (cần 1–{MAX_BENCH})'))
     for fid, hs in ids.items():
         if len(hs) > MAX_BENCH:
             out.append(Finding(rel, 1, 'TOO_MANY_BENCH', f'F-{fid} có {len(hs)} HC, tối đa {MAX_BENCH}'))
@@ -179,7 +185,7 @@ def _q_cell(v):
 def _scoring_tables(lines, rel, ids_by_f, out):
     sec = _section(lines, r'Bảng chấm')
     if sec is None:
-        out.append(Finding(rel, 1, 'CANDIDATE_MISSING', 'thiếu mục «## Bảng chấm»'))
+        out.append(Finding(rel, 1, 'NO_SCORING_TABLE', 'thiếu mục «## Bảng chấm»'))
         return
     got = {}
     for s, e, m in _blocks(lines, SF_HEAD, sec[0] + 1, sec[1]):
@@ -240,15 +246,25 @@ def lint_scoring(path, ids_by_f, out):
         out.append(Finding(rel, 1, 'NO_SENSITIVITY', 'thiếu mục «## Độ nhạy»'))
 
 
-def lint_selection(path, out):
+def lint_selection(path, ids_by_f, out):
     rel = os.path.basename(path)
     lines = _read(path)
     blocks = _blocks(lines, F_HEAD)
     if not blocks:
         out.append(Finding(rel, 1, 'NO_SELECTION', 'không có mục «## F-<id>»'))
+    have = {m.group(1) for _, _, m in blocks}
+    for fid in ids_by_f:
+        if fid not in have:
+            out.append(Finding(rel, 1, 'NO_SELECTION', f'F-{fid}: thiếu khối «## F-{fid}»'))
     for s, e, m in blocks:
         fid = m.group(1)
         r = _field(lines, s, e, 'Chọn')
+        picked = ID_RE.findall(r[1]) if r else []
+        if picked and fid in ids_by_f:
+            bad = [x for x in picked if x not in ids_by_f[fid]]
+            if bad:
+                out.append(Finding(rel, s + 1, 'NO_SELECTION',
+                                   f'F-{fid}: ứng viên không tồn tại: {", ".join(bad)}'))
         if not r or not re.search(r'\b(?:PA|HC)-[A-Za-z0-9]+-\d+', r[1]):
             out.append(Finding(rel, s + 1, 'NO_SELECTION', f'F-{fid}: thiếu «Chọn: PA-…/HC-…»'))
         r = _field(lines, s, e, 'Khoảng tham số')
@@ -273,13 +289,14 @@ def lint_dir(path, prefix, quick=False):
     if 'Form_Variants' in present:
         for f, v in lint_variants(present['Form_Variants'], quick, out).items():
             ids.setdefault(f, []).extend(v)
+    f_ids = list(ids)
     if 'Benchmark' in present:
-        for f, v in lint_benchmark(present['Benchmark'], out).items():
+        for f, v in lint_benchmark(present['Benchmark'], f_ids, out).items():
             ids.setdefault(f, []).extend(v)
     if 'Scoring' in present:
         lint_scoring(present['Scoring'], ids, out)
     if 'Form_Selection' in present:
-        lint_selection(present['Form_Selection'], out)
+        lint_selection(present['Form_Selection'], ids, out)
     return out
 
 
