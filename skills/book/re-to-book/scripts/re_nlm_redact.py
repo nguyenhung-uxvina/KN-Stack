@@ -16,6 +16,7 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from re_provenance import ANCHOR_RE  # noqa: E402
+from re_units import normalize  # noqa: E402
 
 PLACEHOLDER = 'phân tích nội bộ'
 _GT_SUFFIX_RE = re.compile(r'\.\d+(?:~\d+)?$')
@@ -77,8 +78,12 @@ def redact(text, codes):
 def _scan(text, codes):
     hits = [m.group(0) for m in _LEAK_RE.finditer(text)]
     hits += [m.group(0) for m in ANCHOR_RE.finditer(text)]
-    if codes:
-        pat = re.compile(r'(?<![\w-])(?:%s)(?![\w])' % '|'.join(re.escape(c) for c in codes))
+    plain = [c for c in codes if _FILE_RE.match(c) or c.startswith('GT-')]
+    rows = [c for c in codes if c not in plain]
+    if plain:
+        hits += [m.group(0) for m in re.compile('|'.join(re.escape(c) for c in plain)).finditer(text)]
+    if rows:
+        pat = re.compile(r'(?<![\w-])(?:%s)(?![\w])' % '|'.join(re.escape(c) for c in rows))
         hits += [m.group(0) for m in pat.finditer(text)]
     return hits
 
@@ -120,12 +125,26 @@ def main(argv=None):
         try:
             for p in files:
                 with open(p, encoding='utf-8-sig') as f:
-                    raw = f.read()
+                    raw = normalize(f.read())
                 new, n = redact(raw, codes)
                 total += n
                 print('%s thay %d' % (os.path.basename(p), n))
                 with open(os.path.join(tmp, os.path.basename(p)), 'w', encoding='utf-8', newline='\n') as f:
                     f.write(new)
+            bad = []
+            for p in sorted(glob.glob(os.path.join(tmp, '*'))):
+                with open(p, encoding='utf-8') as f:
+                    for h in _scan(f.read(), codes):
+                        bad.append('%s: %s' % (os.path.basename(p), h))
+            if bad:
+                shutil.rmtree(tmp, ignore_errors=True)
+                if os.path.isdir(out):
+                    shutil.rmtree(out)
+                print('tong %d' % total)
+                print('CON MA SOT, KHONG ghi %s:' % out)
+                for b in bad:
+                    print('  ' + b)
+                return 1
             if os.path.isdir(out):
                 shutil.rmtree(out)
             os.replace(tmp, out)
@@ -133,16 +152,6 @@ def main(argv=None):
             shutil.rmtree(tmp, ignore_errors=True)
             raise
         print('tong %d' % total)
-        bad = []
-        for p in sorted(glob.glob(os.path.join(out, '*'))):
-            with open(p, encoding='utf-8') as f:
-                for h in _scan(f.read(), codes):
-                    bad.append('%s: %s' % (os.path.basename(p), h))
-        if bad:
-            print('CON MA SOT trong %s:' % out)
-            for b in bad:
-                print('  ' + b)
-            return 1
         return 0
     except InputError as e:
         print('loi dau vao: %s' % e, file=sys.stderr)

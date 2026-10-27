@@ -803,3 +803,27 @@ def test_cli_missing_manifest_or_empty_src_is_2(tmp_path):
     os.remove(os.path.join(src, 'c1.md'))
     assert rr.main(['--book', book, '--src', src, '--out', str(tmp_path / 'o')]) == 2
     assert rr.main(['--book', str(tmp_path / 'none'), '--src', src, '--out', str(tmp_path / 'o')]) == 2
+
+
+def test_cli_failed_rescan_leaves_out_absent_even_if_previous_existed(tmp_path, monkeypatch):
+    _, book, src = _book(tmp_path, 'Có N-001 ở đây.\n')
+    out = tmp_path / 'out'; out.mkdir(); (out / 'old.md').write_text('sạch', encoding='utf-8')
+    monkeypatch.setattr(rr, 'redact', lambda text, codes: (text, 0))
+    assert rr.main(['--book', book, '--src', src, '--out', str(out)]) == 1
+    assert not out.exists() and not (tmp_path / 'out.tmp').exists()
+
+
+def test_cli_hyphen_prefixed_code_is_reported(tmp_path):
+    _, book, src = _book(tmp_path, 'mã x-GT-D-001 sót\n')
+    out = tmp_path / 'out'
+    assert rr.main(['--book', book, '--src', src, '--out', str(out)]) == 1
+    assert not out.exists()
+
+
+def test_cli_nfd_chunk_is_normalised_before_redaction(tmp_path):
+    import unicodedata
+    _, book, src = _book(tmp_path, unicodedata.normalize('NFD', 'Phân tích N-001 ở đây\n'))
+    out = tmp_path / 'out'
+    assert rr.main(['--book', book, '--src', src, '--out', str(out)]) == 0
+    t = (out / 'c1.md').read_text(encoding='utf-8')
+    assert 'N-001' not in t and unicodedata.is_normalized('NFC', t)
