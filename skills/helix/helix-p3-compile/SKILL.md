@@ -171,7 +171,7 @@ BOM cost: {{amount}} vs target {{amount}}
 BF: {{đã chạy — layout trong khoảng tham số: Y/N; còn D/W tạm: Y/N → nếu Y thì KHÔNG khuyến nghị qua Gate 3 | bỏ qua — lý do: ...}}
 
 PHASE 3 PIPELINE COMPLETE.
-Next: /helix-quality-gate {{project}} --gate 3
+Next: /helix-quality-gate {{project}} --gate 3   [CHỈ khi không còn `D tạm`/`W tạm` trong BF_Scoring; còn nhãn tạm → quay lại BF xin CEO duyệt D/W trước]
       /helix-detail-finalize {{project}}
 ```
 

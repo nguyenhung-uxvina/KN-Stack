@@ -113,7 +113,7 @@ Spatial envelope: {{L×W×H}}
 Layout strategy: [Original/Adaptive/Variant approach]
 
 CEO:
-(1) ✅ Approve → tiếp tục Block BA (Layout Creation)
+(1) ✅ Approve → tiếp tục Block BF (Chức năng → Hình thể); nếu --skip-form thì Block BA (Layout Creation)
 (2) 🔄 Adjust constraints
 (3) ⏸️ Dừng — Phase 2 deliverables incomplete
 ```

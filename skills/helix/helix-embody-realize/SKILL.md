@@ -15,20 +15,20 @@ description: "Orchestrator for Pahl-Beitz Phase 3 Embodiment Design — multi-ag
 ## Pipeline Architecture
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│                  helix-embody-realize (ORCHESTRATOR)             │
-│                                                                  │
-│  Flags: --icdm | --quick | --maritime | --from <block>          │
-│         --only <block> | --skip-form "<lý do>" (bỏ BF)          │
-│                                                                  │
-│  Thứ tự: B0 ──▶ BF (helix-p3-form) ──▶ BA ──▶ BA½ ──▶ BB ──▶ BC ──▶ BD ──▶ BE
-│  ┌──────┐   ┌──────┐   ┌────┐   ┌──────┐   ┌──────┐   ┌──────┐   ┌──────┐
-│  │ B0   │──▶│ BA   │──▶│BA½│──▶│ BB   │──▶│ BC   │──▶│ BD   │──▶│ BE   │
-│  │PRE-  │   │LAY-  │   │ERR│   │DfX   │   │INTE- │   │BOM   │   │COMP- │
-│  │FLIGHT│   │OUT   │   │CHK│   │      │   │GRATE │   │      │   │ILE   │
-│  └──┬───┘   └──┬───┘   └─┬─┘   └──┬───┘   └──┬───┘   └──┬───┘   └──┬───┘
-│     │ ✓CEO     │ ✓CEO    │✓CEO    │ ✓CEO     │ ✓CEO     │ ✓CEO     │ ✓CEO
-└─────────────────────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────────────────────────────────────┐
+│                       helix-embody-realize (ORCHESTRATOR)                                │
+│                                                                                          │
+│  Flags: --icdm | --quick | --maritime | --from <block> | --only <block>                  │
+│         --skip-form "<lý do>" (bỏ BF; lý do vào Adjustments Log)                         │
+│                                                                                          │
+│  ┌──────┐  ┌──────┐  ┌──────┐  ┌────┐  ┌──────┐  ┌──────┐  ┌──────┐  ┌──────┐           │
+│  │ B0   │─▶│ BF   │─▶│ BA   │─▶│BA½ │─▶│ BB   │─▶│ BC   │─▶│ BD   │─▶│ BE   │           │
+│  │PRE-  │  │FORM  │  │LAY-  │  │ERR │  │DfX   │  │INTE- │  │BOM   │  │COMP- │           │
+│  │FLIGHT│  │p3-   │  │OUT   │  │CHK │  │      │  │GRATE │  │      │  │ILE   │           │
+│  │      │  │form  │  │      │  │    │  │      │  │      │  │      │  │      │           │
+│  └──┬───┘  └──┬───┘  └──┬───┘  └─┬──┘  └──┬───┘  └──┬───┘  └──┬───┘  └──┬───┘           │
+│     │✓CEO     │✓CEO×2   │✓CEO    │✓CEO    │✓CEO     │✓CEO     │✓CEO     │✓CEO           │
+└──────────────────────────────────────────────────────────────────────────────────────────┘
 
 Data Bus: 1_Projects/{{project}}/Phase3-Embodiment/
 State:    1_Projects/{{project}}/Phase3-Embodiment/_pipeline_state.md
@@ -87,7 +87,7 @@ This pipeline implements VDI 2221:2019 (Blatt 1 + Blatt 2) principles:
 ```
 
 ### Quick Mode (--quick) Abbreviated Sequence
-B0 (quick) → BA (skip P50/P51 unless maritime) → BA½ (error-check always runs) → BB (DfX core + DfCorrosion if maritime, skip PLAUSIBLE + extended DfX) → BC (ICD update only, skip shadow) → BD (BOM from template) → BE (skip Rt/Re, QC gate only).
+B0 (quick) → BF (quick: tầng 1, ≥2 phương án/chức năng) → BA (skip P50/P51 unless maritime) → BA½ (error-check always runs) → BB (DfX core + DfCorrosion if maritime, skip PLAUSIBLE + extended DfX) → BC (ICD update only, skip shadow) → BD (BOM from template) → BE (skip Rt/Re, QC gate only).
 
 ## Orchestrator Workflow
 
@@ -277,7 +277,7 @@ maritime: [true | false]
 
 **Architecture: Initializer + Incremental + Ledger** (Source: Anthropic Agent Harness, Tier A)
 - B0 (Preflight) = **Initializer** — validates inputs, populates ledger with project context
-- BA-BE = **Incremental Agents** — each reads ledger, does work, writes back
+- BF–BE = **Incremental Agents** — each reads ledger, does work, writes back
 - `_pipeline_state.md` = **State Ledger** — the SOLE communication channel between blocks
 
 #### Ledger Read Protocol (BEFORE each block)
@@ -349,7 +349,7 @@ When variant is specified, all filenames are prefixed with `{{prefix}}` (e.g. `V
 | File Pattern | Written By | Read By | Content |
 |------|-----------|---------|---------|
 | `_pipeline_state.md` | Orchestrator | All | Progress, CEO decisions |
-| `{{prefix}}B0_Preflight_Report.md` | B0 | BA, BB | Embodiment-determining reqs, spatial constraints |
+| `{{prefix}}B0_Preflight_Report.md` | B0 | BF, BA, BB | Embodiment-determining reqs, spatial constraints |
 | `{{prefix}}Preliminary_Layout.md` | BA | BB, BC, BD | Layout description, key dimensions, material candidates |
 | `{{prefix}}Weight_Estimate.md` | BA | BD, BE | P51 bottom-up weight (maritime only) |
 | `{{prefix}}Stability_Check.md` | BA | BE | P50 GM/trim check (maritime only) |
