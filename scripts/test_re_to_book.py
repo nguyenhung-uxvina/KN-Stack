@@ -737,3 +737,69 @@ def test_candidate_section_end_rule_consistent():
     assert ra.idea_coverage(t, ['YT-002']) == []
     out = ra._merge_candidates(t, '- moi' + NL)
     assert '- moi' in out and 'YT-001' not in out and '| YT-002 | trùng |' in out
+
+
+rr = _load('re_nlm_redact')
+
+
+def test_redact_codes_longest_first_and_boundaries():
+    codes = ['RE_3DS_Hypotheses', 'GT-3DS-001', 'N-013']
+    t, n = rr.redact('Xem RE_3DS_Hypotheses.md, GT-3DS-001 và N-013; không đụng N-0130 hay ABN-013.', codes)
+    assert n == 3 and 'RE_3DS' not in t and 'N-0130' in t and 'ABN-013' in t
+
+
+def test_redact_anchor_with_space_in_backticks_fully_removed():
+    t, n = rr.redact('Nguồn `Demo/RE_D_Hypotheses.md#Góc nhận` và Demo/RE_D_Idea_Log.md#YT-1.', [])
+    assert 'Demo/' not in t and 'RE_D' not in t and '`' not in t
+    assert t.count('phân tích nội bộ') == 2 and n == 2 and t.endswith('.')
+
+
+def test_redact_gt_id_consumes_item_suffix():
+    t, n = rr.redact('GT-D-001.7~2 và GT-D-001.', ['GT-D-001'])
+    assert t == 'phân tích nội bộ và phân tích nội bộ.' and n == 2
+
+
+def _book(tmp_path, chunk_text):
+    m = rm.build_manifest({'Demo': make_dossier(tmp_path)}, CLASSES)
+    book = tmp_path / 'Book'; book.mkdir()
+    import json
+    (book / '_re_manifest.json').write_text(json.dumps(m), encoding='utf-8')
+    src = tmp_path / 'chunks'; src.mkdir()
+    (src / 'c1.md').write_text(chunk_text, encoding='utf-8')
+    return m, str(book), str(src)
+
+
+def test_codes_include_block_file_stem_rows_and_gt_ids(tmp_path):
+    m, _, _ = _book(tmp_path, 'x')
+    codes = rr.codes_from_manifest(m)
+    assert 'RE_D_Idea_Log' in codes and 'N-001' in codes and 'GT-D-001' in codes
+    assert codes == sorted(set(codes), key=lambda c: (-len(c), c))
+
+
+def test_cli_clean_run(tmp_path):
+    _, book, src = _book(tmp_path, 'Xem RE_D_Hypotheses.md, GT-D-001.7 và N-001 `Demo/RE_D_Precision_Debt.md#row:N-001`.\n')
+    out = str(tmp_path / 'out')
+    assert rr.main(['--book', book, '--src', src, '--out', out]) == 0
+    t = open(os.path.join(out, 'c1.md'), encoding='utf-8').read()
+    assert 'RE_D' not in t and 'N-001' not in t and 'GT-D-001' not in t and 'phân tích nội bộ' in t
+    assert 'RE_D' in open(os.path.join(src, 'c1.md'), encoding='utf-8').read()
+
+
+def test_cli_rescan_fails_if_code_survives(tmp_path, monkeypatch):
+    _, book, src = _book(tmp_path, 'Có N-001 ở đây.\n')
+    monkeypatch.setattr(rr, 'redact', lambda text, codes: (text, 0))
+    assert rr.main(['--book', book, '--src', src, '--out', str(tmp_path / 'out')]) == 1
+
+
+def test_cli_out_inside_src_or_book_is_2(tmp_path):
+    _, book, src = _book(tmp_path, 'x\n')
+    assert rr.main(['--book', book, '--src', src, '--out', os.path.join(src, 'o')]) == 2
+    assert rr.main(['--book', book, '--src', src, '--out', book]) == 2
+    assert rr.main(['--book', book, '--src', src, '--out', src]) == 2
+
+
+def test_cli_missing_manifest_or_empty_src_is_2(tmp_path):
+    _, book, src = _book(tmp_path, 'x\n')
+    os.remove(os.path.join(src, 'c1.md'))
+    assert rr.main(['--book', book, '--src', src, '--out', str(tmp_path / 'o')]) == 2
+    assert rr.main(['--book', str(tmp_path / 'none'), '--src', src, '--out', str(tmp_path / 'o')]) == 2
