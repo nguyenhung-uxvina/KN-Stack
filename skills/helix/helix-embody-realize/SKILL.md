@@ -317,7 +317,7 @@ For each block (respecting --from / --only flags):
    - (1) → Execute next block (ONE block only, then STOP again)
    - (2) → Re-run current block with adjustments, then STOP for approval
    - (3) → Save state and halt. CEO can resume later with `--from`
-   - (4) → Skip next block, STOP and present the block after that
+   - (4) → Skip next block, STOP and present the block after that. Nếu block kế là **BF**: skip chỉ hợp lệ qua đường `--skip-form` — hỏi CEO lý do, ghi dòng `ngày · BF SKIPPED · <lý do>` vào Adjustments Log và đặt BF = SKIPPED trong Block Progress (như cờ `--skip-form "<lý do>"`); không có lý do → không skip
 
 **Why this matters:** Layout decisions (BA) affect ALL downstream blocks. DfX findings (BB) may require layout changes. BOM (BD) depends on frozen ICD (BC). Auto-continuing cascades errors through the physical design.
 
@@ -328,7 +328,7 @@ For each block (respecting --from / --only flags):
 PHASE 3 PIPELINE COMPLETE — {{project}}
 ═══════════════════════════════════════════════════
 Mode: [standard / icdm / quick]
-Blocks completed: {{N}}/6
+Blocks completed: {{N}}/7
 Rt = {{value}}, Re = {{value}}, R = {{value}}
 BOM cost: {{amount}} vs target {{amount}}
 ICD v3: [FROZEN / PENDING]

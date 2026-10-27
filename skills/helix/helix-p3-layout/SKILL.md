@@ -128,6 +128,7 @@ Nếu có `{{prefix}}BF_Form_Selection.md` (từ `/helix-p3-form`, đã qua Cổ
 - Muốn đổi một khoảng → quay lại BF (`/helix-p3-form --function <F-id>`), không tự chọn lại khoảng trong layout.
 - Mục «Khi có CC2_Handoff.md» ở trên giữ nguyên hiệu lực (BF sinh `CC2_Handoff.md` nếu chưa có thì Handoff đó cũng áp dụng).
 - Không có `BF_Form_Selection.md` mà orchestrator không ghi `--skip-form` → nhắc CEO chạy BF trước.
+- Trước khi dùng, chạy lint chính thức `python -X utf8 D:/KN-Stack/scripts/p3_form_lint.py <thư mục P3 hoặc biến thể> --prefix {{prefix}}` (không `--draft`): exit ≠ 0 (còn `Chọn: (chờ CEO)`, thiếu `Lý do CEO:`/dòng `Cổng CEO 2 — ngày …`) → BA từ chối Selection, dừng và trả về BF.
 
 ## Output
 Save to `1_Projects/{{project}}/Phase3-Embodiment/`:

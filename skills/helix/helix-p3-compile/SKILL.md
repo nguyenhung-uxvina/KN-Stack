@@ -111,9 +111,10 @@ CEO: Review cumulative delta impact on original scope.
 
 ### Step E2b: Đối chiếu block BF (hình thể ↔ layout)
 
-1. **Layout ↔ BF_Form_Selection:** đọc `{{prefix}}BF_Form_Selection.md`; với mỗi chức năng, kiểm tham số trong `BA_Preliminary_Layout.md` nằm trong `Khoảng tham số:` đã chọn. Tham số ngoài khoảng → ghi WARN và yêu cầu quay lại BF (đổi khoảng) hoặc sửa layout.
+1. **Layout ↔ BF_Form_Selection:** đọc `{{prefix}}BF_Form_Selection.md`; với mỗi chức năng, kiểm tham số trong `{{prefix}}Preliminary_Layout.md` (tệp BA theo Data Bus) nằm trong `Khoảng tham số:` đã chọn. Tham số ngoài khoảng → ghi WARN và yêu cầu quay lại BF (đổi khoảng) hoặc sửa layout.
 2. **D/W tạm (spec §13 Q6):** nếu `{{prefix}}BF_Scoring.md` / `BF_Function_Selection.md` còn yêu cầu mang nhãn `D tạm` hoặc `W tạm` (CEO chưa duyệt tại Cổng CEO 1) → BE **KHÔNG khuyến nghị qua Gate 3**; ghi rõ danh sách yêu cầu còn nhãn tạm trong báo cáo.
 3. **`--skip-form`:** nếu `_pipeline_state.md` Adjustments Log có `BF SKIPPED` → in lý do skip ở báo cáo Gate 3 (mục riêng «BF bỏ qua: <lý do>») và ghi rằng hình thể không được chọn có hệ thống.
+4. **Không có dấu vết BF:** không có tệp `{{prefix}}BF_*.md` nào và Adjustments Log không có dòng `BF SKIPPED` → ghi dòng `WARN: không có đầu ra BF và không có bản ghi BF SKIPPED — hình thể chưa qua BF, cũng không có lý do bỏ` vào báo cáo Gate 3.
 
 ### Step E3: P02 QC Gate (MANDATORY — S3)
 
