@@ -946,6 +946,17 @@ def test_apply_readme_appended_when_present(tmp_path):
     assert t.startswith('# Cu\n') and 'Demo' in t
 
 
+def test_cli_plan_creates_missing_out_parent(tmp_path):
+    proj, dest = _vault(tmp_path)
+    out = tmp_path / 'Book' / '_p0' / 'plan.json'
+    assert not out.parent.exists()
+    assert rc.main(['plan', '--src-root', str(proj / 'RE'), '--dossiers', 'Demo',
+                    '--dest-root', str(dest), '--scan', str(proj),
+                    '--old-project', 'BB-02_LOMAH', '--new-project', 'RE-X',
+                    '--out', str(out)]) == 0
+    assert out.is_file() and not dest.exists()
+
+
 def test_cli_apply_requires_approve_flag(tmp_path):
     proj, dest = _vault(tmp_path)
     out = tmp_path / 'plan.json'

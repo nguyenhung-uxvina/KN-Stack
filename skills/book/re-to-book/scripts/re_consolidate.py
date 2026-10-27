@@ -355,6 +355,7 @@ def main(argv=None):
             scans = [x.strip() for s in a.scan for x in s.split(',') if x.strip()]
             dos = [x.strip() for x in a.dossiers.split(',') if x.strip()]
             p = plan(a.src_root, dos, a.dest_root, scans, a.old_project, a.new_project)
+            os.makedirs(os.path.dirname(os.path.abspath(a.out)), exist_ok=True)
             with open(a.out, 'w', encoding='utf-8') as f:
                 json.dump(p, f, ensure_ascii=False, indent=2)
             _print_plan(p)

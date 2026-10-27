@@ -33,6 +33,8 @@ description: "Orchestrator dựng SÁCH SỐNG nội bộ từ hồ sơ /reverse
 Data Bus: D:\Workshop_X\1_Projects\<RE-project>\Book\   (sách sống gắn với nguồn của nó)
 State:    <Book>/_pipeline_state.md
 Scripts:  RTB=<KN-Stack>/skills/book/re-to-book/scripts   — luôn gọi `python -X utf8 "$RTB/…"`
+          Lệnh `skills/…/databus_check.py` và `scripts/re_handoff_to_helix.py` dùng đường dẫn tương đối
+          ⇒ chạy với cwd = gốc KN-Stack (`cd <KN-Stack> && …`), hoặc thay bằng đường dẫn tuyệt đối.
 ```
 
 ## Differences vs `notebook-to-book`
@@ -42,9 +44,9 @@ Scripts:  RTB=<KN-Stack>/skills/book/re-to-book/scripts   — luôn gọi `pytho
 | P0 | — | Gom hồ sơ RE thành dự án `1_Projects/<RE-project>/` (`re_consolidate.py plan/apply`), CEO duyệt từng tệp sửa đường dẫn |
 | P0.5 | — | Manifest + bản chụp lọc bằng script; tệp chưa xếp lớp ⇒ dừng hỏi CEO |
 | P1 | NLM multi-query | Đọc `_re_snapshot/` theo cụm khung 5 phần; mỗi ý mang nhãn tri thức + neo xuất xứ; cổng `check-p1` |
-| P4/P6 brief | chuẩn | + `ChNN.provenance.json`, nhãn hiển thị `⟨…⟩`, hợp đồng nhà chính trước fan-out |
+| P4/P6 brief | chuẩn | + `<stem>.provenance.json` (stem = tên tệp chương bỏ `.md`), nhãn hiển thị `⟨…⟩`, hợp đồng nhà chính trước fan-out |
 | P7 | attribution + IP | + `re_book_audit.py all` (GT · nhãn · Idea_Log · neo còn sống) + bảng trùng Idea_Log + trang phạm vi mỗi ấn bản |
-| P8 | tải `chunks/` | tải bản đã thay mã RE (`re_nlm_redact.py`); mã 1 ⇒ không tải |
+| P8 | tải `chunks/` | chỉ chia chunk → `re_nlm_redact.py` → tải CHỈ tệp trong `--out`; mã 1 ⇒ không tải |
 | sync | — | `--sync`: diff manifest → chương bị ảnh hưởng → viết lại cục bộ → `_editions.md` |
 | gapfill | — | `--gapfill`: tìm cho chỗ trống RE tự khai, **ghi ngược vào hồ sơ RE**, CEO duyệt |
 | Data Bus | `3_Resources/Books/<slug>/` | `1_Projects/<RE-project>/Book/` |
@@ -120,6 +122,7 @@ Chỉ chạy khi `--re` nằm ngoài một dự án RE; chạy lại là no-op. 
 
 ```bash
 # 1. Kế hoạch — chỉ đọc, ghi plan JSON (đặt NGOÀI các thư mục sẽ chuyển)
+mkdir -p "<Book>/_p0"
 python -X utf8 "$RTB/re_consolidate.py" plan \
   --src-root "D:/Workshop_X/1_Projects/BB-02_LOMAH/RE" --dossiers "<hồ sơ 1>,<hồ sơ 2>,..." \
   --dest-root "D:/Workshop_X/1_Projects/RE-ISSF25-Scoring/RE" \
@@ -162,6 +165,7 @@ Ghi `<Book>/_re_manifest.json` (mỗi tệp: lớp, hash, mtime; mỗi đơn v�
 
 - **Mã 2 kèm `Tep chua phan lop (N):`** (`UnclassifiedError`) ⇒ có tệp **chưa xếp lớp**; `build` không ghi gì. Trình CEO danh sách, CEO chọn lớp ⇒ thêm mẫu vào `re_classes.json` (khuôn chung) hoặc tệp lớp riêng của dự án truyền bằng `--classes`, rồi chạy lại. **Không tự đoán lớp.**
 - Mã 2 khác (trùng tên hồ sơ, thiếu thư mục, lỗi đọc) ⇒ sửa đầu vào, chạy lại.
+- Mã 0 ⇒ ghi vào `<Book>/_pipeline_state.md`: `re_roots`, `classes` (đường dẫn tệp lớp đã dùng — mặc định `$RTB/re_classes.json`), `manifest_created`. `--sync` dùng lại đúng `classes` này.
 - **Tác tử viết CHỈ đọc `_re_snapshot/`, không bao giờ đọc thư mục RE gốc.** Brief của mọi tác tử P1/P4/P6 ghi đường dẫn `_re_snapshot/`, không ghi `--re`.
 
 ---
@@ -200,7 +204,7 @@ Schema `book-explore` + hai mục bắt buộc:
 python -X utf8 "$RTB/re_provenance.py" check-p1 --book "<Book>"
 python skills/book/codebase-to-book/scripts/databus_check.py "<Book>" --phase P1
 ```
-`check-p1` mã ≠ 0 (cụm không có neo nào; neo sai dạng; tệp không có trong manifest; lớp không được neo; không có đơn vị) ⇒ **CẤM checkpoint** — sửa ghi chú, chạy lại. Checkpoint P1 nêu: số cụm, số neo, số neo `chưa gán`, `kiểm N phiếu GT`.
+`check-p1` mã ≠ 0 (cụm không có neo nào; neo sai dạng; tệp không có trong manifest; lớp không được neo; không có đơn vị) ⇒ **CẤM checkpoint** — sửa ghi chú, chạy lại. Checkpoint P1 nêu: số cụm, số neo, số neo `chưa gán`, số phiếu GT và số `⟨chờ đo⟩`/`⟨chờ ký⟩` đếm từ `_units_index.md` (cột anchor `#GT-…`; chưa có chương nên **không** chạy `re_book_audit.py gt` ở đây).
 
 ---
 
@@ -236,7 +240,7 @@ Chạy `/book-audit` ở attribution mode (như notebook-to-book) **và**:
 # 1. Gợi ý trùng Idea_Log — chỉ từ vựng/số, KHÔNG chép nội dung Idea_Log
 python -X utf8 "$RTB/re_book_audit.py" idea-candidates --book "<Book>" --re "<dir1>,<dir2>,..."
 ```
-2. **Một lượt tác tử** điền `<Book>/Phase7-IdeaLog-Overlap.md`: bảng có cột `Mã` và `Kết luận`, **một dòng cho MỌI mã Idea_Log**, kết luận ∈ `trùng` / `không trùng` / `một phần` (+ vị trí chương/đoạn). Tác tử đọc Idea_Log chỉ để đối chiếu; bảng nêu mã + chỗ trong sách, không chép văn bản Idea_Log. Tệp này **không** vào `book.md`, không lên NLM.
+2. **Một lượt tác tử** điền `<Book>/Phase7-IdeaLog-Overlap.md`: bảng `| Mã | Kết luận | Vị trí trong sách | Ghi chú |`, **một dòng cho MỌI mã Idea_Log**; ô `Kết luận` chứa **đúng nguyên văn** một trong `trùng` / `không trùng` / `một phần` (không thêm chữ — `idea-coverage` so khớp cả ô); vị trí chương/đoạn để ở cột riêng. Tác tử đọc Idea_Log chỉ để đối chiếu; bảng nêu mã + chỗ trong sách, không chép văn bản Idea_Log. Tệp này **không** vào `book.md`, không lên NLM.
 3. Cổng tổng:
    ```bash
    python -X utf8 "$RTB/re_book_audit.py" all --book "<Book>" --re "<dir1>,<dir2>,..."
@@ -245,17 +249,30 @@ python -X utf8 "$RTB/re_book_audit.py" idea-candidates --book "<Book>" --re "<di
 4. **CEO quyết giữ/bỏ** từng dòng `trùng`/`một phần` (Core, **mỗi ấn bản**). Không tự xoá — CEO K54 từng chọn giữ.
 5. **Trang `# ⛔ Phạm vi lưu hành`** ở đầu `book.md` — trang này ghi **ngày chụp manifest** (`created` của `_re_manifest.json`), phạm vi NỘI BỘ, danh sách hồ sơ RE, số ấn bản, quyết định Idea_Log của CEO, dòng: *«Ch08b/08c sách K54 (`lomah-sung-ngan-k54`) là bản chụp 2026-10-26 của cùng hồ sơ; bản hiện hành là sách này.»* và dòng ký `CEO ký: ________ Ngày: ________`. **Đường ống không bao giờ điền chữ ký thay CEO.**
 6. `databus_check.py "<Book>" --phase P7` rồi mới trình IP sign-off (Core).
+7. **Sau khi CEO ký trang phạm vi — chốt manifest của ấn bản** (không có bước này thì `--sync` lần sau HALT):
+   ```bash
+   mkdir -p "<Book>/_manifests" && cp "<Book>/_re_manifest.json" "<Book>/_manifests/ed1.json"   # ấn bản N ⇒ edN.json
+   ```
+   và ghi dòng đầu `<Book>/_editions.md`: ấn bản 1 · ngày · ngày chụp manifest · hồ sơ RE · số chương · GT `⟨chờ đo⟩`/`⟨chờ ký⟩` · CEO ký phạm vi (để trống cho CEO).
 
 ---
 
 ## P7.5 · P7.6 · P8 · P8.5 · P9 — như `/notebook-to-book`
 
-Theo đúng mục P7.5 (EPUB), P7.6 (bản đồ sách), P8 (`/book-notebook`), P8.5 (audio), P9 (`/book-ceo-insight`) trong `/notebook-to-book` — không chép lại. **Một thay đổi ở P8:** tải bản đã thay mã RE, không tải `chunks/` trực tiếp:
+Theo đúng mục P7.5 (EPUB), P7.6 (bản đồ sách), P8.5 (audio), P9 (`/book-ceo-insight`) trong `/notebook-to-book` — không chép lại.
 
-```bash
-python -X utf8 "$RTB/re_nlm_redact.py" --book "<Book>" --src "<Book>/chunks" --out "<RE-project>/_nlm_upload/ed<N>"
-```
-`--out` phải nằm **ngoài** `<Book>` và `--src`. Mã 0 ⇒ tải từ `--out`. **Mã 1 (còn mã sót) ⇒ KHÔNG tải**; script đã xoá hẳn `--out` — **không bao giờ tải từ một `--out` cũ**; sửa nguồn rồi chạy lại. `book.md` trong máy giữ mã RE.
+**P8 thay đổi — che mã RE TRƯỚC khi tải.** `/book-notebook` chia chunk (P8.4) rồi tải (P8.5) trong cùng một khối; **không** giao P8 nguyên khối. Trình tự bắt buộc:
+
+1. Chạy `/book-notebook` **chỉ tới hết P8.4** (chia `book.md` → `<Book>/chunks/`). **Dừng trước P8.5** — chưa gọi `source_add` nào.
+2. Che mã:
+   ```bash
+   python -X utf8 "$RTB/re_nlm_redact.py" --book "<Book>" --src "<Book>/chunks" --out "<RE-project>/_nlm_upload/ed<N>"
+   ```
+   `--out` phải nằm **ngoài** `<Book>` và `--src`.
+3. **Bắt buộc mã 0.** Mã 1 (còn mã sót) ⇒ **KHÔNG tải**; script đã xoá hẳn `--out` — **không bao giờ tải từ một `--out` cũ**; sửa chương/`book.md` → chia lại → che lại. Mã 2 ⇒ sửa đầu vào.
+4. Tiếp P8.5 của `/book-notebook` với danh sách nguồn = **chỉ các tệp trong `--out`** (liệt kê bằng `ls`), không tệp nào từ `<Book>/chunks/`. Meta-sources (outline, audit log) cũng phải đi qua `re_nlm_redact.py` (đặt vào một `--src` riêng) hoặc không tải. `Phase8-Notebook-Manifest.md` ghi đường dẫn `--out` đã tải.
+
+`book.md` trong máy giữ mã RE.
 
 ---
 
@@ -276,7 +293,7 @@ python -X utf8 "$RTB/re_nlm_redact.py" --book "<Book>" --src "<Book>/chunks" --o
 ```bash
 cp -r "<Book>/_re_snapshot/." "<Book>/_re_snapshot_$(date +%Y-%m-%d_%H%M)/"
 cp -r "<Book>/Phase6-Revised/." "<Book>/Phase6-Revised_$(date +%Y-%m-%d_%H%M)/"
-python -X utf8 "$RTB/re_manifest.py" build --re "<re_roots hiện hành>" --book "<Book>"
+python -X utf8 "$RTB/re_manifest.py" build --re "<re_roots hiện hành>" --book "<Book>" [--classes <classes trong _pipeline_state.md>]
 python -X utf8 "$RTB/re_manifest.py" diff --old "<Book>/_manifests/ed<N>.json" --new "<Book>/_re_manifest.json" --out "<Book>/_sync/ed<N+1>_diff.json"
 python -X utf8 "$RTB/re_provenance.py" impact --prov "<Book>/Phase6-Revised" --diff "<Book>/_sync/ed<N+1>_diff.json" --out "<Book>/_sync/ed<N+1>_impact.json"
 # --quick (không có Phase6): --prov "<Book>/Phase4-Chapters" và sao lưu Phase4-Chapters thay Phase6-Revised
