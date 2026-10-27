@@ -1,6 +1,6 @@
-# Bảng chấm phương án hình thể (bước F5, khối BF)
+# Bảng chấm phương án hình thể (bước F5 checklist + F6 chấm điểm, khối BF)
 
-Tệp này quy định cách lập `<P>BF_Scoring.md`. Định dạng dưới đây khớp với cổng máy `scripts/p3_form_lint.py`: sai khuôn bảng thì lint báo `BAD_CELL`, `EMPTY_WEIGHT_NO_FLAG`, `QUESTION_NO_REASON`, `CHECKLIST_INCOMPLETE` hoặc `NO_SENSITIVITY`. Quy tắc nền của sách về đánh giá ở pha hiện thân nằm ở `tkktht-guidelines § Đánh giá ở pha hiện thân` (PB-R175 [TKKTHT Ch22 §1.2]: chỉ so phương án cùng mức cụ thể hoá; PB-R176 [TKKTHT Ch22 §1.1]: điểm kỹ thuật tách khỏi điểm kinh tế; PB-R177 [TKKTHT Ch22 §1.3]: mỗi mục checklist có ít nhất một tiêu chí; PB-R178 [TKKTHT Ch22 §1.3]: bản bố trí cuối thì thẩm định điểm yếu chứ không chọn) và `tkktht-guidelines § Checklist 14 mục`.
+Tệp này quy định cách lập `<P>BF_Scoring.md`. Định dạng dưới đây khớp với cổng máy `scripts/p3_form_lint.py`: sai khuôn bảng thì lint báo `BAD_CELL`, `EMPTY_WEIGHT_NO_FLAG`, `QUESTION_NO_REASON`, `CHECKLIST_INCOMPLETE`, `CHECKLIST_SKIP_NO_REASON`, `CHECKLIST_CANDIDATE_MISSING` hoặc `NO_SENSITIVITY`. Quy tắc nền của sách về đánh giá ở pha hiện thân nằm ở `tkktht-guidelines § Đánh giá ở pha hiện thân` (PB-R175 [TKKTHT Ch22 §1.2]: chỉ so phương án cùng mức cụ thể hoá; PB-R176 [TKKTHT Ch22 §1.1]: điểm kỹ thuật tách khỏi điểm kinh tế; PB-R177 [TKKTHT Ch22 §1.3]: mỗi mục checklist có ít nhất một tiêu chí; PB-R178 [TKKTHT Ch22 §1.3]: bản bố trí cuối thì thẩm định điểm yếu chứ không chọn) và `tkktht-guidelines § Checklist 14 mục`.
 
 ## Thang 0–4 (VDI 2225)
 
@@ -30,7 +30,7 @@ Khi danh sách yêu cầu chưa phân D/W (hoặc chỉ có `Requirements_Draft`
 
 ## Luật cờ đỏ trọng số trống (Q7)
 
-Kích hoạt khi yêu cầu W không ánh xạ được DP nào của HOQ, HOẶC khi HOQ chỉ là bản proxy (draft-proxy), nên ánh xạ DP không đáng tin. Khi đó: GIỮ dòng trong bảng, để ô `Trọng số` TRỐNG, ghi `🔴` ở cột Ghi chú kèm việc cần làm (ví dụ `🔴 CEO gán trọng số`), và để ô DP là `—` nếu không có DP. Không tự điền trọng số để bảng trông đầy. Lint cho phép ô trọng số trống chỉ khi dòng có `🔴` (nếu không là `EMPTY_WEIGHT_NO_FLAG`). Ô Trọng số có giá trị phải là số (`3`, `2,5`, `15%`).
+Kích hoạt khi yêu cầu W không ánh xạ được DP nào của HOQ, HOẶC khi HOQ chỉ là bản proxy (draft-proxy), nên ánh xạ DP không đáng tin. Khi đó: GIỮ dòng trong bảng, để ô `Trọng số` TRỐNG, ghi `🔴` ở cột Ghi chú kèm việc cần làm (ví dụ `🔴 CEO gán trọng số`), và để ô DP là `—` nếu không có DP. Không tự điền trọng số để bảng trông đầy. Lint cho phép ô trọng số trống ở dòng W chỉ khi dòng có `🔴` (nếu không là `EMPTY_WEIGHT_NO_FLAG`); dòng D không cần trọng số (chỉ lọc), được để trống. Ô Trọng số có giá trị phải là số (`3`, `2,5`, `15%`).
 
 Tổng điểm in HAI cột: (1) chỉ phần có trọng số; (2) phần cờ đỏ còn chưa gán, tức các dòng `🔴` để CEO gán. Không cộng gộp hai phần thành một con số duy nhất.
 
@@ -38,14 +38,14 @@ Tổng điểm in HAI cột: (1) chỉ phần có trọng số; (2) phần cờ 
 
 Khuôn đầy đủ nằm ở `references/templates/scoring-template.txt` (tách khỏi tệp này để bộ kiểm con trỏ sách không đọc các dòng bảng mẫu như dòng dữ liệu); dán nguyên, thay giá trị mẫu, giữ nguyên tiêu đề và tên cột. Các dòng chốt của khuôn:
 
-- Mục `# Bảng chấm`, rồi `## Checklist 14 mục` với tiêu đề bảng `# | Mục | Tiêu chí` (14 dòng), rồi `## Bảng chấm`, rồi `## Độ nhạy`.
+- Mục `# Bảng chấm`, rồi `## Checklist 14 mục` với một mục `### F-<id>` cho mỗi chức năng (tiêu đề bảng `# | Mục | Tiêu chí | PA-<id>-1 | … | HC-<id>-1 | …`, 14 dòng), rồi `## Bảng chấm`, rồi `## Độ nhạy`.
 - Mỗi chức năng một mục `### F-<id>` với tiêu đề bảng `Req-ID | D/W | DP | Trọng số | PA-<id>-1 | … | HC-<id>-1 | … | Ghi chú`.
 - Dòng mẫu: D → `R-11 | D | DP-1 | 1 | Đạt | Loại | Đạt`; W → `R-12 | W | DP-2 | 3 | 3 | 4 | 1`; ô chưa biết → `?(chưa có số liệu)`; W không DP → DP `—`, ô Trọng số trống và Ghi chú `🔴 CEO gán trọng số`.
 
 
 Quy ước về cấu trúc, mỗi điều khớp một mã lint:
 
-- Đúng 14 dòng trong `## Checklist 14 mục` (đánh số 1–14), mỗi dòng có tiêu chí; mục bỏ phải ghi `Bỏ — lý do: …` (nếu không là `CHECKLIST_SKIP_NO_REASON`). Tên 14 mục lấy từ `tkktht-guidelines § Checklist 14 mục`, không nghĩ ra.
+- `## Checklist 14 mục` có một mục `### F-<id>` cho mỗi chức năng (thiếu bảng hoặc thiếu dòng → `CHECKLIST_INCOMPLETE`). Mỗi bảng: cột `# | Mục | Tiêu chí` rồi một cột cho MỌI `PA-`/`HC-` của chức năng đó (thiếu cột → `CHECKLIST_CANDIDATE_MISSING`); đúng 14 dòng đánh số 1–14, mỗi dòng có tiêu chí; ô ứng viên chỉ nhận `Đạt`, `Không đạt` hoặc `?(<lý do>)` (khác → `BAD_CELL`). Mục bỏ: cột Tiêu chí ghi `Bỏ — lý do: …` (thiếu lý do → `CHECKLIST_SKIP_NO_REASON`) và mọi ô ứng viên của dòng là `—`. Tên 14 mục lấy từ `tkktht-guidelines § Checklist 14 mục`, không nghĩ ra.
 - `## Bảng chấm` có một mục `### F-<id>` cho mỗi chức năng của F2; trong mỗi mục là một bảng có cột đầu `Req-ID`, bốn cột cố định `Req-ID | D/W | DP | Trọng số`, tiếp theo là các cột `PA-<id>-<n>` (phương án hình thể) và `HC-<id>-<n>` (chuẩn đối sánh từ benchmark), cột cuối là `Ghi chú`. Mọi `PA-`/`HC-` khai ở F4/benchmark phải có cột, thiếu thì `CANDIDATE_MISSING`.
 - Số ô mỗi dòng bằng số cột tiêu đề.
 - Mục `## Độ nhạy` bắt buộc (thiếu thì `NO_SENSITIVITY`).
@@ -55,6 +55,6 @@ Quy ước về cấu trúc, mỗi điều khớp một mã lint:
 Sau khi chấm, kiểm hai lần và ghi kết quả ở `## Độ nhạy`:
 
 1. Đổi từng trọng số ±20% (làm đồng thời mọi trọng số theo cả hai chiều và từng trọng số riêng nếu nghi ngờ): phương án dẫn đầu có đổi không? Nếu đổi, phương án dẫn đầu không vững; ghi nó là «dẫn đầu mong manh».
-2. Thay mọi ô `?(…)` bằng `0` rồi bằng `4`: phương án dẫn đầu có đổi không? Nếu đổi, ô `?` nào quyết định, và việc thử/đo nào đóng được ô đó; việc này đi vào kế hoạch thử của F6.
+2. Thay mọi ô `?(…)` bằng `0` rồi bằng `4`: phương án dẫn đầu có đổi không? Nếu đổi, ô `?` nào quyết định, và việc thử/đo nào đóng được ô đó; việc này đi vào kế hoạch thử của F7.
 
 Kết luận độ nhạy chỉ nói dẫn đầu vững hay mong manh và vì sao; chọn phương án là quyết định của CEO.

@@ -17,14 +17,14 @@ Luận đề: hình thể là giả thuyết. BF không đưa đáp án; nó d�
 
 1. **Hai cổng CEO:** Cổng CEO 1 duyệt danh sách chức năng (+ nguyên lý suy ra, + D/W tạm); Cổng CEO 2 chọn hình thể cho từng chức năng. AI không tự qua cổng nào.
 2. **≥3 phương án hình thể mỗi chức năng** (`--quick`: ≥2). Phương án chỉ ghi tên nguyên tắc («phân chia nhiệm vụ») mà không nói hình thể đổi gì, tham số nào = không tính.
-3. **Mỗi phương án trỏ quy tắc cụ thể** dạng `[TKHT ChNN §x.y]` / `[TKKTHT ChNN §x.y]` / `[KL9 ChNN §x.y]`, lấy từ bộ tham chiếu của skill này; không trích câu không có trong tham chiếu, không bịa chương/mục.
+3. **Mỗi phương án trỏ quy tắc cụ thể** bằng **mã quy tắc** có trong `references/` (`TKHT-Rnnn` / `PB-Rnnn` / `PB-Mnnn` / `KL-Rnnn`) kèm con trỏ sách dạng `[TKHT ChNN §x.y]` / `[TKKTHT ChNN §x.y]` / `[KL9 ChNN §x.y]` chép từ chính dòng của mã đó; không trích câu không có trong tham chiếu, không bịa chương/mục. Lint đối chiếu với references: thiếu mã → `RULE_CODE_MISSING`, mã không có → `RULE_CODE_UNKNOWN`, con trỏ không nằm trong dòng của mã → `CITATION_NOT_IN_RULE`.
 4. **Nhãn tri thức bắt buộc** trên mọi phương án và mọi giải pháp hiện có: `tri thức` / `phỏng đoán` / `giả định` (`helix-cc2:references:cc2-core` §Hai loại nhãn).
 5. **Không đoán điểm.** Ô thiếu dữ liệu ghi `?(<lý do>)`; điểm cho đối thủ không bịa từ suy đoán.
 6. **Quyết định CEO ghi bằng TÊN + mã phương án**, ví dụ `Chọn: PA-1-2 — Vỏ thép lò xo lá`; không bao giờ chỉ một nhãn chữ trần (A/B, «phương án 2») — lỗi đã gặp: quyết định ghi bằng nhãn bị ghi sai.
 7. **Analyst Trap:** mỗi hình thể được chọn PHẢI có phiếu giả thuyết + Kế hoạch thử trên bàn. BF không kết thúc bằng một báo cáo phân tích suông (`rules/areas-helix` § Analyst Trap Guard).
 8. **Không vẽ hình học / CAD** (việc của BA + `helix-cad-*`). BF dừng ở hình thể mô tả + khoảng tham số. Câu có từ không gian (above, adjacent, coaxial, đồng trục, kề…) mà không dẫn sketch CEO → gắn `[SPATIAL — CEO VERIFY]` như BA.
 9. **FTO:** sáng chế còn hiệu lực có liên quan → chỉ ghi `Cờ FTO:` và chuyển `ip-*` (vd. `ip-screen`) / QP-02-06. BF không phán định vi phạm hay hết hiệu lực.
-10. **Cổng máy:** `p3_form_lint.py` phải exit 0 trước Cổng CEO 2. Báo cáo «đã kiểm» không thay output của lệnh.
+10. **Cổng máy:** `p3_form_lint.py --draft` phải exit 0 trước Cổng CEO 2 (Selection nháp, `Chọn: (chờ CEO)`); sau khi CEO chọn, lint chính thức (không `--draft`) phải exit 0 trước khi bàn giao BA. Báo cáo «đã kiểm» không thay output của lệnh.
 
 ## Cờ
 
@@ -34,8 +34,8 @@ Luận đề: hình thể là giả thuyết. BF không đưa đáp án; nó d�
 
 | Cờ | Tác dụng |
 |---|---|
-| `--variant <V>` | Thư mục biến thể `<thư mục P3>/<V>/` (giữ nguyên `<V>`), tiền tố `<PROJECT>_<V0>_` |
-| `--function <F-id>` | Chỉ chạy F2–F7 cho một chức năng đã qua Cổng CEO 1. Ghi đè đúng mục `## F-<id>` của nó trong `BF_Form_Variants.md`, `BF_Benchmark.md`, `BF_Form_Selection.md`, và đúng mục `### F-<id>` dưới `## Bảng chấm` trong `BF_Scoring.md`; `## Checklist 14 mục` và `## Độ nhạy` của `BF_Scoring.md` là phần dùng chung — chỉ sửa/thêm dòng liên quan tới F này, không xoá phần của F khác |
+| `--variant <V>` | Thư mục biến thể `<thư mục P3>/<V>/` (giữ nguyên `<V>`), tiền tố `<PROJECT>_<V0>_`; B0 chỉ lấy từ `<thư mục P3>/<V>/`; tiền tố trên tên tệp B0 khác tiền tố tính ra → dừng, hỏi CEO |
+| `--function <F-id>` | Chỉ chạy F2–F7 cho một chức năng đã qua Cổng CEO 1. Ghi đè đúng mục `## F-<id>` của nó trong `{{prefix}}BF_Form_Variants.md`, `{{prefix}}BF_Benchmark.md`, `{{prefix}}BF_Form_Selection.md`, và đúng mục `### F-<id>` dưới `## Checklist 14 mục` và dưới `## Bảng chấm` trong `{{prefix}}BF_Scoring.md`; `## Độ nhạy` của `{{prefix}}BF_Scoring.md` là phần dùng chung — chỉ sửa/thêm dòng liên quan tới F này, không xoá phần của F khác |
 | `--quick` | Tầng nguồn chỉ 1 (hồ sơ dự án), ≥2 phương án/chức năng; tầng 1 không ra HC nào cho một chức năng → nâng lên tầng 2 (web) cho riêng chức năng đó; lint chạy với `--quick` |
 | (orchestrator) `--skip-form "<lý do>"` | Bỏ BF; lý do vào `_pipeline_state.md` Adjustments Log, BE in lại ở báo cáo Gate 3 |
 
@@ -45,7 +45,7 @@ Luận đề: hình thể là giả thuyết. BF không đưa đáp án; nó d�
 - Không variant: ghi vào `<thư mục P3>/`, `{{prefix}}` = `<PROJECT>_` với mọi `-` của PROJECT đổi thành `_` (`VN-XUONG-UUV` → `VN_XUONG_UUV_`).
 - Có `--variant <V>`: ghi vào `<thư mục P3>/<V>/`, `{{prefix}}` = `<PROJECT>_<V0>_`, `<V0>` = `<V>` cắt tại dấu `-` đầu tiên (`V5-MOTORIZED` → `VN_MGM_V5_`).
 - Áp luật nguyên văn: `VN-TGT-F --variant TGT-10` → thư mục `Phase3-Embodiment/TGT-10/`, tiền tố `VN_TGT_F_TGT_` (KHÔNG phải `VN_TGT_F_TGT10_`).
-- ⚠ Hệ quả: TGT-9, TGT-10, TGT-14… cùng ra tiền tố `VN_TGT_F_TGT_`; chỉ thư mục biến thể phân biệt chúng. Không tự chế luật khác — dùng đúng tiền tố mà B0 của P3 đã dùng (đọc tên tệp `*B0_Preflight_Report.md` chỉ trong `<thư mục P3>/<V>/` hoặc `<thư mục P3>/`; không lấy B0 ở Phase1-Task — đó là B0 của P1, pipeline helix-task-clarify) và in tiền tố ra đầu phiên để CEO thấy.
+- ⚠ Hệ quả: TGT-9, TGT-10, TGT-14… cùng ra tiền tố `VN_TGT_F_TGT_`; chỉ thư mục biến thể phân biệt chúng. Không tự chế luật khác — đọc tên tệp `*B0_Preflight_Report.md` của B0 P3: có `--variant <V>` thì CHỈ trong `<thư mục P3>/<V>/`, không variant thì trong `<thư mục P3>/` (không lấy B0 ở Phase1-Task — đó là B0 của P1, pipeline helix-task-clarify). Tiền tố trên tên tệp B0 khác tiền tố tính theo luật trên → dừng, in cả hai, hỏi CEO dùng tiền tố nào. In tiền tố đã chốt ra đầu phiên để CEO thấy.
 - Mã chức năng `F-<id>`: `<id>` chỉ gồm chữ/số (lint đọc `F-([A-Za-z0-9]+)`). Function_Structure ghi `F1.2` → dùng `F-12` hoặc `F-1b` và ghi ánh xạ ở `BF_Function_Selection.md`.
 
 ## Đầu vào
@@ -56,11 +56,11 @@ Luận đề: hình thể là giả thuyết. BF không đưa đáp án; nó d�
 | `{{prefix}}Requirements_List_v*.md` (đã phân D/W, cột nguồn `HOQ-DPx`) | P1 | Có | Chỉ có `Requirements_Draft*` / chưa phân D/W → chạy D/W tạm (Q6) |
 | `HOQ_Design_Parameters_v*.md` | FORGE / P2 | Có | Chấm không trọng số, mọi dòng W cờ 🔴 (Q7) |
 | `{{prefix}}Concept_Selection.md` (+ `Morphological_Matrix*`) | P2 | Có | Dừng, chỉ `/helix-p2-select` |
-| `{{prefix}}B0_Preflight_Report.md` | B0 của P3 (chỉ trong `<thư mục P3>/<V>/` hoặc `<thư mục P3>/`) | Có | Dừng, chạy `/helix-p3-preflight` trước |
+| `{{prefix}}B0_Preflight_Report.md` | B0 của P3 (`--variant`: chỉ trong `<thư mục P3>/<V>/`; không variant: `<thư mục P3>/`) | Có | Dừng, chạy `/helix-p3-preflight` trước |
 | `{{prefix}}CC2_Handoff.md` | `/helix-cc2` C6 | Không | F2 tự dựng chuỗi; BF sinh Handoff ở F7 |
 | `RE/`, `Phase2-Concept/FTO_*`, `ban-do-sang-che*`, PDF sáng chế trong dự án | dự án | Không | Tầng nguồn 1 rỗng — ghi rõ |
 
-**Glob linh hoạt** (spec §11b): với mỗi tệp, thử lần lượt `{{prefix}}<Tên>*`, `*_<Tên>*`, rồi `<Tên>*` không tiền tố (vd. `BE_Concept_Selection.md`, `Requirements_Draft.md`), trong `Phase2-Concept/<V>/`, `Phase2-Concept/`, `Phase1-Task/<V>/`, `Phase1-Task/`, `Phase0-Forge/` (hoặc `FORGE/`), `Phase0-Plan/<V>/`, `<project>/<V>/`. Riêng B0_Preflight_Report và CC2_Handoff chỉ tìm trong `<thư mục P3>/<V>/` và `<thư mục P3>/` — không lấy B0 ở Phase1-Task — đó là B0 của P1 (vd. `Phase1-Task/VN_TGT_F_B0_Preflight_Report.md` của helix-task-clarify). Nhiều bản → lấy phiên bản cao nhất, in tên tệp đã chọn; không chắc → hỏi CEO.
+**Glob linh hoạt** (spec §11b): với mỗi tệp, thử lần lượt `{{prefix}}<Tên>*`, `*_<Tên>*`, rồi `<Tên>*` không tiền tố (vd. `BE_Concept_Selection.md`, `Requirements_Draft.md`), trong `Phase2-Concept/<V>/`, `Phase2-Concept/`, `Phase1-Task/<V>/`, `Phase1-Task/`, `Phase0-Forge/` (hoặc `FORGE/`), `Phase0-Plan/<V>/`, `<project>/<V>/`. Riêng B0_Preflight_Report chỉ tìm trong `<thư mục P3>/<V>/` khi có `--variant` (trong `<thư mục P3>/` khi không variant), CC2_Handoff chỉ tìm trong `<thư mục P3>/<V>/` và `<thư mục P3>/` — không lấy B0 ở Phase1-Task — đó là B0 của P1 (vd. `Phase1-Task/VN_TGT_F_B0_Preflight_Report.md` của helix-task-clarify). Nhiều bản → lấy phiên bản cao nhất, in tên tệp đã chọn; không chắc → hỏi CEO.
 
 ## Nạp tham chiếu (kỷ luật — không nạp cả tệp)
 
@@ -111,13 +111,13 @@ Theo `benchmark-search.md`, đi đúng thứ tự: tầng 1 hồ sơ dự án �
 2. **Tầng 2 — web:** `mcp__exa__web_search_exa` để tìm, `mcp__exa__web_fetch_exa` để đọc; truy vấn theo **chức năng** (động từ + điều kiện), không theo tên sản phẩm; chỉ ghi nguồn đã mở đọc.
 3. **Tầng 3 — sáng chế:** Exa trên patents.google.com / Espacenet; ưu tiên công bố ≤ 5 năm; ĐỌC HÌNH VẼ (figures) và claims, không chỉ tóm tắt/thuyết minh — số chú thích trên hình là chỗ lộ WFP/LSS. Không mở được hình vẽ → nhãn `giả định`, ghi «chưa đọc hình».
 
-Tối đa **≤8 giải pháp (HC) mỗi chức năng**; dừng sớm khi giải pháp mới chỉ lặp một chuỗi C&C² đã có. Mỗi HC: nguồn (URL / số công bố / tệp), ngày truy cập, **chuỗi C&C² đọc ngược** (đọc sáng chế bằng bảng WFP/LSS/Connector của `reverse-engineering:references:cc2-lens`), nhãn tri thức, `Cờ FTO:` nếu có. `--quick` chỉ tầng 1, nhưng tầng 1 trống cho chức năng nào thì nâng lên tầng 2 cho chức năng đó.
+Tối đa **≤8 giải pháp (HC) mỗi chức năng**; dừng sớm khi giải pháp mới chỉ lặp một chuỗi C&C² đã có. Mỗi HC: nguồn (URL / số công bố / tệp), ngày truy cập, **chuỗi C&C² đọc ngược** (đọc sáng chế bằng bảng WFP/LSS/Connector của `reverse-engineering:references:cc2-lens`; nếu không có, dùng `helix-cc2:references:cc2-core`), nhãn tri thức, `Cờ FTO:` nếu có. `--quick` chỉ tầng 1, nhưng tầng 1 trống cho chức năng nào thì nâng lên tầng 2 cho chức năng đó.
 
-**Không tìm được HC nào:** chức năng kết thúc F4 với 0 HC phải có trong mục `## F-<id>` của `BF_Benchmark.md` dòng `- Không tìm thấy HC — lý do: <các tầng đã tìm + truy vấn chính + vì sao không có>` (lý do không rỗng; lint chấp nhận thay cho HC, thiếu dòng hoặc lý do rỗng → `NO_BENCH`). Bảng chấm của chức năng đó khi ấy chỉ có cột PA.
+**Không tìm được HC nào:** chức năng kết thúc F4 với 0 HC phải có trong mục `## F-<id>` của `{{prefix}}BF_Benchmark.md` dòng `- Không tìm thấy HC — lý do: <các tầng đã tìm + truy vấn chính + vì sao không có>` (lý do không rỗng; lint chấp nhận thay cho HC, thiếu dòng hoặc lý do rỗng → `NO_BENCH`). Bảng chấm của chức năng đó khi ấy chỉ có cột PA.
 
 ### F5 — Checklist 14 mục P&B (Offload)
 
-Áp `tkktht-guidelines § Checklist 14 mục` (TKKTHT Ch13, Figure 7.3): ≥1 tiêu chí kiểm cho **mỗi** mục 1–14, xét lần lượt từng mục; bỏ mục nào phải ghi `Bỏ — lý do: …` (cơ chế, không phải lời khuyên). Áp lên cả phương án mình (PA) và giải pháp hiện có (HC) ở **cùng mức cụ thể hoá** (PB-R175) — HC chi tiết hơn PA thì hạ về mức mô tả của PA.
+Áp `tkktht-guidelines § Checklist 14 mục` (TKKTHT Ch13, Figure 7.3) **cho từng chức năng**: trong `## Checklist 14 mục` của `{{prefix}}BF_Scoring.md`, mỗi chức năng một mục `### F-<id>` với bảng `| # | Mục | Tiêu chí | <mọi PA/HC của F này> |`, đủ 14 dòng đánh số 1–14 (tên mục đúng như `tkktht-guidelines`), ≥1 tiêu chí kiểm cho **mỗi** mục, xét lần lượt từng mục. Ô ứng viên chỉ nhận `Đạt` / `Không đạt` / `?(<lý do>)`. Bỏ mục nào thì cột Tiêu chí ghi `Bỏ — lý do: …` và mọi ô ứng viên của dòng đó là `—` (cơ chế, không phải lời khuyên). Lint: thiếu bảng/dòng → `CHECKLIST_INCOMPLETE`; bỏ không lý do → `CHECKLIST_SKIP_NO_REASON`; thiếu cột PA/HC → `CHECKLIST_CANDIDATE_MISSING`; ô ngoài miền → `BAD_CELL`. Áp lên cả phương án mình (PA) và giải pháp hiện có (HC) ở **cùng mức cụ thể hoá** (PB-R175) — HC chi tiết hơn PA thì hạ về mức mô tả của PA.
 
 ### F6 — Chấm định lượng (Offload)
 
@@ -129,21 +129,27 @@ Theo `scoring.md` và khuôn `references/templates/scoring-template.txt` (dán n
 - **Độ nhạy:** trọng số ±20% và ô `?` lấy 0 rồi 4 — thứ hạng có đổi không; in «dẫn đầu vững» / «dẫn đầu mong manh» + ô `?` nào quyết định (→ đi vào kế hoạch thử).
 - **Ưu/nhược bằng lời** dưới mỗi bảng, 1–2 câu cho mỗi ứng viên, để CEO đọc được mà không cần bảng.
 
-### Cổng máy (bắt buộc trước Cổng CEO 2)
+### Cổng máy (hai lần: nháp trước Cổng CEO 2, chính thức sau Cổng CEO 2)
 
 ```
-python -X utf8 D:/KN-Stack/scripts/p3_form_lint.py <thư mục P3 hoặc thư mục biến thể> --prefix <PREFIX> [--quick]
+python -X utf8 D:/KN-Stack/scripts/p3_form_lint.py <thư mục P3 hoặc thư mục biến thể> --prefix <PREFIX> [--quick] --draft   # trước Cổng CEO 2
+python -X utf8 D:/KN-Stack/scripts/p3_form_lint.py <thư mục P3 hoặc thư mục biến thể> --prefix <PREFIX> [--quick]           # sau Cổng CEO 2, trước BA
 ```
 
-Ví dụ: `python -X utf8 D:/KN-Stack/scripts/p3_form_lint.py "1_Projects/VN-TGT-F/Phase3-Embodiment/TGT-10" --prefix VN_TGT_F_TGT_`. Lint đọc cả `BF_Form_Selection.md`, nên trước Cổng CEO 2 ghi tệp này ở dạng nháp: mỗi `## F-<id>` có `Chọn:` = ứng viên dẫn đầu theo bảng chấm kèm `(đề xuất — chờ CEO)`, `Khoảng tham số:` và `Kế hoạch thử:` nháp. Exit 0 = sạch; exit 1 → sửa đúng dòng lint báo (mã lỗi trong docstring script) rồi chạy lại; exit 2 → lỗi đường dẫn/tệp. In nguyên output + mã thoát vào `_pipeline_state.md`. Không mở Cổng CEO 2 khi chưa exit 0.
+Ví dụ: `python -X utf8 D:/KN-Stack/scripts/p3_form_lint.py "D:/Workshop_X/1_Projects/VN-TGT-F/Phase3-Embodiment/TGT-10" --prefix VN_TGT_F_TGT_ --draft`.
+
+- **Lần nháp (`--draft`):** lint đọc cả `{{prefix}}BF_Form_Selection.md`, nên trước Cổng CEO 2 ghi tệp này ở dạng nháp (khuôn «nháp» bên dưới): mỗi `## F-<id>` có `Chọn: (chờ CEO)` — **KHÔNG điền sẵn ứng viên dẫn đầu, không ghi mã PA/HC nào trong `Chọn:`** (lint báo `SELECTION_DRAFT`) — cùng `Khoảng tham số:` và `Kế hoạch thử:` nháp. Không mở Cổng CEO 2 khi lần nháp chưa exit 0.
+- **Lần chính thức (không `--draft`):** sau khi CEO chọn, ghi Selection chính thức (khuôn bên dưới) rồi chạy lại; lint đòi đúng một dòng `Cổng CEO 2 — ngày YYYY-MM-DD` (`NO_GATE2_DATE`), `Chọn: <PA-/HC-mã> — <tên>` (`SELECTION_NO_NAME`), `Lý do CEO:` không rỗng mỗi F (`NO_CEO_REASON`), và không còn `chờ CEO`/`đề xuất` (`SELECTION_DRAFT`). Chưa exit 0 → không bàn giao BA.
+
+Exit 0 = sạch; exit 1 → sửa đúng dòng lint báo (mã lỗi trong docstring script) rồi chạy lại; exit 2 → lỗi đường dẫn/tệp. In nguyên output + mã thoát của cả hai lần vào `_pipeline_state.md`.
 
 ### F7 — Cổng CEO 2 + bàn giao (Core)
 
 1. Trình CEO, mỗi chức năng: top-3 theo điểm có trọng số, cờ 🔴 chưa gán, ô `?` quyết định, kết luận độ nhạy, ưu/nhược bằng lời, cờ FTO. Không khuyến nghị «chọn X» thay CEO.
-2. CEO chọn hình thể (PA hoặc HC) cho từng chức năng → ghi `Chọn: <mã> — <tên phương án>` + lý do của CEO + ngày; CEO có thể gán trọng số cho dòng 🔴 và chốt D/W tạm ở đây.
+2. CEO chọn hình thể (PA hoặc HC) cho từng chức năng → ghi `Chọn: <mã> — <tên phương án>` + `Lý do CEO:` (lời CEO) + dòng đầu tệp `Cổng CEO 2 — ngày YYYY-MM-DD`; CEO có thể gán trọng số cho dòng 🔴 và chốt D/W tạm ở đây.
 3. Khoá **khoảng tham số** cho phương án chọn (từ `Tham số khoá` của F3 + `param-bridge` §Dải đã kiểm; không ngoại suy ra ngoài dải).
 4. **Phiếu giả thuyết + Kế hoạch thử trên bàn** cho tham số nhạy nhất của mỗi hình thể chọn, theo `hypothesis-sheet` §Khuôn phiếu (9 mục, «Phép thử nhỏ nhất để bác bỏ», dự đoán viết trước do CEO ký) — đầu ra vật lý bắt buộc. Ô `?` quyết định thứ hạng ở F6 → thành một phép thử trong kế hoạch.
-5. Ghi `{{prefix}}BF_Form_Selection.md`, chạy lại lint (exit 0), sinh `{{prefix}}CC2_Handoff.md` nếu chưa có, cập nhật `_pipeline_state.md`, in tóm tắt 3–5 dòng, hỏi CEO «tiếp BA / sửa / dừng».
+5. Ghi `{{prefix}}BF_Form_Selection.md` chính thức, chạy lint chính thức (không `--draft`) → phải exit 0 trước khi bàn giao BA, sinh `{{prefix}}CC2_Handoff.md` nếu chưa có, cập nhật `_pipeline_state.md`, in tóm tắt 3–5 dòng, hỏi CEO «tiếp BA / sửa / dừng».
 
 ## Khuôn đầu ra
 
@@ -179,7 +185,7 @@ Chuỗi C&C² nền: <WFP1 → LSS1 → Connector → WFP2> (Nhãn: <tri thức 
 
 ### PA-<id>-1 — <tên phương án>
 - Thay đổi C&C²: <WFP/LSS/Connector nào đổi, đổi thế nào>
-- Nguồn quy tắc: <mã> [TKHT ChNN §x.y], <mã> [KL9 ChNN §x.y]
+- Nguồn quy tắc: <TKHT-Rnnn> [TKHT ChNN §x.y], <KL-Rnnn> [KL9 ChNN §x.y]   (mã có trong references/; con trỏ chép từ đúng dòng của mã, vd. «TKHT-R300 [TKHT Ch13b §13b.9]»)
 - Tham số khoá: <tham số = con số/khoảng; điều kiện đúng>
 - Kiểu hỏng khi vi phạm: <từ sách>
 - Nhãn: <tri thức | phỏng đoán | giả định>
@@ -205,18 +211,29 @@ Chuỗi C&C² nền: <WFP1 → LSS1 → Connector → WFP2> (Nhãn: <tri thức 
 
 ### `{{prefix}}BF_Scoring.md`
 
-Dán nguyên `references/templates/scoring-template.txt`. Bố cục lint đòi: `# Bảng chấm` → `## Checklist 14 mục` (bảng `# | Mục | Tiêu chí`, đủ dòng 1–14, mục bỏ ghi `Bỏ — lý do: …`) → `## Bảng chấm` với một `### F-<id>` mỗi chức năng (bảng `Req-ID | D/W | DP | Trọng số | PA-<id>-1 | … | HC-<id>-1 | … | Ghi chú`, mọi PA/HC đã khai đều có cột) → `## Độ nhạy`. Ô D: `Đạt`/`Loại`; ô W: `0`–`4`; ô thiếu: `?(<lý do>)`; Trọng số trống chỉ khi dòng có `🔴`.
+Dán nguyên `references/templates/scoring-template.txt`. Bố cục lint đòi: `# Bảng chấm` → `## Checklist 14 mục` với một `### F-<id>` mỗi chức năng (bảng `# | Mục | Tiêu chí | PA-<id>-1 | … | HC-<id>-1 | …`, mọi PA/HC của F có cột, đủ dòng 1–14, ô `Đạt`/`Không đạt`/`?(<lý do>)`; mục bỏ: Tiêu chí `Bỏ — lý do: …`, ô ứng viên `—`) → `## Bảng chấm` với một `### F-<id>` mỗi chức năng (bảng `Req-ID | D/W | DP | Trọng số | PA-<id>-1 | … | HC-<id>-1 | … | Ghi chú`, mọi PA/HC đã khai đều có cột) → `## Độ nhạy`. Ô D: `Đạt`/`Loại`; ô W: `0`–`4`; ô thiếu: `?(<lý do>)`; Trọng số trống: dòng W phải có `🔴`, dòng D được để trống.
 
-### `{{prefix}}BF_Form_Selection.md`
+### `{{prefix}}BF_Form_Selection.md` — nháp (trước Cổng CEO 2, lint `--draft`)
+
+```markdown
+# Chọn hình thể (nháp — chờ Cổng CEO 2)
+
+## F-<id> — <tên chức năng>
+- Chọn: (chờ CEO)
+- Khoảng tham số: <nháp: tham số = khoảng từ Tham số khoá F3>
+- Kế hoạch thử: <nháp: bàn thử, đại lượng đo cho ô ? quyết định>
+```
+
+### `{{prefix}}BF_Form_Selection.md` — chính thức (sau Cổng CEO 2, lint không `--draft`)
 
 ```markdown
 # Chọn hình thể
 
-Cổng CEO 2 — ngày {{YYYY-MM-DD}} · lint p3_form_lint: exit {{0}}
+Cổng CEO 2 — ngày YYYY-MM-DD · lint p3_form_lint: exit 0
 
 ## F-<id> — <tên chức năng>
-- Chọn: PA-<id>-<n> — <tên phương án>
-- Lý do CEO: <lời CEO>
+- Chọn: <id> — <tên>
+- Lý do CEO: <lời CEO, không rỗng>
 - Khoảng tham số: <tham số = khoảng đã khoá; nguồn số; nhãn>
 - Kế hoạch thử: <bàn thử, số mẫu, đại lượng đo, ngày thử; phiếu GT-nnn>
 
@@ -235,7 +252,7 @@ Cổng CEO 2 — ngày {{YYYY-MM-DD}} · lint p3_form_lint: exit {{0}}
 | `{{prefix}}BF_Form_Variants.md` | BA, BB |
 | `{{prefix}}BF_Benchmark.md` | BE, `ip-*` |
 | `{{prefix}}BF_Scoring.md` | BE |
-| `{{prefix}}BF_Form_Selection.md` | **BA** (nguồn khoảng tham số — đổi khoảng phải quay lại BF), BB, BE, Phase 4 |
+| `{{prefix}}BF_Form_Selection.md` | **BA** (nguồn khoảng tham số — đổi khoảng phải quay lại BF; BA từ chối Selection trượt lint chính thức), BB, BE, Phase 4 |
 | `{{prefix}}CC2_Handoff.md` | BA (hợp đồng cũ giữ nguyên) |
 
 BF chọn hình thể **theo chức năng**; BE vẫn chấm Rt/Re ở mức layout. BA có thể ra nhiều phương án *bố trí* từ các hình thể đã chọn.

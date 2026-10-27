@@ -12,7 +12,7 @@ Truy vấn bằng động từ chức năng và điều kiện (ví dụ `nhận
 |---|---|---|---|
 | 1 | Hồ sơ dự án: RE, FTO, bản PDF sáng chế đã có trong thư mục dự án và vault | Đọc trước; ghi đường dẫn tương đối trong `Nguồn:` (ví dụ `RE/<Tên>/x.md`) | [ngoài sách] |
 | 2 | Web qua Exa: `mcp__exa__web_search_exa` để tìm, `mcp__exa__web_fetch_exa` để đọc trang đã biết URL | Tìm theo chức năng; chỉ ghi nguồn đã mở đọc, ghi URL đầy đủ và ngày truy cập | [ngoài sách] |
-| 3 | Sáng chế qua Exa trên Google Patents / Espacenet | Ưu tiên công bố trong 5 năm gần nhất; ĐỌC HÌNH VẼ, không chỉ đọc tóm tắt hay mô tả (KL-R121: đọc yêu cầu bảo hộ, không đọc ví dụ minh hoạ); ghi số sáng chế như `US 9,097,498 B2`, `CN116753779A` | [KL9 Ch16 §24.3.7] |
+| 3 | Sáng chế qua Exa trên Google Patents / Espacenet | Ưu tiên công bố trong 5 năm gần nhất; ĐỌC HÌNH VẼ, không chỉ đọc tóm tắt hay mô tả [ngoài sách: bài học RE của vault, không phải KL9]; đọc yêu cầu bảo hộ, không đọc ví dụ minh hoạ (KL-R121); ghi số sáng chế như `US 9,097,498 B2`, `CN116753779A` | [KL9 Ch16 §24.3.7] |
 
 Cách đọc sáng chế ở tầng 3 theo sách KL9 Ch16 (mã dòng trong `kl9-gestaltung`): KL-R119 (tra cứu TRƯỚC khi chốt hình thể) [KL9 Ch16 §24.3.7], KL-R120 (từ khoá + từ đồng nghĩa + phân loại IPC, giới hạn thời gian) [KL9 Ch16 §24.3.7], KL-R121 (đọc claims) [KL9 Ch16 §24.3.7], KL-R122 và KL-R123 (né tránh thiết kế và bốn lối ra) [KL9 Ch16 §24.3.2.1], KL-R124 (độc quyền không phải quyền sử dụng) [KL9 Ch16 §24.2], KL-R125 (nguyên tắc lãnh thổ) [KL9 Ch16 §24.3.1]. Sáng chế chỉ có tóm tắt mà không mở được hình vẽ thì ghi nhãn `giả định` và nói rõ chưa đọc hình.
 
@@ -24,7 +24,7 @@ Cách đọc sáng chế ở tầng 3 theo sách KL9 Ch16 (mã dòng trong `kl9-
 
 ## Dịch mỗi giải pháp sang chuỗi C&C²
 
-Mỗi HC phải kèm `Chuỗi C&C²:` viết bằng WFP (cặp bề mặt làm việc), LSS (cấu trúc dẫn-đỡ) và Connector (môi trường/phần tử nối ngoài cặp): ví dụ `WFP1 → LSS1 → Connector → WFP2`. Thiếu chuỗi thì `BENCH_NO_CHAIN`. Dựng chuỗi theo `tkht-rules § C&C² 7 bước dựng mô hình` và đọc sáng chế bằng bảng WFP/LSS/Connector của `reverse-engineering:references:cc2-lens`.
+Mỗi HC phải kèm `Chuỗi C&C²:` viết bằng WFP (cặp bề mặt làm việc), LSS (cấu trúc dẫn-đỡ) và Connector (môi trường/phần tử nối ngoài cặp): ví dụ `WFP1 → LSS1 → Connector → WFP2`. Thiếu chuỗi thì `BENCH_NO_CHAIN`. Dựng chuỗi theo `tkht-rules § C&C² 7 bước dựng mô hình` và đọc sáng chế bằng bảng WFP/LSS/Connector của `reverse-engineering:references:cc2-lens` (nếu không có, dùng `helix-cc2:references:cc2-core`).
 
 ## Nhãn tri thức
 
