@@ -369,6 +369,191 @@ def _stage_manifest(manifest, path):
     return tmp
 
 
+# ---------- diff / gaps / index ----------
+STATUS_EMPTY = ('chờ đo', 'đã đo')
+STATUS_CUT = ('chờ ký', 'đã ký')
+
+
+def _unit_map(manifest):
+    """-> {anchor: (lop tep, ban ghi don vi)} cho moi tep co don vi."""
+    out = {}
+    for key, ent in manifest.get('files', {}).items():
+        for uid, rec in ent.get('units', {}).items():
+            out['%s#%s' % (key, uid)] = (ent['class'], rec)
+    return out
+
+
+def diff_manifests(old, new):
+    om, nm = _unit_map(old), _unit_map(new)
+    added, changed, removed, status, compared = [], [], [], [], 0
+    for a in set(om) | set(nm):
+        if a in om and a in nm and om[a][0] == nm[a][0]:
+            compared += 1
+            o, n = om[a][1], nm[a][1]
+            if o['sha256'] != n['sha256']:
+                changed.append(a)
+            if o.get('empty_result') and not n.get('empty_result'):
+                status.append({'anchor': a, 'from': STATUS_EMPTY[0], 'to': STATUS_EMPTY[1]})
+            if o.get('cut') and not n.get('cut'):
+                status.append({'anchor': a, 'from': STATUS_CUT[0], 'to': STATUS_CUT[1]})
+        else:
+            if a in om:
+                removed.append(a)
+            if a in nm:
+                added.append(a)
+    moved = {}
+    orr, nrr = old.get('roots', {}), new.get('roots', {})
+    for name in sorted(set(orr) & set(nrr)):
+        if orr[name] != nrr[name]:
+            moved[name] = [orr[name], nrr[name]]
+    os_, ns_ = old.get('sources', {}), new.get('sources', {})
+    src = [k for k in set(os_) | set(ns_)
+           if k not in os_ or k not in ns_ or os_[k]['sha256'] != ns_[k]['sha256']]
+    status.sort(key=lambda d: (d['anchor'], d['to']))
+    return {'root_moved': moved, 'added': sorted(added), 'changed': sorted(changed),
+            'removed': sorted(removed), 'sources_changed': sorted(src),
+            'status_changes': status, 'compared_units': compared}
+
+
+def _disk_units(manifest, roots, key):
+    """Tach lai tep tu dia theo cung luat build -> {unit id: text}."""
+    name, rel = key.split('/', 1)
+    if name not in roots:
+        raise InputError('thieu goc ho so: %s' % name)
+    text = _safe_text(os.path.join(roots[name], *rel.split('/')))
+    if 'gapfill' in manifest['files'][key]:
+        text = _gapfill(text)[1]
+    return {u.id: u.text for u in split_units(normalize(text))}
+
+
+_MO = re.compile(r'(?<!\w)mở(?!\w)')
+_GAP_SECTIONS = ('Nợ chính xác (Precision_Debt)', 'Hàng N-… còn mở',
+                 'Stage Progress bị BỎ', 'Còn mở (status)')
+
+
+def gaps(manifest, roots):
+    items, seen = [], set()
+
+    def add(sec, anchor, text):
+        if (sec, anchor, text) not in seen:
+            seen.add((sec, anchor, text))
+            items.append((sec, anchor, text.strip()))
+
+    for key in sorted(manifest['files']):
+        ent = manifest['files'][key]
+        rows = [u for u in ent.get('units', {}) if u.startswith('row:')]
+        if not rows or ent['class'] not in _SNAP_CLASSES:
+            continue
+        texts = _disk_units(manifest, roots, key)
+        is_debt = key.endswith('_Precision_Debt.md')
+        for uid in rows:
+            t = texts.get(uid, '')
+            if is_debt:
+                add(_GAP_SECTIONS[0], '%s#%s' % (key, uid), t)
+            if uid.startswith('row:N-') and _MO.search(t):
+                add(_GAP_SECTIONS[1], '%s#%s' % (key, uid), t)
+    missing = []
+    for name in sorted(set(k.split('/', 1)[0] for k in manifest['files']) | set(roots)):
+        key = name + '/_pipeline_state.md'
+        if key not in manifest['files']:
+            missing.append(name)
+            continue
+        for uid, t in _disk_units(manifest, roots, key).items():
+            anchor = '%s#%s' % (key, uid)
+            low = uid.lower()
+            if 'stage progress' in low:
+                for ln in t.split('\n'):
+                    if ln.lstrip().startswith('|') and 'BỎ' in ln:
+                        add(_GAP_SECTIONS[2], anchor, ln)
+            if 'còn mở' in low:
+                for ln in t.split('\n'):
+                    if re.match(r'^\s*(?:[-*]\s*)?status:', ln):
+                        add(_GAP_SECTIONS[3], anchor, ln)
+    out = ['# Chỗ trống hồ sơ RE tự khai', '',
+           '> Sinh tự động bởi re_manifest.py gaps — không sửa tay.', '']
+    for sec in _GAP_SECTIONS:
+        out += ['## ' + sec, '']
+        sub = [(a, t) for s_, a, t in items if s_ == sec]
+        if not sub:
+            out.append('- (không có)')
+        for a, t in sub:
+            out.append('- `%s` — %s' % (a, t.replace('\n', ' ')))
+        out.append('')
+    for name in missing:
+        out.append('- (không có _pipeline_state.md) %s' % name)
+    return '\n'.join(out).rstrip() + '\n'
+
+
+def units_index(manifest, snapshot_dir=None):
+    """Bang don vi trich dan duoc. Trich doc tu ban chup (khong tu ho so goc)."""
+    out = ['# Bảng đơn vị trích dẫn được', '',
+           '| anchor | lớp | nhãn | mức tin | 80 ký tự đầu |',
+           '|---|---|---|---|---|']
+    cache = {}
+    for key in sorted(manifest['files']):
+        ent = manifest['files'][key]
+        if ent['class'] not in _SNAP_CLASSES:
+            continue
+        for uid, rec in ent['units'].items():
+            if rec.get('cut'):
+                ex = '⟨chờ ký⟩'
+            elif rec.get('empty_result'):
+                ex = '⟨chờ đo⟩'
+            elif snapshot_dir is None:
+                ex = ''
+            else:
+                if key not in cache:
+                    path = os.path.join(snapshot_dir, *key.split('/'))
+                    cache[key] = {u.id: u.text for u in split_units(_safe_text(path))}
+                t = cache[key].get(uid, '')
+                ex = re.sub(r'\s+', ' ', t)[:80].replace('|', '\\|')
+            out.append('| %s | %s | %s | %s | %s |' % (
+                ('%s#%s' % (key, uid)).replace('|', '\\|'), ent['class'], rec['label'],
+                rec.get('confidence') or '-', ex))
+    return '\n'.join(out) + '\n'
+
+
+def _load_json(path):
+    try:
+        with open(path, encoding='utf-8') as f:
+            return json.load(f)
+    except (OSError, ValueError):
+        raise InputError(path)
+
+
+def _write(path, text):
+    os.makedirs(os.path.dirname(os.path.abspath(path)), exist_ok=True)
+    with open(path, 'w', encoding='utf-8', newline='\n') as f:
+        f.write(text)
+
+
+def _main_read(a):
+    try:
+        if a.cmd == 'diff':
+            d = diff_manifests(_load_json(a.old), _load_json(a.new))
+            if a.out:
+                _write(a.out, json.dumps(d, ensure_ascii=False, indent=1) + '\n')
+            print('compared_units: %d' % d['compared_units'])
+            for k in ('added', 'changed', 'removed', 'sources_changed', 'status_changes'):
+                print('%s: %d' % (k, len(d[k])))
+            print('root_moved: %d' % len(d['root_moved']))
+            return 0
+        m = _load_json(os.path.join(a.book, '_re_manifest.json'))
+        p1 = os.path.join(a.book, 'Phase1-Exploration')
+        if a.cmd == 'gaps':
+            text = gaps(m, m['roots'])
+            _write(os.path.join(p1, '_re_gaps.md'), text)
+        else:
+            snap = os.path.join(a.book, '_re_snapshot')
+            if not os.path.isdir(snap):
+                raise InputError(snap)
+            _write(os.path.join(p1, '_units_index.md'), units_index(m, snap))
+        return 0
+    except (OSError, ValueError, KeyError, InputError) as e:
+        print('Loi: %s' % e, file=sys.stderr)
+        return 2
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser(prog='re_manifest')
     sub = ap.add_subparsers(dest='cmd')
@@ -377,12 +562,20 @@ def main(argv=None):
     b.add_argument('--book', required=True)
     b.add_argument('--classes', default=os.path.join(
         os.path.dirname(os.path.abspath(__file__)), 're_classes.json'))
+    d = sub.add_parser('diff')
+    d.add_argument('--old', required=True)
+    d.add_argument('--new', required=True)
+    d.add_argument('--out')
+    for nm in ('gaps', 'index'):
+        sub.add_parser(nm).add_argument('--book', required=True)
     try:
         a = ap.parse_args(argv)
     except SystemExit as e:
         return 2 if e.code else 0
+    if a.cmd in ('diff', 'gaps', 'index'):
+        return _main_read(a)
     if a.cmd != 'build':
-        print('usage: re_manifest.py build --re <dir>[,<dir>] --book <dir>', file=sys.stderr)
+        print('usage: re_manifest.py build|diff|gaps|index ...', file=sys.stderr)
         return 2
     roots = {}
     for d in [x.strip() for x in a.re.split(',') if x.strip()]:

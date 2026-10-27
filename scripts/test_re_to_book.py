@@ -349,3 +349,127 @@ def test_swap_failure_restores_old_snapshot(tmp_path, monkeypatch):
     assert (old / 'keep.txt').read_text(encoding='utf-8') == 'cu'
     assert not (book / '_re_manifest.json').exists()
     assert not (book / '_re_snapshot.tmp').exists() and not (book / '_re_snapshot.old').exists()
+
+
+# ---------------- Task 4: diff / gaps / index ----------------
+import json  # noqa: E402
+import shutil  # noqa: E402
+
+
+def test_root_move_is_not_content_change(tmp_path):
+    root = make_dossier(tmp_path); old = rm.build_manifest({'Demo': root}, CLASSES)
+    moved = tmp_path / 'X' / 'Demo'; moved.parent.mkdir(); shutil.move(root, moved)
+    new = rm.build_manifest({'Demo': str(moved)}, CLASSES)
+    d = rm.diff_manifests(old, new)
+    assert d['root_moved'] == {'Demo': [root, str(moved)]}
+    assert d['changed'] == d['added'] == d['removed'] == [] and d['compared_units'] > 0
+
+
+def test_result_filled_reports_status_change(tmp_path):
+    root = make_dossier(tmp_path); old = rm.build_manifest({'Demo': root}, CLASSES)
+    p = tmp_path / 'Demo' / 'RE_D_Hypotheses.md'
+    p.write_text(p.read_text(encoding='utf-8').replace('*(điền sau)*', 'f = 3,1 — đạt'), encoding='utf-8')
+    d = rm.diff_manifests(old, rm.build_manifest({'Demo': root}, CLASSES))
+    assert 'Demo/RE_D_Hypotheses.md#GT-D-001.6' in d['changed']
+    assert {'anchor': 'Demo/RE_D_Hypotheses.md#GT-D-001.6', 'from': 'chờ đo', 'to': 'đã đo'} in d['status_changes']
+
+
+def test_prediction_signed_reports_status_change(tmp_path):
+    root = make_dossier(tmp_path); old = rm.build_manifest({'Demo': root}, CLASSES)
+    p = tmp_path / 'Demo' / 'RE_D_Hypotheses.md'
+    p.write_text(p.read_text(encoding='utf-8').replace('ngày ___', 'ngày 2026-10-01'), encoding='utf-8')
+    d = rm.diff_manifests(old, rm.build_manifest({'Demo': root}, CLASSES))
+    a = 'Demo/RE_D_Hypotheses.md#GT-D-001.7'
+    assert a in d['changed']
+    assert {'anchor': a, 'from': 'chờ ký', 'to': 'đã ký'} in d['status_changes']
+
+
+def test_heading_rename_is_removed_plus_added(tmp_path):
+    root = make_dossier(tmp_path); old = rm.build_manifest({'Demo': root}, CLASSES)
+    p = tmp_path / 'Demo' / 'RE_D_S1A_Deconstruction.md'
+    p.write_text(p.read_text(encoding='utf-8').replace('## Khung', '## Khung đo'), encoding='utf-8')
+    d = rm.diff_manifests(old, rm.build_manifest({'Demo': root}, CLASSES))
+    assert 'Demo/RE_D_S1A_Deconstruction.md#Khung' in d['removed']
+    assert 'Demo/RE_D_S1A_Deconstruction.md#Khung đo' in d['added']
+
+
+def test_new_source_pdf_detected(tmp_path):
+    root = make_dossier(tmp_path); old = rm.build_manifest({'Demo': root}, CLASSES)
+    (tmp_path / 'Demo' / '_source' / 'b.pdf').write_bytes(b'%PDF-new')
+    assert 'Demo/_source/b.pdf' in rm.diff_manifests(old, rm.build_manifest({'Demo': root}, CLASSES))['sources_changed']
+
+
+def test_class_change_counts_units_as_removed_and_added(tmp_path):
+    root = make_dossier(tmp_path); old = rm.build_manifest({'Demo': root}, CLASSES)
+    new = json.loads(json.dumps(old))
+    k = 'Demo/RE_D_S1A_Deconstruction.md'
+    new['files'][k] = {'class': 'BLOCK', 'sha256': 'x', 'mtime': 0}
+    d = rm.diff_manifests(old, new)
+    assert k + '#Khung' in d['removed']
+    d2 = rm.diff_manifests(new, old)
+    assert k + '#Khung' in d2['added'] and k + '#Khung' not in d2['changed']
+
+
+def test_no_changes_still_reports_compared_units(tmp_path):
+    root = make_dossier(tmp_path); m = rm.build_manifest({'Demo': root}, CLASSES)
+    d = rm.diff_manifests(m, m)
+    assert d['compared_units'] > 0 and d['changed'] == d['added'] == d['removed'] == []
+    assert d['status_changes'] == [] and d['sources_changed'] == [] and d['root_moved'] == {}
+    assert rm.diff_manifests({'files': {}, 'roots': {}, 'sources': {}},
+                             {'files': {}, 'roots': {}, 'sources': {}})['compared_units'] == 0
+
+
+def test_cli_diff_exit_0_with_changes_and_prints_compared(tmp_path, capsys):
+    root = make_dossier(tmp_path); old = rm.build_manifest({'Demo': root}, CLASSES)
+    (tmp_path / 'Demo' / '_source' / 'b.pdf').write_bytes(b'%PDF-new')
+    new = rm.build_manifest({'Demo': root}, CLASSES)
+    o, n, out = tmp_path / 'o.json', tmp_path / 'n.json', tmp_path / 'd.json'
+    o.write_text(json.dumps(old), encoding='utf-8'); n.write_text(json.dumps(new), encoding='utf-8')
+    assert rm.main(['diff', '--old', str(o), '--new', str(n), '--out', str(out)]) == 0
+    assert 'compared_units' in capsys.readouterr().out
+    assert json.loads(out.read_text(encoding='utf-8'))['sources_changed'] == ['Demo/_source/b.pdf']
+    assert rm.main(['diff', '--old', str(o), '--new', str(tmp_path / 'none.json')]) == 2
+
+
+def test_gaps_lists_precision_debt_rows(tmp_path):
+    root = make_dossier(tmp_path); m = rm.build_manifest({'Demo': root}, CLASSES)
+    assert 'Demo/RE_D_Precision_Debt.md#row:N-001' in rm.gaps(m, {'Demo': root})
+
+
+def test_gaps_open_rows_stage_bo_status_and_missing_state(tmp_path):
+    root = make_dossier(tmp_path)
+    (tmp_path / 'Demo' / 'RE_D_S1B_Notes.md').write_text(
+        '# N\n\n| Mã | Nội dung |\n|---|---|\n| N-050 | còn mở |\n| N-051 | đã đóng |\n', encoding='utf-8')
+    (tmp_path / 'Demo' / '_pipeline_state.md').write_text(
+        '---\nconfidence_ceiling: M\n---\n## Stage Progress\n| Stage | Status |\n|---|---|\n'
+        '| 3 | BỎ |\n| 4 | XONG |\n\n## Còn mở\n- status: chờ đo GT-D-001\n', encoding='utf-8')
+    m = rm.build_manifest({'Demo': root}, CLASSES)
+    g = rm.gaps(m, {'Demo': root})
+    assert 'RE_D_S1B_Notes.md#row:N-050' in g and 'row:N-051' not in g
+    assert '_pipeline_state.md#Stage Progress' in g and '| 3 | BỎ |' in g and '| 4 | XONG |' not in g
+    assert '_pipeline_state.md#Còn mở' in g and 'status: chờ đo GT-D-001' in g
+    (tmp_path / 'Demo' / '_pipeline_state.md').unlink()
+    m2 = rm.build_manifest({'Demo': root}, CLASSES)
+    assert '- (không có _pipeline_state.md) Demo' in rm.gaps(m2, {'Demo': root})
+
+
+def test_index_uses_cho_ky_and_snapshot_excerpt(tmp_path):
+    root = make_dossier(tmp_path); m = rm.build_manifest({'Demo': root}, CLASSES)
+    snap = tmp_path / 'snap'; rm.write_snapshot(m, str(snap))
+    t = rm.units_index(m, str(snap))
+    assert '| Demo/RE_D_Hypotheses.md#GT-D-001.7 |' in t and '⟨chờ ký⟩' in t and 'Nguyễn A' not in t
+    assert '⟨chờ đo⟩' in t
+    assert 'RE_D_Idea_Log' not in t and '_pipeline_state' not in t
+    assert 'phỏng đoán về khung' in t
+
+
+def test_cli_gaps_and_index_write_files_and_missing_exit_2(tmp_path):
+    root = make_dossier(tmp_path); book = tmp_path / 'Book'; book.mkdir()
+    assert rm.main(['gaps', '--book', str(book)]) == 2
+    assert rm.main(['build', '--re', root, '--book', str(book)]) == 0
+    assert rm.main(['gaps', '--book', str(book)]) == 0
+    assert rm.main(['index', '--book', str(book)]) == 0
+    assert (book / 'Phase1-Exploration' / '_re_gaps.md').is_file()
+    assert (book / 'Phase1-Exploration' / '_units_index.md').is_file()
+    shutil.rmtree(book / '_re_snapshot')
+    assert rm.main(['index', '--book', str(book)]) == 2
