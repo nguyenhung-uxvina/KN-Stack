@@ -473,3 +473,127 @@ def test_cli_gaps_and_index_write_files_and_missing_exit_2(tmp_path):
     assert (book / 'Phase1-Exploration' / '_units_index.md').is_file()
     shutil.rmtree(book / '_re_snapshot')
     assert rm.main(['index', '--book', str(book)]) == 2
+
+
+rp = _load('re_provenance')
+
+
+def _prov(d, name, sections, chapter=None):
+    d.mkdir(exist_ok=True)
+    (d / (name + '.provenance.json')).write_text(
+        json.dumps({'chapter': chapter or name, 'sections': sections}, ensure_ascii=False), encoding='utf-8')
+    return d
+
+
+def test_check_flags_dead_and_blocked_anchors(tmp_path):
+    m = rm.build_manifest({'Demo': make_dossier(tmp_path)}, CLASSES)
+    pd = _prov(tmp_path / 'p', 'Ch01', {'§01.1': [
+        'Demo/RE_D_S1A_Deconstruction.md#Khung', 'Demo/RE_D_S1A_Deconstruction.md#Không có',
+        'Demo/RE_D_Idea_Log.md#row:YT-001']})
+    errs = rp.check(str(pd), m)
+    assert len(errs) == 2 and any('Không có' in e for e in errs) and any('Idea_Log' in e for e in errs)
+
+
+def test_check_accepts_valid_and_rejects_bad_file_and_input(tmp_path):
+    m = rm.build_manifest({'Demo': make_dossier(tmp_path)}, CLASSES)
+    ok = _prov(tmp_path / 'ok', 'Ch01', {'§01.1': ['Demo/RE_D_S1A_Deconstruction.md#Khung']})
+    assert rp.check(str(ok), m) == []
+    nofile = _prov(tmp_path / 'nf', 'Ch01', {'§01.1': ['Demo/nope.md#x']})
+    assert len(rp.check(str(nofile), m)) == 1
+    with pytest.raises(rp.InputError):
+        rp.check(str(tmp_path / 'missing_dir'), m)
+    (tmp_path / 'e').mkdir()
+    with pytest.raises(rp.InputError):
+        rp.check(str(tmp_path / 'e'), m)
+    bad = tmp_path / 'bad'; bad.mkdir()
+    (bad / 'Ch02.provenance.json').write_text('{oops', encoding='utf-8')
+    with pytest.raises(rp.InputError, match='Ch02'):
+        rp.check(str(bad), m)
+    nos = tmp_path / 'nos'; nos.mkdir()
+    (nos / 'Ch03.provenance.json').write_text('{"chapter": "Ch03"}', encoding='utf-8')
+    with pytest.raises(rp.InputError, match='Ch03'):
+        rp.check(str(nos), m)
+
+
+def test_check_cli_exit_codes(tmp_path):
+    book = tmp_path / 'Book'; book.mkdir()
+    m = rm.build_manifest({'Demo': make_dossier(tmp_path)}, CLASSES)
+    (book / '_re_manifest.json').write_text(json.dumps(m, ensure_ascii=False), encoding='utf-8')
+    good = _prov(tmp_path / 'g', 'Ch01', {'§01.1': ['Demo/RE_D_S1A_Deconstruction.md#Khung']})
+    bad = _prov(tmp_path / 'b', 'Ch01', {'§01.1': ['Demo/RE_D_S1A_Deconstruction.md#Nope']})
+    assert rp.main(['check', '--prov', str(good), '--book', str(book)]) == 0
+    assert rp.main(['check', '--prov', str(bad), '--book', str(book)]) == 1
+    (tmp_path / 'none').mkdir()
+    assert rp.main(['check', '--prov', str(tmp_path / 'none'), '--book', str(book)]) == 2
+    assert rp.main(['check', '--prov', str(good), '--book', str(tmp_path / 'nobook')]) == 2
+
+
+def test_impact_maps_changed_unit_to_section_and_lists_unanchored(tmp_path):
+    diff = {'changed': ['Demo/a.md#Khung'], 'added': ['Demo/a.md#Mới'], 'removed': [], 'status_changes': [],
+            'root_moved': {}, 'sources_changed': [], 'compared_units': 3}
+    pf = _prov(tmp_path / 'pf', 'Ch01', {'§01.1': ['Demo/a.md#Khung']})
+    r = rp.impact(str(pf), diff)
+    assert r['sections'] == {'Ch01': {'§01.1': ['Demo/a.md#Khung']}} and r['unanchored_new'] == ['Demo/a.md#Mới']
+
+
+def test_impact_removed_status_and_root_moved(tmp_path):
+    pf = _prov(tmp_path / 'pf', 'Ch02', {'§02.1': ['Demo/a.md#Cũ', 'Demo/a.md#S'], '§02.2': ['Demo/a.md#Cũ']})
+    diff = {'changed': [], 'added': [], 'removed': ['Demo/a.md#Cũ'],
+            'status_changes': [{'anchor': 'Demo/a.md#S', 'from': 'x', 'to': 'y'},
+                               {'anchor': 'Demo/z.md#Q', 'from': 'x', 'to': 'y'}],
+            'root_moved': {'Demo': ['a', 'b']}, 'sources_changed': [], 'compared_units': 1}
+    r = rp.impact(str(pf), diff)
+    assert r['sections'] == {'Ch02': {'§02.1': ['Demo/a.md#Cũ'], '§02.2': ['Demo/a.md#Cũ']}}
+    assert r['status_changes'][0]['chapters'] == ['Ch02'] and r['status_changes'][1]['chapters'] == []
+    assert r['unanchored_new'] == []
+
+
+def test_impact_cli_writes_out_and_exit_2_on_missing(tmp_path):
+    pf = _prov(tmp_path / 'pf', 'Ch01', {'§01.1': ['Demo/a.md#Khung']})
+    dj = tmp_path / 'd.json'
+    dj.write_text(json.dumps({'changed': ['Demo/a.md#Khung'], 'added': [], 'removed': [], 'status_changes': []}), encoding='utf-8')
+    out = tmp_path / 'o' / 'imp.json'
+    assert rp.main(['impact', '--prov', str(pf), '--diff', str(dj), '--out', str(out)]) == 0
+    assert json.loads(out.read_text(encoding='utf-8'))['sections']['Ch01']
+    assert rp.main(['impact', '--prov', str(pf), '--diff', str(tmp_path / 'x.json')]) == 2
+
+
+def _p1_book(tmp_path):
+    book = tmp_path / 'Book'; (book / 'Phase1-Exploration').mkdir(parents=True)
+    m = rm.build_manifest({'Demo': make_dossier(tmp_path)}, CLASSES)
+    (book / '_re_manifest.json').write_text(json.dumps(m, ensure_ascii=False), encoding='utf-8')
+    return book, book / 'Phase1-Exploration'
+
+
+def test_check_p1_requires_anchor_per_exploration_file(tmp_path):
+    book, p1 = _p1_book(tmp_path)
+    (p1 / 'A_Exploration.md').write_text('# A\n\nkhông có neo nào\n', encoding='utf-8')
+    assert rp.main(['check-p1', '--book', str(book)]) == 1
+    m = json.loads((book / '_re_manifest.json').read_text(encoding='utf-8'))
+    errs = rp.check_p1(str(p1), m)
+    assert len(errs) == 1 and 'A_Exploration.md' in errs[0]
+
+
+def test_check_p1_backticked_anchor_with_space_and_bare_anchor(tmp_path):
+    book, p1 = _p1_book(tmp_path)
+    d = tmp_path / 'Demo'
+    (d / 'RE_D_S1A_Deconstruction.md').write_text(
+        '# S1A\n\n## Khung\n\nx\n\n## Khung đo\n\ny\n', encoding='utf-8')
+    m = rm.build_manifest({'Demo': str(d)}, CLASSES)
+    (book / '_re_manifest.json').write_text(json.dumps(m, ensure_ascii=False), encoding='utf-8')
+    (p1 / 'A_Exploration.md').write_text(
+        'Xem `Demo/RE_D_S1A_Deconstruction.md#Khung đo` và Demo/RE_D_S1A_Deconstruction.md#Khung.\n', encoding='utf-8')
+    (p1 / 'P1_Synthesis.md').write_text('Tổng hợp `Demo/RE_D_S1A_Deconstruction.md#Khung`\n', encoding='utf-8')
+    assert rp.main(['check-p1', '--book', str(book)]) == 0
+    (p1 / 'P1_Synthesis.md').write_text('sai `Demo/RE_D_S1A_Deconstruction.md#Không có`\n', encoding='utf-8')
+    assert rp.main(['check-p1', '--book', str(book)]) == 1
+
+
+def test_check_p1_no_exploration_files_is_input_error(tmp_path):
+    book, p1 = _p1_book(tmp_path)
+    (p1 / 'P1_Synthesis.md').write_text('x', encoding='utf-8')
+    assert rp.main(['check-p1', '--book', str(book)]) == 2
+
+
+def test_anchor_re_exported_exactly():
+    assert rp.ANCHOR_RE.pattern == r'[\w.\-]+/[^\s#`|]+\.md#[^\s`|\]]+'
