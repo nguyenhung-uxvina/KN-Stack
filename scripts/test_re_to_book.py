@@ -226,3 +226,84 @@ def test_vanished_file_raises_input_error(tmp_path, monkeypatch):
     monkeypatch.setattr(rm, '_read_text', flaky)
     with pytest.raises(rm.InputError):
         rm.build_manifest({'Demo': root}, CLASSES)
+
+
+# ---------------- Task 3 fix round 1 ----------------
+def _hyp(tmp_path, body):
+    root = make_dossier(tmp_path)
+    p = tmp_path / 'Demo' / 'RE_D_Hypotheses.md'
+    p.write_text(body, encoding='utf-8')
+    return root
+
+
+def test_duplicate_item7_and_item6_are_cut(tmp_path):
+    body = ('## GT-D-001 — X\n\n'
+            '6. **KẾT QUẢ + khuyến nghị:** *(điền sau)*\n'
+            '7. **DỰ ĐOÁN VIẾT TRƯỚC:** A — người ký Ba Ca — ngày 2026-10-01\n'
+            '6. **KẾT QUẢ + khuyến nghị:** *(điền sau)*\n'
+            '7. **DỰ ĐOÁN VIẾT TRƯỚC:** bia lệch BÍ_MẬT — người ký ___ — ngày ___\n')
+    root = _hyp(tmp_path, body)
+    m = rm.build_manifest({'Demo': root}, CLASSES)
+    u = m['files']['Demo/RE_D_Hypotheses.md']['units']
+    assert u['GT-D-001.7']['cut'] is False and u['GT-D-001.7~2']['cut'] is True
+    assert u['GT-D-001.6~2']['empty_result'] is True
+    out = tmp_path / 'snap'; rm.write_snapshot(m, str(out))
+    s = (out / 'Demo' / 'RE_D_Hypotheses.md').read_text(encoding='utf-8')
+    assert 'BÍ_MẬT' not in s and s.count('⟨chờ ký⟩') == 1 and s.count('⟨chờ đo⟩') == 2
+    assert 'Ba Ca' in s
+
+
+def test_signed_requires_signer_and_digit_date(tmp_path):
+    for tail, cut in [('người ký ___ — ngày 2026-10-01', True),
+                      ('người ký Nguyễn A — ngày ___ (dd/mm)', True),
+                      ('người ký Nguyễn A — ngày 01/10/2026', False)]:
+        body = '## GT-D-001 — X\n\n7. **DỰ ĐOÁN VIẾT TRƯỚC:** p — %s\n' % tail
+        sub = tmp_path / str(abs(hash(tail)))
+        sub.mkdir()
+        m = rm.build_manifest({'Demo': _hyp(sub, body)}, CLASSES)
+        assert m['files']['Demo/RE_D_Hypotheses.md']['units']['GT-D-001.7']['cut'] is cut
+
+
+def test_apply_cuts_unplaceable_raises():
+    u = ru.Unit('GT-D-001.7', 'gt_item', '7. **DỰ ĐOÁN VIẾT TRƯỚC:** x', 'h')
+    with pytest.raises(rm.InputError):
+        rm._apply_cuts('khac han', [u])
+
+
+def test_snapshot_failure_midway_keeps_previous_snapshot_and_no_manifest(tmp_path, monkeypatch):
+    root = make_dossier(tmp_path)
+    book = tmp_path / 'Book'; book.mkdir()
+    old = book / '_re_snapshot'; old.mkdir(); (old / 'keep.txt').write_text('cu', encoding='utf-8')
+    real = rm._read_text
+    seen = {'n': 0}
+
+    def flaky(p):
+        if p.endswith('RE_D_S1A_Deconstruction.md'):
+            seen['n'] += 1
+            if seen['n'] >= 2:
+                raise FileNotFoundError(p)
+        return real(p)
+    monkeypatch.setattr(rm, '_read_text', flaky)
+    assert rm.main(['build', '--re', root, '--book', str(book)]) == 2
+    assert not (book / '_re_manifest.json').exists()
+    assert not (book / '_re_manifest.json.tmp').exists()
+    assert (old / 'keep.txt').exists() and not (old / 'Demo').exists()
+    assert not (book / '_re_snapshot.tmp').exists()
+
+
+def test_bad_classes_json_exit_2(tmp_path):
+    root = make_dossier(tmp_path)
+    book = tmp_path / 'Book'; book.mkdir()
+    bad = tmp_path / 'bad.json'; bad.write_text('{ khong json', encoding='utf-8')
+    assert rm.main(['build', '--re', root, '--book', str(book), '--classes', str(bad)]) == 2
+    assert rm.main(['build', '--re', root, '--book', str(book),
+                    '--classes', str(tmp_path / 'none.json')]) == 2
+    assert not (book / '_re_manifest.json').exists()
+
+
+def test_re_dot_uses_abspath_name(tmp_path, monkeypatch):
+    root = make_dossier(tmp_path)
+    book = tmp_path / 'Book'; book.mkdir()
+    monkeypatch.chdir(root)
+    assert rm.main(['build', '--re', '.', '--book', str(book)]) == 0
+    assert (book / '_re_snapshot' / 'Demo').is_dir()

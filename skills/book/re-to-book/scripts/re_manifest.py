@@ -22,6 +22,8 @@ SCHEMA = 1
 MARK_UNSIGNED = '7. **DỰ ĐOÁN VIẾT TRƯỚC:** ⟨chờ ký⟩'
 MARK_EMPTY = '6. **KẾT QUẢ + khuyến nghị:** ⟨chờ đo⟩'
 _SNAP_CLASSES = ('READ', 'CUT')
+_ITEM7 = re.compile(r'\.7(~\d+)?$')
+_ITEM6 = re.compile(r'\.6(~\d+)?$')
 
 
 class InputError(Exception):
@@ -130,7 +132,7 @@ def _alnum(s):
 def _signed(unit_text):
     for ln in unit_text.split('\n'):
         m = re.search(r'người ký(.*)ngày(.*)$', ln, re.I)
-        if m and _alnum(m.group(1)) and _alnum(m.group(2)):
+        if m and _alnum(m.group(1)) and re.search(r'\d', m.group(2)):
             return True
     return False
 
@@ -144,25 +146,23 @@ def _result_empty(unit_text):
 def _apply_cuts(text, units):
     """-> (snapshot_text, flags{unit_id: {...}}). text da normalize."""
     flags, out, cur = {}, [], 0
-    for u in units:
-        if u.kind != 'gt_item':
-            continue
-        marker = None
-        if u.id.endswith('.7'):
-            if not _signed(u.text):
-                flags[u.id] = {'cut': True}
-                marker = MARK_UNSIGNED
-        elif u.id.endswith('.6'):
-            if _result_empty(u.text):
-                flags[u.id] = {'cut': False, 'empty_result': True}
-                marker = MARK_EMPTY
-        if marker is None:
-            continue
+    for n, u in enumerate(units):
+        # dat moi don vi theo thu tu; khoang giua phai la khoang trang (tru truoc don vi dau)
         i = text.find(u.text, cur)
-        if i < 0:
-            continue
+        if i < 0 or (n > 0 and text[cur:i].strip()):
+            raise InputError('khong dat duoc don vi %s' % u.id)
+        marker = None
+        if u.kind == 'gt_item':
+            if _ITEM7.search(u.id):
+                if not _signed(u.text):
+                    flags[u.id] = {'cut': True}
+                    marker = MARK_UNSIGNED
+            elif _ITEM6.search(u.id):
+                if _result_empty(u.text):
+                    flags[u.id] = {'cut': False, 'empty_result': True}
+                    marker = MARK_EMPTY
         out.append(text[cur:i])
-        out.append(marker)
+        out.append(marker if marker is not None else u.text)
         cur = i + len(u.text)
     out.append(text[cur:])
     return ''.join(out), flags
@@ -170,7 +170,9 @@ def _apply_cuts(text, units):
 
 # ---------- build ----------
 def _walk(root):
-    for d, dirs, files in os.walk(root):
+    def _err(e):
+        raise InputError(getattr(e, 'filename', None) or root)
+    for d, dirs, files in os.walk(root, onerror=_err):
         dirs.sort()
         for fn in sorted(files):
             full = os.path.join(d, fn)
@@ -263,32 +265,46 @@ def write_snapshot(manifest, out_dir):
         ra = os.path.abspath(r)
         if ra == out_abs or ra.startswith(out_abs + os.sep):
             raise InputError(out_dir)
-    if os.path.isdir(out_dir):
-        shutil.rmtree(out_dir)
-    n = 0
-    for key, ent in manifest['files'].items():
-        if ent['class'] not in _SNAP_CLASSES:
-            continue
-        name, rel = key.split('/', 1)
-        src = os.path.join(manifest['roots'][name], *rel.split('/'))
-        raw = _safe_text(src)
-        base = _gapfill(raw)[1] if 'gapfill' in ent else raw
-        if _sha(base) != ent['sha256']:
-            raise InputError(src)
-        dst = os.path.join(out_dir, name, *rel.split('/'))
-        os.makedirs(os.path.dirname(dst), exist_ok=True)
-        with open(dst, 'w', encoding='utf-8', newline='\n') as f:
-            f.write(_snapshot_text(ent, raw) + '\n')
-        n += 1
+    tmp_dir = out_dir.rstrip('/\\') + '.tmp'
+    try:
+        if os.path.isdir(tmp_dir):
+            shutil.rmtree(tmp_dir)
+        n = 0
+        for key, ent in manifest['files'].items():
+            if ent['class'] not in _SNAP_CLASSES:
+                continue
+            name, rel = key.split('/', 1)
+            src = os.path.join(manifest['roots'][name], *rel.split('/'))
+            raw = _safe_text(src)
+            base = _gapfill(raw)[1] if 'gapfill' in ent else raw
+            if _sha(base) != ent['sha256']:
+                raise InputError(src)
+            dst = os.path.join(tmp_dir, name, *rel.split('/'))
+            os.makedirs(os.path.dirname(dst), exist_ok=True)
+            with open(dst, 'w', encoding='utf-8', newline='\n') as f:
+                f.write(_snapshot_text(ent, raw) + '\n')
+            n += 1
+        os.makedirs(tmp_dir, exist_ok=True)
+        if os.path.isdir(out_dir):
+            shutil.rmtree(out_dir)
+        os.replace(tmp_dir, out_dir)
+    except BaseException:
+        shutil.rmtree(tmp_dir, ignore_errors=True)
+        raise
     return n
 
 
-def _write_manifest(manifest, path):
+def _stage_manifest(manifest, path):
     tmp = path + '.tmp'
-    with open(tmp, 'w', encoding='utf-8', newline='\n') as f:
-        json.dump(manifest, f, ensure_ascii=False, indent=1)
-        f.write('\n')
-    os.replace(tmp, path)
+    try:
+        with open(tmp, 'w', encoding='utf-8', newline='\n') as f:
+            json.dump(manifest, f, ensure_ascii=False, indent=1)
+            f.write('\n')
+    except BaseException:
+        if os.path.exists(tmp):
+            os.remove(tmp)
+        raise
+    return tmp
 
 
 def main(argv=None):
@@ -308,7 +324,7 @@ def main(argv=None):
         return 2
     roots = {}
     for d in [x.strip() for x in a.re.split(',') if x.strip()]:
-        name = os.path.basename(os.path.normpath(d))
+        name = os.path.basename(os.path.abspath(d))
         if name in roots:
             print('trung ten ho so: %s' % name, file=sys.stderr)
             return 2
@@ -319,16 +335,27 @@ def main(argv=None):
     if not roots or not os.path.isdir(a.book):
         print('thieu --re hoac --book khong ton tai', file=sys.stderr)
         return 2
+    mpath = os.path.join(a.book, '_re_manifest.json')
+    staged = None
     try:
         m = build_manifest(roots, a.classes)
+        staged = _stage_manifest(m, mpath)
         n = write_snapshot(m, os.path.join(a.book, '_re_snapshot'))
-        _write_manifest(m, os.path.join(a.book, '_re_manifest.json'))
+        os.replace(staged, mpath)
+        staged = None
+    except (OSError, ValueError, KeyError) as e:
+        if staged and os.path.exists(staged):
+            os.remove(staged)
+        print('Loi: %s' % e, file=sys.stderr)
+        return 2
     except UnclassifiedError as e:
         print('Tep chua phan lop (%d):' % len(e.files), file=sys.stderr)
         for f in e.files:
             print('  ' + f, file=sys.stderr)
         return 2
     except InputError as e:
+        if staged and os.path.exists(staged):
+            os.remove(staged)
         print('Loi doc tep: %s' % e, file=sys.stderr)
         return 2
     counts = {}
