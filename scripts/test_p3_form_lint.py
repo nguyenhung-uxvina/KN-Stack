@@ -9,10 +9,14 @@ import pytest
 sys.path.insert(0, os.path.dirname(__file__))
 import p3_form_lint as L  # noqa: E402
 
-GOOD = os.path.join(os.path.dirname(__file__), '..', 'evals', 'fixtures', 'p3_form', 'out_good')
+FIX = os.path.join(os.path.dirname(__file__), '..', 'evals', 'fixtures', 'p3_form')
+GOOD = os.path.join(FIX, 'out_good')
+DRAFT_SEL = os.path.join(FIX, 'sel_draft')
+REFS = os.path.join(FIX, 'lint_refs')
 P = 'TST_'
 VAR, BEN, SCO, SEL = (P + n for n in ('BF_Form_Variants.md', 'BF_Benchmark.md',
                                       'BF_Scoring.md', 'BF_Form_Selection.md'))
+RULE_LINE = 'Nguồn quy tắc: TKHT-R901 [TKHT Ch05b §05b.4], KL-R901 [KL9 Ch08 §13.6]'
 
 
 @pytest.fixture
@@ -38,12 +42,16 @@ def mut(d, n, old, new, count=1):
     wr(d, n, t.replace(old, new, count))
 
 
-def codes(d, quick=False):
-    return {f.code for f in L.lint_dir(d, P, quick)}
+def lint(d, quick=False, draft=False, refs=REFS):
+    return L.lint_dir(d, P, quick, draft=draft, refs=refs)
+
+
+def codes(d, quick=False, draft=False, refs=REFS):
+    return {f.code for f in lint(d, quick, draft, refs)}
 
 
 def test_good_fixture_clean(d):
-    assert L.lint_dir(d, P) == []
+    assert lint(d) == []
 
 
 def test_missing_file(d):
@@ -68,7 +76,7 @@ def test_quick_allows_two_variants(d):
 
 
 def test_variant_no_rule(d):
-    mut(d, VAR, 'Nguồn quy tắc: [TKHT Ch05b §05b.4], [KL9 Ch08 §13.6]', 'Nguồn quy tắc: kinh nghiệm')
+    mut(d, VAR, RULE_LINE, 'Nguồn quy tắc: kinh nghiệm')
     assert 'VARIANT_NO_RULE' in codes(d)
 
 
@@ -114,7 +122,8 @@ def test_benchmark_source_forms(d, src, ok):
 
 
 def test_checklist_incomplete(d):
-    mut(d, SCO, '| 7 | Mục 7 | Tiêu chí kiểm số 7 |\n', '')
+    t = rd(d, SCO)
+    wr(d, SCO, re.sub(r'^\| 7 \|.*\n', '', t, count=1, flags=re.M))
     assert 'CHECKLIST_INCOMPLETE' in codes(d)
 
 
@@ -124,7 +133,7 @@ def test_checklist_blank_criterion(d):
 
 
 def test_checklist_skip_no_reason(d):
-    mut(d, SCO, 'Bỏ — lý do: không có mối ghép hàn', 'Bỏ')
+    mut(d, SCO, 'Bỏ — lý do: không có mốc giao hàng ràng buộc', 'Bỏ')
     assert 'CHECKLIST_SKIP_NO_REASON' in codes(d)
 
 
@@ -150,7 +159,7 @@ def test_empty_weight_requires_red_flag(d):
 
 def test_provisional_dw_ok(d):
     assert 'W tạm' in rd(d, SCO)
-    assert L.lint_dir(d, P) == []
+    assert lint(d) == []
     mut(d, SCO, '| W tạm |', '| W lạ |')
     assert 'BAD_CELL' in codes(d)
 
@@ -161,10 +170,9 @@ def test_no_sensitivity(d):
 
 
 def test_candidate_missing(d):
-    t = rd(d, SCO)
-    t = t.replace(' PA-1-3 |', '', 1)
+    mut(d, SCO, '| Req-ID | D/W | DP | Trọng số | PA-1-1 | PA-1-2 | PA-1-3 |',
+        '| Req-ID | D/W | DP | Trọng số | PA-1-1 | PA-1-2 |')
     # header loses PA-1-3 while rows keep the cell: BAD_CELL also fires; only the candidate code is asserted
-    wr(d, SCO, t)
     assert 'CANDIDATE_MISSING' in codes(d)
 
 
@@ -188,13 +196,13 @@ def test_lint_nfd_bom(d):
         t = unicodedata.normalize('NFD', rd(d, n))
         with open(os.path.join(d, n), 'w', encoding='utf-8-sig', newline='\n') as f:
             f.write(t)
-    assert L.lint_dir(d, P) == []
+    assert lint(d) == []
 
 
 def test_cli_exit_codes(d, capsys):
-    assert L.main([d, '--prefix', P]) == 0
+    assert L.main([d, '--prefix', P, '--refs', REFS]) == 0
     mut(d, SEL, '- Chọn: PA-1-2', '- Chọn:')
-    assert L.main([d, '--prefix', P]) == 1
+    assert L.main([d, '--prefix', P, '--refs', REFS]) == 1
     assert L.main([]) == 2
 
 
@@ -226,19 +234,19 @@ def test_selection_missing_f_block(d):
 
 def test_selection_unknown_candidate(d):
     mut(d, SEL, '- Chọn: PA-1-2', '- Chọn: PA-2-1')
-    fs = L.lint_dir(d, P)
+    fs = lint(d)
     assert any(f.code == 'NO_SELECTION' and 'không tồn tại' in f.msg for f in fs)
     mut(d, SEL, '- Chọn: PA-2-1', '- Chọn: HC-1-9')
-    assert any(f.code == 'NO_SELECTION' and 'không tồn tại' in f.msg for f in L.lint_dir(d, P))
+    assert any(f.code == 'NO_SELECTION' and 'không tồn tại' in f.msg for f in lint(d))
 
 
 def test_selection_hc_ok(d):
     mut(d, SEL, '- Chọn: PA-1-2', '- Chọn: HC-1-1')
-    assert L.lint_dir(d, P) == []
+    assert lint(d) == []
 
 
 def test_missing_scoring_section(d):
-    mut(d, SCO, '## Bảng chấm', '## Khác bảng')
+    mut(d, SCO, '## Bảng chấm\n\n### F-1\n\n| Req-ID', '## Khác bảng\n\n### F-1\n\n| Req-ID')
     assert 'NO_SCORING_TABLE' in codes(d)
 
 
@@ -251,20 +259,36 @@ F2_PA_ONLY = """### F-2
 
 """
 
+ITEMS = ['Function', 'Working principle', 'Layout', 'Safety', 'Ergonomics', 'Production',
+         'Quality control', 'Assembly', 'Transport', 'Operation', 'Maintenance', 'Recycling',
+         'Costs', 'Schedules']
+
+
+def ck_table(fid, cands):
+    out = [f'### F-{fid}', '', '| # | Mục | Tiêu chí | ' + ' | '.join(cands) + ' |',
+           '|' + '---|' * (3 + len(cands))]
+    for n, name in enumerate(ITEMS, 1):
+        out.append(f'| {n} | {name} | Tiêu chí kiểm số {n} | ' + ' | '.join(['Đạt'] * len(cands)) + ' |')
+    return '\n'.join(out) + '\n\n'
+
 
 def _drop_hc_f2(d, reason_line):
-    """F-2 khong con HC nao: Benchmark chi giu dong ly do, bang cham F-2 chi co cot PA."""
+    """F-2 khong con HC nao: Benchmark chi giu dong ly do, checklist va bang cham F-2 chi co cot PA."""
     t = rd(d, BEN)
     wr(d, BEN, t[:t.index('### HC-2-1')] + reason_line)
     t = rd(d, SCO)
-    s, e = t.index('### F-2'), t.index('## Độ nhạy')
-    wr(d, SCO, t[:s] + F2_PA_ONLY + t[e:])
+    b = t.index('## Bảng chấm')
+    s, e = t.index('### F-2', b), t.index('## Độ nhạy')
+    t = t[:s] + F2_PA_ONLY + t[e:]
+    s = t.index('### F-2')
+    t = t[:s] + ck_table(2, ['PA-2-1', 'PA-2-2', 'PA-2-3']) + t[t.index('## Bảng chấm'):]
+    wr(d, SCO, t)
 
 
 def test_no_hc_with_reason_ok(d):
     _drop_hc_f2(d, '- Không tìm thấy HC — lý do: đã tìm tầng 1 (RE/, FTO_*), tầng 2 (Exa web), '
                    'tầng 3 (Exa patents) — không có lời giải cùng chức năng\n')
-    assert L.lint_dir(d, P) == []
+    assert lint(d) == []
 
 
 def test_no_hc_reason_empty_fails(d):
@@ -275,3 +299,175 @@ def test_no_hc_reason_empty_fails(d):
 def test_no_hc_without_line_fails(d):
     _drop_hc_f2(d, '')
     assert 'NO_BENCH' in codes(d)
+
+
+# --- I3: checklist 14 muc theo tung chuc nang ---
+
+def test_checklist_table_per_function(d):
+    t = rd(d, SCO)
+    s = t.index('### F-2')
+    wr(d, SCO, t[:s] + t[t.index('## Bảng chấm'):])
+    assert any(f.code == 'CHECKLIST_INCOMPLETE' and 'F-2' in f.msg for f in lint(d))
+
+
+def test_checklist_no_tables_at_all(d):
+    t = rd(d, SCO)
+    s = t.index('### F-1')
+    wr(d, SCO, t[:s] + t[t.index('## Bảng chấm'):])
+    fs = [f for f in lint(d) if f.code == 'CHECKLIST_INCOMPLETE']
+    assert {'F-1', 'F-2'} <= {m for f in fs for m in re.findall(r'F-\d', f.msg)}
+
+
+def test_checklist_candidate_missing(d):
+    mut(d, SCO, '| # | Mục | Tiêu chí | PA-1-1 | PA-1-2 | PA-1-3 | HC-1-1 | HC-1-2 |',
+        '| # | Mục | Tiêu chí | PA-1-1 | PA-1-2 | PA-1-3 | HC-1-1 |')
+    assert 'CHECKLIST_CANDIDATE_MISSING' in codes(d)
+
+
+@pytest.mark.parametrize('old,new', [
+    ('| Không đạt |', '| Kém |'),
+    ('| Không đạt |', '| |'),
+    ('| Không đạt |', '| — |'),
+    ('| — | — | — | — | — |', '| Đạt | — | — | — | — |'),
+])
+def test_checklist_bad_cell(d, old, new):
+    mut(d, SCO, old, new)
+    assert 'BAD_CELL' in codes(d)
+
+
+def test_checklist_question_needs_reason(d):
+    mut(d, SCO, '?(chưa thử)', '?()')
+    assert 'QUESTION_NO_REASON' in codes(d)
+
+
+def test_checklist_row_count_per_function(d):
+    t = rd(d, SCO)
+    s = t.index('### F-2')
+    tail = re.sub(r'^\| 12 \|.*\n', '', t[s:], count=1, flags=re.M)
+    wr(d, SCO, t[:s] + tail)
+    assert any(f.code == 'CHECKLIST_INCOMPLETE' and 'F-2' in f.msg and '12' in f.msg for f in lint(d))
+
+
+# --- m1: dong D khong can trong so ---
+
+def test_d_row_blank_weight_ok(d):
+    assert '| R-14 | D | DP-4 | |' in rd(d, SCO)
+    assert lint(d) == []
+    mut(d, SCO, '| R-14 | D | DP-4 | | Đạt | Đạt | Đạt | Đạt | Đạt |',
+        '| R-14 | W | DP-4 | | 1 | 1 | 1 | 1 | 1 |')
+    assert 'EMPTY_WEIGHT_NO_FLAG' in codes(d)
+
+
+# --- m2: PA/HC dung khoi F ---
+
+def test_pa_under_wrong_f_block(d):
+    mut(d, VAR, '### PA-1-3 — Phương án 3', '### PA-2-9 — Phương án 3')
+    assert 'ID_BLOCK_MISMATCH' in codes(d)
+
+
+def test_hc_under_wrong_f_block(d):
+    mut(d, BEN, '### HC-1-2 — Sản phẩm 2', '### HC-2-7 — Sản phẩm 2')
+    assert 'ID_BLOCK_MISMATCH' in codes(d)
+
+
+# --- I1: ma quy tac + con tro sach phai co trong references ---
+
+def test_rule_code_missing(d):
+    mut(d, VAR, RULE_LINE, 'Nguồn quy tắc: [TKHT Ch05b §05b.4], [KL9 Ch08 §13.6]')
+    assert 'RULE_CODE_MISSING' in codes(d)
+
+
+def test_rule_code_unknown(d):
+    mut(d, VAR, 'TKHT-R901 [TKHT Ch05b §05b.4]', 'TKHT-R999 [TKHT Ch05b §05b.4]')
+    assert 'RULE_CODE_UNKNOWN' in codes(d)
+
+
+@pytest.mark.parametrize('line', [
+    'Nguồn quy tắc: TKHT-R901 [TKHT Ch99 §99.9]',
+    'Nguồn quy tắc: TKHT-R901 [KL9 Ch08 §13.6]',
+    'Nguồn quy tắc: TKHT-R901 [TKHT Ch05b §05b.4], [TKHT Ch99 §99.9]',
+])
+def test_citation_not_in_rule(d, line):
+    mut(d, VAR, RULE_LINE, line)
+    assert 'CITATION_NOT_IN_RULE' in codes(d)
+
+
+def test_citation_any_code_on_line_ok(d):
+    mut(d, VAR, RULE_LINE, 'Nguồn quy tắc: PB-R901, PB-M901 [TKKTHT Ch22 §1.2] [TKKTHT2 Ch13]')
+    assert lint(d) == []
+
+
+def test_real_references(d):
+    good = 'Nguồn quy tắc: TKHT-R300 [TKHT Ch13b §13b.9], PB-R175 [TKKTHT Ch22 §1.2]'
+    wr(d, VAR, rd(d, VAR).replace(RULE_LINE, good))
+    assert lint(d, refs=None) == []
+    mut(d, VAR, good, 'Nguồn quy tắc: TKHT-R300 [TKHT Ch99 §99.9]')
+    assert 'CITATION_NOT_IN_RULE' in codes(d, refs=None)
+
+
+def test_cli_refs_missing_dir(d, tmp_path):
+    assert L.main([d, '--prefix', P, '--refs', str(tmp_path / 'khong-co')]) == 2
+
+
+# --- I2: Selection nhap / chinh thuc ---
+
+def _use_draft(d):
+    shutil.copy(os.path.join(DRAFT_SEL, SEL), os.path.join(d, SEL))
+
+
+def test_draft_selection_ok_in_draft_mode(d):
+    _use_draft(d)
+    assert lint(d, draft=True) == []
+    assert L.main([d, '--prefix', P, '--refs', REFS, '--draft']) == 0
+
+
+def test_draft_selection_fails_final(d):
+    _use_draft(d)
+    assert {'SELECTION_DRAFT', 'NO_GATE2_DATE', 'NO_CEO_REASON'} <= codes(d)
+    assert L.main([d, '--prefix', P, '--refs', REFS]) == 1
+
+
+def test_draft_mode_rejects_candidate_id(d):
+    _use_draft(d)
+    mut(d, SEL, '- Chọn: (chờ CEO)', '- Chọn: PA-1-2 (đề xuất — chờ CEO)')
+    assert 'SELECTION_DRAFT' in codes(d, draft=True)
+
+
+def test_draft_mode_still_needs_fields(d):
+    _use_draft(d)
+    mut(d, SEL, '- Chọn: (chờ CEO)', '- Chọn:')
+    assert 'NO_SELECTION' in codes(d, draft=True)
+    _use_draft(d)
+    mut(d, SEL, '- Kế hoạch thử: kéo thử 3 mẫu (nháp)', '- Kế hoạch thử:')
+    assert 'NO_TEST_PLAN' in codes(d, draft=True)
+
+
+def test_final_good_fails_draft_mode(d):
+    assert 'SELECTION_DRAFT' in codes(d, draft=True)
+
+
+@pytest.mark.parametrize('new', ['- Chọn: PA-1-2 — Phương án 2 (đề xuất — chờ CEO)',
+                                 '- Chọn: PA-1-2 — Phương án 2 (chờ CEO)'])
+def test_final_rejects_pending(d, new):
+    mut(d, SEL, '- Chọn: PA-1-2 — Phương án 2', new)
+    assert 'SELECTION_DRAFT' in codes(d)
+
+
+@pytest.mark.parametrize('new', ['- Chọn: PA-1-2', '- Chọn: PA-1-2 —', '- Chọn: PA-1-2 - Phương án 2'])
+def test_final_requires_name(d, new):
+    mut(d, SEL, '- Chọn: PA-1-2 — Phương án 2', new)
+    assert 'SELECTION_NO_NAME' in codes(d)
+
+
+def test_final_requires_ceo_reason(d):
+    mut(d, SEL, '- Lý do CEO: hai bu lông chia tải, thay được tại bãi bắn', '- Lý do CEO:')
+    assert 'NO_CEO_REASON' in codes(d)
+    mut(d, SEL, '- Lý do CEO:\n', '')
+    assert 'NO_CEO_REASON' in codes(d)
+
+
+@pytest.mark.parametrize('new', ['', 'Cổng CEO 2 — ngày hôm nay',
+                                 'Cổng CEO 2 — ngày 2026-10-27\nCổng CEO 2 — ngày 2026-10-28'])
+def test_final_requires_gate2_date(d, new):
+    mut(d, SEL, 'Cổng CEO 2 — ngày 2026-10-27 · lint p3_form_lint: exit 0', new)
+    assert 'NO_GATE2_DATE' in codes(d)
