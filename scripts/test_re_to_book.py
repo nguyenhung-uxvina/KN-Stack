@@ -86,3 +86,27 @@ def test_ceiling_lowest_letter_and_caps_confidence():
 
 def test_ceiling_does_not_create_knowledge_label():
     assert rl.resolve(U('730 mm'), None, 'M').label == 'chưa gán'
+
+
+def test_bare_symbol_cell_is_not_confidence():
+    l = rl.resolve(U('| L | 730 | mm |'), None, None)
+    assert (l.confidence, l.confidence_source) == (None, 'không có')
+    l = rl.resolve(U('| H | 12 | mm |'), None, 'M')
+    assert (l.confidence, l.confidence_source) == ('M', 'kế thừa: trần miền')
+
+
+def test_confidence_column_cell_is_read():
+    t = '| Mã | Nội dung | Mức tin |\n|---|---|---|\n| a | x | M |\n| b | y | H |\n'
+    l = rl.resolve(U(t), None, None)
+    assert (l.confidence, l.confidence_source) == ('M', 'tại chỗ')
+
+
+def test_end_to_end_encoding_invariance():
+    src = ('---\nk: v\n---\nMở đầu\n\n## Mục đầu\n\nchữ Việt\n\n'
+           '## GT-3DS-001 — Góc nhận\n\n1. **Tiêu đề:** a\n6. **KẾT QUẢ:** b\n\n'
+           '## Nợ\n\n| Mã | Nội dung |\n|---|---|\n| N-013 | 26 vs 24 |\n')
+    a = '\ufeff' + src.replace('\n', '\r\n')
+    b = unicodedata.normalize('NFD', src)
+    ka = [(u.id, u.sha256) for u in ru.split_units(a)]
+    kb = [(u.id, u.sha256) for u in ru.split_units(b)]
+    assert ka == kb and len(ka) >= 5

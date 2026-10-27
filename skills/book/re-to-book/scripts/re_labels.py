@@ -20,7 +20,7 @@ _VOCAB = [
 _FILE_CAP = re.compile(
     r'mọi\s.{0,60}?(?:≤|tối đa|không quá|chỉ)\s*(phỏng đoán|giả định)', re.I | re.S)
 _CONF_INLINE = re.compile(r'(?i:mức)\s+([LMH])\b')
-_CONF_CELL = re.compile(r'\|\s*([LMH])\s*(?=\|)')
+_CONF_HEAD = re.compile(r'mức tin|confidence', re.I)
 _CEIL_LINE = re.compile(r'^confidence_ceiling:[ \t]*(.*)$', re.M)
 _LETTER = re.compile(r'\b([LMH])\b')
 
@@ -64,6 +64,24 @@ def ceiling_from_state(state_text):
     return min(letters, key=CONF_RANK.get)
 
 
+def _table_conf(text):
+    """Chi nhan o L/M/H nam duoi cot co tieu de 'Muc tin'/'confidence'."""
+    out, col = [], None
+    for ln in text.split('\n'):
+        if not ln.lstrip().startswith('|'):
+            col = None
+            continue
+        cells = [c.strip() for c in ln.strip().strip('|').split('|')]
+        if col is None:
+            for i, c in enumerate(cells):
+                if _CONF_HEAD.search(c):
+                    col = i
+            continue
+        if col < len(cells) and cells[col] in CONF_RANK:
+            out.append(cells[col])
+    return out
+
+
 def _low(rank_map, vals):
     return min(vals, key=rank_map.get)
 
@@ -80,7 +98,7 @@ def resolve(unit: Unit, cap, ceiling) -> Label:
     else:
         label, source = 'chưa gán', 'chưa gán'
 
-    letters = _CONF_INLINE.findall(text) + _CONF_CELL.findall(text)
+    letters = _CONF_INLINE.findall(text) + _table_conf(text)
     if letters:
         conf, csrc = _low(CONF_RANK, letters), 'tại chỗ'
         if ceiling and CONF_RANK[conf] > CONF_RANK[ceiling]:
