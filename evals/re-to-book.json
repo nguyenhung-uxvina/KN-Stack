@@ -128,8 +128,15 @@
     {
       "id": "RTB-ED1",
       "name": "edition1_manifest_frozen_after_scope_signed",
-      "check": "sau khi CEO ký trang phạm vi, chốt _re_manifest.json thành _manifests/ed1.json (không có thì sync HALT)",
-      "regex": "_manifests/ed1\\.json",
+      "check": "sau khi CEO ký trang phạm vi, chốt ấn bản bằng re_manifest.py freeze --edition 1 (chỉ chép khi manifest trùng bản khoá P1), không bằng cp",
+      "regex": "re_manifest\\.py\"? freeze --book \"<Book>\" --edition 1",
+      "required": true
+    },
+    {
+      "id": "RTB-P1-LOCK",
+      "name": "p1_manifest_locked_at_checkpoint",
+      "check": "checkpoint P1 khoá manifest bằng re_manifest.py lock; build lại sau P1 ⇒ kiểm lại P1 và lock lại",
+      "regex": "re_manifest\\.py\"? lock --book[\\s\\S]{0,400}build[\\s\\S]{0,200}lock",
       "required": true
     },
     {
@@ -140,7 +147,7 @@
       "required": true
     }
   ],
-  "passing_score": 19,
-  "total_required": 19,
+  "passing_score": 20,
+  "total_required": 20,
   "total_optional": 0
 }

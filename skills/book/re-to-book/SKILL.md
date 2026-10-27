@@ -165,6 +165,8 @@ Ghi `<Book>/_re_manifest.json` (mỗi tệp: lớp, hash, mtime; mỗi đơn v�
 
 - **Mã 2 kèm `Tep chua phan lop (N):`** (`UnclassifiedError`) ⇒ có tệp **chưa xếp lớp**; `build` không ghi gì. Trình CEO danh sách, CEO chọn lớp ⇒ thêm mẫu vào `re_classes.json` (khuôn chung) hoặc tệp lớp riêng của dự án truyền bằng `--classes`, rồi chạy lại. **Không tự đoán lớp.**
 - Mã 2 khác (trùng tên hồ sơ, thiếu thư mục, lỗi đọc) ⇒ sửa đầu vào, chạy lại.
+- Dòng `CẢNH BÁO: <tệp> 0 đơn vị` (mã vẫn 0) ⇒ tệp READ/CUT trống hoặc không tách được — trình CEO cùng bảng đếm lớp; không bỏ qua im lặng.
+- Phiếu GT dạng **bảng** (`| 6 | KẾT QUẢ | … |`, `| 7 | **DỰ ĐOÁN VIẾT TRƯỚC** | … |`) và dạng **danh sách** (`6. …`, `7. …`) đều được tách thành mục `GT-x.n`; bản chụp thay bằng hàng `| 7 | DỰ ĐOÁN VIẾT TRƯỚC | ⟨chờ ký⟩ |` / `| 6 | KẾT QUẢ | ⟨chờ đo⟩ |` (giữ số cột).
 - Mã 0 ⇒ ghi vào `<Book>/_pipeline_state.md`: `re_roots`, `classes` (đường dẫn tệp lớp đã dùng — mặc định `$RTB/re_classes.json`), `manifest_created`. `--sync` dùng lại đúng `classes` này.
 - **Tác tử viết CHỈ đọc `_re_snapshot/`, không bao giờ đọc thư mục RE gốc.** Brief của mọi tác tử P1/P4/P6 ghi đường dẫn `_re_snapshot/`, không ghi `--re`.
 
@@ -204,7 +206,19 @@ Schema `book-explore` + hai mục bắt buộc:
 python -X utf8 "$RTB/re_provenance.py" check-p1 --book "<Book>"
 python skills/book/codebase-to-book/scripts/databus_check.py "<Book>" --phase P1
 ```
-`check-p1` mã ≠ 0 (cụm không có neo nào; neo sai dạng; tệp không có trong manifest; lớp không được neo; không có đơn vị) ⇒ **CẤM checkpoint** — sửa ghi chú, chạy lại. Checkpoint P1 nêu: số cụm, số neo, số neo `chưa gán`, số phiếu GT và số `⟨chờ đo⟩`/`⟨chờ ký⟩` đếm từ `_units_index.md` (cột anchor `#GT-…`; chưa có chương nên **không** chạy `re_book_audit.py gt` ở đây).
+`check-p1` mã ≠ 0 (cụm không có neo nào; neo sai dạng; tệp không có trong manifest; lớp không được neo; không có đơn vị) ⇒ **CẤM checkpoint** — sửa ghi chú, chạy lại. Checkpoint P1 nêu: số cụm, số neo, số phiếu GT và số `⟨chờ đo⟩`/`⟨chờ ký⟩` đếm từ `_units_index.md` (cột anchor `#GT-…`; chưa có chương nên **không** chạy `re_book_audit.py gt` ở đây), và **dòng `chưa gán: N / tổng M`** mà `index` in ra (cũng ở đầu `_units_index.md`).
+
+**Nhãn `chưa gán` — CEO chọn, không bao giờ tự gán.** Trình CEO số neo `chưa gán` các cụm đã dùng (mục `## Nhãn chưa gán cần quyết`) và hai lựa chọn:
+- (a) CEO quyết từng neo ⇒ ghi `<Book>/Phase1-Exploration/_label_decisions.md`, mỗi dòng `` | `<neo>` | knowledge | `` (hoặc `conjecture` / `assumption`). Nhãn CEO quyết thành nhãn hiệu lực cho cổng `labels` (knowledge ⇒ không cần dấu; conjecture ⇒ `⟨phỏng đoán⟩`; assumption ⇒ `⟨giả định⟩`).
+- (b) Không quyết ⇒ người viết hiện `⟨chưa gán nhãn⟩` ở mọi mục dựa trên neo đó.
+
+Cổng `labels` (P4/P6/P7) chặn mục dẫn neo `chưa gán` mà không có `⟨chưa gán` trong mục và không có dòng quyết định. Tác tử **không** được viết dòng vào `_label_decisions.md` — chỉ CEO.
+
+**Khoá P1 sau khi CEO duyệt checkpoint** (ấn bản chỉ được chốt từ đúng manifest đã kiểm ở P1):
+```bash
+python -X utf8 "$RTB/re_manifest.py" lock --book "<Book>"   # → _manifests/_p1_lock.json (created + sha256 của _re_manifest.json)
+```
+Chạy lại `build` sau P1 (vì bất kỳ lý do gì) ⇒ manifest đổi ⇒ **phải** chạy lại `index` · `check-p1`, trình lại checkpoint P1 và `lock` lại; không thì `freeze` ở P7 từ chối (mã 1).
 
 ---
 
@@ -218,8 +232,8 @@ P2 `/book-position` (Core) · P3 `/book-outline` (Core — khung 5 phần là m�
    ```json
    {"chapter": "Ch05_kien-truc_Draft", "sections": {"§05.2": ["Megalink_3D-Score/RE_3DS_S2B_Function_Structure.md#Cây SF"]}}
    ```
-   Tiêu đề mục trong chương **chứa số mục** (`## 05.2 …`) để `labels` tìm được. P6 ghi lại tệp provenance cho `Phase6-Revised/Ch<NN>_<slug>_v2.md` (`"chapter": "Ch<NN>_<slug>_v2"`). Chương thiếu provenance = phát hiện. **Không** ghi neo bằng chú thích HTML trong thân (lọt vào EPUB).
-3. **Nhãn hiển thị:** câu dựa trên ý `conjecture` ⇒ `⟨phỏng đoán⟩`; `assumption` ⇒ `⟨giả định⟩`; GT `.6` trống ⇒ `⟨chờ đo⟩`; dự đoán chưa ký ⇒ `⟨chờ ký⟩`, không số.
+   Tiêu đề mục trong chương **chứa số mục** (`## 05.2 …`) để `labels` tìm được; **mọi** tiêu đề `##`/`###` có số mục phải có khoá `§NN.x` trong provenance, và mọi khoá phải có ít nhất một neo (mục rỗng / `sections: {}` = phát hiện). P6 ghi lại tệp provenance cho `Phase6-Revised/Ch<NN>_<slug>_v2.md` (`"chapter": "Ch<NN>_<slug>_v2"`). Chương thiếu provenance = phát hiện. **Không** ghi neo bằng chú thích HTML trong thân (lọt vào EPUB).
+3. **Nhãn hiển thị:** câu dựa trên ý `conjecture` ⇒ `⟨phỏng đoán⟩`; `assumption` ⇒ `⟨giả định⟩`; `chưa gán` (CEO chưa quyết trong `_label_decisions.md`) ⇒ `⟨chưa gán nhãn⟩`; GT `.6` trống ⇒ `⟨chờ đo⟩`; dự đoán chưa ký ⇒ `⟨chờ ký⟩`, không số. Mọi mục phiếu GT mang nhãn tối đa `conjecture` (giả thuyết chưa thử).
 4. **Hợp đồng nhà chính** (khái niệm → chương sở hữu) ghi vào brief **trước khi** chia tác tử song song; không đính chính giữa đợt.
 
 **Cổng trước checkpoint P4 và P6:**
@@ -249,10 +263,11 @@ python -X utf8 "$RTB/re_book_audit.py" idea-candidates --book "<Book>" --re "<di
 4. **CEO quyết giữ/bỏ** từng dòng `trùng`/`một phần` (Core, **mỗi ấn bản**). Không tự xoá — CEO K54 từng chọn giữ.
 5. **Trang `# ⛔ Phạm vi lưu hành`** ở đầu `book.md` — trang này ghi **ngày chụp manifest** (`created` của `_re_manifest.json`), phạm vi NỘI BỘ, danh sách hồ sơ RE, số ấn bản, quyết định Idea_Log của CEO, dòng: *«Ch08b/08c sách K54 (`lomah-sung-ngan-k54`) là bản chụp 2026-10-26 của cùng hồ sơ; bản hiện hành là sách này.»* và dòng ký `CEO ký: ________ Ngày: ________`. **Đường ống không bao giờ điền chữ ký thay CEO.**
 6. `databus_check.py "<Book>" --phase P7` rồi mới trình IP sign-off (Core).
-7. **Sau khi CEO ký trang phạm vi — chốt manifest của ấn bản** (không có bước này thì `--sync` lần sau HALT):
+7. **Sau khi CEO ký trang phạm vi — chốt manifest của ấn bản** bằng `freeze` (không có bước này thì `--sync` lần sau HALT). **Không dùng `cp`** — `freeze` chỉ chép khi `_re_manifest.json` trùng bản đã `lock` ở P1:
    ```bash
-   mkdir -p "<Book>/_manifests" && cp "<Book>/_re_manifest.json" "<Book>/_manifests/ed1.json"   # ấn bản N ⇒ edN.json
+   python -X utf8 "$RTB/re_manifest.py" freeze --book "<Book>" --edition 1   # → _manifests/ed1.json ; ấn bản N ⇒ --edition N
    ```
+   Mã 1 (manifest khác bản khoá P1 — đã `build` lại sau P1) ⇒ **không** chốt; quay lại P1: `index` · `check-p1` · CEO duyệt · `lock`, rồi xét lại các chương bị ảnh hưởng trước khi `freeze`. Mã 2 (chưa `lock`, hoặc `ed<N>.json` đã có) ⇒ sửa đầu vào; **không** ghi đè ấn bản đã chốt.
    và ghi dòng đầu `<Book>/_editions.md`: ấn bản 1 · ngày · ngày chụp manifest · hồ sơ RE · số chương · GT `⟨chờ đo⟩`/`⟨chờ ký⟩` · CEO ký phạm vi (để trống cho CEO).
 
 ---
@@ -307,7 +322,7 @@ Trình CEO bảng thay đổi (tệp RE · đơn vị · thêm/đổi/xoá · ch
 
 Thay đổi cần chương mới hoặc đổi khung (vd. thêm hồ sơ Suooter) ⇒ **quay về P3**, CEO duyệt dàn ý. "Không đổi" chỉ được báo **kèm `compared_units`** (in sẵn ở dòng đầu của `diff`) — `compared_units: 0` là "không so được", không phải "không đổi".
 
-CEO duyệt ⇒ P1 cục bộ (chỉ đơn vị đổi) → P4/P6 cục bộ cho mục bị ảnh hưởng (brief như trên) → P7 đầy đủ cho chương đổi → hợp `book.md` → P8 thay nguồn tương ứng. Cuối cùng ghi `<Book>/_editions.md`: ấn bản · ngày · ngày chụp manifest · đơn vị RE đổi · chương viết lại · GT đổi trạng thái · CEO ký phạm vi (để trống cho CEO). Sau khi CEO ký: `cp "<Book>/_re_manifest.json" "<Book>/_manifests/ed<N+1>.json"`.
+CEO duyệt ⇒ P1 cục bộ (chỉ đơn vị đổi) → P4/P6 cục bộ cho mục bị ảnh hưởng (brief như trên) → P7 đầy đủ cho chương đổi → hợp `book.md` → P8 thay nguồn tương ứng. Cuối cùng ghi `<Book>/_editions.md`: ấn bản · ngày · ngày chụp manifest · đơn vị RE đổi · chương viết lại · GT đổi trạng thái · CEO ký phạm vi (để trống cho CEO). P1 cục bộ kết thúc bằng `check-p1` + checkpoint + `re_manifest.py lock --book "<Book>"` (manifest vừa `build` lại). Sau khi CEO ký: `python -X utf8 "$RTB/re_manifest.py" freeze --book "<Book>" --edition <N+1>` (không `cp`; mã 1 ⇒ manifest đổi sau lần khoá ⇒ làm lại P1 cục bộ + `lock`).
 
 Sách K54 (Ch08b/08c) **ngoài phạm vi sync** (Q9).
 
@@ -340,7 +355,9 @@ Progress table + Block Ledger: như `codebase-to-book/_pipeline_state.md`.
 | `Phase1-Exploration/_units_index.md` · `_re_gaps.md` | P1 `index` · `gaps` | bảng đơn vị · chỗ trống RE tự khai |
 | `Phase4-Chapters/*.provenance.json` · `Phase6-Revised/*.provenance.json` | P4 · P6 | mục sách → neo |
 | `Phase7-IdeaLog-Overlap.md` | P7 | gợi ý (script) + bảng kết luận mọi mã Idea_Log |
-| `_manifests/ed<N>.json` · `_sync/` · `_editions.md` | sync | manifest mỗi ấn bản · diff/impact · nhật ký ấn bản |
+| `Phase1-Exploration/_label_decisions.md` | CEO (P1.5) | nhãn CEO quyết cho neo `chưa gán` |
+| `_manifests/_p1_lock.json` | P1.5 `lock` | created + sha256 của manifest đã kiểm ở P1 |
+| `_manifests/ed<N>.json` · `_sync/` · `_editions.md` | P7 `freeze` · sync | manifest mỗi ấn bản · diff/impact · nhật ký ấn bản |
 | `_p0/plan_*.json` | P0 | kế hoạch chuyển |
 
 ---
@@ -383,7 +400,7 @@ Progress table + Block Ledger: như `codebase-to-book/_pipeline_state.md`.
 
 ```
 re-to-book READS:   hồ sơ /reverse-engineering (qua _re_snapshot/ do re_manifest.py build sinh)
-re-to-book RUNS:    $RTB/re_manifest.py (build|diff|gaps|index) · re_provenance.py (check|impact|check-p1)
+re-to-book RUNS:    $RTB/re_manifest.py (build|diff|gaps|index|lock|freeze) · re_provenance.py (check|impact|check-p1)
                     re_book_audit.py (gt|labels|idea-candidates|idea-coverage|all) · re_nlm_redact.py
                     re_consolidate.py (plan|apply) · codebase-to-book/scripts/databus_check.py
                     scripts/re_handoff_to_helix.py --project-dir (B5 sau P0)
