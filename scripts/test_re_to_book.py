@@ -619,7 +619,7 @@ def test_unsigned_prediction_mention_flagged():
 
 
 def test_gt_prefix_id_does_not_match():
-    assert not ra.gt_leaks({'Ch08': 'GT-D-0010 cho thấy f giảm.'}, _GT_M)
+    assert not any('chờ' in e for e in ra.gt_leaks({'Ch08': 'GT-D-0010 cho thấy f giảm.'}, _GT_M))
 
 
 def test_conjecture_section_without_marker_flagged():
@@ -701,3 +701,39 @@ def test_cli_all_exit_is_max(tmp_path):
     assert ra.main(['all', '--book', str(book), '--re', root]) == 1
     f.unlink()
     assert ra.main(['all', '--book', str(book), '--re', root]) == 2
+
+
+def test_gt_unknown_id_flagged_and_summary():
+    assert ra.gt_summary(_GT_M) == (1, 1, 1)
+    errs = ra.gt_leaks({'Ch08': 'GT-X-9 cho thấy gì đó.'}, _GT_M)
+    assert errs == ['Ch08 đoạn 1: GT-X-9 không có trong manifest']
+    assert ra.gt_summary({'files': {}}) == (0, 0, 0)
+    assert ra.gt_leaks({'Ch08': 'không nhắc'}, {'files': {}}) == []
+
+
+def test_cli_gt_prints_count_line(tmp_path, capsys):
+    root, book = _audit_book(tmp_path)
+    assert ra.main(['gt', '--book', str(book)]) == 0
+    assert 'kiểm 1 phiếu GT (1 chờ đo, 1 chờ ký)' in capsys.readouterr().out
+
+
+def test_gt_prefix_id_not_matched_as_known_card():
+    errs = ra.gt_leaks({'Ch08': 'GT-D-0010 cho thấy f giảm.'}, _GT_M)
+    assert errs == ['Ch08 đoạn 1: GT-D-0010 không có trong manifest']
+
+
+def test_chapter_without_provenance_flagged():
+    m = {'files': {}}
+    prov = {'Ch01': {'chapter': 'Ch01', 'sections': {}}}
+    assert ra.label_gaps({'Ch01': 'x', 'Ch02': 'y'}, prov, m) == ['Ch02: không có provenance']
+
+
+def test_candidate_section_end_rule_consistent():
+    NL = chr(10)
+    tbl = '| Mã | Kết luận |' + NL + '|---|---|' + NL
+    t = (NL.join(['# Overlap', '', '## Gợi ý từ vựng (không phải kết luận)', '', '### Phụ', ''])
+         + NL + tbl + '| YT-001 | trùng |' + NL + NL + '## Kết luận' + NL + NL + tbl + '| YT-002 | trùng |' + NL)
+    assert ra.idea_coverage(t, ['YT-001']) != []
+    assert ra.idea_coverage(t, ['YT-002']) == []
+    out = ra._merge_candidates(t, '- moi' + NL)
+    assert '- moi' in out and 'YT-001' not in out and '| YT-002 | trùng |' in out

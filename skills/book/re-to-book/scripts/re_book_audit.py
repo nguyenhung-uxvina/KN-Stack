@@ -28,6 +28,9 @@ LABEL_VN = {'conjecture': 'phỏng đoán', 'assumption': 'giả định'}
 _GT_KEY = re.compile(r'^(GT-.+)\.([67])(?:~\d+)?$')
 _HEAD = re.compile(r'^(#{1,6})\s+(.*)$')
 _TOKEN = re.compile(r'\d+(?:[,.]\d+)?\s?(?:nm|mm|m|kHz|Hz|ms|µs|dB)(?!\w)')
+_GT_ANY = re.compile(r'(?<![\w-])GT-[A-Z0-9]+(?:-[A-Z0-9]+)*(?![\w-])')
+_GT_UNIT = re.compile(r'^(GT-.+)\.\d(?:~\d+)?$')
+_H12 = re.compile(r'^#{1,2}\s')
 _SPLIT_ANCHOR = re.compile(r'^(.*?\.md)#(.+)$', re.S)
 
 
@@ -55,8 +58,31 @@ def _gt_rules(manifest):
     return rules
 
 
+def gt_cards(manifest):
+    """Moi ma phieu GT co don vi trong manifest."""
+    cards = set()
+    for ent in manifest.get('files', {}).values():
+        for uid in (ent.get('units') or {}):
+            m = _GT_UNIT.match(uid)
+            if m:
+                cards.add(m.group(1))
+    return cards
+
+
+def gt_summary(manifest):
+    """-> (so phieu, so phieu cho do, so phieu cho ky)"""
+    rules = _gt_rules(manifest)
+    return (len(gt_cards(manifest)), sum(r['result'] for r in rules.values()),
+            sum(r['pred'] for r in rules.values()))
+
+
 def gt_leaks(chapters, manifest):
     errs = []
+    known = gt_cards(manifest)
+    for ch in sorted(chapters):
+        for i, para in enumerate(_paragraphs(chapters[ch]), 1):
+            for gid in sorted(set(_GT_ANY.findall(para)) - known):
+                errs.append('%s đoạn %d: %s không có trong manifest' % (ch, i, gid))
     for card, r in sorted(_gt_rules(manifest).items()):
         rx = _mention(card)
         for ch in sorted(chapters):
@@ -106,6 +132,8 @@ def _section_text(text, sec_key):
 def label_gaps(chapters, prov, manifest):
     errs = []
     files = manifest.get('files', {})
+    for ch in sorted(set(chapters) - set(prov)):
+        errs.append('%s: không có provenance' % ch)
     for ch in sorted(prov):
         secs = (prov[ch] or {}).get('sections', {})
         if ch not in chapters:
@@ -155,7 +183,7 @@ def idea_coverage(table_md, ids):
     verdicts = {}
     code_col = verd_col = None
     for ln in normalize(table_md).split('\n'):
-        if ln.startswith('#'):
+        if _H12.match(ln):
             in_cand = ln.strip().startswith(CAND_HEAD)
             continue
         if in_cand or not ln.lstrip().startswith('|'):
@@ -218,7 +246,7 @@ def _merge_candidates(existing, body):
     for i, ln in enumerate(lines):
         if ln.strip() == CAND_HEAD:
             j = i + 1
-            while j < len(lines) and not lines[j].startswith('## '):
+            while j < len(lines) and not _H12.match(lines[j]):
                 j += 1
             rest = '\n'.join(lines[j:])
             head = '\n'.join(lines[:i])
@@ -281,7 +309,10 @@ def _report(title, errs):
 
 def _run_gt(a):
     chapters, _ = _chapters(a.book)
-    return _report('gt', gt_leaks(chapters, _manifest(a.book)))
+    man = _manifest(a.book)
+    n, k, m = gt_summary(man)
+    print('kiểm %d phiếu GT (%d chờ đo, %d chờ ký)' % (n, k, m))
+    return _report('gt', gt_leaks(chapters, man))
 
 
 def _run_labels(a):
