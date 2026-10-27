@@ -51,7 +51,9 @@ def _row_code(line: str):
     if not m:
         return None
     cell = m.group(1).replace('**', '').replace('`', '').strip()
-    return cell if ROW_CODE.match(cell) else None
+    # o ma co the kem ghi chu sau ma ("N-009 ✅ ĐÃ TRẢ …") — lay tu dau tien
+    tok = cell.split()[0] if cell else ''
+    return tok if ROW_CODE.match(tok) else None
 
 
 def table_item(line):

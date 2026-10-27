@@ -118,6 +118,13 @@ def test_section_id_drops_backticks_so_anchor_can_be_quoted():
     assert 'Layer 2 — xem RE_X_S1B.md' in ids and not any('`' in i for i in ids)
 
 
+def test_row_code_with_trailing_note_in_code_cell():
+    t = ('# N\n\n| Mã | Nội dung |\n|---|---|\n| N-008 | a |\n'
+         '| N-009 ✅ ĐÃ TRẢ 2026-10-25 (hình) | b |\n')
+    ids = [u.id for u in ru.split_units(t)]
+    assert 'row:N-008' in ids and 'row:N-009' in ids
+
+
 # ---------------- Task 3: re_manifest ----------------
 import pytest  # noqa: E402
 
