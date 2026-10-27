@@ -1,0 +1,132 @@
+{
+  "skill": "re-to-book",
+  "version": "1.0-pipeline",
+  "description": "Binary assertions cho /re-to-book — sách sống dựng từ hồ sơ /reverse-engineering, adapter của notebook-to-book; mỗi assertion trỏ đúng một luật có lệnh script + mã thoát",
+  "mode": "static",
+  "include_references": false,
+  "test_input": "re to book cho các hồ sơ RE bia ISSF trong BB-02_LOMAH/RE",
+  "assertions": [
+    {
+      "id": "RTB-SNAPSHOT",
+      "name": "writers_read_only_filtered_snapshot",
+      "check": "tác tử viết chỉ đọc bản chụp đã lọc _re_snapshot/, không đọc thư mục RE gốc",
+      "regex": "_re_snapshot",
+      "required": true
+    },
+    {
+      "id": "RTB-P05-BUILD",
+      "name": "p05_manifest_built_by_script",
+      "check": "P0.5 sinh manifest bằng lệnh re_manifest.py build, không bằng lời nhắc",
+      "regex": "re_manifest\\.py build",
+      "required": true
+    },
+    {
+      "id": "RTB-P05-UNCLASSIFIED",
+      "name": "unclassified_file_stops_and_asks_ceo",
+      "check": "tệp chưa xếp lớp ⇒ build mã 2, hỏi CEO xếp lớp, không tự đoán",
+      "regex": "UnclassifiedError|chưa xếp lớp",
+      "required": true
+    },
+    {
+      "id": "RTB-P1-GATE",
+      "name": "p1_anchor_gate",
+      "check": "cổng re_provenance.py check-p1 trước checkpoint P1",
+      "regex": "check-p1",
+      "required": true
+    },
+    {
+      "id": "RTB-PROV",
+      "name": "chapter_provenance_file",
+      "check": "mỗi chương ghi ChNN.provenance.json (không chú thích HTML trong thân)",
+      "regex": "provenance\\.json",
+      "required": true
+    },
+    {
+      "id": "RTB-LABEL-SHOW",
+      "name": "knowledge_label_visible_to_reader",
+      "check": "nhãn phỏng đoán hiển thị cho người đọc dạng ⟨phỏng đoán⟩",
+      "regex": "⟨phỏng đoán",
+      "required": true
+    },
+    {
+      "id": "RTB-P7-ALL",
+      "name": "p7_audit_gate_before_ip_signoff",
+      "check": "re_book_audit.py all mã ≠ 0 ⇒ cấm trình IP sign-off",
+      "regex": "re_book_audit\\.py all",
+      "required": true
+    },
+    {
+      "id": "RTB-P7-IDEA",
+      "name": "idea_log_overlap_table",
+      "check": "bảng Phase7-IdeaLog-Overlap.md có kết luận cho mọi mã Idea_Log, CEO quyết",
+      "regex": "Phase7-IdeaLog-Overlap\\.md",
+      "required": true
+    },
+    {
+      "id": "RTB-P8-REDACT",
+      "name": "p8_redact_before_upload",
+      "check": "re_nlm_redact.py trước khi tải lên NLM; mã 1 ⇒ không tải",
+      "regex": "re_nlm_redact\\.py",
+      "required": true
+    },
+    {
+      "id": "RTB-SYNC-COUNT",
+      "name": "sync_no_change_prints_compared_units",
+      "check": "sync báo 'không đổi' kèm compared_units",
+      "regex": "compared_units",
+      "required": true
+    },
+    {
+      "id": "RTB-SYNC-ROOT",
+      "name": "sync_root_moved_reported_separately",
+      "check": "sync báo gốc đổi chỗ (root_moved) riêng khỏi thay đổi nội dung",
+      "regex": "root_moved",
+      "required": true
+    },
+    {
+      "id": "RTB-P0-PLAN",
+      "name": "p0_plan_before_move",
+      "check": "P0 chạy re_consolidate.py plan, CEO duyệt, rồi mới apply",
+      "regex": "re_consolidate\\.py plan",
+      "required": true
+    },
+    {
+      "id": "RTB-P0-B5",
+      "name": "b5_handoff_project_dir",
+      "check": "B5 sau khi chuyển dùng --project-dir trỏ dự án thiết kế",
+      "regex": "--project-dir",
+      "required": true
+    },
+    {
+      "id": "RTB-ONE-BLOCK",
+      "name": "one_block_per_turn_inherited",
+      "check": "kế thừa nguyên văn luật ONE BLOCK PER TURN của notebook-to-book",
+      "regex": "ONE BLOCK PER TURN",
+      "required": true
+    },
+    {
+      "id": "RTB-GAPFILL",
+      "name": "gapfill_writes_back_to_re_pending_ceo",
+      "check": "--gapfill ghi RE_<SP>_Book_GapFill.md trạng thái chờ CEO duyệt",
+      "regex": "status: chờ CEO duyệt",
+      "required": true
+    },
+    {
+      "id": "RTB-EDITIONS",
+      "name": "sync_edition_log",
+      "check": "sync ghi nhật ký ấn bản _editions.md",
+      "regex": "_editions\\.md",
+      "required": true
+    },
+    {
+      "id": "RTB-SCOPE",
+      "name": "scope_page_signed_by_ceo_each_edition",
+      "check": "trang ⛔ Phạm vi lưu hành ghi ngày chụp manifest, CEO ký mỗi ấn bản",
+      "regex": "Phạm vi lưu hành[^\\n]*\\n?[^\\n]*ngày chụp manifest|ngày chụp manifest[^\\n]*Phạm vi lưu hành",
+      "required": true
+    }
+  ],
+  "passing_score": 17,
+  "total_required": 17,
+  "total_optional": 0
+}

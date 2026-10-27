@@ -543,6 +543,9 @@ notebook-to-book WRITES TO:
   - <output_dir>/Phase2-Phase9/ — same as codebase-to-book
   - NotebookLM account — 1 new notebook (P8, separate from source)
 
+SIBLING:
+  - Nguồn là hồ sơ /reverse-engineering (không phải NLM notebook) ⇒ dùng /re-to-book
+
 FOLLOW-UP (CEO-triggered):
   - /research-to-skill → apply P9 HELIX/FORGE insights
   - /galaxy-note → create P9 Galaxy candidates

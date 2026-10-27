@@ -15,7 +15,8 @@ KN-Stack/
 │   ├── helix/        (57) — Design execution pipeline (Pahl-Beitz phases — P1/P2/P3/P4 all 6-block mega-skill pipelines; CAD chain: helix-cad-bridge code→CAD, helix-cad-ingest CAD→info, helix-cad-validate design-rule Computational Sensor+Gate, helix-cad-roundtrip orchestrates across P1-P4 with human-draw import, helix-cad-nest geometry→cut-plan/nesting, helix-cad-to-fab drawing-folder→fab bundle; Spec-to-CAD: helix-spec-to-cad SDD orchestrator + 6 helix-s2c-* blocks — spec-kit methodology as disciplined Flow-B front-end)
 │   ├── galaxy/       (12) — Knowledge management (+ skill-to-public, codify, mentor-board — Naval outbound + code + mentor leverage)
 │   ├── mentors/      (58, dynamic) — Per-mentor advisor skills (add more via /mentor-board --add <leader>); orchestrator at galaxy/mentor-board/
-│   ├── book/         (23) — Book pipelines: codebase-to-book (9-phase, book-* blocks), book-to-codebase (btc-* blocks), book-to-skill, notebook-to-book
+│   ├── book/         (23) — Book pipelines: codebase-to-book (9-phase, book-* blocks), book-to-codebase (btc-* blocks), book-to-skill, notebook-to-book,
+│                       re-to-book (sách SỐNG nội bộ từ hồ sơ /reverse-engineering — adapter notebook-to-book; manifest lọc + neo xuất xứ + --sync/--gapfill)
 │   ├── erp/          (6)  — ERPNext integration
 │   ├── extract/      (7)  — Content extraction (social, chat, yt-extract/yt-learn/yt-search)
 │   ├── learn/        (4)  — Learning methodology
