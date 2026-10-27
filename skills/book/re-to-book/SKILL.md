@@ -163,7 +163,7 @@ Ghi `<Book>/_re_manifest.json` (mỗi tệp: lớp, hash, mtime; mỗi đơn v�
 | DECISION | `_pipeline_state.md`, `*_S1_Source_Gate.md`, `_source/_ma_nguon.md` | chỉ cho `gaps` và P7 |
 | SOURCE / IGNORE | `_source/*`, `_analysis/*`, `_source/video/*`, `*.json`, `*.py`, `*_out.txt` | chỉ băm (sync thấy đổi), không đọc |
 
-- **Mã 2 kèm `Tep chua phan lop (N):`** (`UnclassifiedError`) ⇒ có tệp **chưa xếp lớp**; `build` không ghi gì. Trình CEO danh sách, CEO chọn lớp ⇒ thêm mẫu vào `re_classes.json` (khuôn chung) hoặc tệp lớp riêng của dự án truyền bằng `--classes`, rồi chạy lại. **Không tự đoán lớp.**
+- **Mã 2 kèm `Tep chua phan lop (N):`** (`UnclassifiedError`) ⇒ có tệp **chưa xếp lớp**; `build` không ghi gì. Trình CEO danh sách, CEO chọn lớp ⇒ thêm mẫu vào `re_classes.json` (khuôn chung) hoặc tệp lớp riêng của dự án truyền bằng `--classes`, rồi chạy lại. **Không tự đoán lớp.** Mẫu khớp đường dẫn trong hồ sơ; viết `<hồ sơ>/<mẫu>` (vd `MF6R3_Black_Magic_XL/TECH_T1_*.md`) để nhắm MỘT hồ sơ — đặt dòng đó TRƯỚC các mẫu chung (khớp đầu tiên thắng).
 - Mã 2 khác (trùng tên hồ sơ, thiếu thư mục, lỗi đọc) ⇒ sửa đầu vào, chạy lại.
 - Dòng `CẢNH BÁO: <tệp> 0 đơn vị` (mã vẫn 0) ⇒ tệp READ/CUT trống hoặc không tách được — trình CEO cùng bảng đếm lớp; không bỏ qua im lặng.
 - Phiếu GT dạng **bảng** (`| 6 | KẾT QUẢ | … |`, `| 7 | **DỰ ĐOÁN VIẾT TRƯỚC** | … |`) và dạng **danh sách** (`6. …`, `7. …`) đều được tách thành mục `GT-x.n`; bản chụp thay bằng hàng `| 7 | DỰ ĐOÁN VIẾT TRƯỚC | ⟨chờ ký⟩ |` / `| 6 | KẾT QUẢ | ⟨chờ đo⟩ |` (giữ số cột).

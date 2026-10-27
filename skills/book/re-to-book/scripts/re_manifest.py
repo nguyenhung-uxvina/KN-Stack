@@ -69,10 +69,12 @@ def load_classes(path):
         return json.load(f)['classes']
 
 
-def classify(rel, classes):
+def classify(rel, classes, dossier=None):
+    """Mau khop duong dan trong ho so (rel), hoac '<ho so>/<rel>' de nham MOT ho so."""
+    full = '%s/%s' % (dossier, rel) if dossier else None
     for c in classes:
         for p in c['patterns']:
-            if fnmatch.fnmatchcase(rel, p):
+            if fnmatch.fnmatchcase(rel, p) or (full and fnmatch.fnmatchcase(full, p)):
                 return c['class']
     return None
 
@@ -293,7 +295,7 @@ def build_manifest(roots, classes_path):
             if rel.endswith('_Book_GapFill.md'):
                 cls = 'GAPFILL'
             else:
-                cls = classify(rel, classes)
+                cls = classify(rel, classes, name)
             if cls is None:
                 unclassified.append('%s/%s' % (name, rel))
             else:

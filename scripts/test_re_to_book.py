@@ -150,6 +150,23 @@ def test_build_classifies_and_snapshot_excludes_blocked(tmp_path):
     assert (out / 'Demo' / 'RE_D_S1A_Deconstruction.md').exists()
 
 
+def test_dossier_scoped_pattern_targets_one_dossier_only(tmp_path):
+    a = make_dossier(tmp_path / 'a'); b = make_dossier(tmp_path / 'b')
+    for d in (a, b):
+        with open(os.path.join(d, 'TECH_T1_Domain_Definition.md'), 'w', encoding='utf-8') as f:
+            f.write('# T1\n\n## Mien\n\nx\n')
+    import json
+    with open(CLASSES, encoding='utf-8') as f:
+        base = json.load(f)
+    base['classes'].insert(0, {'class': 'IGNORE', 'patterns': ['Old/TECH_T1_*.md']})
+    cp = tmp_path / 'proj_classes.json'; cp.write_text(json.dumps(base), encoding='utf-8')
+    m = rm.build_manifest({'Old': a, 'New': b}, str(cp))
+    assert 'Old/TECH_T1_Domain_Definition.md' not in m['files']
+    assert 'Old/TECH_T1_Domain_Definition.md' in m['sources']
+    assert m['files']['New/TECH_T1_Domain_Definition.md']['class'] == 'READ'
+    assert rm.classify('TECH_T1_x.md', base['classes']) == 'READ'
+
+
 def test_half_signed_prediction_is_cut(tmp_path):
     m = rm.build_manifest({'Demo': make_dossier(tmp_path)}, CLASSES)
     u = m['files']['Demo/RE_D_Hypotheses.md']['units']
