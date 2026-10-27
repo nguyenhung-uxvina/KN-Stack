@@ -240,3 +240,38 @@ def test_selection_hc_ok(d):
 def test_missing_scoring_section(d):
     mut(d, SCO, '## Bảng chấm', '## Khác bảng')
     assert 'NO_SCORING_TABLE' in codes(d)
+
+
+F2_PA_ONLY = """### F-2
+
+| Req-ID | D/W | DP | Trọng số | PA-2-1 | PA-2-2 | PA-2-3 | Ghi chú |
+|---|---|---|---|---|---|---|---|
+| R-21 | D | DP-1 | 1 | Đạt | Đạt | Loại | |
+| R-22 | W | DP-2 | 3 | 3 | 4 | 2 | |
+
+"""
+
+
+def _drop_hc_f2(d, reason_line):
+    """F-2 khong con HC nao: Benchmark chi giu dong ly do, bang cham F-2 chi co cot PA."""
+    t = rd(d, BEN)
+    wr(d, BEN, t[:t.index('### HC-2-1')] + reason_line)
+    t = rd(d, SCO)
+    s, e = t.index('### F-2'), t.index('## Độ nhạy')
+    wr(d, SCO, t[:s] + F2_PA_ONLY + t[e:])
+
+
+def test_no_hc_with_reason_ok(d):
+    _drop_hc_f2(d, '- Không tìm thấy HC — lý do: đã tìm tầng 1 (RE/, FTO_*), tầng 2 (Exa web), '
+                   'tầng 3 (Exa patents) — không có lời giải cùng chức năng\n')
+    assert L.lint_dir(d, P) == []
+
+
+def test_no_hc_reason_empty_fails(d):
+    _drop_hc_f2(d, '- Không tìm thấy HC — lý do:\n')
+    assert 'NO_BENCH' in codes(d)
+
+
+def test_no_hc_without_line_fails(d):
+    _drop_hc_f2(d, '')
+    assert 'NO_BENCH' in codes(d)

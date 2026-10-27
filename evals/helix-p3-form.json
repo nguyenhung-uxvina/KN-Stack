@@ -16,8 +16,8 @@
     {"id": "BF-REDFLAG", "name": "red_flag_no_dp", "check": "W without DP kept with red flag and empty weight (Q7)", "regex": "🔴", "required": true},
     {"id": "BF-PROVISIONAL", "name": "provisional_dw", "check": "provisional D/W labels when list not classified (Q6)", "regex": "D/W tạm", "required": true},
     {"id": "BF-CHECKLIST14", "name": "pb_checklist_14", "check": "P&B 14-item checklist", "regex": "14 mục", "required": true},
-    {"id": "BF-LINT", "name": "machine_lint", "check": "p3_form_lint.py must exit 0 before gate 2", "regex": "p3_form_lint\\.py", "required": true},
-    {"id": "BF-TESTPLAN", "name": "bench_test_plan", "check": "every chosen form has a test plan (Analyst Trap)", "regex": "Kế hoạch thử", "required": true},
+    {"id": "BF-LINT", "name": "machine_lint", "check": "p3_form_lint.py must exit 0 before gate 2", "regex": "p3_form_lint\\.py.*exit 0.*Cổng CEO 2", "required": true},
+    {"id": "BF-TESTPLAN", "name": "bench_test_plan", "check": "every chosen form has a test plan (Analyst Trap)", "regex": "PHẢI có phiếu giả thuyết \\+ Kế hoạch thử", "required": true},
     {"id": "BF-LABELS", "name": "knowledge_labels", "check": "three knowledge labels", "regex": "tri thức.*phỏng đoán.*giả định", "required": true},
     {"id": "BF-BOOKS", "name": "three_books", "check": "rules cite the three books TKHT, TKKTHT, KL9", "regex": "TKHT.*TKKTHT.*KL9", "required": true}
   ],

@@ -5,6 +5,11 @@ Usage: python -X utf8 scripts/p3_form_lint.py <thu-muc-dau-ra> --prefix <PREFIX>
 Tep: <P>BF_Form_Variants.md, <P>BF_Benchmark.md, <P>BF_Scoring.md, <P>BF_Form_Selection.md
 Exit: 0 sach, 1 co finding, 2 loi dung/doc tep.
 
+Loi ra NO_BENCH co ly do: chuc nang khong co HC nao van sach neu trong khoi
+«## F-<id> — …» cua <P>BF_Benchmark.md co dong
+«Không tìm thấy HC — lý do: <ly do khong rong>» (cho phep tien to «- »).
+Ly do rong -> NO_BENCH. Khi khong co HC, bang cham cua F do chi can cot PA.
+
 Ma loi: MISSING_FILE TOO_FEW_VARIANTS VARIANT_NO_RULE VARIANT_NO_PARAM BAD_LABEL
   BENCH_NO_SOURCE BENCH_NO_DATE BENCH_NO_CHAIN TOO_MANY_BENCH
   CHECKLIST_INCOMPLETE CHECKLIST_SKIP_NO_REASON BAD_CELL QUESTION_NO_REASON
@@ -33,6 +38,7 @@ F_HEAD = re.compile(r'^##\s+F-([A-Za-z0-9]+)\b')
 PA_HEAD = re.compile(r'^###\s+(PA-[A-Za-z0-9]+-\d+)\b')
 HC_HEAD = re.compile(r'^###\s+(HC-([A-Za-z0-9]+)-\d+)\b')
 SF_HEAD = re.compile(r'^###\s+F-([A-Za-z0-9]+)\b')
+NOHC_RE = re.compile(r'^\s*(?:[-*]\s+)?\**Không tìm thấy HC\s*[—–-]\s*lý do\s*:\s*\**\s*(.*?)\s*$')
 
 
 def _read(path):
@@ -137,9 +143,25 @@ def lint_benchmark(path, f_ids, out):
         r = _field(lines, s, e, 'Chuỗi C&C²')
         if not r or not r[1]:
             out.append(Finding(rel, s + 1, 'BENCH_NO_CHAIN', f'{hid}: «Chuỗi C&C²:» rỗng'))
+    nohc = {}
+    for s, e, m in _blocks(lines, F_HEAD):
+        for i in range(s + 1, e):
+            mm = NOHC_RE.match(lines[i])
+            if mm:
+                nohc[m.group(1)] = (i + 1, mm.group(1).strip('* '))
+                break
     for fid in f_ids:
         if not ids.get(fid):
-            out.append(Finding(rel, 1, 'NO_BENCH', f'F-{fid} không có HC nào (cần 1–{MAX_BENCH})'))
+            r = nohc.get(fid)
+            if r and r[1]:
+                continue
+            if r:
+                out.append(Finding(rel, r[0], 'NO_BENCH',
+                                   f'F-{fid}: «Không tìm thấy HC — lý do:» rỗng'))
+            else:
+                out.append(Finding(rel, 1, 'NO_BENCH',
+                                   f'F-{fid} không có HC nào (cần 1–{MAX_BENCH}, hoặc dòng '
+                                   f'«Không tìm thấy HC — lý do: …» trong «## F-{fid}»)'))
     for fid, hs in ids.items():
         if len(hs) > MAX_BENCH:
             out.append(Finding(rel, 1, 'TOO_MANY_BENCH', f'F-{fid} có {len(hs)} HC, tối đa {MAX_BENCH}'))

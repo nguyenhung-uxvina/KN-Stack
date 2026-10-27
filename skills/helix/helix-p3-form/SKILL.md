@@ -8,7 +8,7 @@ description: "Block BF of Phase 3 pipeline (helix-embody-realize), runs between 
 > **P&B:** 7.1 (bước 2–5, phát triển vật mang chức năng chính) + 7.2–7.4 (quy tắc, nguyên tắc hiện thân) | **Pipeline:** helix-embody-realize → Block BF (bắt buộc)
 > **Vị trí:** `B0 preflight ──▶ BF form ──▶ BA layout ──▶ BA½ ──▶ BB DfX ──▶ BC ──▶ BD ──▶ BE`
 > **Input:** Function_Structure + Requirements_List (D/W) + HOQ + Concept_Selection + B0_Preflight_Report (+ CC2_Handoff nếu có)
-> **Output:** `{{prefix}}BF_Function_Selection.md`, `BF_Form_Variants.md`, `BF_Benchmark.md`, `BF_Scoring.md`, `BF_Form_Selection.md` (+ `CC2_Handoff.md` nếu chưa có)
+> **Output:** `{{prefix}}BF_Function_Selection.md`, `{{prefix}}BF_Form_Variants.md`, `{{prefix}}BF_Benchmark.md`, `{{prefix}}BF_Scoring.md`, `{{prefix}}BF_Form_Selection.md` (+ `{{prefix}}CC2_Handoff.md` nếu chưa có)
 > **Spec:** `docs/superpowers/specs/2026-10-27-helix-p3-form-design.md` (§4–§8, §11b, §13 Q6–Q8)
 
 Luận đề: hình thể là giả thuyết. BF không đưa đáp án; nó dựng phương án có lý do trỏ đúng quy tắc sách, đặt cạnh lời giải đã có trên đời, chấm cùng một thước, rồi để CEO chọn — và mọi hình thể được chọn phải đi ra bàn thử.
@@ -35,8 +35,8 @@ Luận đề: hình thể là giả thuyết. BF không đưa đáp án; nó d�
 | Cờ | Tác dụng |
 |---|---|
 | `--variant <V>` | Thư mục biến thể `<thư mục P3>/<V>/` (giữ nguyên `<V>`), tiền tố `<PROJECT>_<V0>_` |
-| `--function <F-id>` | Chỉ chạy F2–F7 cho một chức năng đã qua Cổng CEO 1; ghi đè đúng mục `## F-<id>` của nó trong 4 tệp, giữ mục khác |
-| `--quick` | Tầng nguồn chỉ 1 (hồ sơ dự án), ≥2 phương án/chức năng; lint chạy với `--quick` |
+| `--function <F-id>` | Chỉ chạy F2–F7 cho một chức năng đã qua Cổng CEO 1. Ghi đè đúng mục `## F-<id>` của nó trong `BF_Form_Variants.md`, `BF_Benchmark.md`, `BF_Form_Selection.md`, và đúng mục `### F-<id>` dưới `## Bảng chấm` trong `BF_Scoring.md`; `## Checklist 14 mục` và `## Độ nhạy` của `BF_Scoring.md` là phần dùng chung — chỉ sửa/thêm dòng liên quan tới F này, không xoá phần của F khác |
+| `--quick` | Tầng nguồn chỉ 1 (hồ sơ dự án), ≥2 phương án/chức năng; tầng 1 không ra HC nào cho một chức năng → nâng lên tầng 2 (web) cho riêng chức năng đó; lint chạy với `--quick` |
 | (orchestrator) `--skip-form "<lý do>"` | Bỏ BF; lý do vào `_pipeline_state.md` Adjustments Log, BE in lại ở báo cáo Gate 3 |
 
 ### Nơi ghi và tiền tố (luật VARIANT_SHORT của P3 — giống `helix-embody-realize` §Variant Subfolder Convention và `helix-cc2`)
@@ -45,22 +45,22 @@ Luận đề: hình thể là giả thuyết. BF không đưa đáp án; nó d�
 - Không variant: ghi vào `<thư mục P3>/`, `{{prefix}}` = `<PROJECT>_` với mọi `-` của PROJECT đổi thành `_` (`VN-XUONG-UUV` → `VN_XUONG_UUV_`).
 - Có `--variant <V>`: ghi vào `<thư mục P3>/<V>/`, `{{prefix}}` = `<PROJECT>_<V0>_`, `<V0>` = `<V>` cắt tại dấu `-` đầu tiên (`V5-MOTORIZED` → `VN_MGM_V5_`).
 - Áp luật nguyên văn: `VN-TGT-F --variant TGT-10` → thư mục `Phase3-Embodiment/TGT-10/`, tiền tố `VN_TGT_F_TGT_` (KHÔNG phải `VN_TGT_F_TGT10_`).
-- ⚠ Hệ quả: TGT-9, TGT-10, TGT-14… cùng ra tiền tố `VN_TGT_F_TGT_`; chỉ thư mục biến thể phân biệt chúng. Không tự chế luật khác — dùng đúng tiền tố mà B0 của cùng phiên đã dùng (đọc tên tệp `*B0_Preflight_Report.md` trong thư mục biến thể) và in tiền tố ra đầu phiên để CEO thấy.
+- ⚠ Hệ quả: TGT-9, TGT-10, TGT-14… cùng ra tiền tố `VN_TGT_F_TGT_`; chỉ thư mục biến thể phân biệt chúng. Không tự chế luật khác — dùng đúng tiền tố mà B0 của P3 đã dùng (đọc tên tệp `*B0_Preflight_Report.md` chỉ trong `<thư mục P3>/<V>/` hoặc `<thư mục P3>/`; không lấy B0 ở Phase1-Task — đó là B0 của P1, pipeline helix-task-clarify) và in tiền tố ra đầu phiên để CEO thấy.
 - Mã chức năng `F-<id>`: `<id>` chỉ gồm chữ/số (lint đọc `F-([A-Za-z0-9]+)`). Function_Structure ghi `F1.2` → dùng `F-12` hoặc `F-1b` và ghi ánh xạ ở `BF_Function_Selection.md`.
 
 ## Đầu vào
 
 | Tệp | Nguồn | Bắt buộc | Thiếu thì |
 |---|---|---|---|
-| `{{prefix}}Function_Structure.md` | P1/P2 | Có | Dừng, chỉ `/helix-p1-structure` |
+| `{{prefix}}Function_Structure.md` | P1/P2 | Có | Không dừng: dự phòng R15 — suy danh sách chức năng từ bảng «Yêu cầu quyết định hiện thân» của B0 P3 + Concept_Selection + Requirements, mỗi chức năng nhãn *phỏng đoán*, CEO xác nhận ở Cổng CEO 1; khuyên chạy `/helix-p1-structure` sau |
 | `{{prefix}}Requirements_List_v*.md` (đã phân D/W, cột nguồn `HOQ-DPx`) | P1 | Có | Chỉ có `Requirements_Draft*` / chưa phân D/W → chạy D/W tạm (Q6) |
 | `HOQ_Design_Parameters_v*.md` | FORGE / P2 | Có | Chấm không trọng số, mọi dòng W cờ 🔴 (Q7) |
 | `{{prefix}}Concept_Selection.md` (+ `Morphological_Matrix*`) | P2 | Có | Dừng, chỉ `/helix-p2-select` |
-| `{{prefix}}B0_Preflight_Report.md` | B0 | Có | Dừng, chạy B0 trước |
+| `{{prefix}}B0_Preflight_Report.md` | B0 của P3 (chỉ trong `<thư mục P3>/<V>/` hoặc `<thư mục P3>/`) | Có | Dừng, chạy `/helix-p3-preflight` trước |
 | `{{prefix}}CC2_Handoff.md` | `/helix-cc2` C6 | Không | F2 tự dựng chuỗi; BF sinh Handoff ở F7 |
 | `RE/`, `Phase2-Concept/FTO_*`, `ban-do-sang-che*`, PDF sáng chế trong dự án | dự án | Không | Tầng nguồn 1 rỗng — ghi rõ |
 
-**Glob linh hoạt** (spec §11b): với mỗi tệp, thử lần lượt `{{prefix}}<Tên>*`, `*_<Tên>*`, rồi `<Tên>*` không tiền tố (vd. `BE_Concept_Selection.md`, `Requirements_Draft.md`), trong `Phase2-Concept/<V>/`, `Phase2-Concept/`, `Phase1-Task/<V>/`, `Phase1-Task/`, `Phase0-Forge/` (hoặc `FORGE/`), `Phase0-Plan/<V>/`, `<project>/<V>/`, và `<thư mục P3>/<V>/` cho B0/CC2_Handoff. Nhiều bản → lấy phiên bản cao nhất, in tên tệp đã chọn; không chắc → hỏi CEO.
+**Glob linh hoạt** (spec §11b): với mỗi tệp, thử lần lượt `{{prefix}}<Tên>*`, `*_<Tên>*`, rồi `<Tên>*` không tiền tố (vd. `BE_Concept_Selection.md`, `Requirements_Draft.md`), trong `Phase2-Concept/<V>/`, `Phase2-Concept/`, `Phase1-Task/<V>/`, `Phase1-Task/`, `Phase0-Forge/` (hoặc `FORGE/`), `Phase0-Plan/<V>/`, `<project>/<V>/`. Riêng B0_Preflight_Report và CC2_Handoff chỉ tìm trong `<thư mục P3>/<V>/` và `<thư mục P3>/` — không lấy B0 ở Phase1-Task — đó là B0 của P1 (vd. `Phase1-Task/VN_TGT_F_B0_Preflight_Report.md` của helix-task-clarify). Nhiều bản → lấy phiên bản cao nhất, in tên tệp đã chọn; không chắc → hỏi CEO.
 
 ## Nạp tham chiếu (kỷ luật — không nạp cả tệp)
 
@@ -83,7 +83,7 @@ Nguồn C&C² dùng chung (không chép lại): `helix-cc2:references:cc2-core` 
 
 ### F1 — Chọn chức năng (Core · Cổng CEO 1)
 
-1. Đọc Function_Structure × danh sách «yêu cầu quyết định hiện thân» trong B0_Preflight_Report. Đề xuất các chức năng cần đi qua BF, xếp theo mức quyết định hiện thân (chức năng nào mà hình thể sai thì hỏng sản phẩm đứng đầu).
+1. Đọc Function_Structure × danh sách «yêu cầu quyết định hiện thân» trong B0_Preflight_Report của P3. **Không có Function_Structure (R15):** suy danh sách chức năng từ bảng «Yêu cầu quyết định hiện thân» của B0 P3 + Concept_Selection + Requirements, gắn mỗi chức năng suy ra nhãn *phỏng đoán*, in ở đầu `BF_Function_Selection.md` câu «Chưa có cấu trúc chức năng P1 — danh sách dưới đây suy từ B0 P3 + Concept_Selection + Requirements, nhãn phỏng đoán, chờ CEO xác nhận tại Cổng CEO 1; nên chạy /helix-p1-structure sau.» Đề xuất các chức năng cần đi qua BF, xếp theo mức quyết định hiện thân (chức năng nào mà hình thể sai thì hỏng sản phẩm đứng đầu).
 2. Gán mỗi chức năng một (hoặc hai) **loại chức năng** theo hàng của `function-index.md`.
 3. **Nguyên lý làm việc của từng chức năng con:** P2 thường chỉ chọn khái niệm cấp hệ → suy nguyên lý từng chức năng con từ Concept_Selection (+ Morphological_Matrix nếu có), gắn nhãn *phỏng đoán*, đưa CEO xác nhận ở Cổng CEO 1.
 4. **D/W tạm (Q6):** danh sách yêu cầu chưa phân D/W hoặc chỉ có Requirements_Draft → BF đề xuất D/W, MỌI dòng ghi `D tạm` / `W tạm` cho tới khi CEO duyệt tại Cổng CEO 1; đầu `BF_Scoring.md` in câu đang dùng phân loại D/W tạm; BE không được khuyến nghị qua Gate 3 khi còn nhãn tạm.
@@ -111,7 +111,9 @@ Theo `benchmark-search.md`, đi đúng thứ tự: tầng 1 hồ sơ dự án �
 2. **Tầng 2 — web:** `mcp__exa__web_search_exa` để tìm, `mcp__exa__web_fetch_exa` để đọc; truy vấn theo **chức năng** (động từ + điều kiện), không theo tên sản phẩm; chỉ ghi nguồn đã mở đọc.
 3. **Tầng 3 — sáng chế:** Exa trên patents.google.com / Espacenet; ưu tiên công bố ≤ 5 năm; ĐỌC HÌNH VẼ (figures) và claims, không chỉ tóm tắt/thuyết minh — số chú thích trên hình là chỗ lộ WFP/LSS. Không mở được hình vẽ → nhãn `giả định`, ghi «chưa đọc hình».
 
-Tối đa **≤8 giải pháp (HC) mỗi chức năng**; dừng sớm khi giải pháp mới chỉ lặp một chuỗi C&C² đã có. Mỗi HC: nguồn (URL / số công bố / tệp), ngày truy cập, **chuỗi C&C² đọc ngược** (đọc sáng chế bằng bảng WFP/LSS/Connector của `reverse-engineering:references:cc2-lens`), nhãn tri thức, `Cờ FTO:` nếu có. `--quick` chỉ tầng 1.
+Tối đa **≤8 giải pháp (HC) mỗi chức năng**; dừng sớm khi giải pháp mới chỉ lặp một chuỗi C&C² đã có. Mỗi HC: nguồn (URL / số công bố / tệp), ngày truy cập, **chuỗi C&C² đọc ngược** (đọc sáng chế bằng bảng WFP/LSS/Connector của `reverse-engineering:references:cc2-lens`), nhãn tri thức, `Cờ FTO:` nếu có. `--quick` chỉ tầng 1, nhưng tầng 1 trống cho chức năng nào thì nâng lên tầng 2 cho chức năng đó.
+
+**Không tìm được HC nào:** chức năng kết thúc F4 với 0 HC phải có trong mục `## F-<id>` của `BF_Benchmark.md` dòng `- Không tìm thấy HC — lý do: <các tầng đã tìm + truy vấn chính + vì sao không có>` (lý do không rỗng; lint chấp nhận thay cho HC, thiếu dòng hoặc lý do rỗng → `NO_BENCH`). Bảng chấm của chức năng đó khi ấy chỉ có cột PA.
 
 ### F5 — Checklist 14 mục P&B (Offload)
 
@@ -196,6 +198,9 @@ Chuỗi C&C² nền: <WFP1 → LSS1 → Connector → WFP2> (Nhãn: <tri thức 
 - Nhãn: <tri thức | phỏng đoán | giả định>
 - Chuỗi C&C²: <WFP1 → LSS1 → Connector → WFP2>
 - Cờ FTO: <tuỳ chọn: số sáng chế; lãnh thổ; chuyển ip-* / QP-02-06>
+
+## F-<id> — <tên chức năng không có HC>
+- Không tìm thấy HC — lý do: <tầng 1: RE/, FTO_* …; tầng 2: Exa web «<truy vấn>»; tầng 3: Exa patents «<truy vấn>» — không có lời giải cùng chức năng>
 ```
 
 ### `{{prefix}}BF_Scoring.md`
