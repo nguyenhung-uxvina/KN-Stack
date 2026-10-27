@@ -54,6 +54,15 @@ def _row_code(line: str):
     return cell if ROW_CODE.match(cell) else None
 
 
+def table_item(line):
+    """So muc 1-9 neu dong la hang bang co o dau la mot chu so (bo **, dau cach)."""
+    m = _ROW.match(line)
+    if not m:
+        return None
+    cell = m.group(1).replace('**', '').strip()
+    return cell if re.fullmatch(r'[1-9]', cell) else None
+
+
 def split_units(text: str) -> list:
     body = _strip_frontmatter(text)
     # entries: [id, kind, lines]; thu tu theo luc xuat hien
@@ -61,6 +70,8 @@ def split_units(text: str) -> list:
     cur = ['_preamble', 'preamble', []]
     entries.append(cur)
     gt = None  # id phieu GT dang mo
+    gt_entry = None  # muc .0 cua phieu dang mo
+    in_row_item = False  # cur la muc dang hang bang
     in_fence = False
     has_heading = False
     has_row = False
@@ -76,16 +87,28 @@ def split_units(text: str) -> list:
             if g:
                 has_heading = True
                 gt = g.group(1)
-                cur = [gt + '.0', 'gt_item', [line]]
+                cur = gt_entry = [gt + '.0', 'gt_item', [line]]
+                in_row_item = False
                 entries.append(cur)
                 continue
             if h:
                 has_heading = True
                 gt = None
+                in_row_item = False
                 title = normalize(h.group(2))
                 cur = [title, 'section', [line]]
                 entries.append(cur)
                 continue
+            if gt:
+                ti = table_item(line)
+                if ti:
+                    cur = ['%s.%s' % (gt, ti), 'gt_item', [line]]
+                    in_row_item = True
+                    entries.append(cur)
+                    continue
+                if in_row_item and _ROW.match(line):
+                    # hang bang khac dong muc dang hang; ve lai muc .0
+                    cur, in_row_item = gt_entry, False
             code = _row_code(line)
             if code:
                 has_row = True
@@ -95,6 +118,7 @@ def split_units(text: str) -> list:
                 it = _ITEM.match(line)
                 if it:
                     cur = ['%s.%s' % (gt, it.group(1)), 'gt_item', [line]]
+                    in_row_item = False
                     entries.append(cur)
                     continue
         cur[2].append(line)

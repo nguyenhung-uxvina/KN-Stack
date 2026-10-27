@@ -23,6 +23,11 @@ _GT_SUFFIX_RE = re.compile(r'\.\d+(?:~\d+)?$')
 _FILE_RE = re.compile(r'^(?:RE_|TECH_T)')
 _LEAK_RE = re.compile(r'RE_[A-Z0-9]+_')
 _TICK_FULL_RE = re.compile(r'`[^`\s][^`]*?\.md#[^`]+`')
+# ma y tuong Idea_Log chung (ke ca ma khong co trong manifest): thay + quet lai
+_YT_RE = re.compile(r'(?<![\w-])YT-[A-Z0-9-]*\d+(?![\w])')
+# quet lai: moi dang ma GT / hang N-ddd, du khong co trong manifest
+_GT_LEAK_RE = re.compile(r'GT-[A-Z0-9]+(?:-[A-Z0-9]+)*')
+_N_LEAK_RE = re.compile(r'\bN-\d{3}\b')
 
 
 class InputError(Exception):
@@ -72,12 +77,16 @@ def redact(text, codes):
             _alt(c) for c in sorted(set(codes), key=lambda c: (-len(c), c))))
         text, k = pat.subn(PLACEHOLDER, text)
         n += k
+    text, k = _YT_RE.subn(PLACEHOLDER, text)
+    n += k
     return text, n
 
 
 def _scan(text, codes):
     hits = [m.group(0) for m in _LEAK_RE.finditer(text)]
     hits += [m.group(0) for m in ANCHOR_RE.finditer(text)]
+    for rx in (_YT_RE, _GT_LEAK_RE, _N_LEAK_RE):
+        hits += [m.group(0) for m in rx.finditer(text)]
     plain = [c for c in codes if _FILE_RE.match(c) or c.startswith('GT-')]
     rows = [c for c in codes if c not in plain]
     if plain:

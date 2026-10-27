@@ -71,12 +71,25 @@ def load_prov(prov_dir):
 def check(prov_dir, manifest):
     errs = []
     for name, _ch, secs in load_prov(prov_dir):
+        if not secs:
+            errs.append('%s: không có neo' % name)
         for sec, anchors in secs.items():
+            if not anchors:
+                errs.append('%s:%s: không có neo' % (name, sec))
             for a in anchors:
                 why = anchor_error(a, manifest)
                 if why:
                     errs.append('%s:%s: %s (%s)' % (name, sec, a, why))
     return errs
+
+
+_CARD_RE = re.compile(r'^(.*?\.md#GT-.+)\.\d(?:~\d+)?$', re.S)
+
+
+def _card_key(anchor):
+    """'tep.md#GT-x.n(~k)' -> 'tep.md#GT-x' ; khong phai muc GT -> None."""
+    m = _CARD_RE.match(anchor)
+    return m.group(1) if m else None
 
 
 def impact(prov_dir, diff):
@@ -96,8 +109,17 @@ def impact(prov_dir, diff):
                 for ch, ss in sorted(sections.items())}
     unanchored = sorted(a for a in diff.get('added', []) if _norm_anchor(a) not in cite)
     status = []
+    by_card = {}  # 'tep#GT-x' -> {chapter}
+    for a, refs in cite.items():
+        k = _card_key(a)
+        if k:
+            by_card.setdefault(k, set()).update(ch for ch, _ in refs)
     for s in diff.get('status_changes', []):
-        chs = sorted({ch for ch, _ in cite.get(_norm_anchor(s['anchor']), [])})
+        k = _card_key(_norm_anchor(s['anchor']))
+        if k:
+            chs = sorted(by_card.get(k, ()))
+        else:
+            chs = sorted({ch for ch, _ in cite.get(_norm_anchor(s['anchor']), [])})
         status.append({'anchor': s['anchor'], 'from': s['from'], 'to': s['to'], 'chapters': chs})
     return {'sections': sections, 'unanchored_new': unanchored, 'status_changes': status}
 
@@ -159,6 +181,11 @@ def _report(r):
 
 
 def main(argv=None):
+    for st in (sys.stdout, sys.stderr):
+        try:
+            st.reconfigure(encoding='utf-8', errors='replace')
+        except (AttributeError, ValueError, OSError):
+            pass
     ap = argparse.ArgumentParser(prog='re_provenance')
     sub = ap.add_subparsers(dest='cmd')
     c = sub.add_parser('check')
@@ -181,12 +208,12 @@ def main(argv=None):
         if a.cmd == 'impact':
             r = impact(a.prov, _load_json(a.diff))
             text = json.dumps(r, ensure_ascii=False, indent=1) + '\n'
-            _report(r)
             if a.out:
                 os.makedirs(os.path.dirname(os.path.abspath(a.out)), exist_ok=True)
                 with open(a.out, 'w', encoding='utf-8', newline='\n') as f:
                     f.write(text)
-            else:
+            _report(r)
+            if not a.out:
                 sys.stdout.write(text)
             return 0
         m = _load_json(os.path.join(a.book, '_re_manifest.json'))

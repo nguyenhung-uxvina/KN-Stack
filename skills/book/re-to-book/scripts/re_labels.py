@@ -97,6 +97,10 @@ def resolve(unit: Unit, cap, ceiling) -> Label:
         label, source = cap, 'kế thừa: tệp'
     else:
         label, source = 'chưa gán', 'chưa gán'
+    if unit.kind == 'gt_item' and (label == 'chưa gán'
+                                   or LABEL_RANK[label] > LABEL_RANK['conjecture']):
+        # phieu GT la gia thuyet chua thu => tran phong doan
+        label, source = 'conjecture', 'kế thừa: phiếu GT'
 
     letters = _CONF_INLINE.findall(text) + _table_conf(text)
     if letters:

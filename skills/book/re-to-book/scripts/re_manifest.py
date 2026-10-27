@@ -15,7 +15,7 @@ import shutil
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from re_units import normalize, split_units, _FENCE, _GT_HEAD, _HEAD, _ITEM  # noqa: E402
+from re_units import normalize, split_units, table_item, _FENCE, _GT_HEAD, _HEAD, _ITEM, _ROW  # noqa: E402
 import re_labels  # noqa: E402
 
 SCHEMA = 1
@@ -129,8 +129,27 @@ def _alnum(s):
     return re.search(r'[^\W_]', s) is not None
 
 
+_FILL_LATER = re.compile(r'\*\(điền sau[^)]*\)\*')
+_ROW_LABEL = {'6': ('KẾT QUẢ', '⟨chờ đo⟩'), '7': ('DỰ ĐOÁN VIẾT TRƯỚC', '⟨chờ ký⟩')}
+
+
+def _cells(line):
+    return line.strip().strip('|').split('|')
+
+
+def _row_content(unit_text):
+    """Muc dang hang bang -> van ban cac o noi dung (bo o so + o nhan); khac -> None."""
+    first = unit_text.split('\n', 1)[0]
+    if not table_item(first):
+        return None
+    cells = _cells(first)
+    return ' | '.join(cells[2:] if len(cells) >= 3 else cells[1:])
+
+
 def _signed(unit_text):
-    for ln in unit_text.split('\n'):
+    content = _row_content(unit_text)
+    lines = [content] if content is not None else unit_text.split('\n')
+    for ln in lines:
         m = re.search(r'người ký(.*)ngày(.*)$', ln, re.I)
         if m and _alnum(m.group(1)) and re.search(r'\d', m.group(2)):
             return True
@@ -138,9 +157,23 @@ def _signed(unit_text):
 
 
 def _result_empty(unit_text):
-    body = re.sub(r'^6\.\s*(\*\*[^*]*\*\*)?', '', unit_text, count=1)
-    body = body.replace('*(điền sau)*', '')
+    body = _row_content(unit_text)
+    if body is None:
+        body = re.sub(r'^6\.\s*(\*\*[^*]*\*\*)?', '', unit_text, count=1)
+    body = _FILL_LATER.sub('', body)
     return not _alnum(body)
+
+
+def _marker(unit, which):
+    """Dau thay the: hang bang giu so cot; muc danh sach giu dang cu."""
+    first = unit.text.split('\n', 1)[0]
+    num = table_item(first)
+    if not num:
+        return MARK_UNSIGNED if which == '7' else MARK_EMPTY
+    label, mark = _ROW_LABEL[which]
+    n = len(_cells(first))
+    out = [num, label, mark] + [''] * (n - 3) if n >= 3 else [num, mark]
+    return '| ' + ' | '.join(out) + ' |'
 
 
 def _item_spans(lines):
@@ -153,7 +186,7 @@ def _item_spans(lines):
                 start = k + 1
                 break
     spans, seen = [], {}
-    gt, in_fence, cur = None, False, None  # cur = [start, id]
+    gt, in_fence, cur = None, False, None  # cur = [start, id, la_hang_bang]
 
     def close(end):
         nonlocal cur
@@ -181,13 +214,20 @@ def _item_spans(lines):
             gt = None
             continue
         if gt:
-            it = _ITEM.match(line)
-            if it:
+            num = table_item(line)
+            is_row = num is not None
+            if not is_row:
+                if cur is not None and cur[2] and _ROW.match(line):
+                    close(i)  # hang bang khac dong muc dang hang
+                    continue
+                it = _ITEM.match(line)
+                num = it.group(1) if it else None
+            if num:
                 close(i)
-                uid = '%s.%s' % (gt, it.group(1))
+                uid = '%s.%s' % (gt, num)
                 n = seen.get(uid, 0) + 1
                 seen[uid] = n
-                cur = [i, uid if n == 1 else '%s~%d' % (uid, n)]
+                cur = [i, uid if n == 1 else '%s~%d' % (uid, n), is_row]
     close(len(lines))
     return spans
 
@@ -202,11 +242,11 @@ def _apply_cuts(text, units):
         if _ITEM7.search(u.id):
             if not _signed(u.text):
                 flags[u.id] = {'cut': True}
-                markers[u.id] = MARK_UNSIGNED
+                markers[u.id] = _marker(u, '7')
         elif _ITEM6.search(u.id):
             if _result_empty(u.text):
                 flags[u.id] = {'cut': False, 'empty_result': True}
-                markers[u.id] = MARK_EMPTY
+                markers[u.id] = _marker(u, '6')
     lines = text.split('\n')
     done = set()
     for s, e, uid in reversed(_item_spans(lines)):
@@ -228,6 +268,21 @@ def _walk(root):
         for fn in sorted(files):
             full = os.path.join(d, fn)
             yield full, os.path.relpath(full, root).replace(os.sep, '/')
+
+
+def _norm_root(p):
+    """Mot cach viet cho mot thu muc: abspath + normcase, bo dau phan cach cuoi."""
+    n = os.path.normcase(os.path.abspath(p))
+    s = n.rstrip('/\\')
+    if not s or s.endswith(':'):
+        return n  # goc o dia / goc POSIX: giu nguyen dau phan cach
+    return s
+
+
+def zero_unit_files(manifest):
+    """Tep READ/CUT khong tach duoc don vi nao (de canh bao, khong chan)."""
+    return sorted(k for k, e in manifest.get('files', {}).items()
+                  if e.get('class') in _SNAP_CLASSES and not e.get('units'))
 
 
 def build_manifest(roots, classes_path):
@@ -297,7 +352,8 @@ def build_manifest(roots, classes_path):
         ent['units'] = ud
         files[key] = ent
     now = datetime.datetime.now(datetime.timezone.utc).isoformat(timespec='seconds')
-    return {'schema': SCHEMA, 'created': now, 'roots': dict(roots),
+    return {'schema': SCHEMA, 'created': now,
+            'roots': {k: _norm_root(v) for k, v in roots.items()},
             'files': files, 'sources': sources}
 
 
@@ -404,7 +460,7 @@ def diff_manifests(old, new):
     moved = {}
     orr, nrr = old.get('roots', {}), new.get('roots', {})
     for name in sorted(set(orr) & set(nrr)):
-        if orr[name] != nrr[name]:
+        if _norm_root(orr[name]) != _norm_root(nrr[name]):
             moved[name] = [orr[name], nrr[name]]
     os_, ns_ = old.get('sources', {}), new.get('sources', {})
     src = [k for k in set(os_) | set(ns_)
@@ -415,18 +471,61 @@ def diff_manifests(old, new):
             'status_changes': status, 'compared_units': compared}
 
 
-def _disk_units(manifest, roots, key):
-    """Tach lai tep tu dia theo cung luat build -> {unit id: text}."""
+def _disk_text(manifest, roots, key):
+    """Doc lai tep tu dia (loc GapFill nhu build) -> van ban da normalize."""
     name, rel = key.split('/', 1)
     if name not in roots:
         raise InputError('thieu goc ho so: %s' % name)
     text = _safe_text(os.path.join(roots[name], *rel.split('/')))
     if 'gapfill' in manifest['files'][key]:
         text = _gapfill(text)[1]
-    return {u.id: u.text for u in split_units(normalize(text))}
+    return normalize(text)
 
 
-_MO = re.compile(r'(?<!\w)mở(?!\w)')
+def _disk_units(manifest, roots, key):
+    """Tach lai tep tu dia theo cung luat build -> {unit id: text}."""
+    return {u.id: u.text for u in split_units(_disk_text(manifest, roots, key))}
+
+
+_MO = re.compile(r'(?<!\w)mở(?!\w)', re.I)
+_CLOSED = re.compile(r'ĐÃ TRẢ|BÃI BỎ|CHUYỂN|ĐÓNG', re.I)
+_STATUS_HEAD = re.compile(r'trạng thái|status', re.I)
+
+
+def _row_status(text):
+    """-> {row id: o cot Trang thai/Status cua bang chua hang; khong co cot => ca hang}.
+    Danh so hang trung (~k) nhu split_units."""
+    from re_units import _strip_frontmatter, _row_code
+    out, seen = {}, {}
+    col, prev_table, in_fence = None, False, False
+    for ln in normalize(_strip_frontmatter(text)).split('\n'):
+        if _FENCE.match(ln):
+            in_fence = not in_fence
+            prev_table = False
+            continue
+        is_table = not in_fence and ln.lstrip().startswith('|')
+        if is_table and not prev_table:  # dong dau bang = tieu de (tru khi la hang co ma)
+            cells = _cells(ln)
+            col = None if _row_code(ln) else next(
+                (i for i, c in enumerate(cells) if _STATUS_HEAD.search(c)), None)
+        prev_table = is_table
+        if not is_table:
+            continue
+        code = _row_code(ln)
+        if not code:
+            continue
+        uid = 'row:' + code
+        n = seen.get(uid, 0) + 1
+        seen[uid] = n
+        if n > 1:
+            uid = '%s~%d' % (uid, n)
+        cells = _cells(ln)
+        out[uid] = cells[col] if col is not None and col < len(cells) else ln
+    return out
+
+
+def _is_open(status):
+    return bool(_MO.search(status)) and not _CLOSED.search(status)
 _GAP_SECTIONS = ('Nợ chính xác (Precision_Debt)', 'Hàng N-… còn mở',
                  'Stage Progress bị BỎ', 'Còn mở (status)')
 
@@ -444,13 +543,15 @@ def gaps(manifest, roots):
         rows = [u for u in ent.get('units', {}) if u.startswith('row:')]
         if not rows or ent['class'] not in _SNAP_CLASSES:
             continue
-        texts = _disk_units(manifest, roots, key)
+        raw = _disk_text(manifest, roots, key)
+        texts = {u.id: u.text for u in split_units(raw)}
+        status = _row_status(raw)
         is_debt = key.endswith('_Precision_Debt.md')
         for uid in rows:
             t = texts.get(uid, '')
             if is_debt:
                 add(_GAP_SECTIONS[0], '%s#%s' % (key, uid), t)
-            if uid.startswith('row:N-') and _MO.search(t):
+            if uid.startswith('row:N-') and _is_open(status.get(uid, t)):
                 add(_GAP_SECTIONS[1], '%s#%s' % (key, uid), t)
     missing = []
     for name in sorted(set(k.split('/', 1)[0] for k in manifest['files']) | set(roots)):
@@ -487,6 +588,7 @@ def gaps(manifest, roots):
 def units_index(manifest, snapshot_dir=None):
     """Bang don vi trich dan duoc. Trich doc tu ban chup (khong tu ho so goc)."""
     out = ['# Bảng đơn vị trích dẫn được', '',
+           'chưa gán: %d / tổng %d' % unassigned_count(manifest), '',
            '| anchor | lớp | nhãn | mức tin | 80 ký tự đầu |',
            '|---|---|---|---|---|']
     cache = {}
@@ -548,13 +650,98 @@ def _main_read(a):
             if not os.path.isdir(snap):
                 raise InputError(snap)
             _write(os.path.join(p1, '_units_index.md'), units_index(m, snap))
+            n, total = unassigned_count(m)
+            print('chưa gán: %d / tổng %d' % (n, total))
         return 0
     except (OSError, ValueError, KeyError, InputError) as e:
         print('Loi: %s' % e, file=sys.stderr)
         return 2
 
 
+def unassigned_count(manifest):
+    """-> (so don vi trich dan duoc mang nhan 'chua gan', tong so don vi trich dan duoc)."""
+    n = total = 0
+    for ent in manifest.get('files', {}).values():
+        if ent.get('class') not in _SNAP_CLASSES:
+            continue
+        for rec in (ent.get('units') or {}).values():
+            total += 1
+            n += rec.get('label') == 'chưa gán'
+    return n, total
+
+
+# ---------- lock / freeze (an ban = dung ban chup da kiem o P1) ----------
+LOCK = '_p1_lock.json'
+
+
+def _file_sha(path):
+    return hashlib.sha256(_safe_bytes(path)).hexdigest()
+
+
+def _atomic_write_bytes(path, data):
+    os.makedirs(os.path.dirname(os.path.abspath(path)), exist_ok=True)
+    tmp = path + '.tmp'
+    try:
+        with open(tmp, 'wb') as f:
+            f.write(data)
+        os.replace(tmp, path)
+    except BaseException:
+        if os.path.exists(tmp):
+            os.remove(tmp)
+        raise
+
+
+def _main_lock(a):
+    """lock: ghi _manifests/_p1_lock.json = created + sha256 cua _re_manifest.json."""
+    try:
+        mpath = os.path.join(a.book, '_re_manifest.json')
+        m = _load_json(mpath)
+        lock = {'created': m['created'], 'sha256': _file_sha(mpath)}
+        path = os.path.join(a.book, '_manifests', LOCK)
+        _atomic_write_bytes(path, (json.dumps(lock, ensure_ascii=False, indent=1) + '\n').encode('utf-8'))
+        print('khoá P1: %s · %s' % (lock['created'], lock['sha256'][:12]))
+        return 0
+    except (OSError, ValueError, KeyError, TypeError, InputError) as e:
+        print('Loi: %s' % e, file=sys.stderr)
+        return 2
+
+
+def _main_freeze(a):
+    """freeze: chep _re_manifest.json -> _manifests/ed<N>.json CHI KHI trung ban khoa P1."""
+    try:
+        if a.edition < 1:
+            raise InputError('--edition phai >= 1')
+        mdir = os.path.join(a.book, '_manifests')
+        lpath = os.path.join(mdir, LOCK)
+        if not os.path.isfile(lpath):
+            raise InputError('chua co %s — chay "lock" o checkpoint P1 truoc' % lpath)
+        dst = os.path.join(mdir, 'ed%d.json' % a.edition)
+        if os.path.exists(dst):
+            raise InputError('%s da co — khong ghi de an ban da chot' % dst)
+        mpath = os.path.join(a.book, '_re_manifest.json')
+        lock = _load_json(lpath)
+        m = _load_json(mpath)
+        data = _safe_bytes(mpath)
+        if (hashlib.sha256(data).hexdigest() != lock['sha256']
+                or m.get('created') != lock['created']):
+            print('Manifest hiện tại KHÁC bản đã khoá ở P1 (build lại sau P1?) — '
+                  'chạy lại check-p1, CEO duyệt lại P1, rồi "lock" trước khi freeze. '
+                  'Không ghi %s.' % dst, file=sys.stderr)
+            return 1
+        _atomic_write_bytes(dst, data)
+        print('chốt ấn bản %d: %s' % (a.edition, dst))
+        return 0
+    except (OSError, ValueError, KeyError, TypeError, InputError) as e:
+        print('Loi: %s' % e, file=sys.stderr)
+        return 2
+
+
 def main(argv=None):
+    for st in (sys.stdout, sys.stderr):
+        try:
+            st.reconfigure(encoding='utf-8', errors='replace')
+        except (AttributeError, ValueError, OSError):
+            pass
     ap = argparse.ArgumentParser(prog='re_manifest')
     sub = ap.add_subparsers(dest='cmd')
     b = sub.add_parser('build')
@@ -566,16 +753,23 @@ def main(argv=None):
     d.add_argument('--old', required=True)
     d.add_argument('--new', required=True)
     d.add_argument('--out')
-    for nm in ('gaps', 'index'):
+    for nm in ('gaps', 'index', 'lock'):
         sub.add_parser(nm).add_argument('--book', required=True)
+    fz = sub.add_parser('freeze')
+    fz.add_argument('--book', required=True)
+    fz.add_argument('--edition', required=True, type=int)
     try:
         a = ap.parse_args(argv)
     except SystemExit as e:
         return 2 if e.code else 0
     if a.cmd in ('diff', 'gaps', 'index'):
         return _main_read(a)
+    if a.cmd == 'lock':
+        return _main_lock(a)
+    if a.cmd == 'freeze':
+        return _main_freeze(a)
     if a.cmd != 'build':
-        print('usage: re_manifest.py build|diff|gaps|index ...', file=sys.stderr)
+        print('usage: re_manifest.py build|diff|gaps|index|lock|freeze ...', file=sys.stderr)
         return 2
     roots = {}
     for d in [x.strip() for x in a.re.split(',') if x.strip()]:
@@ -625,6 +819,8 @@ def main(argv=None):
     for k in sorted(counts):
         print('%-14s %d' % (k, counts[k]))
     print('snapshot: %d tep' % n)
+    for k in zero_unit_files(m):
+        print('CẢNH BÁO: %s 0 đơn vị' % k)
     return 0
 
 

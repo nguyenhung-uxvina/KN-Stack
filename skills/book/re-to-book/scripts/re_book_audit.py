@@ -23,7 +23,12 @@ from re_units import normalize, split_units  # noqa: E402
 OVERLAP = 'Phase7-IdeaLog-Overlap.md'
 CAND_HEAD = '## Gợi ý từ vựng (không phải kết luận)'
 VERDICTS = ('trùng', 'không trùng', 'một phần')
-LABEL_VN = {'conjecture': 'phỏng đoán', 'assumption': 'giả định'}
+UNASSIGNED = 'chưa gán'
+UNASSIGNED_MARK = 'chưa gán nhãn'
+LABEL_VN = {'conjecture': 'phỏng đoán', 'assumption': 'giả định', UNASSIGNED: UNASSIGNED}
+LABEL_DECISIONS = '_label_decisions.md'
+DECIDABLE = ('knowledge', 'conjecture', 'assumption')
+_NUM_HEAD = re.compile(r'^#{2,3}\s+(\d+\.\d+)')
 
 _GT_KEY = re.compile(r'^(GT-.+)\.([67])(?:~\d+)?$')
 _HEAD = re.compile(r'^(#{1,6})\s+(.*)$')
@@ -129,9 +134,45 @@ def _section_text(text, sec_key):
     return '\n'.join(lines[start:end])
 
 
-def label_gaps(chapters, prov, manifest):
+def _numbered_headings(text):
+    """So muc NN.x cua moi tieu de ##/### ngoai rao ma."""
+    out, in_fence = [], False
+    for ln in normalize(text).split('\n'):
+        if _fence(ln):
+            in_fence = not in_fence
+            continue
+        m = None if in_fence else _NUM_HEAD.match(ln)
+        if m and m.group(1) not in out:
+            out.append(m.group(1))
+    return out
+
+
+def load_label_decisions(book):
+    """Phase1-Exploration/_label_decisions.md: | <neo> | <knowledge|conjecture|assumption> |.
+    Thieu tep => {} (chua co quyet dinh nao)."""
+    p = os.path.join(book, 'Phase1-Exploration', LABEL_DECISIONS)
+    if not os.path.isfile(p):
+        return {}
+    with open(p, encoding='utf-8-sig') as f:
+        text = normalize(f.read())
+    out = {}
+    for ln in text.split('\n'):
+        if not ln.lstrip().startswith('|'):
+            continue
+        cells = _cells(ln)
+        if len(cells) < 2:
+            continue
+        anchor = cells[0].replace('`', '').strip()
+        label = cells[1].replace('*', '').strip().lower()
+        if label in DECIDABLE and _SPLIT_ANCHOR.match(anchor):
+            out[anchor] = label
+    return out
+
+
+def label_gaps(chapters, prov, manifest, decisions=None):
     errs = []
     files = manifest.get('files', {})
+    decisions = decisions or {}
     for ch in sorted(set(chapters) - set(prov)):
         errs.append('%s: không có provenance' % ch)
     for ch in sorted(prov):
@@ -139,6 +180,10 @@ def label_gaps(chapters, prov, manifest):
         if ch not in chapters:
             errs.append('%s: không thấy chương' % ch)
             continue
+        have = {k.lstrip('§').strip() for k in secs}
+        for num in _numbered_headings(chapters[ch]):
+            if num not in have:
+                errs.append('%s §%s: không có provenance' % (ch, num))
         for sec, anchors in secs.items():
             body = _section_text(chapters[ch], sec)
             if body is None:
@@ -150,12 +195,16 @@ def label_gaps(chapters, prov, manifest):
                 if not m:
                     continue
                 rec = (files.get(m.group(1), {}).get('units') or {}).get(m.group(2))
-                vn = LABEL_VN.get((rec or {}).get('label'))
+                label = (rec or {}).get('label')
+                if label == UNASSIGNED:
+                    label = decisions.get('%s#%s' % (m.group(1), m.group(2)), UNASSIGNED)
+                vn = LABEL_VN.get(label)
                 if not vn or a in seen:
                     continue
                 seen.add(a)
                 if '⟨' + vn not in body:
-                    errs.append('%s %s: thiếu ⟨%s⟩ (%s)' % (ch, sec, vn, a))
+                    show = UNASSIGNED_MARK if label == UNASSIGNED else vn
+                    errs.append('%s %s: thiếu ⟨%s⟩ (%s)' % (ch, sec, show, a))
     return errs
 
 
@@ -318,7 +367,8 @@ def _run_gt(a):
 def _run_labels(a):
     chapters, d = _chapters(a.book, getattr(a, 'stage', None))
     prov = {ch: {'chapter': ch, 'sections': secs} for _n, ch, secs in re_provenance.load_prov(d)}
-    return _report('labels', label_gaps(chapters, prov, _manifest(a.book)))
+    return _report('labels', label_gaps(chapters, prov, _manifest(a.book),
+                                        load_label_decisions(a.book)))
 
 
 def _require_ids(a):

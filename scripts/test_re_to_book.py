@@ -170,7 +170,7 @@ def test_unclassified_file_stops_with_exit_2_and_writes_nothing(tmp_path):
 def test_manifest_keys_are_relative_to_dossier_name(tmp_path):
     m = rm.build_manifest({'Demo': make_dossier(tmp_path)}, CLASSES)
     assert all(k.startswith('Demo/') and '\\' not in k for k in m['files'])
-    assert m['roots']['Demo'] == str(tmp_path / 'Demo')
+    assert m['roots']['Demo'] == rm._norm_root(str(tmp_path / 'Demo'))
     assert 'Demo/_source/a.pdf' in m['sources'] and 'Demo/_analysis/x.py' in m['sources']
 
 
@@ -361,7 +361,7 @@ def test_root_move_is_not_content_change(tmp_path):
     moved = tmp_path / 'X' / 'Demo'; moved.parent.mkdir(); shutil.move(root, moved)
     new = rm.build_manifest({'Demo': str(moved)}, CLASSES)
     d = rm.diff_manifests(old, new)
-    assert d['root_moved'] == {'Demo': [root, str(moved)]}
+    assert d['root_moved'] == {'Demo': [rm._norm_root(root), rm._norm_root(str(moved))]}
     assert d['changed'] == d['added'] == d['removed'] == [] and d['compared_units'] > 0
 
 
@@ -626,7 +626,8 @@ def test_conjecture_section_without_marker_flagged():
     m = {'files': {'Demo/a.md': {'class': 'READ', 'units': {'Khung': {'label': 'conjecture'}}}}}
     prov = {'Ch03': {'chapter': 'Ch03', 'sections': {'§03.2': ['Demo/a.md#Khung']}}}
     ch = {'Ch03': '## 03.2 Khung\nKhung rộng 730 mm.\n## 03.3 Khác\n⟨phỏng đoán⟩\n'}
-    assert ra.label_gaps(ch, prov, m) == ['Ch03 §03.2: thiếu ⟨phỏng đoán⟩ (Demo/a.md#Khung)']
+    assert ra.label_gaps(ch, prov, m) == ['Ch03 §03.3: không có provenance',
+                                          'Ch03 §03.2: thiếu ⟨phỏng đoán⟩ (Demo/a.md#Khung)']
 
 
 def test_label_marker_prefix_accepted_and_missing_section_error():
@@ -634,7 +635,7 @@ def test_label_marker_prefix_accepted_and_missing_section_error():
     prov = {'Ch03': {'chapter': 'Ch03', 'sections': {'§03.2': ['Demo/a.md#Khung']}}}
     assert ra.label_gaps({'Ch03': '## 03.2 Khung\nrộng ⟨phỏng đoán · M⟩\n'}, prov, m) == []
     errs = ra.label_gaps({'Ch03': '## 03.21 Khác\nx\n'}, prov, m)
-    assert errs == ['Ch03 §03.2: không thấy mục trong chương']
+    assert errs == ['Ch03 §03.21: không có provenance', 'Ch03 §03.2: không thấy mục trong chương']
 
 
 def test_idea_coverage_requires_every_id_with_verdict():
@@ -1035,3 +1036,292 @@ def test_nested_link_refused_nothing_moved(tmp_path, monkeypatch):
     with pytest.raises(rc.RefusedError):
         rc.apply(p, [])
     assert (proj / 'RE' / 'Demo' / 'a.md').exists() and not dest.exists()
+
+
+# ================================================================ final fix wave
+# ---------- C1: phieu GT dang bang ----------
+TABLE_HYP = (
+    '# Phiếu trung tính\n\n'
+    '## GT-T-001 — Bàn thử trung tính\n\n'
+    '| # | Mục | Nội dung |\n|---|---|---|\n'
+    '| 1 | Tiêu đề | Một câu hỏi trung tính |\n'
+    '| 2 | **NẾU** | điều kiện A |\n'
+    '| 3 | **THÌ** | hệ quả B |\n'
+    '| 4 | **VÌ** | lý do C |\n'
+    '| 5 | KIỂM | quy trình D |\n'
+    '| 6 | KẾT QUẢ | *(điền sau buổi thử)* |\n'
+    '| 7 | **DỰ ĐOÁN VIẾT TRƯỚC** | giá trị XA — người ký: ____ — ngày: ____ |\n'
+    '| 8 | Độ tin | trung bình |\n'
+    '| 9 | Nếu bị bác | quay lại |\n\n'
+    '**Đối chứng dương:** đoạn văn sau bảng.\n\n'
+    '## GT-T-002 — Phiếu dạng danh sách\n\n'
+    '1. **Tiêu đề:** a\n'
+    '6. **KẾT QUẢ + khuyến nghị:** *(điền sau 2026-11-04)*\n'
+    '7. **DỰ ĐOÁN VIẾT TRƯỚC:** giá trị XB — người ký ___ — ngày ___\n\n'
+    '## GT-T-003 — Bảng hai\n\n'
+    '| # | Mục | Nội dung |\n|---|---|---|\n'
+    '| 6 | **KẾT QUẢ** | *(điền sau khi thử)* |\n'
+    '| **7** | **DỰ ĐOÁN VIẾT TRƯỚC** | giá trị XC — người ký: ____ — ngày: ____ *(ghi chú)* |\n\n'
+    '## Tham chiếu\n\nx\n')
+
+
+def _table_dossier(tmp_path, text=TABLE_HYP):
+    root = make_dossier(tmp_path)
+    (tmp_path / 'Demo' / 'RE_D_Hypotheses.md').write_text(text, encoding='utf-8')
+    return root
+
+
+def test_table_gt_rows_are_items_and_ids_agree_with_spans():
+    ids = [u.id for u in ru.split_units(TABLE_HYP)]
+    for n in range(1, 10):
+        assert 'GT-T-001.%d' % n in ids
+    assert 'GT-T-003.6' in ids and 'GT-T-003.7' in ids and 'GT-T-002.7' in ids
+    lines = ru.normalize(TABLE_HYP).split('\n')
+    span_ids = [uid for _s, _e, uid in rm._item_spans(lines)]
+    assert span_ids == [i for i in ids if i.startswith('GT-') and not i.endswith('.0')]
+
+
+def test_table_gt_duplicate_row_numbering_matches():
+    t = ('## GT-T-009 — x\n\n| # | Mục | Nội dung |\n|---|---|---|\n'
+         '| 7 | DỰ ĐOÁN VIẾT TRƯỚC | a — người ký: ____ — ngày: ____ |\n'
+         '| 7 | DỰ ĐOÁN VIẾT TRƯỚC | b — người ký: ____ — ngày: ____ |\n')
+    ids = [u.id for u in ru.split_units(t)]
+    assert 'GT-T-009.7' in ids and 'GT-T-009.7~2' in ids
+    assert [x for _s, _e, x in rm._item_spans(ru.normalize(t).split('\n'))] == ['GT-T-009.7', 'GT-T-009.7~2']
+
+
+def test_table_unsigned_prediction_never_reaches_snapshot(tmp_path):
+    root = _table_dossier(tmp_path)
+    m = rm.build_manifest({'Demo': root}, CLASSES)
+    u = m['files']['Demo/RE_D_Hypotheses.md']['units']
+    for card in ('GT-T-001', 'GT-T-002', 'GT-T-003'):
+        assert u[card + '.7']['cut'] is True, card
+        assert u[card + '.6'].get('empty_result') is True, card
+    out = tmp_path / 'snap'; rm.write_snapshot(m, str(out))
+    s = (out / 'Demo' / 'RE_D_Hypotheses.md').read_text(encoding='utf-8')
+    assert 'XA' not in s and 'XB' not in s and 'XC' not in s
+    assert s.count('| 7 | DỰ ĐOÁN VIẾT TRƯỚC | ⟨chờ ký⟩ |') == 2
+    assert s.count('| 6 | KẾT QUẢ | ⟨chờ đo⟩ |') == 2
+    assert '| 8 | Độ tin | trung bình |' in s and 'Đối chứng dương' in s
+
+
+def test_table_marker_keeps_column_count():
+    u = ru.Unit(id='GT-T-001.7', kind='gt_item',
+                text='| 7 | DỰ ĐOÁN VIẾT TRƯỚC | x | y |', sha256='')
+    assert rm._marker(u, '7') == '| 7 | DỰ ĐOÁN VIẾT TRƯỚC | ⟨chờ ký⟩ |  |'
+    u6 = ru.Unit(id='GT-T-001.6', kind='gt_item', text='| 6 | KẾT QUẢ | *(điền sau)* |', sha256='')
+    assert rm._marker(u6, '6') == '| 6 | KẾT QUẢ | ⟨chờ đo⟩ |'
+
+
+def test_table_signed_prediction_kept_and_filled_result_kept(tmp_path):
+    t = TABLE_HYP.replace('XA — người ký: ____ — ngày: ____', 'XA — người ký: Kỹ sư B — ngày: 01/11')
+    t = t.replace('| 6 | KẾT QUẢ | *(điền sau buổi thử)* |', '| 6 | KẾT QUẢ | đạt, 3 nấc |')
+    m = rm.build_manifest({'Demo': _table_dossier(tmp_path, t)}, CLASSES)
+    u = m['files']['Demo/RE_D_Hypotheses.md']['units']
+    assert u['GT-T-001.7']['cut'] is False and not u['GT-T-001.6'].get('empty_result')
+
+
+def test_table_empty_variants_underscore_dash():
+    for cell in ('*(điền sau)*', '___', '—', '', '*(điền sau 2026-11-04)*'):
+        assert rm._result_empty('| 6 | KẾT QUẢ | %s |' % cell), cell
+    assert not rm._result_empty('| 6 | KẾT QUẢ | đạt |')
+    assert rm._result_empty('6. **KẾT QUẢ + khuyến nghị:** *(điền sau 2026-11-04)*')
+
+
+def test_gt_counts_mixed_list_and_table_cards(tmp_path):
+    m = rm.build_manifest({'Demo': _table_dossier(tmp_path)}, CLASSES)
+    assert ra.gt_summary(m) == (3, 3, 3)
+
+
+def test_chapter_stating_result_of_empty_table_card_flagged(tmp_path):
+    m = rm.build_manifest({'Demo': _table_dossier(tmp_path)}, CLASSES)
+    errs = ra.gt_leaks({'Ch05': 'GT-T-001 cho thấy phân biệt được 3 nấc.'}, m)
+    assert any('GT-T-001' in e and 'chờ đo' in e for e in errs)
+    assert ra.gt_leaks({'Ch05': 'GT-T-001: kết quả ⟨chờ đo⟩.'}, m) == []
+
+
+def test_filling_table_row6_reports_status_change(tmp_path):
+    root = _table_dossier(tmp_path); old = rm.build_manifest({'Demo': root}, CLASSES)
+    p = tmp_path / 'Demo' / 'RE_D_Hypotheses.md'
+    p.write_text(TABLE_HYP.replace('*(điền sau buổi thử)*', 'đạt — phân biệt 3 nấc'), encoding='utf-8')
+    d = rm.diff_manifests(old, rm.build_manifest({'Demo': root}, CLASSES))
+    assert {'anchor': 'Demo/RE_D_Hypotheses.md#GT-T-001.6', 'from': 'chờ đo', 'to': 'đã đo'} in d['status_changes']
+
+
+# ---------- I1: provenance rong ----------
+def test_check_empty_sections_or_empty_list_flagged(tmp_path):
+    m = rm.build_manifest({'Demo': make_dossier(tmp_path)}, CLASSES)
+    e1 = _prov(tmp_path / 'e1', 'Ch01', {})
+    assert rp.check(str(e1), m) == ['Ch01.provenance.json: không có neo']
+    e2 = _prov(tmp_path / 'e2', 'Ch01', {'§01.1': ['Demo/RE_D_S1A_Deconstruction.md#Khung'], '§01.2': []})
+    assert rp.check(str(e2), m) == ['Ch01.provenance.json:§01.2: không có neo']
+
+
+def test_label_gaps_numbered_heading_without_provenance_entry():
+    m = {'files': {}}
+    prov = {'Ch04': {'chapter': 'Ch04', 'sections': {'§04.1': []}}}
+    ch = {'Ch04': '# 4 Tên\n## 04.1 A\nx\n### 04.2 B\ny\n```\n## 04.9 trong rào\n```\n'}
+    assert ra.label_gaps(ch, prov, m) == ['Ch04 §04.2: không có provenance']
+
+
+# ---------- I2: phieu GT tran phong doan ----------
+def test_gt_item_capped_at_conjecture():
+    u = ru.Unit(id='GT-T-001.4', kind='gt_item', text='VÌ: đã biết từ sáng chế', sha256='')
+    l = rl.resolve(u, None, None)
+    assert (l.label, l.source) == ('conjecture', 'kế thừa: phiếu GT')
+    u0 = ru.Unit(id='GT-T-001.0', kind='gt_item', text='## GT-T-001 — x', sha256='')
+    assert rl.resolve(u0, None, None).label == 'conjecture'
+    ua = ru.Unit(id='GT-T-001.2', kind='gt_item', text='giả định: tải đều', sha256='')
+    assert rl.resolve(ua, None, None).label == 'assumption'
+
+
+def test_manifest_gt_units_never_knowledge(tmp_path):
+    m = rm.build_manifest({'Demo': _table_dossier(tmp_path)}, CLASSES)
+    for uid, rec in m['files']['Demo/RE_D_Hypotheses.md']['units'].items():
+        if uid.startswith('GT-'):
+            assert rec['label'] in ('conjecture', 'assumption'), uid
+
+
+# ---------- I3: chua gan ----------
+_UA_M = {'files': {'Demo/a.md': {'class': 'READ', 'units': {'Khung': {'label': 'chưa gán'}}}}}
+_UA_P = {'Ch03': {'chapter': 'Ch03', 'sections': {'§03.2': ['Demo/a.md#Khung']}}}
+
+
+def test_unassigned_anchor_needs_marker_or_decision():
+    bare = {'Ch03': '## 03.2 Khung\nKhung rộng.\n'}
+    assert ra.label_gaps(bare, _UA_P, _UA_M) == ['Ch03 §03.2: thiếu ⟨chưa gán nhãn⟩ (Demo/a.md#Khung)']
+    marked = {'Ch03': '## 03.2 Khung\nKhung rộng ⟨chưa gán nhãn⟩.\n'}
+    assert ra.label_gaps(marked, _UA_P, _UA_M) == []
+    assert ra.label_gaps(bare, _UA_P, _UA_M, {'Demo/a.md#Khung': 'knowledge'}) == []
+    assert ra.label_gaps(bare, _UA_P, _UA_M, {'Demo/a.md#Khung': 'conjecture'}) == [
+        'Ch03 §03.2: thiếu ⟨phỏng đoán⟩ (Demo/a.md#Khung)']
+
+
+def test_label_decisions_file_parsed_and_used_by_cli(tmp_path):
+    root, book = _audit_book(tmp_path, '## 01.1 Khung\nKhung rộng.\n')
+    man = json.loads((book / '_re_manifest.json').read_text(encoding='utf-8'))
+    man['files']['Demo/RE_D_S1A_Deconstruction.md']['units']['Khung']['label'] = 'chưa gán'
+    (book / '_re_manifest.json').write_text(json.dumps(man, ensure_ascii=False), encoding='utf-8')
+    assert ra.main(['labels', '--book', str(book)]) == 1
+    p1 = book / 'Phase1-Exploration'; p1.mkdir()
+    (p1 / '_label_decisions.md').write_text(
+        '| neo | nhãn |\n|---|---|\n| `Demo/RE_D_S1A_Deconstruction.md#Khung` | knowledge |\n', encoding='utf-8')
+    assert ra.load_label_decisions(str(book)) == {'Demo/RE_D_S1A_Deconstruction.md#Khung': 'knowledge'}
+    assert ra.main(['labels', '--book', str(book)]) == 0
+
+
+def test_index_prints_unassigned_count(tmp_path, capsys):
+    root = make_dossier(tmp_path); book = tmp_path / 'Book'; book.mkdir()
+    assert rm.main(['build', '--re', root, '--book', str(book)]) == 0
+    capsys.readouterr()
+    assert rm.main(['index', '--book', str(book)]) == 0
+    m = json.loads((book / '_re_manifest.json').read_text(encoding='utf-8'))
+    units = [r for e in m['files'].values() if e['class'] in ('READ', 'CUT') for r in e['units'].values()]
+    n = sum(r['label'] == 'chưa gán' for r in units)
+    assert 'chưa gán: %d / tổng %d' % (n, len(units)) in capsys.readouterr().out
+
+
+# ---------- I4: gaps hang mo ----------
+def test_gaps_open_rows_case_and_status_column(tmp_path):
+    root = make_dossier(tmp_path)
+    (tmp_path / 'Demo' / 'RE_D_S1B_Notes.md').write_text(
+        '# N\n\n| Mã | Nội dung | Trạng thái |\n|---|---|---|\n'
+        '| N-060 | việc A | MỞ |\n'
+        '| N-061 | mở rộng phạm vi | BÃI BỎ |\n'
+        '| N-062 | mở rộng khung | đã đóng |\n'
+        '| N-063 | việc B | Mở — chờ thử |\n'
+        '| N-064 | việc C | ĐÃ TRẢ (mở lại?) |\n', encoding='utf-8')
+    g = rm.gaps(rm.build_manifest({'Demo': root}, CLASSES), {'Demo': root})
+    assert 'row:N-060' in g and 'row:N-063' in g
+    assert 'row:N-061' not in g and 'row:N-062' not in g and 'row:N-064' not in g
+
+
+def test_gaps_whole_row_when_no_status_column_ci(tmp_path):
+    root = make_dossier(tmp_path)
+    (tmp_path / 'Demo' / 'RE_D_S1B_Notes.md').write_text(
+        '# N\n\n| Mã | Nội dung |\n|---|---|\n| N-070 | CÒN MỞ |\n| N-071 | BÃI BỎ — mở rộng |\n', encoding='utf-8')
+    g = rm.gaps(rm.build_manifest({'Demo': root}, CLASSES), {'Demo': root})
+    assert 'row:N-070' in g and 'row:N-071' not in g
+
+
+# ---------- I5: lock / freeze ----------
+def _built_book(tmp_path):
+    root = make_dossier(tmp_path); book = tmp_path / 'Book'; book.mkdir()
+    assert rm.main(['build', '--re', root, '--book', str(book)]) == 0
+    return root, book
+
+
+def test_freeze_without_lock_is_2_and_with_lock_copies(tmp_path):
+    root, book = _built_book(tmp_path)
+    assert rm.main(['freeze', '--book', str(book), '--edition', '1']) == 2
+    assert rm.main(['lock', '--book', str(book)]) == 0
+    lock = json.loads((book / '_manifests' / '_p1_lock.json').read_text(encoding='utf-8'))
+    m = json.loads((book / '_re_manifest.json').read_text(encoding='utf-8'))
+    assert lock['created'] == m['created'] and len(lock['sha256']) == 64
+    assert rm.main(['freeze', '--book', str(book), '--edition', '1']) == 0
+    assert (book / '_manifests' / 'ed1.json').read_bytes() == (book / '_re_manifest.json').read_bytes()
+    assert rm.main(['freeze', '--book', str(book), '--edition', '1']) == 2
+
+
+def test_freeze_refuses_manifest_rebuilt_after_lock(tmp_path, capsys):
+    root, book = _built_book(tmp_path)
+    assert rm.main(['lock', '--book', str(book)]) == 0
+    p = tmp_path / 'Demo' / 'RE_D_S1A_Deconstruction.md'
+    p.write_text(p.read_text(encoding='utf-8') + '\nthêm\n', encoding='utf-8')
+    assert rm.main(['build', '--re', root, '--book', str(book)]) == 0
+    capsys.readouterr()
+    assert rm.main(['freeze', '--book', str(book), '--edition', '1']) == 1
+    assert 'P1' in capsys.readouterr().err
+    assert not (book / '_manifests' / 'ed1.json').exists()
+
+
+def test_lock_without_manifest_is_2(tmp_path):
+    book = tmp_path / 'Book'; book.mkdir()
+    assert rm.main(['lock', '--book', str(book)]) == 2
+
+
+# ---------- Minors ----------
+def test_impact_writes_out_before_printing(tmp_path, monkeypatch):
+    pf = _prov(tmp_path / 'pf', 'Ch01', {'§01.1': ['Demo/a.md#Khung']})
+    dj = tmp_path / 'd.json'
+    dj.write_text(json.dumps({'changed': ['Demo/a.md#Khung'], 'added': [], 'removed': [], 'status_changes': []}), encoding='utf-8')
+    out = tmp_path / 'imp.json'
+
+    def boom(_r):
+        assert out.exists()
+        raise UnicodeEncodeError('cp1252', '', 0, 1, 'x')
+    monkeypatch.setattr(rp, '_report', boom)
+    rp.main(['impact', '--prov', str(pf), '--diff', str(dj), '--out', str(out)])
+    assert out.exists() and json.loads(out.read_text(encoding='utf-8'))['sections']['Ch01']
+
+
+def test_root_spelling_variants_not_moved(tmp_path):
+    root = make_dossier(tmp_path)
+    a = rm.build_manifest({'Demo': root}, CLASSES)
+    b = rm.build_manifest({'Demo': root.replace('\\', '/') + '/'}, CLASSES)
+    assert rm.diff_manifests(a, b)['root_moved'] == {}
+    assert a['roots']['Demo'] == rm._norm_root(root)
+
+
+def test_impact_status_change_linked_by_card(tmp_path):
+    pf = _prov(tmp_path / 'pf', 'Ch05', {'§05.1': ['Demo/h.md#GT-T-001.3']})
+    diff = {'changed': [], 'added': [], 'removed': [],
+            'status_changes': [{'anchor': 'Demo/h.md#GT-T-001.6', 'from': 'chờ đo', 'to': 'đã đo'},
+                               {'anchor': 'Demo/h.md#GT-T-0010.6', 'from': 'chờ đo', 'to': 'đã đo'}]}
+    r = rp.impact(str(pf), diff)
+    assert r['status_changes'][0]['chapters'] == ['Ch05'] and r['status_changes'][1]['chapters'] == []
+
+
+def test_redact_generic_yt_and_rescan_gt_n(tmp_path):
+    t, n = rr.redact('ý YT-LS-012 và YT-9 ở đây', [])
+    assert 'YT-' not in t and n == 2
+    assert rr._scan('còn GT-ZZ-7 sót', []) and rr._scan('và N-123 sót', []) and rr._scan('YT-77', [])
+    assert not rr._scan('N-1234 không phải mã', [])
+
+
+def test_build_warns_zero_unit_read_file(tmp_path, capsys):
+    root = make_dossier(tmp_path)
+    (tmp_path / 'Demo' / 'RE_D_S1B_Empty.md').write_text('\n\n', encoding='utf-8')
+    book = tmp_path / 'Book'; book.mkdir()
+    assert rm.main(['build', '--re', root, '--book', str(book)]) == 0
+    assert 'CẢNH BÁO: Demo/RE_D_S1B_Empty.md 0 đơn vị' in capsys.readouterr().out
