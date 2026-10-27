@@ -1,0 +1,25 @@
+# Bảng chấm
+
+## Checklist 14 mục
+
+| # | Mục | Tiêu chí |
+|---|---|---|
+| 1 | <tên mục 1 của checklist 14 mục> | <tiêu chí kiểm> |
+| 2 | <tên mục 2> | <tiêu chí kiểm> |
+| ... | ... | ... |
+| 14 | <tên mục 14> | Bỏ — lý do: <vì sao mục vắng hoặc giống hệt ở mọi phương án> |
+
+## Bảng chấm
+
+### F-<id>
+
+| Req-ID | D/W | DP | Trọng số | PA-<id>-1 | PA-<id>-2 | HC-<id>-1 | Ghi chú |
+|---|---|---|---|---|---|---|---|
+| R-11 | D | DP-1 | 1 | Đạt | Loại | Đạt | |
+| R-12 | W | DP-2 | 3 | 3 | 4 | 1 | |
+| R-13 | W | DP-3 | 2 | ?(chưa có số liệu) | 2 | 0 | |
+| R-14 | W tạm | DP-4 | | 2 | 3 | 4 | 🔴 CEO chốt trọng số |
+
+## Độ nhạy
+
+<Đổi trọng số ±20%: phương án dẫn đầu có đổi không; thay mỗi ô ?(…) bằng 0 rồi bằng 4: phương án dẫn đầu có đổi không.>

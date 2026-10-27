@@ -1,5 +1,7 @@
 # Chỉ mục quy tắc hiện thân → câu hỏi kiểm hình thể
 
+> Hướng dẫn đầy đủ hơn, tra theo loại chức năng với mã quy tắc từ ba kho TKHT/TKKTHT/KL9: `helix-p3-form:references:function-index`.
+
 > Reference dùng chung của bộ `helix-cc2`, dùng ở C2 (mỗi phương án hình thể phải có lý do từ quy tắc) và ở CA
 > (đọc ngược «vì sao hình học này»). Nguồn: TK = *Thiết kế hiện thân*, Ch04–Ch16. Lời văn là diễn ý; cột
 > *Tham số bị khoá* là tham số hình thể mà quy tắc ấy buộc người thiết kế quyết.
