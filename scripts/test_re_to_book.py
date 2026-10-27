@@ -597,3 +597,107 @@ def test_check_p1_no_exploration_files_is_input_error(tmp_path):
 
 def test_anchor_re_exported_exactly():
     assert rp.ANCHOR_RE.pattern == r'[\w.\-]+/[^\s#`|]+\.md#[^\s`|\]]+'
+
+
+# ---------- Task 6: re_book_audit ----------
+ra = _load('re_book_audit')
+
+_GT_M = {'files': {'Demo/RE_D_Hypotheses.md': {'class': 'CUT', 'units': {
+    'GT-D-001.6': {'empty_result': True, 'cut': False}, 'GT-D-001.7': {'cut': True}}}}}
+
+
+def test_gt_mention_without_pending_marker_flagged():
+    m = _GT_M
+    bad = {'Ch08': 'GT-D-001 cho thấy f giảm 3 lần.\n\nĐoạn khác.'}
+    ok = {'Ch08': 'GT-D-001: kết quả ⟨chờ đo⟩.'}
+    assert ra.gt_leaks(bad, m) and not ra.gt_leaks(ok, m)
+
+
+def test_unsigned_prediction_mention_flagged():
+    assert ra.gt_leaks({'Ch08': 'GT-D-001 ⟨chờ đo⟩; dự đoán 55 nấc.'}, _GT_M)
+    assert not ra.gt_leaks({'Ch08': 'GT-D-001 ⟨chờ đo⟩; dự đoán 55 nấc ⟨chờ ký⟩.'}, _GT_M)
+
+
+def test_gt_prefix_id_does_not_match():
+    assert not ra.gt_leaks({'Ch08': 'GT-D-0010 cho thấy f giảm.'}, _GT_M)
+
+
+def test_conjecture_section_without_marker_flagged():
+    m = {'files': {'Demo/a.md': {'class': 'READ', 'units': {'Khung': {'label': 'conjecture'}}}}}
+    prov = {'Ch03': {'chapter': 'Ch03', 'sections': {'§03.2': ['Demo/a.md#Khung']}}}
+    ch = {'Ch03': '## 03.2 Khung\nKhung rộng 730 mm.\n## 03.3 Khác\n⟨phỏng đoán⟩\n'}
+    assert ra.label_gaps(ch, prov, m) == ['Ch03 §03.2: thiếu ⟨phỏng đoán⟩ (Demo/a.md#Khung)']
+
+
+def test_label_marker_prefix_accepted_and_missing_section_error():
+    m = {'files': {'Demo/a.md': {'class': 'READ', 'units': {'Khung': {'label': 'conjecture'}}}}}
+    prov = {'Ch03': {'chapter': 'Ch03', 'sections': {'§03.2': ['Demo/a.md#Khung']}}}
+    assert ra.label_gaps({'Ch03': '## 03.2 Khung\nrộng ⟨phỏng đoán · M⟩\n'}, prov, m) == []
+    errs = ra.label_gaps({'Ch03': '## 03.21 Khác\nx\n'}, prov, m)
+    assert errs == ['Ch03 §03.2: không thấy mục trong chương']
+
+
+def test_idea_coverage_requires_every_id_with_verdict():
+    table = '| Mã | Chương | Kết luận |\n|---|---|---|\n| YT-001 | Ch08 | trùng |\n| YT-002 | — | |\n'
+    errs = ra.idea_coverage(table, ['YT-001', 'YT-002', 'YT-003'])
+    assert any('YT-002' in e for e in errs) and any('YT-003' in e for e in errs) and not any('YT-001' in e for e in errs)
+
+
+def test_idea_coverage_column_order_and_bad_verdict():
+    table = '| Kết luận | Mã |\n|---|---|\n| Không trùng | YT-001 |\n| có lẽ | YT-002 |\n'
+    errs = ra.idea_coverage(table, ['YT-001', 'YT-002'])
+    assert len(errs) == 1 and 'YT-002' in errs[0]
+
+
+def test_idea_candidates_numeric_unit_overlap(tmp_path):
+    root = make_dossier(tmp_path)
+    out = ra.idea_candidates({'Ch08': 'Bộ lọc 890 nm với cửa sổ 20 nm.'}, {'Demo': root})
+    assert 'YT-001' in out and 'Ch08' in out
+    assert 'lọc 890 nm, cửa sổ' not in out
+
+
+def _audit_book(tmp_path, chapter_text='## 01.1 Khung\nChương không nhắc gì ⟨phỏng đoán⟩.\n'):
+    root = make_dossier(tmp_path)
+    book = tmp_path / 'book'
+    (book / 'Phase4-Chapters').mkdir(parents=True)
+    (book / 'Phase4-Chapters' / 'Ch01.md').write_text(chapter_text, encoding='utf-8')
+    (book / 'Phase4-Chapters' / 'Ch01.provenance.json').write_text(
+        '{"chapter": "Ch01", "sections": {"§01.1": ["Demo/RE_D_S1A_Deconstruction.md#Khung"]}}', encoding='utf-8')
+    m = rm.build_manifest({'Demo': root}, CLASSES)
+    (book / '_re_manifest.json').write_text(json.dumps(m, ensure_ascii=False), encoding='utf-8')
+    return root, book
+
+
+def test_cli_no_idea_log_is_input_error(tmp_path):
+    root, book = _audit_book(tmp_path)
+    os.remove(os.path.join(root, 'RE_D_Idea_Log.md'))
+    (book / 'Phase7-IdeaLog-Overlap.md').write_text('| Mã | Kết luận |\n|---|---|\n', encoding='utf-8')
+    assert ra.main(['idea-coverage', '--book', str(book), '--re', root]) == 2
+    assert ra.main(['all', '--book', str(book), '--re', root]) == 2
+
+
+def test_cli_idea_candidates_preserves_verdict_table(tmp_path):
+    root, book = _audit_book(tmp_path, '## 01.1 Khung\nBộ lọc 890 nm với cửa sổ 20 nm.\n')
+    f = book / 'Phase7-IdeaLog-Overlap.md'
+    f.write_text('# Overlap\n\n## Gợi ý từ vựng (không phải kết luận)\n\n- cũ\n\n## Kết luận\n\n'
+                 '| Mã | Kết luận |\n|---|---|\n| YT-001 | trùng |\n', encoding='utf-8')
+    assert ra.main(['idea-candidates', '--book', str(book), '--re', root]) == 0
+    t = f.read_text(encoding='utf-8')
+    assert '- cũ' not in t and 'YT-001 · Ch01' in t and '| YT-001 | trùng |' in t
+    assert t.count('## Gợi ý từ vựng') == 1
+    assert ra.main(['idea-coverage', '--book', str(book), '--re', root]) == 0
+    f.unlink()
+    assert ra.main(['idea-candidates', '--book', str(book), '--re', root]) == 0
+    assert f.exists()
+
+
+def test_cli_all_exit_is_max(tmp_path):
+    root, book = _audit_book(tmp_path)
+    f = book / 'Phase7-IdeaLog-Overlap.md'
+    f.write_text('| Mã | Kết luận |\n|---|---|\n| YT-001 | không trùng |\n', encoding='utf-8')
+    assert ra.main(['all', '--book', str(book), '--re', root]) == 0
+    (book / 'Phase4-Chapters' / 'Ch01.md').write_text('GT-D-001 cho thấy gì đó.\n', encoding='utf-8')
+    assert ra.main(['gt', '--book', str(book)]) == 1
+    assert ra.main(['all', '--book', str(book), '--re', root]) == 1
+    f.unlink()
+    assert ra.main(['all', '--book', str(book), '--re', root]) == 2
