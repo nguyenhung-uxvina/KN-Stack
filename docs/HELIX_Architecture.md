@@ -95,7 +95,7 @@ AI LÀM TỐT (delegate):              NGƯỜI PHẢI LÀM (non-delegable):
 | 1 | `helix-project-init` | 0 | Khởi tạo dự án Triple Helix | 🤖→👤 |
 | 2 | `helix-task-clarify` | 1 | Làm rõ yêu cầu & abstraction | 🤖→👤 |
 | 3 | `helix-concept-generate` | 2 | Tạo & đánh giá phương án | 🤖→👤 |
-| 4 | `helix-embody-realize` | 3 | Thiết kế chi tiết hình dáng + layout | 👤→🤖 |
+| 4 | `helix-embody-realize` | 3 | Thiết kế chi tiết hình dáng + layout (khối BF `helix-p3-form`: chức năng→hình thể C&C² + 3 sách + đối chiếu giải pháp hiện có, chạy sau B0 trước BA) | 👤→🤖 |
 | 5 | `helix-detail-finalize` | 4 | Hoàn thiện bản vẽ chế tạo | 👤→🤖 |
 | 6 | `helix-sync-protocol` | Cross | Monthly sync giữa 3 domains | 🤖→👤 |
 | 7 | `helix-integration-debt` | Cross | Track & manage ICD | 🤖 (track) + 👤 (resolve) |

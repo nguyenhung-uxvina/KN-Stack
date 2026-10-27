@@ -95,6 +95,16 @@ If any YES → recommend mode adjustment (e.g., --quick → standard, or vice ve
 ## Output
 Save to `1_Projects/{{project}}/Phase3-Embodiment/B0_Preflight_Report.md`
 
+Báo cáo PHẢI có mục **«Yêu cầu quyết định hiện thân»** (rút từ Step 0.2) ở dạng bảng, để block BF (`/helix-p3-form`) đọc và chọn chức năng cần phương án hình thể:
+
+```
+## Yêu cầu quyết định hiện thân
+| Req-ID | Chức năng (F-id) | Lý do |
+|--------|------------------|-------|
+| R-xx   | F-<id>           | <vì sao yêu cầu này quyết định hình thể/kích thước/bố trí> |
+```
+Mã chức năng `F-<id>` chỉ gồm chữ/số. Yêu cầu chưa gắn được chức năng → để trống cột F-id và ghi lý do; BF sẽ hỏi CEO.
+
 ## CEO Checkpoint
 ```
 ═══ BLOCK B0 PRE-FLIGHT COMPLETE ═══

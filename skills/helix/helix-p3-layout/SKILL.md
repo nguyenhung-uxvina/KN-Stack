@@ -121,6 +121,14 @@ Nếu `Phase3-Embodiment/` hoặc `Phase3-Embody/` (hoặc thư mục biến th�
 - Muốn đổi một khoảng thì mở hoặc sửa phiếu giả thuyết tương ứng (qua `/helix-cc2`), không tự chọn lại khoảng trong layout.
 - Handoff là đối chiếu mức mô tả. Khi đã có hình học (`cad_extract.json` từ `helix-cad-bridge` hoặc `helix-cad-ingest`), chạy vòng lặp P3 bằng `--crosscheck` của CA (không dùng `/helix-cc2 --analyze`): dựng một `<thư mục trích>` mới gồm bản trích C0, bản trích C2 + C3 của phương án đi tiếp `<X-n>` và `cad_extract.json`, rồi trong tác tử con mới chạy `/helix-cc2-analyze --crosscheck <thư mục trích> <X-n> <n>` (`<n>` = số GT lớn nhất ở mục Phiếu giả thuyết đang mở của Handoff cộng 1). Kết quả nằm trong `<thư mục trích>`; CEO quyết từng chỗ lệch.
 
+## Khi có BF_Form_Selection.md (block BF)
+
+Nếu có `{{prefix}}BF_Form_Selection.md` (từ `/helix-p3-form`, đã qua Cổng CEO 2):
+- Đây là **nguồn khoảng tham số** hình thể của layout: mỗi `## F-<id>` có hình thể đã chọn, `Khoảng tham số:` và `Kế hoạch thử:`. Layout phải nằm trong các khoảng này và ghi lại trong `BA_Preliminary_Layout.md`.
+- Muốn đổi một khoảng → quay lại BF (`/helix-p3-form --function <F-id>`), không tự chọn lại khoảng trong layout.
+- Mục «Khi có CC2_Handoff.md» ở trên giữ nguyên hiệu lực (BF sinh `CC2_Handoff.md` nếu chưa có thì Handoff đó cũng áp dụng).
+- Không có `BF_Form_Selection.md` mà orchestrator không ghi `--skip-form` → nhắc CEO chạy BF trước.
+
 ## Output
 Save to `1_Projects/{{project}}/Phase3-Embodiment/`:
 - `BA_Preliminary_Layout.md`

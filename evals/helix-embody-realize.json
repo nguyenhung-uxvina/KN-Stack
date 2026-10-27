@@ -90,6 +90,13 @@
       "required": false
     },
     {
+      "id": "P3-BF",
+      "name": "bf_block",
+      "check": "orchestrator includes the BF block",
+      "regex": "helix-p3-form",
+      "required": true
+    },
+    {
       "id": "ER-PRINCIPLES",
       "name": "design_principles",
       "check": "output checks 5 design principles (force transmission, division, self-help, stability, fault-free)",
@@ -97,7 +104,7 @@
       "required": false
     }
   ],
-  "passing_score": 10,
-  "total_required": 10,
+  "passing_score": 11,
+  "total_required": 11,
   "total_optional": 3
 }
