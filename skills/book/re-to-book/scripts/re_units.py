@@ -95,7 +95,8 @@ def split_units(text: str) -> list:
                 has_heading = True
                 gt = None
                 in_row_item = False
-                title = normalize(h.group(2))
+                # bo backtick: neo dat trong backtick, ma don vi khong duoc chua backtick
+                title = normalize(h.group(2)).replace('`', '').strip()
                 cur = [title, 'section', [line]]
                 entries.append(cur)
                 continue

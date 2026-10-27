@@ -112,6 +112,12 @@ def test_end_to_end_encoding_invariance():
     assert ka == kb and len(ka) >= 5
 
 
+def test_section_id_drops_backticks_so_anchor_can_be_quoted():
+    us = ru.split_units('# T\n\n## Layer 2 — xem `RE_X_S1B.md`\n\nnoi dung\n')
+    ids = [u.id for u in us]
+    assert 'Layer 2 — xem RE_X_S1B.md' in ids and not any('`' in i for i in ids)
+
+
 # ---------------- Task 3: re_manifest ----------------
 import pytest  # noqa: E402
 
