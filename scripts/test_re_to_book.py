@@ -643,6 +643,13 @@ def test_gt_mention_without_pending_marker_flagged():
     assert ra.gt_leaks(bad, m) and not ra.gt_leaks(ok, m)
 
 
+def test_gt_heading_line_is_not_a_paragraph_mention():
+    ok = {'Ch14': '## 14.3 Phiếu GT-D-001\n\nThân mục, kết quả ⟨chờ đo⟩.'}
+    assert not ra.gt_leaks(ok, _GT_M)
+    bad = {'Ch14': '## 14.3 Phiếu GT-D-001\nGT-D-001 cho thấy f giảm.'}
+    assert ra.gt_leaks(bad, _GT_M)
+
+
 def test_unsigned_prediction_mention_flagged():
     assert ra.gt_leaks({'Ch08': 'GT-D-001 ⟨chờ đo⟩; dự đoán 55 nấc.'}, _GT_M)
     assert not ra.gt_leaks({'Ch08': 'GT-D-001 ⟨chờ đo⟩; dự đoán 55 nấc ⟨chờ ký⟩.'}, _GT_M)
@@ -1192,6 +1199,15 @@ def test_label_gaps_numbered_heading_without_provenance_entry():
     prov = {'Ch04': {'chapter': 'Ch04', 'sections': {'§04.1': []}}}
     ch = {'Ch04': '# 4 Tên\n## 04.1 A\nx\n### 04.2 B\ny\n```\n## 04.9 trong rào\n```\n'}
     assert ra.label_gaps(ch, prov, m) == ['Ch04 §04.2: không có provenance']
+
+
+def test_apply_section_numbered_A_needs_provenance_and_is_found():
+    m = {'files': {}}
+    ch = {'Ch07': '# 7\n## 07.1 A\nx\n## 07.A Áp dụng cho BB-02\ny\n## 07.Abc không phải\nz\n'}
+    prov = {'Ch07': {'chapter': 'Ch07', 'sections': {'§07.1': []}}}
+    assert ra.label_gaps(ch, prov, m) == ['Ch07 §07.A: không có provenance']
+    prov['Ch07']['sections']['§07.A'] = []
+    assert ra.label_gaps(ch, prov, m) == []
 
 
 # ---------- I2: phieu GT tran phong doan ----------

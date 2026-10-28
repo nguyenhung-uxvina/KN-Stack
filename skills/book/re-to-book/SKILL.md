@@ -232,7 +232,7 @@ P2 `/book-position` (Core) · P3 `/book-outline` (Core — khung 5 phần là m�
    ```json
    {"chapter": "Ch05_kien-truc_Draft", "sections": {"§05.2": ["Megalink_3D-Score/RE_3DS_S2B_Function_Structure.md#Cây SF"]}}
    ```
-   Tiêu đề mục trong chương **chứa số mục** (`## 05.2 …`) để `labels` tìm được; **mọi** tiêu đề `##`/`###` có số mục phải có khoá `§NN.x` trong provenance, và mọi khoá phải có ít nhất một neo (mục rỗng / `sections: {}` = phát hiện). P6 ghi lại tệp provenance cho `Phase6-Revised/Ch<NN>_<slug>_v2.md` (`"chapter": "Ch<NN>_<slug>_v2"`). Chương thiếu provenance = phát hiện. **Không** ghi neo bằng chú thích HTML trong thân (lọt vào EPUB).
+   Tiêu đề mục trong chương **chứa số mục** (`## 05.2 …`) để `labels` tìm được; **mọi** tiêu đề `##`/`###` có số mục phải có khoá `§NN.x` trong provenance (mục «Áp dụng cho BB-02» đánh số `## NN.A …` và cũng có khoá `§NN.A` — để cổng và `--sync` thấy nó), và mọi khoá phải có ít nhất một neo (mục rỗng / `sections: {}` = phát hiện). P6 ghi lại tệp provenance cho `Phase6-Revised/Ch<NN>_<slug>_v2.md` (`"chapter": "Ch<NN>_<slug>_v2"`). Chương thiếu provenance = phát hiện. **Không** ghi neo bằng chú thích HTML trong thân (lọt vào EPUB).
 3. **Nhãn hiển thị:** câu dựa trên ý `conjecture` ⇒ `⟨phỏng đoán⟩`; `assumption` ⇒ `⟨giả định⟩`; `chưa gán` (CEO chưa quyết trong `_label_decisions.md`) ⇒ `⟨chưa gán nhãn⟩`; GT `.6` trống ⇒ `⟨chờ đo⟩`; dự đoán chưa ký ⇒ `⟨chờ ký⟩`, không số. Mọi mục phiếu GT mang nhãn tối đa `conjecture` (giả thuyết chưa thử).
 4. **Hợp đồng nhà chính** (khái niệm → chương sở hữu) ghi vào brief **trước khi** chia tác tử song song; không đính chính giữa đợt.
 

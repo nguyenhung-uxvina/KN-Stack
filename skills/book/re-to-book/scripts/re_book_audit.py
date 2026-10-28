@@ -28,7 +28,8 @@ UNASSIGNED_MARK = 'chưa gán nhãn'
 LABEL_VN = {'conjecture': 'phỏng đoán', 'assumption': 'giả định', UNASSIGNED: UNASSIGNED}
 LABEL_DECISIONS = '_label_decisions.md'
 DECIDABLE = ('knowledge', 'conjecture', 'assumption')
-_NUM_HEAD = re.compile(r'^#{2,3}\s+(\d+\.\d+)')
+# NN.x hoac NN.A (muc «Ap dung» danh so A cung phai co provenance)
+_NUM_HEAD = re.compile(r'^#{2,3}\s+(\d+\.(?:\d+|A(?![\w])))')
 
 _GT_KEY = re.compile(r'^(GT-.+)\.([67])(?:~\d+)?$')
 _HEAD = re.compile(r'^(#{1,6})\s+(.*)$')
@@ -92,9 +93,11 @@ def gt_leaks(chapters, manifest):
         rx = _mention(card)
         for ch in sorted(chapters):
             for i, para in enumerate(_paragraphs(chapters[ch]), 1):
-                if not rx.search(para):
+                # dong tieu de chi la nhan muc, khong phai doan van nhac phieu
+                body = '\n'.join(l for l in para.split('\n') if not l.lstrip().startswith('#'))
+                if not rx.search(body):
                     continue
-                low = para.lower()
+                low = body.lower()
                 if r['result'] and 'chờ đo' not in low:
                     errs.append('%s đoạn %d: nhắc %s (chưa có kết quả đo) mà không có ⟨chờ đo⟩' % (ch, i, card))
                 if r['pred'] and 'dự đoán' in low and 'chờ ký' not in low:
