@@ -81,9 +81,51 @@
       "check": "book voice and style guide is enforced",
       "regex": "voice|style|giọng văn",
       "required": false
+    },
+    {
+      "id": "CB-GATE-SCRIPT",
+      "name": "databus_gate_is_a_script_not_a_reminder",
+      "check": "skill trỏ tới script cổng thi hành Data Bus, không chỉ mô tả bảng",
+      "regex": "databus_check\\.py",
+      "required": true
+    },
+    {
+      "id": "CB-GATE-BLOCK",
+      "name": "nonzero_exit_blocks_checkpoint",
+      "check": "mã thoát khác 0 thì CẤM trình CEO checkpoint",
+      "regex": "(?:!=\\s*0|khác 0).{0,80}(?:CẤM|KHÔNG được).{0,40}checkpoint|checkpoint.{0,60}(?:!=\\s*0|mã thoát)",
+      "required": true
+    },
+    {
+      "id": "CB-GATE-P5P6P8",
+      "name": "gate_names_the_three_skipped_phases",
+      "check": "nêu đích danh P5·P6·P8 là ba pha dễ bị làm tại chỗ rồi báo xong",
+      "regex": "P5\\s*[·,]\\s*P6\\s*[·,]\\s*P8|P5 · P6 · P8",
+      "required": true
+    },
+    {
+      "id": "CB-INPLACE",
+      "name": "in_place_revision_needs_changelog",
+      "check": "sửa tại chỗ thì bắt buộc có danh sách thay đổi đo bằng máy",
+      "regex": "Phase6-Revise\\.md",
+      "required": true
+    },
+    {
+      "id": "CB-BACKUP",
+      "name": "snapshot_names_must_carry_time",
+      "check": "sao lưu theo mốc phải có giờ trong tên; cp -r cùng đích là đồng bộ chứ không phải sao lưu",
+      "regex": "date \\+%Y-%m-%d_%H%M|%H%M",
+      "required": true
+    },
+    {
+      "id": "CB-P8-WHICH",
+      "name": "p8_manifest_records_which_edition",
+      "check": "manifest P8 phải ghi rõ tải bản nào và kết quả tiền kiểm rò rỉ",
+      "regex": "(?:đối ngoại|external).{0,60}(?:không bao giờ|never).{0,30}(?:nội bộ|internal)",
+      "required": false
     }
   ],
   "passing_score": 9,
-  "total_required": 9,
-  "total_optional": 2
+  "total_required": 14,
+  "total_optional": 3
 }

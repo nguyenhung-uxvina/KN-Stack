@@ -835,7 +835,9 @@ Priority 3: helix-integration-debt     (tracks the hidden killer)
 
 ```
 Priority 4: helix-task-clarify         (Phase 1 — most mature methodology)
-Priority 5: helix-6flow-mapper         (6-flow is Workshop X's unique advantage)
+Priority 5: helix-6flow-mapper         (tracing convention for AI-embedded products —
+                                        see "Honest provenance" in its SKILL.md before
+                                        calling it a novelty; P&B p.30 already carries data)
 Priority 6: helix-concept-generate     (Phase 2 — includes coupling analysis)
 ```
 
