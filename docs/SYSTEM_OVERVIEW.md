@@ -24,7 +24,7 @@ FORGE (what to build)
 HELIX (how to build — Pahl-Beitz P1→P4, each a 6-block mega-skill pipeline)
   helix-task-clarify    = p1-preflight → requirements → validate → abstract → structure → compile
   helix-concept-generate= p2-preflight → frame → search → develop → risk → select
-  helix-embody-realize  = p3-preflight → layout → integrate → dfx → bom → compile
+  helix-embody-realize  = p3-preflight → form (BF) → layout → integrate → dfx → bom → compile
   helix-detail-finalize = p4-preflight → drawing → bom → assembly → inspection → handoff
         │  emits Handoff_to_Fabrication.md
         ▼

@@ -1,0 +1,42 @@
+# Bảng chấm
+
+Đang dùng phân loại D/W tạm, chờ CEO duyệt tại Cổng 1.   <!-- bỏ câu này khi CEO đã duyệt và mọi nhãn tạm đã gỡ -->
+
+## Checklist 14 mục
+
+### F-<id>
+
+| # | Mục | Tiêu chí | PA-<id>-1 | PA-<id>-2 | PA-<id>-3 | HC-<id>-1 | HC-<id>-2 |
+|---|---|---|---|---|---|---|---|
+| 1 | Function | <tiêu chí> | Đạt | Đạt | Đạt | Đạt | Đạt |
+| 2 | Working principle | <tiêu chí> | Đạt | Đạt | Đạt | Đạt | Đạt |
+| 3 | Layout | <tiêu chí> | Đạt | Không đạt | Đạt | Đạt | Đạt |
+| 4 | Safety | <tiêu chí> | Đạt | Đạt | Đạt | Đạt | Đạt |
+| 5 | Ergonomics | <tiêu chí> | Đạt | Đạt | Đạt | Đạt | ?(chưa có số liệu) |
+| 6 | Production | <tiêu chí> | Đạt | Đạt | Đạt | Đạt | Đạt |
+| 7 | Quality control | <tiêu chí> | Đạt | Đạt | Đạt | Đạt | Đạt |
+| 8 | Assembly | <tiêu chí> | Đạt | Đạt | Đạt | Đạt | Đạt |
+| 9 | Transport | <tiêu chí> | Đạt | Đạt | Đạt | Đạt | Đạt |
+| 10 | Operation | <tiêu chí> | Đạt | Đạt | Đạt | Đạt | Đạt |
+| 11 | Maintenance | <tiêu chí> | Đạt | Đạt | Đạt | Đạt | Đạt |
+| 12 | Recycling | <tiêu chí> | Đạt | Đạt | Đạt | Đạt | Đạt |
+| 13 | Costs | <tiêu chí> | Đạt | Đạt | Đạt | Đạt | Đạt |
+| 14 | Schedules | Bỏ — lý do: <lý do> | — | — | — | — | — |
+
+(Một bảng `### F-<id>` cho MỖI chức năng; cột = mọi PA/HC của chức năng đó. Ô ứng viên: `Đạt` / `Không đạt` / `?(<lý do>)`. Mục bỏ: Tiêu chí `Bỏ — lý do: <lý do>`, mọi ô ứng viên `—`.)
+
+## Bảng chấm
+
+### F-<id>
+
+| Req-ID | D/W | DP | Trọng số | PA-<id>-1 | PA-<id>-2 | PA-<id>-3 | HC-<id>-1 | HC-<id>-2 | Ghi chú |
+|---|---|---|---|---|---|---|---|---|---|
+| R-11 | D tạm | DP-1 | | Đạt | Đạt | Loại | Đạt | Đạt | |
+| R-12 | W tạm | DP-2 | 3 | 3 | 4 | 2 | 1 | ?(chưa có số liệu) | |
+| R-13 | W tạm | — | | 2 | 2 | 3 | 0 | 4 | 🔴 CEO gán trọng số (không có DP) |
+
+Tổng điểm: phần có trọng số = <số theo từng cột>; phần cờ đỏ chưa gán = <số dòng 🔴, điểm thô theo từng cột>.
+
+## Độ nhạy
+
+<Đổi trọng số ±20%: phương án dẫn đầu có đổi không; thay mỗi ô ?(…) bằng 0 rồi bằng 4: phương án dẫn đầu có đổi không.>

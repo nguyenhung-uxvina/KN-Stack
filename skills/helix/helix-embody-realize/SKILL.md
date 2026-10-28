@@ -1,11 +1,11 @@
 ---
 name: helix-embody-realize
-description: "Orchestrator for Pahl-Beitz Phase 3 Embodiment Design — multi-agent pipeline commanding 6 block-skills (preflight → layout → dfx → integrate → bom → compile). Transforms selected concept into buildable layout with DfX review, integration check, ICD v3 freeze, and draft BOM. Aligned with P&B Ch7 (7.1–7.8) + AI-Orchestration S1-S5. Triggers on: 'embodiment design', 'layout', 'DfX', 'embody', 'thiet ke tong the', 'Phase 3'."
+description: "Orchestrator for Pahl-Beitz Phase 3 Embodiment Design — multi-agent pipeline commanding 7 block-skills (preflight → form → layout → dfx → integrate → bom → compile). Transforms selected concept into buildable layout with DfX review, integration check, ICD v3 freeze, and draft BOM. Aligned with P&B Ch7 (7.1–7.8) + AI-Orchestration S1-S5. Triggers on: 'embodiment design', 'layout', 'DfX', 'embody', 'thiet ke tong the', 'Phase 3'."
 ---
 
 # Helix Embody Realize — Phase 3 Orchestrator (Multi-Agent Pipeline)
 
-> **Role:** Chỉ huy trưởng — điều phối 6 block-skills tuần tự
+> **Role:** Chỉ huy trưởng — điều phối 7 block-skills tuần tự (B0, BF, BA, BB, BC, BD, BE)
 > **Architecture:** Modular pipeline — mỗi block = 1 skill độc lập
 > **P&B Reference:** Ch7 (7.1–7.8) Embodiment Design
 > **VDI 2221:2019:** Blatt 1 (generic model) + Blatt 2 (context-specific adaptation)
@@ -15,19 +15,20 @@ description: "Orchestrator for Pahl-Beitz Phase 3 Embodiment Design — multi-ag
 ## Pipeline Architecture
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│                  helix-embody-realize (ORCHESTRATOR)             │
-│                                                                  │
-│  Flags: --icdm | --quick | --maritime | --from <block>          │
-│         --only <block> (run single block)                       │
-│                                                                  │
-│  ┌──────┐   ┌──────┐   ┌────┐   ┌──────┐   ┌──────┐   ┌──────┐   ┌──────┐
-│  │ B0   │──▶│ BA   │──▶│BA½│──▶│ BB   │──▶│ BC   │──▶│ BD   │──▶│ BE   │
-│  │PRE-  │   │LAY-  │   │ERR│   │DfX   │   │INTE- │   │BOM   │   │COMP- │
-│  │FLIGHT│   │OUT   │   │CHK│   │      │   │GRATE │   │      │   │ILE   │
-│  └──┬───┘   └──┬───┘   └─┬─┘   └──┬───┘   └──┬───┘   └──┬───┘   └──┬───┘
-│     │ ✓CEO     │ ✓CEO    │✓CEO    │ ✓CEO     │ ✓CEO     │ ✓CEO     │ ✓CEO
-└─────────────────────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────────────────────────────────────┐
+│                       helix-embody-realize (ORCHESTRATOR)                                │
+│                                                                                          │
+│  Flags: --icdm | --quick | --maritime | --from <block> | --only <block>                  │
+│         --skip-form "<lý do>" (bỏ BF; lý do vào Adjustments Log)                         │
+│                                                                                          │
+│  ┌──────┐  ┌──────┐  ┌──────┐  ┌────┐  ┌──────┐  ┌──────┐  ┌──────┐  ┌──────┐           │
+│  │ B0   │─▶│ BF   │─▶│ BA   │─▶│BA½ │─▶│ BB   │─▶│ BC   │─▶│ BD   │─▶│ BE   │           │
+│  │PRE-  │  │FORM  │  │LAY-  │  │ERR │  │DfX   │  │INTE- │  │BOM   │  │COMP- │           │
+│  │FLIGHT│  │p3-   │  │OUT   │  │CHK │  │      │  │GRATE │  │      │  │ILE   │           │
+│  │      │  │form  │  │      │  │    │  │      │  │      │  │      │  │      │           │
+│  └──┬───┘  └──┬───┘  └──┬───┘  └─┬──┘  └──┬───┘  └──┬───┘  └──┬───┘  └──┬───┘           │
+│     │✓CEO     │✓CEO×2   │✓CEO    │✓CEO    │✓CEO     │✓CEO     │✓CEO     │✓CEO           │
+└──────────────────────────────────────────────────────────────────────────────────────────┘
 
 Data Bus: 1_Projects/{{project}}/Phase3-Embodiment/
 State:    1_Projects/{{project}}/Phase3-Embodiment/_pipeline_state.md
@@ -43,7 +44,7 @@ This pipeline implements VDI 2221:2019 (Blatt 1 + Blatt 2) principles:
 - **Continuous Assurance (Eigenschaftsabsicherung):** CEO checkpoints after each block = VDI 2221:2019 checkpoints. ICD v3 freeze (BC) is a major assurance milestone. PLAUSIBLE + P02 = assurance layer at Gate 3.
 
 **VDI 2206 Three Strands Mapping:**
-- **Orange strand** (core activities) = pipeline blocks B0→BA→BA½→BB→BC→BD→BE
+- **Orange strand** (core activities) = pipeline blocks B0→BF→BA→BA½→BB→BC→BD→BE
 - **Yellow strand** (continuous RE) = `Requirements_Delta_Log.md` backflow from BC (integration) and BE (compile delta summary)
 - **Blue strand** (modeling mandate) = future enhancement (model inventory system TBD)
 - **RFLP position:** Phase 3 = **P** (Physical) — embodiment transforms logical concepts into physical realizations
@@ -52,11 +53,12 @@ This pipeline implements VDI 2221:2019 (Blatt 1 + Blatt 2) principles:
 - `Research: VDI 2221 Systematic Design (1986→2019)` (27 sources, notebook `f6e2b21f`)
 - `Research: VDI 2206 V-Model Mechatronic CPS` (16 sources, notebook `3856a428`)
 
-## Sub-Skills (6 Block-Skills)
+## Sub-Skills (7 Block-Skills)
 
 | Block | Skill Name | P&B Section | Purpose | CEO Checkpoint |
 |-------|-----------|-------------|---------|----------------|
 | **B0** | `/helix-p3-preflight` | 7.1 | Verify Phase 2 done, identify embodiment-determining reqs, spatial constraints | Confirm layout strategy |
+| **BF** | `/helix-p3-form` | 7.1 (chức năng→hình thể) | Chọn chức năng quyết định hiện thân → ≥3 phương án hình thể C&C² mỗi chức năng (3 sách + giải pháp hiện có) → chấm điểm → `BF_Form_Selection.md` (khoảng tham số + kế hoạch thử) + CC2_Handoff nếu chưa có. Bỏ được bằng `--skip-form "<lý do>"` | **Cổng CEO 1** (chức năng, D/W) + **Cổng CEO 2** (hình thể) |
 | **BA** | `/helix-p3-layout` | 7.1 (Steps 2-6) | CEO creates preliminary layout, maritime P50/P51 auto-invoke. **Per part, a Geometry Source Gate routes to [[helix-cad-bridge]] (AI-parametric .py→STEP) or [[helix-cad-roundtrip]] --design-import (human-drawn external import → ingested via [[helix-cad-ingest]]); the resulting STEP / cad_extract.json becomes the per-part geometry-of-record candidate** | **Approve layout** (Core) |
 | **BA→BB** | *(early error-check)* | 7.1 Step 6 | Lightweight error + cost check on layout BEFORE detailed DfX — catch flawed layouts early | CEO: fix layout or proceed |
 | **BB** | `/helix-p3-dfx` | 7.3-7.5 | 3 basic rules (PASS/FAIL) → 5 principles rapid audit → DfX review (DfM/DfA/DfR/DfT/DfW/DfU/DfQC + DfCorrosion/DfThermal/DfDurability/DfWear/DfTransport/DfCreep; optional: DfAesthetics/DfRecycling), PLAUSIBLE 9-check | Resolve FAIL items |
@@ -85,7 +87,7 @@ This pipeline implements VDI 2221:2019 (Blatt 1 + Blatt 2) principles:
 ```
 
 ### Quick Mode (--quick) Abbreviated Sequence
-B0 (quick) → BA (skip P50/P51 unless maritime) → BA½ (error-check always runs) → BB (DfX core + DfCorrosion if maritime, skip PLAUSIBLE + extended DfX) → BC (ICD update only, skip shadow) → BD (BOM from template) → BE (skip Rt/Re, QC gate only).
+B0 (quick) → BF (quick: tầng 1, ≥2 phương án/chức năng) → BA (skip P50/P51 unless maritime) → BA½ (error-check always runs) → BB (DfX core + DfCorrosion if maritime, skip PLAUSIBLE + extended DfX) → BC (ICD update only, skip shadow) → BD (BOM from template) → BE (skip Rt/Re, QC gate only).
 
 ## Orchestrator Workflow
 
@@ -99,8 +101,10 @@ FLAGS:
   --icdm     → ICDM framework extensions (default: OFF)
   --quick    → Abbreviated pipeline (default: OFF)
   --maritime → Auto-invoke P50/P51 in Block BA (default: auto-detect)
-  --from X   → Resume from block X (B0/BA/BB/BC/BD/BE)
-  --only X   → Run single block X only
+  --from X   → Resume from block X (B0/BF/BA/BB/BC/BD/BE)
+  --only X   → Run single block X only (BF hợp lệ: --from BF / --only BF)
+  --skip-form "<lý do>" → Bỏ block BF; lý do ghi vào Adjustments Log của `_pipeline_state.md`, BE in lại ở báo cáo Gate 3
+  (--quick cũng truyền xuống BF = BF quick: nguồn tầng 1, ≥2 phương án/chức năng)
 ```
 
 #### Variant Subfolder Convention
@@ -167,6 +171,7 @@ OPTIONAL INPUTS:
 ```
 
 Glob for each in `Phase2-Concept/{{variant}}/`, `Phase1-Task/{{variant}}/`, `Phase0-Forge/ (or FORGE/)`, `Phase0-Plan/{{variant}}/`.
+Nguồn của `CC2_Handoff.md`: block BF (`/helix-p3-form`) sinh nếu chưa có, hoặc `/helix-cc2` (C6).
 Glob `{{prefix}}CC2_Handoff.md` in `Phase3-Embodiment/{{variant}}/`, `Phase3-Embodiment/`, `Phase3-Embody/{{variant}}/` and `Phase3-Embody/`.
 
 #### 1.5b: Present Input Checklist to CEO
@@ -246,6 +251,7 @@ maritime: [true | false]
 | Block | Skill | Status | Started | Completed | CEO Approved |
 |-------|-------|--------|---------|-----------|-------------|
 | B0 | helix-p3-preflight | PENDING | - | - | - |
+| BF | helix-p3-form | PENDING | - | - | - |
 | BA | helix-p3-layout | PENDING | - | - | - |
 | BB | helix-p3-dfx | PENDING | - | - | - |
 | BC | helix-p3-integrate | PENDING | - | - | - |
@@ -262,6 +268,7 @@ maritime: [true | false]
 
 ## Adjustments Log
 [populated when CEO modifies block outputs between runs]
+[`--skip-form "<lý do>"` → ghi dòng: ngày · BF SKIPPED · <lý do>; đặt BF = SKIPPED trong Block Progress]
 ```
 
 ### Step 3: Execute Blocks Sequentially — ONE AT A TIME
@@ -270,7 +277,7 @@ maritime: [true | false]
 
 **Architecture: Initializer + Incremental + Ledger** (Source: Anthropic Agent Harness, Tier A)
 - B0 (Preflight) = **Initializer** — validates inputs, populates ledger with project context
-- BA-BE = **Incremental Agents** — each reads ledger, does work, writes back
+- BF–BE = **Incremental Agents** — each reads ledger, does work, writes back
 - `_pipeline_state.md` = **State Ledger** — the SOLE communication channel between blocks
 
 #### Ledger Read Protocol (BEFORE each block)
@@ -310,7 +317,7 @@ For each block (respecting --from / --only flags):
    - (1) → Execute next block (ONE block only, then STOP again)
    - (2) → Re-run current block with adjustments, then STOP for approval
    - (3) → Save state and halt. CEO can resume later with `--from`
-   - (4) → Skip next block, STOP and present the block after that
+   - (4) → Skip next block, STOP and present the block after that. Nếu block kế là **BF**: skip chỉ hợp lệ qua đường `--skip-form` — hỏi CEO lý do, ghi dòng `ngày · BF SKIPPED · <lý do>` vào Adjustments Log và đặt BF = SKIPPED trong Block Progress (như cờ `--skip-form "<lý do>"`); không có lý do → không skip
 
 **Why this matters:** Layout decisions (BA) affect ALL downstream blocks. DfX findings (BB) may require layout changes. BOM (BD) depends on frozen ICD (BC). Auto-continuing cascades errors through the physical design.
 
@@ -321,7 +328,7 @@ For each block (respecting --from / --only flags):
 PHASE 3 PIPELINE COMPLETE — {{project}}
 ═══════════════════════════════════════════════════
 Mode: [standard / icdm / quick]
-Blocks completed: {{N}}/6
+Blocks completed: {{N}}/7
 Rt = {{value}}, Re = {{value}}, R = {{value}}
 BOM cost: {{amount}} vs target {{amount}}
 ICD v3: [FROZEN / PENDING]
@@ -342,7 +349,7 @@ When variant is specified, all filenames are prefixed with `{{prefix}}` (e.g. `V
 | File Pattern | Written By | Read By | Content |
 |------|-----------|---------|---------|
 | `_pipeline_state.md` | Orchestrator | All | Progress, CEO decisions |
-| `{{prefix}}B0_Preflight_Report.md` | B0 | BA, BB | Embodiment-determining reqs, spatial constraints |
+| `{{prefix}}B0_Preflight_Report.md` | B0 | BF, BA, BB | Embodiment-determining reqs, spatial constraints |
 | `{{prefix}}Preliminary_Layout.md` | BA | BB, BC, BD | Layout description, key dimensions, material candidates |
 | `{{prefix}}Weight_Estimate.md` | BA | BD, BE | P51 bottom-up weight (maritime only) |
 | `{{prefix}}Stability_Check.md` | BA | BE | P50 GM/trim check (maritime only) |
@@ -358,7 +365,12 @@ When variant is specified, all filenames are prefixed with `{{prefix}}` (e.g. `V
 | `{{prefix}}Embodiment_Evaluation.md` | BE | Gate 3 | Rt/Re scores, S-diagram, weak spots |
 | `{{prefix}}P02_QC_Gate.md` | BE | Gate 3 | QC gate results |
 | `{{prefix}}Deliverables_Index.md` | BE | Phase 4 | Complete deliverable list |
-| `{{prefix}}CC2_Handoff.md` | `/helix-cc2` (C6, external — not written by this pipeline) | B0, BA | C&C² chains, form-parameter ranges, sensitive parameters, open hypothesis sheets (description-level cross-check) |
+| `{{prefix}}BF_Function_Selection.md` | BF (Cổng CEO 1) | BE | Chức năng quyết định hiện thân, D/W (nhãn `D tạm`/`W tạm` đến khi CEO duyệt) |
+| `{{prefix}}BF_Form_Variants.md` | BF | BA, BB | ≥3 phương án hình thể/chức năng, chuỗi C&C² |
+| `{{prefix}}BF_Benchmark.md` | BF | BE, `ip-*` | Giải pháp hiện có đọc ngược C&C², cờ FTO |
+| `{{prefix}}BF_Scoring.md` | BF | BE | Bảng chấm điểm hình thể |
+| `{{prefix}}BF_Form_Selection.md` | BF (Cổng CEO 2) | **BA** (nguồn khoảng tham số), BB, BE, Phase 4 | Hình thể chọn, khoảng tham số, kế hoạch thử |
+| `{{prefix}}CC2_Handoff.md` | BF (sinh nếu chưa có) hoặc `/helix-cc2` (C6) | B0, BA | C&C² chains, form-parameter ranges, sensitive parameters, open hypothesis sheets (description-level cross-check) |
 
 **Example (with variant):** `Phase3-Embody/V5-MOTORIZED/VN_MGM_V5_BOM_Draft.md`
 **Example (no variant):** `Phase3-Embody/VN_XUONG_UUV_BOM_Draft.md`
@@ -435,6 +447,7 @@ When `--icdm` is active, each block receives **specific ICDM methodological exte
 ```
 helix-embody-realize (ORCHESTRATOR) COMMANDS:
   → /helix-p3-preflight   (Block 0)
+  → /helix-p3-form        (Block F)
   → /helix-p3-layout      (Block A)
   → /helix-p3-dfx         (Block B)
   → /helix-p3-integrate   (Block C)
@@ -450,6 +463,7 @@ helix-embody-realize READS FROM:
   - helix-cad-ingest → BA ingested cad_extract.json (human-drawn imported parts)
   - helix-cad-roundtrip → BA Geometry Source Gate orchestration (Flow B / Flow D)
   - helix-cc2 → CC2_Handoff (khoảng tham số, phiếu giả thuyết mở)
+  - helix-p3-form (BF) → BF_Form_Selection (nguồn khoảng tham số cho BA), BF_Scoring (D/W tạm cho BE)
 
 helix-embody-realize WRITES TO:
   - 1_Projects/{{project}}/Phase3-Embodiment/ → all deliverables

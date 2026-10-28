@@ -6,7 +6,7 @@ description: "Block B of Phase 3 pipeline — full DfX review (DfM/DfA/DfR/DfT/D
 # Block B: DfX Review — Design Rules + Principles + PLAUSIBLE
 
 > **P&B:** 7.3 (Basic Rules) + 7.4 (Principles) + 7.5 (DfX Guidelines) | **Pipeline:** helix-embody-realize → Block BB
-> **Input:** `BA_Preliminary_Layout.md` + Phase 1 requirements | **Output:** `BB_DfX_Review.md`, `BB_PLAUSIBLE_Check.md`, `BB_Basic_Rules_Audit.md`
+> **Input:** `BA_Preliminary_Layout.md` + Phase 1 requirements (+ `{{prefix}}BF_Form_Variants.md` / `{{prefix}}BF_Form_Selection.md` nếu có — đọc để biết hình thể đã chọn cho từng chức năng và quy tắc hiện thân đã dùng để sinh nó) | **Output:** `BB_DfX_Review.md`, `BB_PLAUSIBLE_Check.md`, `BB_Basic_Rules_Audit.md`
 
 ## Operational Envelope
 > Source: [[Operational Envelope Law]], [[LLM Spatial Blindness]], Multi-Agent Research 2026-04-22
