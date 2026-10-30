@@ -129,12 +129,14 @@ Always emit **both**: `cad_extract.json` (machine — for `forge-fabrication`, `
 {
   "meta":   { "part_id","name","assembly","product","material","mass_kg","scale",
               "org","date","classification","dxf_version","units",
-              "source_files": {"dxf","pdf"}, "ingested","tool":"helix-cad-ingest" },
-  "dimensions":    [ {"param","value","unit","tolerance","source","confidence","note"} ],
-  "tolerances":    [ {"rule","value","source","confidence"} ],
+              "source_files": {"dxf","pdf"}, "ingested","tool":"helix-cad-ingest",
+              "provenance": { "part_id":"title-block","code_in_dxf":"title-block",
+                              "name":"title-block","material":"title-block","scale":"title-block" } },
+  "dimensions":    [ {"param","value","unit","tolerance","method","source","confidence","note"} ],
+  "tolerances":    [ {"rule","value","method","source","confidence"} ],
   "gdt":           [ {"symbol","value","datum","source","confidence"} ],
-  "holes":         [ {"dia","count","pattern","positions":[[x,y]],"source","confidence","note"} ],
-  "surface_finish":{ "value","source","confidence" },
+  "holes":         [ {"dia","count","pattern","positions":[[x,y]],"method","source","confidence","note"} ],
+  "surface_finish":{ "value","method","source","confidence" },
   "layers":        [ {"name","color","entity_count"} ],
   "blocks":        [ {"name","count","attribs":{}} ],
   "bom":           [ {"item","code","name","qty","material","thickness_mm"} ],   // assemblies only
@@ -144,6 +146,23 @@ Always emit **both**: `cad_extract.json` (machine — for `forge-fabrication`, `
 }
 ```
 > Rules: `confidence` ∈ {HIGH,MED,LOW}; never omit it. A break-view / dim-override goes in BOTH the dimension row (`note`) and `conflicts[]` (`type":"BREAK-VIEW"`). Unparsed/uncertain reads go in `missing[]`, never dropped silently.
+
+**Collection-method provenance (`method`) — taxonomy B.** Every value records HOW it was obtained;
+`confidence` DERIVES from it (a computed measurement outranks human-typed text — title-block codes
+are copy-paste-prone). Enum → default confidence:
+
+| `method` | nguồn | conf mặc định |
+|---|---|---|
+| `geometry-counted` | đếm entity hình học (CIRCLE) | HIGH |
+| `dim-measured` | `DIMENSION.get_measurement()` | HIGH |
+| `dim-override` | trị số draftsman gõ đè trên dim | MED |
+| `schedule-table` | dòng BOM / parts-list | MED |
+| `title-block` | chữ khung tên (mã/vật liệu/tỷ lệ) | MED (mã: LOW qua `code_confidence`) |
+| `ocr` | raster→Tesseract (chưa wire ở reader DXF-only) | LOW |
+| `human-certified` | CEO/kỹ sư chứng thực → bump đỉnh (đặt downstream) | HIGH |
+
+Giá trị giả định (dung sai mặc định IT14/2) mang `method: null` + `confidence: LOW` — fail-safe cho
+mọi `min_method` gate của [[helix-cad-validate]] tới khi được parse/chứng thực.
 
 **`cad_extract.md`** — CEO-readable mirror: title-block table · critical-dimension table (Param | Value | Tol | Source | Confidence) · BOM table · process notes · CONFLICTS/MISSING section.
 

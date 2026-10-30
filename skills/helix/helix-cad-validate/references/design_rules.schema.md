@@ -25,10 +25,10 @@
 | Rule key | Ý nghĩa | Trường |
 |---|---|---|
 | `materials` | Whitelist/blacklist vật liệu | `allowed[]`, `forbidden[]`, `required` (bool), `severity` |
-| `plate_thickness_mm` | Độ dày tấm tối thiểu | `min`, `required`, `min_confidence` (LOW/MED/HIGH), `severity` |
+| `plate_thickness_mm` | Độ dày tấm tối thiểu | `min`, `required`, `min_confidence` (LOW/MED/HIGH), `min_method`, `severity` |
 | `mass_kg` | Khối lượng tối đa | `max`, `required`, `severity` |
 | `safety_factor` | Hệ số an toàn tối thiểu | `min`, `required`, `severity` |
-| `tolerance_mm` | Dung sai tuyệt đối tối đa | `max`, `min_confidence`, `severity` |
+| `tolerance_mm` | Dung sai tuyệt đối tối đa | `max`, `min_confidence`, `min_method`, `severity` |
 | `mandatory_components` | Thành phần bắt buộc hiện diện | `items[]` (string hoặc list synonym), `severity` |
 | `weld_standard` | Phải viện dẫn ≥1 chuẩn hàn | `required_any[]`, `severity` |
 | `load_class` | Hạng tải phải có / cấm | `required[]`, `forbidden[]`, `severity` |
@@ -48,6 +48,22 @@
 `cad_extract.json` gắn `confidence` (HIGH/MED/LOW) cho mỗi giá trị (helix-cad-ingest). Rule critical
 (độ dày, dung sai) chỉ PASS nếu giá trị nguồn đạt `min_confidence`; giá trị LOW/MED chưa được CEO
 chứng nhận → FAIL "uncertified".
+
+## Method gate (chống "nguồn yếu" lọt cổng) — provenance theo phương pháp thu thập
+Mỗi giá trị còn gắn `method` = CÁCH lấy được nó (taxonomy B từ helix-cad-ingest). Rank:
+`ocr`(0) < `title-block`(1) < `schedule-table`=`dim-override`(2) < `dim-measured`=`geometry-counted`(3)
+< `human-certified`(4). Đặt `min_method` cho một rule → giá trị lấy bằng phương pháp DƯỚI ngưỡng
+→ FAIL (dù trị số đúng). **Fail-safe:** giá trị không có method (giả định mặc định) rank = −1, dưới mọi ngưỡng.
+
+- Per-rule: `plate_thickness_mm.min_method` · `tolerance_mm.min_method` (nơi đã có `min_confidence`).
+- Global default: `method_gate.min_for_critical` áp cho các rule tới hạn không khai `min_method` riêng.
+- Không khai `min_method` và không có `method_gate` → KHÔNG gate theo method (tương thích ngược 100%).
+
+Ví dụ: yêu cầu độ dày phải đo từ hình học hoặc kỹ sư ký (từ chối số đọc BOM/khung tên):
+```jsonc
+"plate_thickness_mm": { "min": 3.0, "min_confidence": "MED",
+                        "min_method": "dim-measured", "severity": "critical" }
+```
 
 ## Contract integrity (gate khóa quyền sửa rào của chính nó)
 Chạy với `--approved-hash <sha256>`: nếu file contract không khớp hash kỹ sư đã duyệt → FAIL

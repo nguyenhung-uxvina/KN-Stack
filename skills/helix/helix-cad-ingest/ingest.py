@@ -29,6 +29,20 @@ SCALE_RE   = re.compile(r"\b\d+\s*:\s*\d+\b")
 NUM_RE     = re.compile(r"-?\d+(?:[.,]\d+)?")
 TOL_RE     = re.compile(r"±\s*(\d+(?:[.,]\d+)?)")
 
+# --- collection-method provenance (taxonomy B) -> default confidence ---
+# Every extracted value carries HOW it was obtained. Trust derives from method:
+# a computed geometry measurement outranks a human-typed value (title-block codes
+# are copy-paste-prone — the stale-code failure this set actually hit).
+METHOD_CONF = {
+    "geometry-counted": "HIGH",   # counted from native geometry entities (CIRCLE…)
+    "dim-measured":     "HIGH",   # DIMENSION.get_measurement() on true-scale geometry
+    "dim-override":     "MED",    # draftsman-typed value on a dim (human-entered)
+    "schedule-table":   "MED",    # BOM / parts-list row
+    "title-block":      "MED",    # TEXT in the title block (human-typed)
+    "ocr":              "LOW",    # raster -> Tesseract (not wired in this DXF-only reader)
+    "human-certified":  "HIGH",   # CEO/engineer certified -> top rank (set downstream)
+}
+
 
 def clean_inline(s: str) -> str:
     """Strip MTEXT/dim inline format codes -> plain text."""
@@ -127,19 +141,21 @@ def extract(path, classification):
             meas = None
         ovr = clean_inline(e.dxf.get("text", ""))
         if ovr in ("", "<>"):
-            value, tol, conf, note = meas, "IT14/2", "HIGH", ""
+            # value read straight from the geometry entity measurement
+            value, tol, method, note = meas, "IT14/2", "dim-measured", ""
         else:
+            # value is a draftsman-typed override on the dimension (human-entered)
             value = num(ovr)
             tolm = TOL_RE.search(ovr)
             tol = "±" + tolm.group(1) if tolm else "IT14/2"
-            conf, note = "HIGH", ""
+            method, note = "dim-override", ""
             if isinstance(meas, (int, float)) and value and abs(meas - value) > max(2.0, 0.02 * value):
                 note = f"break-view: geometry={meas} vs drawn={value}{(' '+tol) if tol!='IT14/2' else ''}"
                 conflicts.append({"type": "BREAK-VIEW",
                                   "detail": f"{value}{tol}: geometry measured {meas} (rút gọn cắt), lấy {value}"})
         dimensions.append({"param": "", "value": value, "unit": "mm",
-                           "tolerance": tol, "source": "DIMENSION",
-                           "confidence": conf, "note": note})
+                           "tolerance": tol, "method": method, "source": "DIMENSION",
+                           "confidence": METHOD_CONF[method], "note": note})
 
     # ---- holes ----
     holes = []
@@ -148,7 +164,8 @@ def extract(path, classification):
         pts = [[round(e.dxf.center.x), round(e.dxf.center.y)]
                for e in msp.query("CIRCLE") if round(e.dxf.radius * 2, 1) == dia]
         holes.append({"dia": dia, "count": n, "pattern": "", "positions": pts,
-                      "source": "CIRCLE", "confidence": "HIGH", "note": ""})
+                      "method": "geometry-counted", "source": "CIRCLE",
+                      "confidence": METHOD_CONF["geometry-counted"], "note": ""})
     n_arc = len(msp.query("ARC"))
     missing = []
     if n_arc:
@@ -185,13 +202,25 @@ def extract(path, classification):
             "dxf_version": f"{doc.dxfversion} ({doc.acad_release})", "units": units,
             "source_files": {"dxf": os.path.basename(path), "pdf": None},
             "ingested": None, "tool": "helix-cad-ingest",
+            # collection-method per title-block field (scalars kept above for
+            # backward compat; provenance is additive). code stays LOW via
+            # code_confidence — a stale copy-paste code is below title-block default.
+            "provenance": {
+                "part_id": "title-block", "code_in_dxf": "title-block",
+                "name": "title-block", "material": "title-block", "scale": "title-block",
+            },
         },
         "dimensions": dimensions,
-        "tolerances": [{"rule": "default", "value": "IT14/2", "source": "general-note", "confidence": "HIGH"}],
+        # default general tolerance is an ASSUMPTION, not an extraction -> method null,
+        # LOW confidence, fail-safe for any min_method gate until parsed/certified.
+        "tolerances": [{"rule": "default", "value": "IT14/2", "method": None,
+                        "source": "assumed-default", "confidence": "LOW",
+                        "note": "giả định mặc định — chưa parse từ general-note; cần xác nhận"}],
         "gdt": [],
         "holes": holes,
         "surface_finish": {"value": "Rz20" if "Rz20" in joined else None,
-                           "source": "Surface Texture block", "confidence": "MED"},
+                           "method": "title-block", "source": "Surface Texture block",
+                           "confidence": METHOD_CONF["title-block"]},
         "layers": layers,
         "blocks": blocks,
         "bom": [],
@@ -222,10 +251,10 @@ def to_md(r):
     L.append("")
     if r["dimensions"]:
         L.append("## Kích thước (cần CEO chứng thực)")
-        L.append("| Value | Tol | Source | Conf | Note |")
+        L.append("| Value | Tol | Method | Conf | Note |")
         L.append("|---|---|---|---|---|")
         for d in r["dimensions"]:
-            L.append(f"| {d['value']} | {d['tolerance']} | {d['source']} | {d['confidence']} | {d['note']} |")
+            L.append(f"| {d['value']} | {d['tolerance']} | {d.get('method','?')} | {d['confidence']} | {d['note']} |")
         L.append("")
     if r["holes"]:
         L.append("## Lỗ")

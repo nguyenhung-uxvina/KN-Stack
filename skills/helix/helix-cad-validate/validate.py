@@ -33,6 +33,15 @@ from datetime import datetime, timezone
 
 CONF_RANK = {"LOW": 0, "MED": 1, "HIGH": 2}
 
+# collection-method provenance rank (taxonomy B, from helix-cad-ingest).
+# A value's method must out-rank a rule's min_method to pass that gate.
+METHOD_RANK = {
+    "ocr": 0, "title-block": 1,
+    "schedule-table": 2, "dim-override": 2,
+    "dim-measured": 3, "geometry-counted": 3,
+    "human-certified": 4,
+}
+
 
 def _load(path):
     with open(path, "r", encoding="utf-8") as f:
@@ -53,6 +62,14 @@ def _norm(s):
 
 def _conf_ok(conf, min_conf):
     return CONF_RANK.get(str(conf or "LOW").upper(), 0) >= CONF_RANK.get(str(min_conf or "HIGH").upper(), 2)
+
+
+def _method_ok(method, min_method):
+    """True if the value's collection method out-ranks the rule's min_method.
+    Fail-safe: unknown/missing method (e.g. an assumed default) ranks below all."""
+    if not min_method:
+        return True                       # rule does not gate on method
+    return METHOD_RANK.get(str(method or ""), -1) >= METHOD_RANK.get(str(min_method), 4)
 
 
 class Report:
@@ -77,18 +94,18 @@ class Report:
 
 
 def _thickness_rows(extract):
-    """Collect (value_mm, confidence, source) thickness candidates from bom + dimensions."""
+    """Collect (value_mm, confidence, method, source) thickness candidates from bom + dimensions."""
     rows = []
     for b in extract.get("bom", []) or []:
         t = b.get("thickness_mm")
         if t is not None:
-            rows.append((float(t), "MED", f"bom:{b.get('code') or b.get('item')}"))
+            rows.append((float(t), "MED", "schedule-table", f"bom:{b.get('code') or b.get('item')}"))
     for d in extract.get("dimensions", []) or []:
         p = _norm(d.get("param"))
         if any(k in p for k in ("thickness", "độ dày", "do day", "dày", "tôn", "plate")):
             try:
                 rows.append((float(d.get("value")), d.get("confidence", "LOW"),
-                             d.get("source") or f"dim:{d.get('param')}"))
+                             d.get("method"), d.get("source") or f"dim:{d.get('param')}"))
             except (TypeError, ValueError):
                 pass
     return rows
@@ -226,11 +243,12 @@ def run_checks(extract, rules, mass_props):
         sev = pt.get("severity", "critical")
         tmin = pt.get("min")
         min_conf = pt.get("min_confidence", rs.get("confidence_gate", {}).get("min_for_critical", "HIGH"))
+        min_method = pt.get("min_method", rs.get("method_gate", {}).get("min_for_critical"))
         rows = _thickness_rows(extract)
         if not rows and pt.get("required", True):
             r.add("plate_thickness_mm", "FAIL", sev, "(none)", f">= {tmin} mm",
                   "Không có dữ liệu độ dày tấm — fail-safe.", source="bom/dim")
-        for val, conf, src in rows:
+        for val, conf, method, src in rows:
             if tmin is not None and val < float(tmin):
                 r.add("plate_thickness_mm", "FAIL", sev, f"{val} mm", f">= {tmin} mm",
                       f"Độ dày {val}mm < tối thiểu {tmin}mm.", fix=f"Tăng độ dày >= {tmin}mm.", source=src)
@@ -239,9 +257,14 @@ def run_checks(extract, rules, mass_props):
                       f"conf >= {min_conf}",
                       f"Độ dày {val}mm độ tin cậy {conf} < {min_conf} — chưa được chứng nhận cho rule tới hạn.",
                       fix="CEO/kỹ sư xác nhận giá trị (re-export vector PDF / certify).", source=src)
+            elif not _method_ok(method, min_method):
+                r.add("plate_thickness_mm", "FAIL", sev, f"{val} mm (method={method})",
+                      f"method >= {min_method}",
+                      f"Độ dày {val}mm lấy bằng '{method}' — dưới nguồn tối thiểu '{min_method}' cho rule tới hạn.",
+                      fix="Đo lại từ hình học / kỹ sư chứng thực (human-certified).", source=src)
             else:
-                r.add("plate_thickness_mm", "PASS", sev, f"{val} mm (conf={conf})", f">= {tmin} mm",
-                      f"Độ dày {val}mm đạt.", source=src)
+                r.add("plate_thickness_mm", "PASS", sev, f"{val} mm (conf={conf}, method={method})",
+                      f">= {tmin} mm", f"Độ dày {val}mm đạt.", source=src)
 
     # 3. Mass max (prefer mass_props, then meta.mass_kg)
     ms = rs.get("mass_kg")
@@ -292,12 +315,14 @@ def run_checks(extract, rules, mass_props):
         sev = tol.get("severity", "major")
         tmax = tol.get("max")
         min_conf = tol.get("min_confidence", "MED")
+        min_method = tol.get("min_method", rs.get("method_gate", {}).get("min_for_critical"))
         for t in extract.get("tolerances", []) or []:
             try:
                 v = abs(float(t.get("value")))
             except (TypeError, ValueError):
                 continue
             conf = t.get("confidence", "LOW")
+            method = t.get("method")
             src = t.get("source") or f"tol:{t.get('rule')}"
             if tmax is not None and v > float(tmax):
                 r.add("tolerance_mm", "FAIL", sev, f"±{v} mm", f"<= ±{tmax} mm",
@@ -305,6 +330,10 @@ def run_checks(extract, rules, mass_props):
             elif not _conf_ok(conf, min_conf):
                 r.add("tolerance_mm", "FAIL", sev, f"±{v} mm (conf={conf})", f"conf >= {min_conf}",
                       f"Dung sai conf {conf} < {min_conf}.", fix="Xác nhận giá trị.", source=src)
+            elif not _method_ok(method, min_method):
+                r.add("tolerance_mm", "FAIL", sev, f"±{v} mm (method={method})", f"method >= {min_method}",
+                      f"Dung sai lấy bằng '{method}' — dưới nguồn tối thiểu '{min_method}'.",
+                      fix="Đo lại / kỹ sư chứng thực.", source=src)
             else:
                 r.add("tolerance_mm", "PASS", sev, f"±{v} mm", f"<= ±{tmax} mm", "Dung sai đạt.", source=src)
 
