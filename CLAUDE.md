@@ -16,7 +16,7 @@ KN-Stack/
 │   ├── galaxy/       (11) — Knowledge management (+ skill-to-public, codify, mentor-board — Naval outbound + code + mentor leverage)
 │   ├── mentors/      (13) — Per-mentor advisor skills (13 mentors live; add more via /mentor-board --add <leader>); orchestrator at galaxy/mentor-board/
 │   ├── erp/          (6)  — ERPNext integration
-│   ├── extract/      (9)  — Content extraction (social, chat, CAD: mech-drawing-extract "cad-to-json", doc-to-json, yt-learn)
+│   ├── extract/      (10) — Content extraction (social, chat, CAD: mech-drawing-extract "cad-to-json", dwg-to-pdf, doc-to-json, yt-learn)
 │   ├── learn/        (3)  — Learning methodology
 │   ├── guard/        (7)  — Guard rails (analyst-trap, ratio-check)
 │   ├── design/       (9)  — Specialized tools only (opt, wp, verify, reverse-engineering, reverse-mc, sdmodel, helm-aluminum-boat) — 12 overlapping skills merged into helix/forge on 2026-05-11
