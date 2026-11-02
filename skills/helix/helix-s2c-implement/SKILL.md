@@ -33,6 +33,10 @@ Gọi [[helix-cad-bridge]] với Intent đã confirm. Yêu cầu bridge:
 - Chạy LOCAL → export `{{part_id}}.step` + `.png` (iso + 3 ortho) + mass-props JSON
   (`{"mass_kg": …, "bbox": …}`) vào `cad/`.
 - Sanity asserts của Phase E (bbox ≤ envelope, wall ≥ min DFM) nằm TRONG script.
+- Script theo **hợp đồng PARAMS/build(params)** của [[helix-cad-gates]] (Parameter Table của Plan ⇒ `PARAMS`),
+  chạy qua `cad_runner.py`, và **không chỉnh kích thước để khớp khối lượng** (bridge Step 3).
+- Lập `geometry_contract.json` từ Plan (bbox từng trục, `projection_method`, ≥1 điểm dò mỗi feature tới hạn) —
+  CEO ký cùng lúc xác nhận Intent; BE dùng hash của nó.
 
 ### 4. Spatial Blindness gate (CEO Core — BLOCKING)
 Bridge Step 5 nguyên trạng: **AI không tự chứng nhận hình học — render là bằng chứng.**

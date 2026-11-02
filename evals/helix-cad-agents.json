@@ -1,0 +1,21 @@
+{
+  "skill": "helix-cad-agents",
+  "version": "1.0",
+  "description": "Static assertions for helix-cad-agents — thin orchestrator for the 9 Claude×CAD applications. Checks that each rule learned in the GIÁ TRƯỢT test 2026-11-02 is stated as a rule with an enforcement point, that MẬT blocks every LLM agent, and that wave 2 stays off.",
+  "mode": "static",
+  "test_input": "dùng Claude dựng CAD cho chi tiết bạc lót từ bản vẽ",
+  "total_required": 9,
+  "passing_score": 9,
+  "assertions": [
+    {"id": "CA-THIN", "name": "thin_commander", "check": "orchestrator never does block work itself", "regex": "NEVER does block work itself", "required": true},
+    {"id": "CA-MAT", "name": "mat_blocks_llm", "check": "MẬT classification blocks every Task/LLM agent", "regex": "MẬT ⇒ không gọi Task/agent LLM", "required": true},
+    {"id": "CA-ONE", "name": "one_block_per_turn", "check": "one block per turn then stop for CEO", "regex": "Một khối mỗi lượt[^\\n]{0,120}STOP", "required": true},
+    {"id": "CA-GATE", "name": "gates_signed_contract", "check": "every AI STEP passes geom_gates with a signed, hash-locked contract that has probes", "regex": "geom_gates\\.py[^\\n]{0,80}đã ký[^\\n]{0,20}--approved-hash[\\s\\S]{0,200}probes", "required": true},
+    {"id": "CA-MASS", "name": "mass_not_target", "check": "title-block mass is INFO and the no-tuning sentence goes into every builder prompt", "regex": "Khối lượng khung tên là INFO[^\\n]{0,200}Không được chỉnh kích thước để khớp khối lượng", "required": true},
+    {"id": "CA-PROJ", "name": "projection_declared", "check": "spec declares projection method and axis convention with D/G/T/? source tags", "regex": "projection_method[^\\n]{0,40}axis_convention[^\\n]{0,80}D/G/T/\\?", "required": true},
+    {"id": "CA-ISO", "name": "isolation_and_separate_judge", "check": "builder agents isolated; the judge is a different agent", "regex": "Agent dựng cách ly[^\\n]{0,200}KHÁC agent dựng", "required": true},
+    {"id": "CA-DRAFT", "name": "draft_label", "check": "drawing-reconstructed models are DRAFT, never geometry-of-record without engineer signature", "regex": "DRAFT[^\\n]{0,60}không bao giờ là geometry-of-record", "required": true},
+    {"id": "CA-WAVE2", "name": "wave2_off", "check": "applications 3/6/7/8 (wave 2) are not active", "regex": "Đợt 2 chưa bật", "required": true},
+    {"id": "CA-RENDER", "name": "font_fixed_render", "check": "drawing images for agents go through render_dxf.py (TCVN / AIGDT fix)", "regex": "render_dxf\\.py[^\\n]{0,60}(TCVN|AIGDT)", "required": false}
+  ]
+}

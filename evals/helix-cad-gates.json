@@ -1,0 +1,28 @@
+{
+  "skill": "helix-cad-gates",
+  "version": "1.0",
+  "description": "Static assertions for helix-cad-gates — geometry Computational Sensor + Gate vs an engineer-signed contract. Encodes the GIÁ TRƯỢT 2026-11-02 lessons: feature counts false-pass without position probes; mass must never gate or be tuned; contract hash-locked; PASS is not a signature.",
+  "mode": "static",
+  "test_input": "check this AI-built STEP of a flanged bushing against its geometry contract",
+  "total_required": 8,
+  "passing_score": 8,
+  "assertions": [
+    {"id": "GG-CONTRACT", "name": "contract_not_reference", "check": "gate compares the STEP against a signed geometry contract, not a reference model",
+     "regex": "geometry_contract\\.json[^\\n]{0,120}(ký|signed|đã ký)|(không|NOT|KHÔNG) cần STEP đáp án|không so mô hình mẫu", "required": true},
+    {"id": "GG-F1", "name": "closed_brep", "check": "F1 closed valid B-Rep", "regex": "F1[^\\n]{0,40}B-Rep[^\\n]{0,20}(kín|closed)", "required": true},
+    {"id": "GG-F2", "name": "axis_and_probes", "check": "F2 per-axis bbox with axis-swap flag and point probes for mirror / misplacement",
+     "regex": "F2[^\\n]{0,80}(TỪNG TRỤC|per axis)[^\\n]{0,120}(ĐẢO TRỤC|axis.?swap)[^\\n]{0,160}(điểm dò|probe)", "required": true},
+    {"id": "GG-PROBE-WHY", "name": "probes_mandatory_because_f3_false_pass", "check": "states that feature counting alone false-passed and probes are required",
+     "regex": "(Đếm feature|feature count)[^\\n]{0,40}(cho qua nhầm|false.?pass)", "required": true},
+    {"id": "GG-F4", "name": "param_flex", "check": "F4 flexes PARAMS and needs the PARAMS/build contract",
+     "regex": "F4[^\\n]{0,60}(uốn tham số|flex)[^\\n]{0,80}PARAMS", "required": true},
+    {"id": "GG-MASS", "name": "mass_info_only", "check": "title-block mass is INFO, never gating, never a tuning target",
+     "regex": "(khối lượng|KL|mass)[^\\n]{0,60}INFO[^\\n]{0,120}(cấm|không|never|DON'T)", "required": true},
+    {"id": "GG-HASH", "name": "approved_hash", "check": "contract locked with --approved-hash against agent self-editing",
+     "regex": "--approved-hash", "required": true},
+    {"id": "GG-HUMAN", "name": "pass_not_signature", "check": "PASS does not replace the engineer/CEO render review and signature",
+     "regex": "PASS = khớp hợp đồng|PASS ≠|không.{0,20}chữ ký|ký\\)? — \\*\\*Core\\*\\*", "required": true},
+    {"id": "GG-RUNNER", "name": "isolated_runner", "check": "AI-written model.py runs in an isolated child process with timeout",
+     "regex": "cad_runner\\.py[^\\n]{0,80}(tiến trình con|child process)", "required": false}
+  ]
+}

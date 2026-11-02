@@ -25,6 +25,24 @@ MATERIALS = [
     "ĐỒNG ĐỎ", "NHỰA TEFLON", "INOX 304", "INOX 316",
 ]
 PART_ID_RE = re.compile(r"GT\.\d{2}\.\d{2}\.\d{2}(?:\.\d{2})?(?:\s*B[KL])?")
+PRODUCT_MARKERS = {"GIÁ TRƯỢT UUV": ["TRƯỢT", "TRŪȊT"]}
+MASS_RE    = re.compile(r"(?:KH[ỐO]I\s*L[ƯU][ỢO]NG|MASS|WEIGHT)\s*[:=]?\s*(\d+(?:[.,]\d+)?)\s*(?:kg)?", re.I)
+
+
+def load_config(path):
+    """Project config (JSON): {"materials": [...], "part_id_regex": "...", "product_markers": {name: [markers]}}.
+    Defaults reproduce the GIÁ TRƯỢT set exactly, so existing callers see no change."""
+    global MATERIALS, PART_ID_RE, PRODUCT_MARKERS
+    if not path:
+        return
+    with io.open(path, encoding="utf-8") as f:
+        cfg = json.load(f)
+    MATERIALS = cfg.get("materials", MATERIALS)
+    if cfg.get("part_id_regex"):
+        PART_ID_RE = re.compile(cfg["part_id_regex"])
+    PRODUCT_MARKERS = cfg.get("product_markers", PRODUCT_MARKERS)
+
+
 SCALE_RE   = re.compile(r"\b\d+\s*:\s*\d+\b")
 NUM_RE     = re.compile(r"-?\d+(?:[.,]\d+)?")
 TOL_RE     = re.compile(r"±\s*(\d+(?:[.,]\d+)?)")
@@ -92,6 +110,8 @@ def extract(path, classification):
     material = next((m for m in MATERIALS if m in joined), None)
     scale_m = SCALE_RE.search(joined)
     scale = scale_m.group().replace(" ", "") if scale_m else None
+    mass_m = MASS_RE.search(joined)
+    mass_kg = num(mass_m.group(1)) if mass_m else None
 
     # candidate name: short uppercase line, not code/material/scale/note/number
     name = None
@@ -138,7 +158,7 @@ def extract(path, classification):
                 conflicts.append({"type": "BREAK-VIEW",
                                   "detail": f"{value}{tol}: geometry measured {meas} (rút gọn cắt), lấy {value}"})
         dimensions.append({"param": "", "value": value, "unit": "mm",
-                           "tolerance": tol, "source": "DIMENSION",
+                           "tolerance": tol, "source": "DIMENSION", "source_tag": "D",
                            "confidence": conf, "note": note})
 
     # ---- holes ----
@@ -148,7 +168,8 @@ def extract(path, classification):
         pts = [[round(e.dxf.center.x), round(e.dxf.center.y)]
                for e in msp.query("CIRCLE") if round(e.dxf.radius * 2, 1) == dia]
         holes.append({"dia": dia, "count": n, "pattern": "", "positions": pts,
-                      "source": "CIRCLE", "confidence": "HIGH", "note": ""})
+                      "source": "CIRCLE", "source_tag": "G", "confidence": "HIGH",
+                      "note": "đường tròn trong hình học — có thể là lỗ, trục, vát hoặc vòng hiển thị; kỹ sư xác nhận"})
     n_arc = len(msp.query("ARC"))
     missing = []
     if n_arc:
@@ -178,8 +199,9 @@ def extract(path, classification):
             "file_index": file_index,
             "code_in_dxf": part_id, "code_confidence": "LOW",
             "part_id": part_id, "name": name, "assembly": None,
-            "product": "GIÁ TRƯỢT UUV" if "TRƯỢT" in joined or "TRŪȊT" in joined else None,
-            "material": material, "mass_kg": None, "scale": scale,
+            "product": next((p for p, mk in PRODUCT_MARKERS.items() if any(k in joined for k in mk)), None),
+            "material": material, "mass_kg": mass_kg, "mass_source_tag": "T" if mass_kg else None,
+            "scale": scale,
             "org": "Viện Kỹ thuật Hải quân" if "HẢI QUÂN" in joined.upper() else None,
             "date": None, "classification": classification,
             "dxf_version": f"{doc.dxfversion} ({doc.acad_release})", "units": units,
@@ -202,6 +224,47 @@ def extract(path, classification):
         "_load_mode": mode,
     }
     return rec
+
+
+GEOM_TYPES = {"LINE", "ARC", "CIRCLE", "SPLINE", "ELLIPSE", "LWPOLYLINE", "POLYLINE"}
+
+
+def measure_geometry(path, layers=None, gap=15.0, min_entities=3):
+    """Cluster drawn geometry into views and measure them — the values a sparse drawing never dimensions
+    (laser-cut DXF is drawn 1:1; the border INSERT is scaled by 1/drawing-scale instead). Every value is
+    source_tag "G" = measured from geometry, NOT a drawing dimension: an engineer confirms before use.
+    `layers`: geometry layers to use (default: every layer that is not dims/text/border/centre/hatch)."""
+    from ezdxf import bbox as B
+    doc, _ = load(path)
+    msp = doc.modelspace()
+    ents = [e for e in msp if e.dxftype() in GEOM_TYPES and (layers is None or e.dxf.layer in layers)]
+    if layers is None:
+        skip = re.compile(r"t[aâ]m|m[aả]nh|thin|center|centre|dim|text|hatch|border|khung|defpoints", re.I)
+        ents = [e for e in ents if not skip.search(e.dxf.layer)]
+    clusters = []  # [BoundingBox, [entities]]
+    for e in ents:
+        b = B.extents([e])
+        if not b.has_data:
+            continue
+        nb, members = B.BoundingBox([b.extmin, b.extmax]), [e]
+        for c in [c for c in clusters if not (b.extmin.x > c[0].extmax.x + gap or b.extmax.x < c[0].extmin.x - gap
+                                              or b.extmin.y > c[0].extmax.y + gap or b.extmax.y < c[0].extmin.y - gap)]:
+            nb.extend([c[0].extmin, c[0].extmax]); members += c[1]; clusters.remove(c)
+        clusters.append([nb, members])
+    border = [round(i.dxf.xscale, 4) for i in msp.query("INSERT") if "border" in i.dxf.name.lower()]
+    views = []
+    for nb, mem in sorted(clusters, key=lambda c: -len(c[1])):
+        if len(mem) < min_entities:
+            continue
+        views.append({"entities": len(mem), "width": round(nb.size.x, 2), "height": round(nb.size.y, 2),
+                      "origin": [round(nb.extmin.x, 2), round(nb.extmin.y, 2)],
+                      "circle_dias": sorted({round(2 * e.dxf.radius, 2) for e in mem if e.dxftype() == "CIRCLE"}),
+                      "arc_radii": sorted({round(e.dxf.radius, 2) for e in mem if e.dxftype() == "ARC"}),
+                      "source_tag": "G"})
+    return {"border_insert_scale": border or None,
+            "assumption": "DXF geometry drawn 1:1 (true mm) — holds when the border INSERT is scaled by "
+                          "1/drawing-scale; verify against at least one D dimension before trusting G values",
+            "views": views}
 
 
 def to_md(r):
@@ -232,6 +295,15 @@ def to_md(r):
         for h in r["holes"]:
             L.append(f"- Ø{h['dia']} × {h['count']}  ({h['confidence']})")
         L.append("")
+    g = r.get("geometry")
+    if g:
+        L.append("## Hình học đo từ DXF (nguồn **G** — bản vẽ KHÔNG ghi; kỹ sư xác nhận trước khi dùng)")
+        L.append(f"> border INSERT scale = {g['border_insert_scale']} · {g['assumption']}")
+        L.append("| View | Rộng × Cao | Ø tròn | R cung |")
+        L.append("|---|---|---|---|")
+        for i, v in enumerate(g["views"], 1):
+            L.append(f"| {i} | {v['width']} × {v['height']} | {v['circle_dias'] or '-'} | {v['arc_radii'] or '-'} |")
+        L.append("")
     if r["process_notes"]:
         L.append("## Ghi chú công nghệ")
         for n in r["process_notes"]:
@@ -250,8 +322,10 @@ def to_md(r):
     return "\n".join(L)
 
 
-def process(path, outdir, classification):
+def process(path, outdir, classification, geometry=False):
     rec = extract(path, classification)
+    if geometry:
+        rec["geometry"] = measure_geometry(path)
     base = os.path.splitext(os.path.basename(path))[0]  # filename = unique reliable key
     stem = os.path.join(outdir, f"{base}.cad_extract")
     with io.open(stem + ".json", "w", encoding="utf-8") as f:
@@ -270,7 +344,11 @@ def main():
     ap.add_argument("--classification", default="MẬT")
     ap.add_argument("--prefer", default="dwg", choices=["dwg", "dxf"],
                     help="when a folder has both <stem>.dwg and .dxf, which to ingest (default: dwg = native source)")
+    ap.add_argument("--config", help="project config JSON: materials / part_id_regex / product_markers")
+    ap.add_argument("--measure-geometry", action="store_true",
+                    help="also cluster views and measure undimensioned geometry (source_tag G)")
     a = ap.parse_args()
+    load_config(a.config)
 
     targets = []
     if os.path.isdir(a.path):
@@ -290,7 +368,7 @@ def main():
         outdir = a.out or os.path.dirname(t) or "."
         os.makedirs(outdir, exist_ok=True)
         try:
-            line = process(t, outdir, a.classification)
+            line = process(t, outdir, a.classification, a.measure_geometry)
         except Exception as ex:
             line = f"{os.path.basename(t):40} -> ERROR {type(ex).__name__}: {ex}"
         try:

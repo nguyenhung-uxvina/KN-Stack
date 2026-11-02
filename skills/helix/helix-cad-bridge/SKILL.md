@@ -74,15 +74,27 @@ MATERIAL / EXPORT: [material] · units mm · export STEP + PNG
 - One parameterized script per part; CEO's dimensions become named variables at top.
 - Comment every spatial op with its CEO source.
 - No magic numbers — every value references the dimensions table.
+- **Script contract (2026-11-02, [[helix-cad-gates]]):** all dimensions live in `PARAMS = {...}`; geometry in
+  `def build(params)` (pure, reads only `params`); `if __name__ == "__main__": export_step(build(PARAMS), ...)`.
+  Feature positions are computed FROM params, never absolute coordinates — gates F4 flexes every param ±10%.
+- **Never tune a dimension to hit a target mass** — mass is a check, not an input (measured failure: an agent
+  set plate thickness to match the title-block mass).
 - Save to `Phase{{N}}-.../cad/{{part_id}}.py`.
 
-### Step 4: Execute Local → Export
+### Step 4: Execute Local → Export → Geometry Gate
 ```
-□ Run script offline → {{part_id}}.step
-□ Render isometric + 3 ortho views → {{part_id}}.png
+□ Run via helix-cad-gates/cad_runner.py (child process, -I, timeout):
+    python cad_runner.py run --model cad/{{part_id}}.py        → model.step (exit 2 = script failed)
+□ Geometry gate vs the engineer-signed geometry_contract.json (bbox per axis + probes + features + F4):
+    python geom_gates.py --step <step> --contract geometry_contract.json --model cad/{{part_id}}.py \
+                         --approved-hash <sha256> --out cad/{{part_id}}.gates     (exit 2 ⇒ fix, re-run)
+□ Render 6 ortho + iso → {{part_id}}_views.png   (python render_views.py --step <step> --out <png>)
 □ Report: bounding box, volume, mass (with material density), CoG
 □ Sanity asserts (e.g., wall thickness ≥ spec, no zero-volume bodies)
 ```
+No `geometry_contract.json` yet ⇒ draft one from the Step 2 table (schema:
+`helix-cad-gates/references/geometry_contract.schema.md`, ≥1 probe per critical feature) and have the CEO sign it
+before Step 5 — the gate never runs against an unsigned contract.
 
 ### Step 5: CEO Verifies Rendered Geometry (CORE — Spatial Blindness Gate)
 ```

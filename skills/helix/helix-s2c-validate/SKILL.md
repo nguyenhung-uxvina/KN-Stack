@@ -25,6 +25,13 @@ PYTHONUTF8=1 python skills/helix/helix-cad-validate/validate.py \
   --rules design_rules.json --approved-hash {{sha256}} \
   --out cad/validated/{{part_id}}
 ```
+- **Cùng lượt, chạy cổng HÌNH HỌC** ([[helix-cad-gates]] — validate.py không nhìn STEP):
+  ```
+  PYTHONUTF8=1 python skills/helix/helix-cad-gates/geom_gates.py \
+    --step cad/{{part_id}}.step --contract geometry_contract.json --model cad/{{part_id}}.py \
+    --approved-hash {{sha256_geom}} --out cad/validated/{{part_id}}.gates
+  ```
+  Gate OPEN chỉ khi **cả hai** exit 0. Đếm feature (F3) PASS mà điểm dò FAIL ⇒ FAIL (đã đo: trục sai Ø vẫn qua F3).
 - Part thuần Flow-B (chưa có cad_extract): chấm bằng mass-props + rules áp được
   (mass_kg, safety_factor, materials, contract_integrity). Rule `required:true` thiếu
   dữ liệu → FAIL fail-safe — ĐÚNG THIẾT KẾ, cấp dữ liệu hoặc kỹ sư hạ required có chủ đích.
@@ -42,13 +49,14 @@ PYTHONUTF8=1 python skills/helix/helix-cad-validate/validate.py \
 ```
 ═══ BLOCK BE COMPLETE — SPEC-TO-CAD DONE: {{part_id}} ═══
 Verdict: {{PASS|FAIL}} ({{n_fail}}/{{n_checks}}) · Hash-OK: {{y/n}} · Gate: {{OPEN|CLOSED}}
+Geometry gates: {{PASS|FAIL}} (F1 {{}} · F2 bbox+probes {{}} · F3 {{}} · F4 {{}}) · Hash-OK: {{y/n}}
 SC scorecard: SC-001 bbox ✅ · SC-002 mass ✅ · SC-003 validate ✅ · SC-004 render ✅
 Còn lại NGOÀI AI: kỹ sư định danh ký sign-off block trong report .md
 CEO: (1) ✅ Close pipeline → handoff {{ICD/fab}}  (2) 🔄 Loop BD  (3) ⏸️ Dừng
 ```
 
 ## Rules
-- **⛔ Block NEVER judges pass/fail itself** — verdict là exit code của validate.py.
+- **⛔ Block NEVER judges pass/fail itself** — verdict là exit code của validate.py **và** geom_gates.py.
   Không LLM "tự phán an toàn" thay Computational sensor.
 - **Contract read-only-với-agent** — mọi run dùng `--approved-hash`; sửa contract = kỹ sư.
 - FAIL → loop BD, không "giải thích cho qua".
