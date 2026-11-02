@@ -7,7 +7,7 @@
 
 ```
 KN-Stack/
-├── skills/           ← 230 skills organized by domain (15 domains)
+├── skills/           ← 231 skills organized by domain (15 domains)
 │   ├── bridge/       (10) — Operations skills
 │   ├── forge/        (15) — Product strategy skills (+ forge-fabrication mega-skill: 6-block manufacturing pipeline F0-F5
 │   │                       — closes R&D → production loop via Handoff_to_Fabrication.md from helix-detail-finalize;
@@ -17,7 +17,7 @@ KN-Stack/
 │   ├── mentors/      (54, dynamic) — Per-mentor advisor skills (add more via /mentor-board --add <leader>); orchestrator at galaxy/mentor-board/
 │   ├── book/         (23) — Book pipelines: codebase-to-book (9-phase, book-* blocks), book-to-codebase (btc-* blocks), book-to-skill, notebook-to-book
 │   ├── erp/          (6)  — ERPNext integration
-│   ├── extract/      (7)  — Content extraction (social, chat, yt-extract/yt-learn/yt-search)
+│   ├── extract/      (8)  — Content extraction (social, chat, yt-extract/yt-learn/yt-search, CAD: dwg-to-pdf)
 │   ├── learn/        (3)  — Learning methodology
 │   ├── guard/        (7)  — Guard rails (analyst-trap, ratio-check)
 │   ├── design/       (8)  — Specialized tools only (odi, opt, wp, verify, reverse-engineering, reverse-mc, sdmodel, helm-aluminum-boat) — 11 overlapping skills merged into helix/forge on 2026-05-11
