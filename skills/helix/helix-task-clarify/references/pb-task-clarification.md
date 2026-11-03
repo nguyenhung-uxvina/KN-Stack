@@ -77,7 +77,9 @@ Step 5: Formulate the essential problem (1-2 sentences)
 ### 6-Flow System (Workshop X extension)
 - **Data** (D): Raw sensor data, measurements
 - **Computation** (C): AI inference, algorithms
-- **Trust** (T): Calibration, validation, confidence
+- **Trust** (T): the **veto record** — who overrode which machine decision, when, on what evidence.
+  (Not model calibration/validation; that is a property of the C lane. These were conflated until
+  2026-08-21 — the same letter meant two different things in two files. See `helix-6flow-mapper`.)
 
 ### Function Verb Library
 
