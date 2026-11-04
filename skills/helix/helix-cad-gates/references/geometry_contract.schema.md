@@ -30,6 +30,10 @@ hoặc `sha256sum`) và luôn chạy `geom_gates.py --approved-hash <sha>`. Hợ
      "pt": ["L_TOTAL-8.5", "D_HEAD/2", "D_HEAD/2"], "inside": false}
   ],
   "waivers": {},
+  "judge_questions": [
+    {"id": "Q1", "q": "Lỗ ngang có tiết diện TRÒN (không vuông, không lục giác)?",
+     "spec_line": "Lỗ ngang Ø5,5 thông, tâm cách đầu mút 8,5", "severity": "block"}
+  ],
   "material": "C45",
   "title_kg": 1.1
 }
@@ -45,6 +49,7 @@ hoặc `sha256sum`) và luôn chạy `geom_gates.py --approved-hash <sha>`. Hợ
 | `f4_params`, `f4_flex` | tuỳ | Tham số đem uốn ±flex (mặc định mọi số dương trong `PARAMS`, ±10%). Cần `--model`. Tham số mà uốn ± đều cho **hình y hệt** (hộp bao, thể tích, trọng tâm) ⇒ FAIL "không tác động" — `build()` bỏ qua params. Tham số thật sự không đổi hình (vd số lượng nguyên) thì bỏ khỏi `f4_params`. |
 | `param_probes[]` | ✅ ở release khi có `--model` | Như `probes` nhưng toạ độ viết theo **biểu thức PARAMS** (`+ - * /`, số, tên PARAMS — không gì khác). Kiểm ở mọi biến thể uốn ⇒ bắt feature đặt bằng **toạ độ tuyệt đối** (lỗ đứng yên khi chiều dài đổi). Ghi quan hệ ý đồ: "cách đầu mút 30" = `"length-30"`, không phải `70`. |
 | `waivers{}` | tuỳ | `{"<rule_id>": "<lý do>"}` cho `F2_probes`, `F4_param_flex`, `F4_relations` — miễn ép FAIL ở release (vd chi tiết mua sẵn không có `model.py`). Nằm trong hợp đồng ⇒ được khoá bằng hash ⇒ agent không tự thêm được. |
+| `judge_questions[]` | ✅ khi chạy judge | 1–12 câu Có/Không cho [[helix-cad-judge]] (`id`, `q`, `spec_line`, `severity` block\|comment). `geom_gates.py` bỏ qua trường này; nó nằm đây để **cùng hash** ⇒ agent không tự đổi câu hỏi. Luật soạn: `helix-cad-judge/references/question-rules.md`. |
 | `material`, `title_kg` | tuỳ | Chỉ cho `MASS_vs_title` = **INFO, không gating**. Agent **không được** chỉnh kích thước để khớp KL. |
 
 **`--mode release` (mặc định)** ép FAIL khi: thiếu `probes[]`, thiếu `--model`, thiếu `param_probes[]`, thiếu
