@@ -70,8 +70,11 @@ Exit 0 `pass`/`comment-only` · 2 `block` · 5 `needs_human` · 3 từ chối (�
 ## Gotchas
 - Judge **vẫn có thể sai** khi có chứng cứ: chứng cứ chỉ chứng minh agent đã nhìn, không chứng minh nhìn đúng.
 - **Đã đo 2026-11-05** (`evals/cad-judge-bench/RESULTS-2026-11-05.md`): 10 ca lỗi cấy, 76/76 câu đúng, 10/10
-  verdict, bắt cả 4 lỗi lọt cổng tất định. NHƯNG 80/80 câu dẫn `code_line` — đó là số đo **đọc mã code-CAD sạch**,
-  không phải nhìn hình. Mô hình KHÔNG có mã (Fusion MCP, STEP ngoài) ⇒ judge chỉ còn render ⇒ **chưa đo, đừng tin**.
+  verdict, bắt cả 4 lỗi lọt cổng tất định. Đối chứng **chỉ-render** (bỏ `model.py`): 75/76 đúng, 0 sai, 1 Không rõ,
+  vẫn bắt 4/4 lỗi lọt cổng ⇒ với chi tiết đơn giản, render đủ. Giới hạn: tấm phẳng, lỗi đơn, n = 10.
+- Câu **"lõm hay nhô"** là điểm yếu của hình tô bóng (không thấy chiều sâu): judge dựa vào dòng bbox/thể tích in
+  trên ảnh. Đừng bỏ dòng chú thích đó; feature mà lõm/nhô quyết định chức năng ⇒ thêm `probes[]` cho cổng tất định
+  chứ đừng chỉ hỏi judge.
 - Cách ly agent là lời nhắc: 1/10 agent đo thử đã chạy python dù prompt cấm.
 - Render là ảnh tô bóng đơn giản; chi tiết < 1 mm có thể không thấy — câu về chi tiết nhỏ nên được trả lời bằng `code_line`.
 - Đổi câu hỏi = đổi hợp đồng ⇒ hash đổi ⇒ phải chạy lại cổng hình học (đúng ý: cổng và judge dùng chung một hợp đồng).
