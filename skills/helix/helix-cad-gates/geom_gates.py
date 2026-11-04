@@ -10,21 +10,35 @@ Gates (measured failure modes, CAD-CUA 2026 + GIÁ TRƯỢT test 2026-11-02):
   F1  closed, valid B-Rep (BRepCheck valid, 0 free edges, >=1 solid)          — open shell / non-manifold
   F2  bbox per axis within tol; flags axis_swap when only the ORDER is wrong;   — projection axis swap
       position probes (point-in-solid) catch mirror images and wrong placement   — first-angle mirror
-  F3  cylindrical-face counts by diameter (>= min_faces)                         — missing holes / bores
+  F3  cylindrical-face counts by diameter (min_faces <= n <= max_faces)          — missing holes / bores
+      + unlisted diameters (cyl_exhaustive, default on)                          — extra holes nobody asked for
       NOTE: F3 alone false-passes (a Ø20 shaft head satisfied a Ø19 shaft check) — put probes on every
       feature that matters.
-  F4  parametric flex: each PARAMS value ×(1±flex) must rebuild to a valid closed solid (needs --model)
-                                                                                  — hardcoded coordinates
+  F4  parametric flex (needs --model):                                            — hardcoded coordinates
+      F4_model_matches_step  build(PARAMS) reproduces the STEP under test (else F4 tests a different model)
+      F4_param_flex          each PARAMS value ×(1±flex) rebuilds to a valid closed solid AND the geometry
+                             actually changes (a build() that ignores its params used to pass)
+      F4_relations           param_probes (coordinates written as expressions of PARAMS, e.g. "length-30")
+                             still hold in every flexed build (a hole placed at an absolute x used to pass)
   MASS (INFO, never gating): model mass vs title-block mass. Agents must NOT tune dimensions to hit it.
 
+Modes: --mode release (default) turns the SKIPs that hide a thin contract into FAIL — missing probes[],
+missing --model (F4), missing param_probes, missing --approved-hash — unless the signed contract carries a
+waiver for that rule id. --mode draft keeps them SKIP and reports verdict DRAFT-PASS, which the judge and
+CEO gate refuse (they require verdict == "PASS").
+
+Blind spots found 2026-11-05 (mutants M1–M4 in scripts/test_helix_cad_gates.py): build() ignoring params,
+absolute hole position, bbox-only contract passing a part with no hole, extra unspecified hole.
+
 Report schema = helix-cad-validate Report (rule_id/status/severity/observed/expected/message/fix_hint/source);
-statuses PASS / FAIL / SKIP / INFO; only FAIL gates. Exit: 0 PASS · 2 FAIL · 3 usage/IO error.
+statuses PASS / FAIL / SKIP / INFO; only FAIL gates. Exit: 0 PASS · 2 FAIL · 3 usage/IO error · 4 DRAFT-PASS.
 
 Usage:
   python geom_gates.py --step model.step --contract geometry_contract.json [--model model.py]
-                       [--out report] [--approved-hash <sha256>] [--quiet]
+                       [--out report] [--approved-hash <sha256>] [--mode release|draft] [--quiet]
 """
 import argparse
+import ast
 import hashlib
 import json
 import os
@@ -41,6 +55,13 @@ DENSITY_KG_MM3 = {"C45": 7.85e-6, "STEEL": 7.85e-6, "CT3": 7.85e-6, "SS400": 7.8
                   "INOX304": 7.93e-6, "SUS304": 7.93e-6, "INOX316": 8.0e-6,
                   "AL5083": 2.66e-6, "AL6061": 2.70e-6, "AL": 2.70e-6,
                   "PTFE": 2.2e-6, "TEFLON": 2.2e-6, "POM": 1.41e-6, "DELRIN": 1.41e-6}
+
+# SKIPs that, in release mode, mean "the contract/run is too thin to judge" ⇒ FAIL unless waived.
+RELEASE_REQUIRED = {
+    "F2_probes": "Hợp đồng phát hành phải có probes[] (≥1 / feature quan trọng).",
+    "F4_param_flex": "Phát hành phải chạy F4 với --model model.py (hợp đồng PARAMS/build).",
+    "F4_relations": "Phát hành phải có param_probes[] để bắt toạ độ tuyệt đối khi kích thước khác đổi.",
+}
 
 
 class Report:
@@ -94,6 +115,10 @@ def is_valid(shape):
     return bool(BRepCheck_Analyzer(shape.wrapped).IsValid())
 
 
+def is_closed_solid(shape):
+    return is_valid(shape) and free_edge_count(shape) == 0 and len(shape.solids()) >= 1
+
+
 def cyl_dias(shape):
     from build123d import GeomType
     c = Counter()
@@ -106,6 +131,60 @@ def cyl_dias(shape):
 def bbox_size(shape):
     bb = shape.bounding_box()
     return [round(bb.size.X, 3), round(bb.size.Y, 3), round(bb.size.Z, 3)]
+
+
+def geom_signature(shape):
+    """bbox min + size, volume, centroid — moving a through-hole changes only the centroid, so it is included."""
+    from build123d import CenterOf
+    bb = shape.bounding_box()
+    c = shape.center(CenterOf.MASS)
+    return {"min": [bb.min.X, bb.min.Y, bb.min.Z], "size": [bb.size.X, bb.size.Y, bb.size.Z],
+            "volume": float(shape.volume), "centroid": [c.X, c.Y, c.Z]}
+
+
+def same_signature(a, b, tol_mm=1e-3, tol_rel=1e-6):
+    vec = all(abs(x - y) <= tol_mm for k in ("min", "size", "centroid") for x, y in zip(a[k], b[k]))
+    return vec and abs(a["volume"] - b["volume"]) <= tol_rel * max(abs(b["volume"]), 1.0)
+
+
+_OPS = {ast.Add: lambda x, y: x + y, ast.Sub: lambda x, y: x - y,
+        ast.Mult: lambda x, y: x * y, ast.Div: lambda x, y: x / y}
+
+
+def eval_expr(expr, params):
+    """Evaluate a probe coordinate: a number, or + - * / over numbers and PARAMS names. Nothing else."""
+    if isinstance(expr, (int, float)) and not isinstance(expr, bool):
+        return float(expr)
+
+    def ev(n):
+        if isinstance(n, ast.Expression):
+            return ev(n.body)
+        if isinstance(n, ast.Constant) and isinstance(n.value, (int, float)) and not isinstance(n.value, bool):
+            return float(n.value)
+        if isinstance(n, ast.Name):
+            if n.id not in params:
+                raise ValueError(f"'{n.id}' không có trong PARAMS")
+            return float(params[n.id])
+        if isinstance(n, ast.BinOp) and type(n.op) in _OPS:
+            return _OPS[type(n.op)](ev(n.left), ev(n.right))
+        if isinstance(n, ast.UnaryOp) and isinstance(n.op, (ast.USub, ast.UAdd)):
+            v = ev(n.operand)
+            return -v if isinstance(n.op, ast.USub) else v
+        raise ValueError(f"biểu thức không cho phép: {expr!r}")
+
+    return ev(ast.parse(str(expr), mode="eval"))
+
+
+def probe_misses(shape, probes, params):
+    """Descriptions of param_probes whose inside/outside expectation fails on `shape` under `params`."""
+    from build123d import Vector
+    bad = []
+    for p in probes:
+        pt = [eval_expr(v, params) for v in p["pt"]]
+        inside = bool(shape.is_inside(Vector(*pt)))
+        if inside != bool(p["inside"]):
+            bad.append(f'{p.get("why", p["pt"])} @({", ".join(f"{v:g}" for v in pt)}) inside={inside}')
+    return bad
 
 
 def check_f1(shape, rep, src):
@@ -161,21 +240,39 @@ def check_f3(shape, contract, rep, src):
         return True
     dias = cyl_dias(shape)
     allok = True
+    claimed = set()
     for f in feats:
         tol = float(f.get("tol", 0.3))
-        n = sum(v for d, v in dias.items() if abs(d - f["dia"]) <= tol)
-        ok = n >= int(f["min_faces"])
+        hits = {d: v for d, v in dias.items() if abs(d - f["dia"]) <= tol}
+        claimed.update(hits)
+        n = sum(hits.values())
+        lo, hi = int(f["min_faces"]), f.get("max_faces")
+        ok = n >= lo and (hi is None or n <= int(hi))
         allok &= ok
+        expect = f">= {lo}" if hi is None else f"{lo}..{int(hi)}"
+        msg = "Có đủ." if ok else ("THIẾU feature trụ (lỗ/trục/bậc)." if n < lo
+                                   else "THỪA feature trụ so với hợp đồng (max_faces).")
         rep.add(f"F3_{f['what']}", "PASS" if ok else "FAIL", "critical", f"{n} mặt trụ Ø{f['dia']}±{tol}",
-                f">= {f['min_faces']}", "Có đủ." if ok else "THIẾU feature trụ (lỗ/trục/bậc).",
-                fix="Đối chiếu danh sách feature trong spec; thêm probe để chắc đúng vị trí.", source=src)
+                expect, msg, fix="Đối chiếu danh sách feature trong spec; thêm probe để chắc đúng vị trí.",
+                source=src)
+    if contract.get("cyl_exhaustive", True):
+        extra = {d: v for d, v in dias.items() if d not in claimed}
+        ok = not extra
+        allok &= ok
+        rep.add("F3_unlisted", "PASS" if ok else "FAIL", "critical",
+                "0" if ok else ", ".join(f"Ø{d}×{v}" for d, v in sorted(extra.items())),
+                "mọi mặt trụ thuộc một cyl_features", "Không có mặt trụ ngoài hợp đồng." if ok else
+                "Có mặt trụ (lỗ/trục/bo cung) mà hợp đồng không liệt kê — feature thừa hoặc hợp đồng thiếu.",
+                fix="Xoá feature thừa; nếu là bo cung/feature hợp lệ thì kỹ sư thêm vào cyl_features "
+                    "(hoặc đặt cyl_exhaustive=false) rồi ký lại.", source=src)
     return allok
 
 
-def check_f4(model_py, contract, rep, src, timeout=120):
+def check_f4(model_py, contract, rep, src, step_shape=None, timeout=120):
     if not model_py:
-        rep.add("F4_param_flex", "SKIP", "major", "no --model", "model.py with PARAMS/build",
-                "Không có mã nguồn — không thử uốn tham số.", source=src)
+        for rid in ("F4_param_flex", "F4_relations"):
+            rep.add(rid, "SKIP", "major", "no --model", "model.py with PARAMS/build",
+                    "Không có mã nguồn — không thử uốn tham số.", source=src)
         return True
     params = cad_runner.read_params(model_py)
     if not params:
@@ -185,26 +282,80 @@ def check_f4(model_py, contract, rep, src, timeout=120):
                 fix="Đưa mọi kích thước vào PARAMS; build(params) chỉ đọc từ params.", source=model_py)
         return False
     flex = float(contract.get("f4_flex", 0.10))
-    keys = contract.get("f4_params") or [k for k, v in params.items() if isinstance(v, (int, float)) and v > 0]
-    broken = []
+    keys = contract.get("f4_params") or [k for k, v in params.items()
+                                         if isinstance(v, (int, float)) and not isinstance(v, bool) and v > 0]
+    pprobes = contract.get("param_probes", [])
+    broken, inert, drift = [], [], []
+    allok = True
     with tempfile.TemporaryDirectory() as td:
+        base = cad_runner.build_with_params(model_py, os.path.join(td, "base.step"), {}, timeout)
+        if not base["ok"]:
+            rep.add("F4_param_flex", "FAIL", "critical", "build(PARAMS) lỗi", "dựng được",
+                    "build(PARAMS) không dựng được: " + str(base.get("error", ""))[:200], source=model_py)
+            return False
+        s0 = load_step(base["step"])
+        sig0 = geom_signature(s0)
+        if step_shape is not None:
+            match = same_signature(geom_signature(step_shape), sig0, tol_mm=0.01, tol_rel=1e-4)
+            allok &= match
+            rep.add("F4_model_matches_step", "PASS" if match else "FAIL", "critical",
+                    "khớp" if match else "lệch", "build(PARAMS) == STEP đang kiểm",
+                    "model.py sinh đúng STEP đang kiểm." if match else
+                    "model.py KHÔNG sinh ra STEP đang kiểm — F4 đang thử một mô hình khác.",
+                    fix="Xuất lại STEP từ đúng model.py (cad_runner.py run) rồi chạy cổng.", source=model_py)
+        try:
+            base_miss = probe_misses(s0, pprobes, params) if pprobes else []
+        except (ValueError, ZeroDivisionError, KeyError) as e:
+            base_miss = [f"param_probes lỗi: {e}"]
         for k in keys:
             if k not in params:
                 broken.append(f"{k}: không có trong PARAMS"); continue
+            sigs = []
             for sgn in (+1, -1):
-                out = os.path.join(td, f"{k}_{'p' if sgn > 0 else 'm'}.step")
-                r = cad_runner.build_with_params(model_py, out, {k: params[k] * (1 + sgn * flex)}, timeout)
+                tag = f"{k}×{1 + sgn * flex:.2f}"
+                over = {k: params[k] * (1 + sgn * flex)}
+                r = cad_runner.build_with_params(model_py, os.path.join(td, f"{k}_{sgn}.step"), over, timeout)
                 if not r["ok"]:
-                    broken.append(f"{k}×{1 + sgn * flex:.2f}: dựng lỗi"); continue
-                s = load_step(out)
-                if not (is_valid(s) and free_edge_count(s) == 0 and len(s.solids()) >= 1):
-                    broken.append(f"{k}×{1 + sgn * flex:.2f}: B-Rep hỏng")
-    ok = not broken
-    rep.add("F4_param_flex", "PASS" if ok else "FAIL", "major", f"{len(keys)} tham số × ±{flex:.0%}",
-            "mọi biến thể dựng lại được, kín", "Cây feature chịu được sửa kích thước." if ok
-            else "Gãy khi sửa kích thước: " + "; ".join(broken[:8]),
-            fix="Dùng ràng buộc tương đối (vị trí theo tham số), không toạ độ tuyệt đối.", source=model_py)
-    return ok
+                    broken.append(f"{tag}: dựng lỗi"); continue
+                s = load_step(r["step"])
+                if not is_closed_solid(s):
+                    broken.append(f"{tag}: B-Rep hỏng"); continue
+                sigs.append(geom_signature(s))
+                if pprobes and not base_miss:
+                    try:
+                        drift += [f"{tag}: {m}" for m in probe_misses(s, pprobes, dict(params, **over))]
+                    except (ValueError, ZeroDivisionError, KeyError) as e:
+                        drift.append(f"{tag}: param_probes lỗi: {e}")
+            if len(sigs) == 2 and all(same_signature(sg, sig0) for sg in sigs):
+                inert.append(k)
+    ok = not broken and not inert
+    allok &= ok
+    why = []
+    if broken:
+        why.append("Gãy khi sửa kích thước: " + "; ".join(broken[:8]))
+    if inert:
+        why.append("Tham số KHÔNG tác động lên hình (build() bỏ qua params / số cứng): " + ", ".join(inert[:8]))
+    rep.add("F4_param_flex", "PASS" if ok else "FAIL", "critical" if inert else "major",
+            f"{len(keys)} tham số × ±{flex:.0%}", "mọi biến thể dựng lại được, kín, và hình có đổi",
+            "Cây feature chịu được sửa kích thước." if ok else " · ".join(why),
+            fix="Dùng ràng buộc tương đối (vị trí theo tham số), không toạ độ tuyệt đối; tham số không "
+                "ảnh hưởng hình thì bỏ khỏi f4_params.", source=model_py)
+    if not pprobes:
+        rep.add("F4_relations", "SKIP", "major", "0 param_probes", ">=1 param_probe",
+                "Không có param_probes — không bắt được feature đứng yên ở toạ độ tuyệt đối khi kích thước khác đổi.",
+                fix='Thêm param_probes[]: toạ độ viết theo PARAMS, vd ["length-30", "width/2", "height/2"].',
+                source=src)
+    else:
+        misses = [f"base: {m}" for m in base_miss] + drift
+        rok = not misses
+        allok &= rok
+        rep.add("F4_relations", "PASS" if rok else "FAIL", "critical",
+                f"{len(pprobes)} param_probes × {len(keys)} tham số × ±{flex:.0%}",
+                "mọi param_probe đúng trong mọi biến thể",
+                "Quan hệ vị trí theo tham số được giữ." if rok else "Quan hệ gãy: " + "; ".join(misses[:8]),
+                fix="Đặt feature theo biểu thức của PARAMS (vd x = length - 30), không theo số tuyệt đối.",
+                source=model_py)
+    return allok
 
 
 def mass_info(shape, contract, rep, src):
@@ -227,15 +378,35 @@ def run_gates(step, contract, model_py=None, src=None):
     check_f1(shape, rep, src)
     check_f2(shape, contract, rep, src)
     check_f3(shape, contract, rep, src)
-    check_f4(model_py, contract, rep, src)
+    check_f4(model_py, contract, rep, src, step_shape=shape)
     mass_info(shape, contract, rep, src)
     return rep
 
 
-def render_md(contract, rep, verdict, chash, approved_ok):
+def enforce_release(rep, contract, approved_hash_given):
+    """Release mode: SKIPs that hide a thin contract become FAIL unless the SIGNED contract waives them."""
+    waivers = contract.get("waivers") or {}
+    for c in rep.checks:
+        if c["status"] == "SKIP" and c["rule_id"] in RELEASE_REQUIRED:
+            reason = str(waivers.get(c["rule_id"], "")).strip()
+            if reason:
+                c["message"] += f" — MIỄN (ghi trong hợp đồng đã ký): {reason}"
+            else:
+                c.update(status="FAIL", severity="critical",
+                         message=RELEASE_REQUIRED[c["rule_id"]] + " " + c["message"],
+                         fix_hint=(c["fix_hint"] + " " if c["fix_hint"] else "") +
+                         f'Hoặc kỹ sư ghi waivers["{c["rule_id"]}"] = "<lý do>" rồi ký lại; '
+                         "hoặc chạy --mode draft (không mở judge/CEO).")
+    if not approved_hash_given:
+        rep.add("contract_integrity", "FAIL", "critical", "không có --approved-hash", "sha256 kỹ sư đã ký",
+                "Phát hành phải khoá hợp đồng bằng --approved-hash — không thì agent sửa hợp đồng cũng không ai biết.",
+                fix="Kỹ sư ký → tính sha256 một lần → truyền --approved-hash; hoặc chạy --mode draft.")
+
+
+def render_md(contract, rep, verdict, chash, approved_ok, mode="release"):
     L = [f"# helix-cad-gates — {verdict}", "",
          f"- Part: **{contract.get('part_id', '?')}** · Phương pháp chiếu: {contract.get('projection_method', '?')} "
-         f"· Classification: {contract.get('classification', '?')}",
+         f"· Classification: {contract.get('classification', '?')} · Mode: **{mode}**",
          f"- Contract sha256 `{chash[:16]}…` · approved-hash: {'PASS' if approved_ok else 'NOT CHECKED / MISMATCH'}",
          f"- Result: **{verdict}** — {len(rep.gating_failed)} FAIL / {len(rep.checks)} checks", "",
          "| Rule | Status | Observed | Expected | Severity |", "|---|---|---|---|---|"]
@@ -245,6 +416,8 @@ def render_md(contract, rep, verdict, chash, approved_ok):
         L += ["", "## ❌ FAIL detail"]
         for c in rep.gating_failed:
             L.append(f"- **{c['rule_id']}**: {c['message']}" + (f"\n  - fix: {c['fix_hint']}" if c["fix_hint"] else ""))
+    if verdict == "DRAFT-PASS":
+        L += ["", "> ⚠️ DRAFT-PASS: chạy --mode draft, có SKIP không bị ép. KHÔNG mở judge / cổng CEO."]
     L += ["", "## Cổng người (BẮT BUỘC)",
           "> PASS = mô hình khớp HỢP ĐỒNG đã duyệt, KHÔNG có nghĩa hợp đồng đúng hay chi tiết an toàn.",
           "> CEO/kỹ sư xem render (Spatial Blindness gate) và ký.", "",
@@ -259,6 +432,8 @@ def main(argv=None):
     ap.add_argument("--model", help="model.py honouring PARAMS/build(params) — enables F4")
     ap.add_argument("--out", default="cad_gates_report")
     ap.add_argument("--approved-hash")
+    ap.add_argument("--mode", choices=("release", "draft"), default="release",
+                    help="release (default): thin contract / no --model / no hash ⇒ FAIL. draft: SKIP, verdict DRAFT-PASS")
     ap.add_argument("--quiet", action="store_true")
     a = ap.parse_args(argv)
     try:
@@ -270,27 +445,32 @@ def main(argv=None):
         return 3
     chash = _sha256(a.contract)
     rep = run_gates(a.step, contract, a.model)
-    approved_ok = True
+    approved_ok = bool(a.approved_hash)
     if a.approved_hash:
         approved_ok = chash == a.approved_hash.strip().lower()
         if not approved_ok:
             rep.add("contract_integrity", "FAIL", "critical", chash[:16] + "…", a.approved_hash[:16] + "…",
                     "geometry_contract KHÔNG khớp hash kỹ sư đã duyệt — có thể bị sửa để cổng xanh.",
                     fix="Khôi phục hợp đồng đã duyệt; chỉ kỹ sư định danh được đổi.", source=a.contract)
-    verdict = "FAIL" if rep.gating_failed else "PASS"
-    out = {"tool": "helix-cad-gates", "version": "1.0", "checked_at": datetime.now(timezone.utc).isoformat(),
-           "part_id": contract.get("part_id"), "step": a.step, "contract_sha256": chash,
+    if a.mode == "release":
+        enforce_release(rep, contract, bool(a.approved_hash))
+    if rep.gating_failed:
+        verdict = "FAIL"
+    else:
+        verdict = "PASS" if a.mode == "release" else "DRAFT-PASS"
+    out = {"tool": "helix-cad-gates", "version": "1.1", "checked_at": datetime.now(timezone.utc).isoformat(),
+           "part_id": contract.get("part_id"), "step": a.step, "contract_sha256": chash, "mode": a.mode,
            "approved_hash_ok": approved_ok, "verdict": verdict, "n_checks": len(rep.checks),
            "n_fail": len(rep.gating_failed), "checks": rep.checks}
     with open(a.out + ".json", "w", encoding="utf-8") as f:
         json.dump(out, f, ensure_ascii=False, indent=2)
     with open(a.out + ".md", "w", encoding="utf-8") as f:
-        f.write(render_md(contract, rep, verdict, chash, approved_ok))
+        f.write(render_md(contract, rep, verdict, chash, approved_ok, a.mode))
     if not a.quiet:
-        print(f"=== helix-cad-gates: {verdict} === ({out['n_fail']} FAIL / {out['n_checks']} checks)")
+        print(f"=== helix-cad-gates: {verdict} === ({out['n_fail']} FAIL / {out['n_checks']} checks, mode={a.mode})")
         for c in rep.gating_failed:
             print(f"  FAIL {c['rule_id']}: {c['message']}")
-    return 0 if verdict == "PASS" else 2
+    return {"PASS": 0, "DRAFT-PASS": 4}.get(verdict, 2)   # 4 ≠ 0 so exit-code callers never open on a draft
 
 
 if __name__ == "__main__":
