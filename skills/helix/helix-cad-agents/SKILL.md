@@ -27,6 +27,8 @@ allowed-tools: ["Read", "Write", "Edit", "Bash", "Grep", "Glob", "Task"]
 2. **Một khối mỗi lượt**, Ledger Read → làm → Ledger Write → **STOP chờ CEO** (mẫu [[helix-spec-to-cad]]).
 3. **Mọi STEP do AI dựng phải qua `geom_gates.py`** với `geometry_contract.json` **đã ký + `--approved-hash`**
    trước khi tới judge/CEO. Hợp đồng thiếu `probes[]` cho feature quan trọng ⇒ không ký (đếm feature đã cho qua nhầm).
+   Cơ chế: `--mode release` (mặc định) tự FAIL khi thiếu `probes[]` / `--model` / `param_probes[]` / `--approved-hash`
+   (trừ `waivers` trong hợp đồng đã ký); `--mode draft` chỉ cho `DRAFT-PASS`, không mở judge/CEO.
 4. **Khối lượng khung tên là INFO.** Prompt mọi agent dựng có câu: *"Không được chỉnh kích thước để khớp khối lượng."*
 5. **Spec khai `projection_method` + `axis_convention`**; mọi giá trị mang nhãn D/G/T/?; mọi `?` kỹ sư xác nhận.
 6. **Agent dựng cách ly**: chỉ được đọc thư mục đầu vào của mình (prompt liệt kê đúng tệp); giám khảo là agent
