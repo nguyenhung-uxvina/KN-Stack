@@ -326,3 +326,17 @@ def test_pull_inside_border(tmp_path):
     assert DS.outside_frame(p)
     r = DS.fix(p)
     assert r["pulled_inside"] == 1 and DS.outside_frame(p) == [] and DS.check(p) == []
+
+
+def test_orient_reversed_points(tmp_path):
+    """F-ORIENT: vertical dim given top point first ⇒ ezdxf flips arrows, line overshoots by one arrow length.
+    fix swaps the points; the dim line then stays between the extension lines; check flags it before."""
+    d = ezdxf.new("R2018"); m = d.modelspace(); plate(m)
+    m.add_linear_dim(base=(110, 0), p1=(100, 50), p2=(100, 0), angle=90).render()     # top first = reversed
+    p = save(d, tmp_path, "a.dxf")
+    assert DS.main(["check", p]) == 2
+    r = DS.fix(p)
+    e = list(ezdxf.readfile(p).modelspace().query("DIMENSION"))[0]
+    ys = [max(v.dxf.start.y, v.dxf.end.y) for v in e.virtual_entities() if v.dxftype() == "LINE" and abs(v.dxf.start.x - v.dxf.end.x) < 1e-6]
+    assert r["oriented"] == 1 and max(ys) <= 50 + 1e-6
+    assert DS.main(["check", p]) == 0

@@ -11,6 +11,8 @@ Paper mm = model units / paper_scale. paper_scale = |xscale| of the title-frame 
   check  : report every linear dim whose line is < --min mm (paper) from its nearer measured point.   exit 0/2
   fix    : move such dims out to --target mm (paper), then keep tiers readable. Overwrites --out (or input).
 
+  F-ORIENT first: measured points running against the dim direction are swapped (ezdxf otherwise flips the
+           arrows and overshoots the dim line by one arrow length at both ends).
 Fix rules (each one is a failure that actually happened on a real redraw — see references/redraw-rules.md):
   MATCH    'the original' of a dim = same value, parallel, BOTH measured points within 5 mm (paper) — value
            alone, or a 20 mm window, matched the wrong one of several equal values.
@@ -186,6 +188,61 @@ def check(path, min_mm=5.0, k=None, frame_regex=FRAME_RE):
     return out
 
 
+def reversed_points(e):
+    """True when defpoint2 -> defpoint3 runs AGAINST the dimension direction. ezdxf then draws the arrows
+    flipped (pointing in from outside) and the dimension line overshoots both extension lines by one arrow
+    length — which is what pushed dims past the sheet border on sheets whose part sits near the border."""
+    if not _linear(e):
+        return False
+    u = direction(e); d = e.dxf
+    return ((d.defpoint3.x - d.defpoint2.x) * u[0] + (d.defpoint3.y - d.defpoint2.y) * u[1]) < -1e-9
+
+
+def flipped_arrows(e, k, doc):
+    """True when the RENDERED dim line runs past BOTH extension lines by ~one arrow length although the dim is
+    long enough for inside arrows (> 2 arrows + gap) — the ezdxf signature of reversed measured points.
+    Measures the block, so AutoCAD-made dims and legit arrows-outside small dims are not flagged."""
+    if not _linear(e):
+        return False
+    arrows = [abs(v.dxf.xscale) for v in e.virtual_entities() if v.dxftype() == "INSERT"]
+    if not arrows:
+        return False                                                       # ticks / no arrows: nothing to flip
+    asz = max(arrows) / k                                                  # rendered arrow size, paper mm
+    u, n, s, q0, q1, _ = _frame(e)
+    from text_overlap import mtext_box
+    tw = 0.0
+    for v in e.virtual_entities():
+        if v.dxftype() == "MTEXT":
+            r = mtext_box(v)
+            if r:
+                tw = max(tw, max(r[2] - r[0], r[3] - r[1]) / k)
+    if (q1 - q0) / k <= 2 * asz + tw + 2.0:
+        return False                                                       # arrows (and text) outside is legit here
+    lo_over = hi_over = 0.0
+    for v in e.virtual_entities():
+        if v.dxftype() != "LINE":
+            continue
+        a, b = v.dxf.start, v.dxf.end
+        da = (b.x - a.x) * u[0] + (b.y - a.y) * u[1]; L = math.hypot(b.x - a.x, b.y - a.y)
+        if L < 1e-9 or abs(abs(da) - L) > 1e-6 * max(L, 1) or abs((a.x * n[0] + a.y * n[1]) - s) > 0.5 * k:
+            continue
+        lo, hi = sorted((a.x * u[0] + a.y * u[1], b.x * u[0] + b.y * u[1]))
+        lo_over = max(lo_over, (q0 - lo) / k); hi_over = max(hi_over, (hi - q1) / k)
+    return lo_over > 0.6 * asz and hi_over > 0.6 * asz
+
+
+def orient(e):
+    """Swap the measured points if reversed and re-render. Skips hand-placed text (bit 128): re-rendering it
+    loses the position (R9) — those are reported instead. Returns True if swapped."""
+    if not reversed_points(e) or (e.dimtype & 128):
+        return False
+    d = e.dxf
+    p2, p3 = d.defpoint2, d.defpoint3
+    d.defpoint2, d.defpoint3 = p3, p2
+    e.override().render()
+    return True
+
+
 def _rerender(e, discard_text=True):
     if discard_text and e.dxf.hasattr("text_midpoint"):
         e.dxf.discard("text_midpoint")
@@ -289,6 +346,7 @@ def fix(path, orig=None, out=None, target=7.0, min_mm=5.0, tier_gap=4.0, k=None,
                 centers.append((b.center.x, b.center.y))
                 boxes.append((b.extmin.x, b.extmin.y, b.extmax.x, b.extmax.y))   # sheet frame/border excluded
     fb = frame_box(m, frame_regex)
+    n_orient = sum(orient(e) for e in m.query("DIMENSION"))                     # F-ORIENT (before anything is measured)
     moved_set, n_fix, n_carry = set(), 0, 0
     for e in list(m.query("DIMENSION")):
         if not _linear(e):
@@ -360,13 +418,15 @@ def fix(path, orig=None, out=None, target=7.0, min_mm=5.0, tier_gap=4.0, k=None,
     n_stack = _stack(m, k, target, tier_gap, fb=fb)                                       # F-STACK
     n_in = _pull_inside(m, k, min_mm, fb)                                         # F-FRAME-IN
     doc.saveas(out or path)
-    return {"moved": n_fix, "carried": n_carry, "stacked": n_stack, "pulled_inside": n_in}
+    return {"oriented": n_orient, "moved": n_fix, "carried": n_carry, "stacked": n_stack, "pulled_inside": n_in}
 
 
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[1])
     sub = ap.add_subparsers(dest="cmd", required=True)
     c = sub.add_parser("check"); c.add_argument("dxf", nargs="+"); c.add_argument("--min", type=float, default=5.0)
+    c.add_argument("--orig-dir", help="folder of the ORIGINAL sheets (same file names): flipped-arrow flags the original "
+                                      "also has (AutoCAD's own arrows-outside choice) are not counted")
     c.add_argument("--paper-scale", type=float); c.add_argument("--frame-regex", default=FRAME_RE); c.add_argument("--json", action="store_true")
     f = sub.add_parser("fix"); f.add_argument("dxf"); f.add_argument("--orig"); f.add_argument("--out")
     f.add_argument("--target", type=float, default=7.0); f.add_argument("--min", type=float, default=5.0)
@@ -381,10 +441,20 @@ def main(argv=None):
             bad = 0; rep = {}
             for p in a.dxf:
                 r = check(p, a.min, a.paper_scale, a.frame_regex); o = outside_frame(p, a.frame_regex)
-                rep[p] = {"close": r, "outside_frame": o}; bad += bool(r or o)
+                dd = ezdxf.readfile(p); kk = paper_scale(dd.modelspace(), a.frame_regex, a.paper_scale)
+                rv = [value(dd, e) for e in dd.modelspace().query("DIMENSION") if flipped_arrows(e, kk, dd)]
+                if a.orig_dir and rv:
+                    op = os.path.join(a.orig_dir, os.path.basename(p))
+                    if os.path.exists(op):
+                        od = ezdxf.readfile(op); ok_ = paper_scale(od.modelspace(), a.frame_regex)
+                        for v in [value(od, e) for e in od.modelspace().query("DIMENSION") if flipped_arrows(e, ok_, od)]:
+                            if v in rv:
+                                rv.remove(v)
+                rep[p] = {"close": r, "outside_frame": o, "reversed": rv}; bad += bool(r or o or rv)
                 if not a.json:
                     print(f"{p}: {len(r)} dims < {a.min:g} mm" + (": " + "; ".join(f"{x['value']}@{x['gap_mm']}" for x in r[:12]) if r else "")
-                          + (f" · {len(o)} OUTSIDE FRAME: " + "; ".join(f"{x['value']}({x['kind']})" for x in o[:8]) if o else ""))
+                          + (f" · {len(o)} OUTSIDE FRAME: " + "; ".join(f"{x['value']}({x['kind']})" for x in o[:8]) if o else "")
+                          + (f" · {len(rv)} FLIPPED ARROWS (reversed points): " + "; ".join(map(str, rv[:8])) if rv else ""))
             if a.json:
                 print(json.dumps(rep, ensure_ascii=False, indent=1))
             return 2 if bad else 0

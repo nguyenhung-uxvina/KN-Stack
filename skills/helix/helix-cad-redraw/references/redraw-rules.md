@@ -22,6 +22,8 @@
 | R14 | Mọi số mới thêm phải từ **số ghi đã duyệt**; mọi chữ mất phải có lý do | — | `label_diff.py` |
 | R15 | Báo cáo của script / agent **không phải bằng chứng**: xem ảnh cặp gốc–mới từng tờ đổi | Cổng xanh mà ảnh sai: kích thước bị đẩy vào trong chi tiết, ra ngoài khung | SKILL bước R5 — CEO duyệt ảnh, không duyệt bảng số |
 | R16 | Ghép bộ: **audit + đếm + mở lại**; cập nhật sha256 từng tờ | Đếm đối tượng «khớp» trong khi khối hình kích thước bị mất | `sheet_merge.py` (exit 2 nếu audit lỗi) |
+| R18 | Kích thước thẳng: **điểm đo thứ nhất ở đầu «bắt đầu» theo hướng kích thước** | Gõ điểm trên trước điểm dưới (kích thước đứng) ⇒ ezdxf vẽ mũi tên lộn chiều, đường kích thước thò quá đường gióng một mũi tên ở cả hai đầu — có ở 17/30 tờ vẽ lại, đẩy kích thước qua viền khung | `dim_spacing.py` F-ORIENT (đảo + vẽ lại) + `check` FLIPPED ARROWS (đo trên khối hình; `--orig-dir` bỏ cờ mà gốc AutoCAD cũng có); `fix_180` đảo luôn điểm |
+| R19 | Bước hậu xử lý **nhận diện kích thước không theo thứ tự điểm đo** (so cặp điểm không thứ tự) | Sau khi chuẩn hoá chiều, bước «đặt lại như gốc» không còn nhận ra kích thước ⇒ kích thước bị đẩy lên xà bên cạnh | quy ước viết script; `dim_spacing.counterpart` so cặp không thứ tự |
 | R17 | **Kiểm công cụ bằng đột biến**: gỡ từng chốt ⇒ test tương ứng phải đỏ | Test đầu tiên của chốt «dời theo» không bao giờ đỏ (vòng chính sửa lại hộ) | `scripts/test_helix_cad_redraw.py` — mỗi luật có test; danh sách đột biến trong SKILL |
 
 ## Không phải lỗi — đừng «sửa»

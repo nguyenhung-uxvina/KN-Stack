@@ -4,8 +4,8 @@
   "description": "Static assertions for helix-cad-redraw — redraw 2D DXF sheets after the original + deterministic layout gates. Checks that the rules learned on a real ~30-sheet redraw are stated with their enforcement point: template = original split sheet, internal inconsistencies decided in words, per-sheet A/B choice, fixed gate chain, image review, merge with audit.",
   "mode": "static",
   "test_input": "vẽ lại bộ bản vẽ DXF theo bản gốc, kích thước quá sát",
-  "total_required": 9,
-  "passing_score": 9,
+  "total_required": 10,
+  "passing_score": 10,
   "assertions": [
     {"id": "RD-TPL", "name": "template_is_original", "check": "redraw scripts take their template only from the ORIGINAL split sheets", "regex": "chỉ nhận khuôn từ\\s+đây", "required": true},
     {"id": "RD-LECH", "name": "inconsistencies_in_words", "check": "internal inconsistencies listed by written_vs_drawn.py and decided by the owner in words, not option letters", "regex": "written_vs_drawn\\.py[\\s\\S]{0,400}bằng lời từng điểm", "required": true},
@@ -16,6 +16,7 @@
     {"id": "RD-KEEP", "name": "keep_as_original", "check": "where the original is also tight, keep the original placement and log why instead of forcing the gate", "regex": "giữ như gốc, ghi lý do", "required": true},
     {"id": "RD-MERGE", "name": "merge_audit", "check": "merge with audit + sha256, then rerun the gates on the whole set", "regex": "sheet_merge\\.py[^\\n]{0,60}audit 0[\\s\\S]{0,120}cả\\s+bộ", "required": true},
     {"id": "RD-MUT", "name": "mutation_tested", "check": "tools are mutation-tested; a new rule needs a test + mutant", "regex": "Thêm luật mới ⇒ thêm test \\+ đột biến", "required": true},
+    {"id": "RD-ORIENT", "name": "point_order", "check": "first measured point at the start of the dim direction; post-steps match dims by unordered point pairs", "regex": "điểm đo thứ nhất ở đầu «bắt đầu» theo hướng[\\s\\S]{0,120}không thứ tự", "required": true},
     {"id": "RD-MAT", "name": "local_only_for_classified", "check": "classified dossiers: local scripts only, no LLM agent reads geometry", "regex": "MẬT ⇒ chỉ script cục bộ", "required": false}
   ]
 }

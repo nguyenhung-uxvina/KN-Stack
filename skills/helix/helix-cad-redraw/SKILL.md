@@ -1,6 +1,6 @@
 ---
 name: helix-cad-redraw
-description: "Vẽ lại bộ bản vẽ 2D (DXF) THEO BẢN GỐC rồi chuẩn hoá bố trí — khối của helix-cad-agents (ứng dụng 10). Tách tờ → liệt kê lệch nội tại (số ghi ≠ hình đo, nhãn tỷ lệ ≠ hệ số) cho chủ đầu tư quyết bằng lời → chọn theo từng tờ: giữ hình học gốc + sửa điểm đã duyệt, hay dựng tham số → cổng bố trí tất định (đường kích thước ≥ 7 mm, tầng ≥ 4 mm giữ tầng gốc, không ra ngoài khung, không chồng/trùng chữ, giữ ký hiệu hàn trong khối ghi chú) → cặp ảnh gốc–mới → ghép bộ + sha256. 17 luật, mỗi luật là một lỗi đã xảy ra thật, mỗi luật có script/test thực thi. Triggers on: 'redraw drawing', 'redraw DXF', 'vẽ lại bản vẽ', 'vẽ lại theo bản gốc', 'chuẩn hoá bản vẽ', 'kích thước quá sát', 'đường kích thước sát', 'kích thước chồng chữ', 'bố trí kích thước', 'tham số hoá bản vẽ', 'sửa bản vẽ theo phiếu', 'ghép bộ bản vẽ', 'dimension spacing', 'dimension layout', 'drawing cleanup'."
+description: "Vẽ lại bộ bản vẽ 2D (DXF) THEO BẢN GỐC rồi chuẩn hoá bố trí — khối của helix-cad-agents (ứng dụng 10). Tách tờ → liệt kê lệch nội tại (số ghi ≠ hình đo, nhãn tỷ lệ ≠ hệ số) cho chủ đầu tư quyết bằng lời → chọn theo từng tờ: giữ hình học gốc + sửa điểm đã duyệt, hay dựng tham số → cổng bố trí tất định (đường kích thước ≥ 7 mm, tầng ≥ 4 mm giữ tầng gốc, không ra ngoài khung, không chồng/trùng chữ, giữ ký hiệu hàn trong khối ghi chú) → cặp ảnh gốc–mới → ghép bộ + sha256. 19 luật, mỗi luật là một lỗi đã xảy ra thật, mỗi luật có script/test thực thi. Triggers on: 'redraw drawing', 'redraw DXF', 'vẽ lại bản vẽ', 'vẽ lại theo bản gốc', 'chuẩn hoá bản vẽ', 'kích thước quá sát', 'đường kích thước sát', 'kích thước chồng chữ', 'bố trí kích thước', 'tham số hoá bản vẽ', 'sửa bản vẽ theo phiếu', 'ghép bộ bản vẽ', 'dimension spacing', 'dimension layout', 'drawing cleanup'."
 allowed-tools: ["Read", "Write", "Edit", "Bash", "Grep", "Glob"]
 ---
 
@@ -10,14 +10,14 @@ allowed-tools: ["Read", "Write", "Edit", "Bash", "Grep", "Glob"]
 > (`acad_split_sheets`, `acad_extract_dossier`); ảnh cho người xem qua `helix-cad-ingest/render_dxf.py`.
 > **Nguyên tắc:** bản gốc là chuẩn. AI chỉ được thay đổi những gì chủ đầu tư đã duyệt **bằng lời**; mọi thứ khác phải
 > giữ như gốc, kể cả cách bố trí kích thước. Cổng xanh ≠ duyệt: chủ đầu tư duyệt **ảnh**.
-> **Luật:** `references/redraw-rules.md` (R1–R17 — mỗi luật một lỗi đã xảy ra + chỗ thực thi). Đọc trước khi vẽ.
+> **Luật:** `references/redraw-rules.md` (R1–R19 — mỗi luật một lỗi đã xảy ra + chỗ thực thi). Đọc trước khi vẽ.
 
 ## Công cụ (tất định, chạy cục bộ — dùng được cả với hồ sơ MẬT)
 | Script | Việc | Exit |
 |---|---|---|
 | `written_vs_drawn.py <dxf>` | lệch nội tại của **bản gốc**: MISMATCH (số ghi ≠ đo), FACTOR (hình chi tiết vẽ tỷ lệ khác nhãn), ROUNDED | 0 / 2 |
-| `dim_spacing.py check <dxf…>` | kích thước < 5 mm giấy tới điểm đo; kích thước ra ngoài khung (`outward` / `view`) | 0 / 2 |
-| `dim_spacing.py fix <dxf> --orig <gốc>` | giãn ra 7 mm; giữ tầng + phía của **kích thước gốc** (cùng giá trị, cùng phương, cùng điểm đo); dời theo tầng ngoài; xếp tầng; không ra khung; kéo vào khung | 0 |
+| `dim_spacing.py check <dxf…> [--orig-dir <gốc>]` | kích thước < 5 mm giấy tới điểm đo; ra ngoài khung (`outward` / `view`); mũi tên lộn chiều (điểm đo đảo) | 0 / 2 |
+| `dim_spacing.py fix <dxf> --orig <gốc>` | chuẩn hoá chiều điểm đo; giãn ra 7 mm; giữ tầng + phía của **kích thước gốc** (cùng giá trị, cùng phương, cùng điểm đo); dời theo tầng ngoài; xếp tầng; không ra khung; kéo vào khung | 0 |
 | `text_overlap.py <dxf…> [--skip-layer L]` | chữ chồng (TEXT/MTEXT/chữ kích thước) + chữ **trùng điểm đặt ở mọi lớp** | 0 / 2 |
 | `notes_strokes.py <gốc> <mới> [--write] [--skip N]` | nét rời trong khối «Yêu cầu kỹ thuật» (ký hiệu hàn) còn đủ | 0 / 2 |
 | `label_diff.py <gốc> <mới> <tờ…>` | chữ / số kích thước mất – thêm so với gốc | 0 / 2 |
@@ -42,11 +42,12 @@ ghi nguyên văn vào ledger.
 
 **R3 Vẽ.** Trước khi đặt kích thước: mở ảnh tờ gốc, chép phía / góc phần tư / tầng (R4). Ø, R: `location=` ra
 ngoài + `override={"dimtih":1,"dimtoh":1}`; góc: `add_angular_dim_3p`; chữ đặt tay: `place_dim_text`; góc 180°:
-`fix_180`; sau khi sửa hình: `rerender_dims`.
+`fix_180`; sau khi sửa hình: `rerender_dims`. Kích thước thẳng: điểm đo thứ nhất ở đầu «bắt đầu» theo hướng
+(R18). Bước hậu xử lý nhận diện kích thước bằng cặp điểm **không thứ tự** (R19).
 
 **R4 Cổng bố trí** (chuỗi cố định, từng tờ):
 ```
-dim_spacing.py fix <tờ> --orig <tờ gốc>  →  dim_spacing.py check  →  text_overlap.py  →  notes_strokes.py  →  label_diff.py
+dim_spacing.py fix <tờ> --orig <tờ gốc>  →  dim_spacing.py check --orig-dir <gốc>  →  text_overlap.py  →  notes_strokes.py  →  label_diff.py
 ```
 Còn FAIL: `outward` ⇒ sửa phía/khoảng trong script; `view` ⇒ dời **hình chiếu** trong script (chi tiết sát viền);
 chỗ gốc cũng chật ⇒ giữ như gốc, ghi lý do vào ledger (không ép cổng xanh bằng cách khác gốc).
@@ -75,7 +76,7 @@ Phân loại: {{}} · Tờ gốc đã tách: {{đường dẫn}} · Bộ cuối:
 
 ## Kiểm công cụ
 `python -m pytest scripts/test_helix_cad_redraw.py -v` — mỗi luật có script có ≥ 1 test trên bản vẽ tổng hợp.
-Đột biến (gỡ đúng chốt ⇒ test đỏ): chốt dời theo · dời theo · tầng gốc · phía gốc · khớp theo điểm đo · xếp tầng ·
+Đột biến (gỡ đúng chốt ⇒ test đỏ): chuẩn hoá chiều điểm đo · chốt dời theo · dời theo · tầng gốc · phía gốc · khớp theo điểm đo · xếp tầng ·
 vắt ngang cố ý · chọn phía theo nét chắn · không ra khung · kéo vào khung · trùng điểm đặt · `set_location` · 180° ·
 dòng chú thích theo dòng trên · ROUNDED. Thêm luật mới ⇒ thêm test + đột biến.
 

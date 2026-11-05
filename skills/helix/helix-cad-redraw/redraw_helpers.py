@@ -6,8 +6,8 @@ way silently produced a wrong sheet (see references/redraw-rules.md, rule number
   place_dim_text(dim, xy, leader)   user text position that SURVIVES render [R9]
                                     (setting dimtype bit 128 + text_midpoint by hand: render() clears the bit and
                                     the text jumps back to the middle)
-  fix_180(dim)                      linear dim at angle 180° ⇒ 0° (same measurement) — re-rendered 180° dims
-                                    put their text upside-down [R10]
+  fix_180(dim)                      linear dim at angle 180° ⇒ 0° (same measurement) and points re-ordered along +x —
+                                    re-rendered 180° dims put their text upside-down [R10]; reversed points flip arrows [R18]
   stretch(msp, box, f)              move vertices inside a box: LINE, LWPOLYLINE, HATCH boundary (polyline and
                                     line edges) and DIMENSION defpoints together [R11]
   explode_named(msp, names)         explode INSERTs first — geometry hidden in a block (a mirrored copy too) is
@@ -36,6 +36,9 @@ def place_dim_text(dim, xy, leader=False):
 def fix_180(dim):
     if (dim.dimtype & 7) == 0 and abs(dim.dxf.get("angle", 0) - 180.0) < 0.1:
         dim.dxf.angle = 0.0
+        d = dim.dxf                                    # keep defpoint2 -> defpoint3 along +x, else arrows flip (R18)
+        if d.defpoint3.x < d.defpoint2.x:
+            d.defpoint2, d.defpoint3 = d.defpoint3, d.defpoint2
         return True
     return False
 
