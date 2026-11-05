@@ -35,6 +35,11 @@ allowed-tools: ["Read", "Write", "Edit", "Bash", "Grep", "Glob", "Task"]
    KHÁC agent dựng ([[helix-cad-judge]]).
 7. **Ảnh bản vẽ cho agent** phải qua `helix-cad-ingest/render_dxf.py` (sửa font TCVN, AIGDT n→Ø).
 8. **Mô hình AI dựng từ bản vẽ = DRAFT**, không bao giờ là geometry-of-record khi chưa có chữ ký kỹ sư.
+9. **Spec phải sạch trước khi khởi chạy agent dựng**: `helix-cad-validate/audit_claims.py spec --spec spec.md` exit 0.
+   Quyết định CEO được VIẾT LẠI thành câu khẳng định trong chính spec (agent cách ly chỉ đọc spec, không đọc
+   `_pipeline_state.md`). Đo 2026-11-05: quyết định "không dựng X" chỉ ghi ở sổ ⇒ agent dựng X ⇒ trượt cổng.
+10. **Trình CEO bằng bản ghi claim** (`audit_claims.py collect … --profile full`), không bằng tóm tắt tự viết;
+    mọi báo cáo khác qua `check-report` (mỗi dòng phát hiện phải trích claim_id có thật).
 
 ## Menu ứng dụng
 | # | Ứng dụng | Đợt | Chuỗi khối (mỗi mũi tên = một lượt, dừng chờ CEO) |

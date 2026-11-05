@@ -82,6 +82,21 @@ mỗi FAIL kèm observed/expected/fix-hint máy-đọc-được → bơm lại c
 PASS của validator = ĐẠT CHUẨN TỐI THIỂU. Kết luận kết cấu/mỏi/FEA và phê duyệt cuối do **kỹ sư
 định danh ký** (block ký trong `.md`). Cấm tuyệt đối auto-merge AI vào luồng sản xuất.
 
+### Step 7: Bản ghi claim chung + kết luận máy (Offload → CORE) — `audit_claims.py` (G0, P–C–C)
+Gom báo cáo của ingest / validate / gates / judge thành **một bản ghi claim** (claim_id tất định, vị trí nguồn,
+luật, trạng thái). Thiếu chứng cứ ⇒ trạng thái an toàn, không phải PASS/FAIL. Máy chỉ ra **BLOCKED** hoặc
+**READY_FOR_HUMAN_RELEASE**; "RELEASED" chỉ có trong bản ghi phát hành do người có tên ký.
+```bash
+python audit_claims.py collect --part <id> --extract x.cad_extract.json --validate v.json \
+       --gates cad_gates_report.json --judge judge_verdict.json --profile full --out claims   # exit 0 READY · 2 BLOCKED
+python audit_claims.py set-check --extracts *.cad_extract.json --out set_claims              # trùng mã giữa các tờ
+python audit_claims.py check-report --claims claims.json --report <báo cáo>.md               # chặn báo cáo "trôi"
+python audit_claims.py spec --spec spec.md                                                    # chặn spec còn "?"
+python audit_claims.py release --claims claims.json --signer "<người ký tự gõ>" --out release.json
+```
+Hồ sơ: `full` (ingest+validate+gates+judge) · `model` (gates+judge) · `drawing` (ingest+validate). Thiếu báo cáo bắt
+buộc ⇒ `ABSTAINED`. Schema: `references/audit_claim.schema.md`.
+
 ## When to add the next tier (DEBATE trigger-based — KHÔNG theo lịch)
 Giữ BƯỚC 1 tối thiểu. CHỈ thêm khi gặp trigger thật:
 | Trigger | Thêm | Loại |
