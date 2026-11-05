@@ -208,6 +208,31 @@ def test_M1_build_ignoring_params_fails_f4(tmp_path):
     assert f4["status"] == "FAIL" and "KHÔNG tác động" in f4["message"]
 
 
+SYMMETRIC_HOLES = textwrap.dedent('''
+    from build123d import Box, Cylinder, Location, export_step
+    PARAMS = {"length": 100.0, "width": 40.0, "height": 20.0, "hole_e": 25.0}
+    def build(p):
+        L, W, H = p["length"], p["width"], p["height"]
+        b = Box(L, W, H).moved(Location((L/2, W/2, H/2)))
+        for x in (p["hole_e"], L - p["hole_e"]):
+            b = b - Cylinder(4, 2*H).moved(Location((x, W/2, H/2)))
+        return b
+    if __name__ == "__main__":
+        export_step(build(PARAMS), "model.step")
+''')
+
+
+def test_f4_symmetric_param_is_not_inert(tmp_path):
+    """Two holes each hole_e from its own end: flexing hole_e keeps volume, bbox AND centroid — only the
+    inertia changes. Before the inertia term this parameter was falsely reported 'KHÔNG tác động'."""
+    m = _model(tmp_path, SYMMETRIC_HOLES)
+    step = tmp_path / "s.step"
+    G.cad_runner.build_with_params(m, str(step), {}, 120)
+    c = {"part_id": "SYM", "bbox": [100, 40, 20], "f4_params": ["hole_e"]}
+    rep = G.run_gates(str(step), c, model_py=m)
+    assert statuses(rep)["F4_param_flex"] == "PASS", [x for x in rep.checks if x["status"] == "FAIL"]
+
+
 def test_M2_absolute_hole_fails_f4_relations(tmp_path):
     c = dict(CONTRACT, param_probes=RELATIVE_PROBES)
     rep = G.run_gates(write_step(tmp_path, block()), c, model_py=_model(tmp_path, HOLE_ABSOLUTE))

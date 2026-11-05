@@ -134,17 +134,29 @@ def bbox_size(shape):
 
 
 def geom_signature(shape):
-    """bbox min + size, volume, centroid — moving a through-hole changes only the centroid, so it is included."""
+    """bbox min + size, volume, centroid and the principal moments of inertia about the centroid.
+    Moving one through-hole changes the centroid; moving two holes symmetrically in opposite directions
+    (e.g. both 25 mm from their own end) leaves the centroid fixed but changes the inertia — measured
+    2026-11-05 on a two-plate frame: centroid-only signature reported such a parameter as 'inert'."""
     from build123d import CenterOf
+    from OCP.BRepGProp import BRepGProp
+    from OCP.GProp import GProp_GProps
     bb = shape.bounding_box()
     c = shape.center(CenterOf.MASS)
+    props = GProp_GProps()
+    BRepGProp.VolumeProperties_s(shape.wrapped, props)
+    m = props.MatrixOfInertia()
+    inertia = [m.Value(i, j) for i in (1, 2, 3) for j in (1, 2, 3)]
     return {"min": [bb.min.X, bb.min.Y, bb.min.Z], "size": [bb.size.X, bb.size.Y, bb.size.Z],
-            "volume": float(shape.volume), "centroid": [c.X, c.Y, c.Z]}
+            "volume": float(shape.volume), "centroid": [c.X, c.Y, c.Z], "inertia": inertia}
 
 
 def same_signature(a, b, tol_mm=1e-3, tol_rel=1e-6):
     vec = all(abs(x - y) <= tol_mm for k in ("min", "size", "centroid") for x, y in zip(a[k], b[k]))
-    return vec and abs(a["volume"] - b["volume"]) <= tol_rel * max(abs(b["volume"]), 1.0)
+    vol = abs(a["volume"] - b["volume"]) <= tol_rel * max(abs(b["volume"]), 1.0)
+    scale = max(max(abs(v) for v in b.get("inertia", [0.0])), 1.0)
+    inert = all(abs(x - y) <= tol_rel * scale for x, y in zip(a.get("inertia", []), b.get("inertia", [])))
+    return vec and vol and inert
 
 
 _OPS = {ast.Add: lambda x, y: x + y, ast.Sub: lambda x, y: x - y,
