@@ -1,10 +1,10 @@
 ---
 name: helix-cad-agents
-description: "Orchestrator mỏng cho bộ agent Claude × CAD — menu 9 ứng dụng, mỗi ứng dụng định tuyến sang khối/flow đã có, không tự làm việc của khối: (1) spec → CAD → STEP [helix-spec-to-cad / helix-cad-bridge + helix-cad-gates] · (2) bóc kích thước/vật liệu/BOM từ DXF có nhãn nguồn D/G/T [helix-cad-ingest] · (4) họ biến thể + đổi layer [helix-cad-batch] · (5) cổng hình học tất định F1–F4 [helix-cad-gates] · (9) giám khảo ý đồ [helix-cad-judge] · đợt 2: (3) dựng NHÁP từ bản vẽ, (6) hàn/lắp ráp nhiều tờ, (7) GD&T, (8) rà trước phát hành. Router phân loại MẬT chặn mọi agent LLM; ledger _pipeline_state.md; MỘT khối mỗi lượt, dừng chờ CEO. Bài học phép đo GIÁ TRƯỢT 2026-11-02 mã hoá thành luật: điểm dò bắt buộc, khối lượng không phải mục tiêu, khai phương pháp chiếu, agent dựng cách ly, giám khảo khác agent dựng. Triggers on: 'cad agents', 'bộ agent CAD', 'claude cad', 'claude với CAD', 'ứng dụng CAD', 'CAD pipeline', 'agent CAD', 'tự động CAD', 'dựng CAD bằng AI', 'AI CAD workflow'."
+description: "Orchestrator mỏng cho bộ agent Claude × CAD — menu 10 ứng dụng, mỗi ứng dụng định tuyến sang khối/flow đã có, không tự làm việc của khối: (1) spec → CAD → STEP [helix-spec-to-cad / helix-cad-bridge + helix-cad-gates] · (2) bóc kích thước/vật liệu/BOM từ DXF có nhãn nguồn D/G/T [helix-cad-ingest] · (4) họ biến thể + đổi layer [helix-cad-batch] · (5) cổng hình học tất định F1–F4 [helix-cad-gates] · (9) giám khảo ý đồ [helix-cad-judge] · (10) vẽ lại bản vẽ 2D theo gốc + cổng bố trí [helix-cad-redraw] · đợt 2: (3) dựng NHÁP từ bản vẽ, (6) hàn/lắp ráp nhiều tờ, (7) GD&T, (8) rà trước phát hành. Router phân loại MẬT chặn mọi agent LLM; ledger _pipeline_state.md; MỘT khối mỗi lượt, dừng chờ CEO. Bài học phép đo GIÁ TRƯỢT 2026-11-02 mã hoá thành luật: điểm dò bắt buộc, khối lượng không phải mục tiêu, khai phương pháp chiếu, agent dựng cách ly, giám khảo khác agent dựng. Triggers on: 'vẽ lại bản vẽ theo gốc', 'cad agents', 'bộ agent CAD', 'claude cad', 'claude với CAD', 'ứng dụng CAD', 'CAD pipeline', 'agent CAD', 'tự động CAD', 'dựng CAD bằng AI', 'AI CAD workflow'."
 allowed-tools: ["Read", "Write", "Edit", "Bash", "Grep", "Glob", "Task"]
 ---
 
-# helix-cad-agents: Bộ định tuyến 9 ứng dụng Claude × CAD
+# helix-cad-agents: Bộ định tuyến 10 ứng dụng Claude × CAD
 
 > **Role:** Thin commander. **NEVER does block work itself** — chỉ phân loại, chọn ứng dụng, gọi khối,
 > ghi ledger, dừng chờ CEO. Khối thật: [[helix-cad-ingest]] · [[helix-spec-to-cad]] / [[helix-cad-bridge]] ·
@@ -33,6 +33,9 @@ allowed-tools: ["Read", "Write", "Edit", "Bash", "Grep", "Glob", "Task"]
    KHÁC agent dựng ([[helix-cad-judge]]).
 7. **Ảnh bản vẽ cho agent** phải qua `helix-cad-ingest/render_dxf.py` (sửa font TCVN, AIGDT n→Ø).
 8. **Mô hình AI dựng từ bản vẽ = DRAFT**, không bao giờ là geometry-of-record khi chưa có chữ ký kỹ sư.
+9. **Bản vẽ 2D vẽ lại**: khuôn = tờ GỐC đã tách; lệch nội tại do chủ đầu tư quyết bằng lời; mọi tờ đổi qua chuỗi
+   cổng bố trí của [[helix-cad-redraw]] (`dim_spacing.py` → `text_overlap.py` → `notes_strokes.py` → `label_diff.py`)
+   **và** cặp ảnh gốc | mới được người xem. Cổng xanh không thay ảnh.
 
 ## Menu ứng dụng
 | # | Ứng dụng | Đợt | Chuỗi khối (mỗi mũi tên = một lượt, dừng chờ CEO) |
@@ -45,6 +48,7 @@ allowed-tools: ["Read", "Write", "Edit", "Bash", "Grep", "Glob", "Task"]
 | 3 | Dựng NHÁP từ bản vẽ | 2 | `render_dxf.py` → agent cách ly dựng + `inferred_spec.json` → kỹ sư duyệt spec → cổng 5 → judge 9 |
 | 6 | Hàn / lắp ráp nhiều tờ | 2 | như 3, thêm danh sách thành viên + tờ con (`authoritative_bom.py` WELD-ASSY) |
 | 7 | GD&T | 2 | `ingest.py` giải mã khung dung sai AIGDT → `gdt[]` (chỉ chép) → kỹ sư đối chiếu từng khung |
+| 10 | Vẽ lại bản vẽ 2D theo gốc | 1 | `acad_split_sheets` → `written_vs_drawn.py` (CEO quyết lệch bằng lời) → CEO chọn A giữ hình gốc / B tham số → vẽ → cổng bố trí `helix-cad-redraw` → ảnh gốc \| mới (CEO duyệt) → `sheet_merge.py` |
 | 8 | Rà trước phát hành | 2 | quy tắc số trong `validate.py`; LLM chỉ giải thích; trạng thái NEEDS_EVIDENCE / NEEDS_HUMAN_RELEASE / ABSTAINED |
 
 **Đợt 2 chưa bật.** Chọn 3/6/7/8 ⇒ trả lời: *"Đợt 2 chờ kết quả nhánh (a) phép đo GIÁ TRƯỢT (spec đã duyệt → so 2 nhánh).

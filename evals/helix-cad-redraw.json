@@ -1,0 +1,21 @@
+{
+  "skill": "helix-cad-redraw",
+  "version": "1.0",
+  "description": "Static assertions for helix-cad-redraw — redraw 2D DXF sheets after the original + deterministic layout gates. Checks that the rules learned on a real ~30-sheet redraw are stated with their enforcement point: template = original split sheet, internal inconsistencies decided in words, per-sheet A/B choice, fixed gate chain, image review, merge with audit.",
+  "mode": "static",
+  "test_input": "vẽ lại bộ bản vẽ DXF theo bản gốc, kích thước quá sát",
+  "total_required": 9,
+  "passing_score": 9,
+  "assertions": [
+    {"id": "RD-TPL", "name": "template_is_original", "check": "redraw scripts take their template only from the ORIGINAL split sheets", "regex": "chỉ nhận khuôn từ\\s+đây", "required": true},
+    {"id": "RD-LECH", "name": "inconsistencies_in_words", "check": "internal inconsistencies listed by written_vs_drawn.py and decided by the owner in words, not option letters", "regex": "written_vs_drawn\\.py[\\s\\S]{0,400}bằng lời từng điểm", "required": true},
+    {"id": "RD-AB", "name": "per_sheet_mode", "check": "per-sheet choice keep-original-geometry vs parametric; schematic sections keep the original", "regex": "\\(A\\) giữ hình học gốc[\\s\\S]{0,200}sơ đồ ⇒ A", "required": true},
+    {"id": "RD-CHAIN", "name": "gate_chain", "check": "fixed gate chain spacing → overlap → notes strokes → label diff", "regex": "dim_spacing\\.py fix[^\\n]{0,60}--orig[^\\n]{0,80}text_overlap\\.py[^\\n]{0,40}notes_strokes\\.py[^\\n]{0,40}label_diff\\.py", "required": true},
+    {"id": "RD-FRAME", "name": "frame_gate", "check": "dims outside the sheet border are reported and classified outward/view", "regex": "outward[^\\n]{0,40}view", "required": true},
+    {"id": "RD-IMG", "name": "image_review", "check": "owner approves images (original | redraw pair), a green gate is not approval", "regex": "Cổng xanh ≠ duyệt[^\\n]{0,80}ảnh", "required": true},
+    {"id": "RD-KEEP", "name": "keep_as_original", "check": "where the original is also tight, keep the original placement and log why instead of forcing the gate", "regex": "giữ như gốc, ghi lý do", "required": true},
+    {"id": "RD-MERGE", "name": "merge_audit", "check": "merge with audit + sha256, then rerun the gates on the whole set", "regex": "sheet_merge\\.py[^\\n]{0,60}audit 0[\\s\\S]{0,120}cả\\s+bộ", "required": true},
+    {"id": "RD-MUT", "name": "mutation_tested", "check": "tools are mutation-tested; a new rule needs a test + mutant", "regex": "Thêm luật mới ⇒ thêm test \\+ đột biến", "required": true},
+    {"id": "RD-MAT", "name": "local_only_for_classified", "check": "classified dossiers: local scripts only, no LLM agent reads geometry", "regex": "MẬT ⇒ chỉ script cục bộ", "required": false}
+  ]
+}
