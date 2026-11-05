@@ -27,6 +27,8 @@ allowed-tools: ["Read", "Write", "Edit", "Bash", "Grep", "Glob", "Task"]
 2. **Một khối mỗi lượt**, Ledger Read → làm → Ledger Write → **STOP chờ CEO** (mẫu [[helix-spec-to-cad]]).
 3. **Mọi STEP do AI dựng phải qua `geom_gates.py`** với `geometry_contract.json` **đã ký + `--approved-hash`**
    trước khi tới judge/CEO. Hợp đồng thiếu `probes[]` cho feature quan trọng ⇒ không ký (đếm feature đã cho qua nhầm).
+   Cơ chế: `--mode release` (mặc định) tự FAIL khi thiếu `probes[]` / `--model` / `param_probes[]` / `--approved-hash`
+   (trừ `waivers` trong hợp đồng đã ký); `--mode draft` chỉ cho `DRAFT-PASS`, không mở judge/CEO.
 4. **Khối lượng khung tên là INFO.** Prompt mọi agent dựng có câu: *"Không được chỉnh kích thước để khớp khối lượng."*
 5. **Spec khai `projection_method` + `axis_convention`**; mọi giá trị mang nhãn D/G/T/?; mọi `?` kỹ sư xác nhận.
 6. **Agent dựng cách ly**: chỉ được đọc thư mục đầu vào của mình (prompt liệt kê đúng tệp); giám khảo là agent
@@ -41,7 +43,7 @@ allowed-tools: ["Read", "Write", "Edit", "Bash", "Grep", "Glob", "Task"]
 | 2 | Bóc kích thước/vật liệu/BOM | 1 | `helix-cad-ingest/ingest.py --measure-geometry [--config]` → `aggregate.py` → (`authoritative_bom.py`) → CEO chứng thực kích thước tới hạn |
 | 4 | Họ biến thể / đổi layer | 1 | điều kiện: mô hình gốc PASS F1–F4 → `helix-cad-batch/batch_sweep.py` → CEO chọn biến thể → cổng đầy đủ cho biến thể phát hành |
 | 5 | Cổng hình học | 1 | kỹ sư ký `geometry_contract.json` → `geom_gates.py` → `render_views.py` → CEO xem render + ký |
-| 9 | Giám khảo ý đồ | 1 | điều kiện: cổng PASS, không MẬT → `/helix-cad-judge` (agent mới) → CEO quyết khi `block` |
+| 9 | Giám khảo ý đồ | 1 | kỹ sư ký `judge_questions[]` trong hợp đồng → điều kiện: cổng PASS cùng hash, không MẬT → `/helix-cad-judge` (agent mới ghi `judge_answers.json`) → `judge_score.py` tính verdict → CEO quyết khi `block` / xem tay khi `needs_human` |
 | 3 | Dựng NHÁP từ bản vẽ | 2 | `render_dxf.py` → agent cách ly dựng + `inferred_spec.json` → kỹ sư duyệt spec → cổng 5 → judge 9 |
 | 6 | Hàn / lắp ráp nhiều tờ | 2 | như 3, thêm danh sách thành viên + tờ con (`authoritative_bom.py` WELD-ASSY) |
 | 7 | GD&T | 2 | `ingest.py` giải mã khung dung sai AIGDT → `gdt[]` (chỉ chép) → kỹ sư đối chiếu từng khung |
@@ -84,7 +86,8 @@ PASS ≠ chữ ký.
 | `spec.md` (nhãn D/G/T/?) + `geometry_contract.json` | người (AI nháp) | gates, judge, khối dựng |
 | `model.py` (PARAMS/build) + `model.step` | bridge / s2c BD / batch | gates, judge |
 | `cad_gates_report.json/.md` + `model_views.png` | gates | judge, CEO |
-| `judge_verdict.json` | judge | CEO |
+| `judge_answers.json` | judge (agent) | `judge_score.py` |
+| `judge_verdict.json/.md` | `judge_score.py` (tất định) | CEO |
 
 ## COD
 | Task | COD |

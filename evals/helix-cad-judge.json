@@ -1,0 +1,27 @@
+{
+  "skill": "helix-cad-judge",
+  "version": "2.0",
+  "description": "Static assertions for helix-cad-judge v2 — CADCodeVerify-style intent judge: engineer-signed Yes/No questions inside the hash-locked geometry contract, agent writes answers only, judge_score.py computes the verdict deterministically, Unclear goes to a human.",
+  "mode": "static",
+  "test_input": "judge whether this AI-built bracket matches its approved spec",
+  "total_required": 7,
+  "passing_score": 7,
+  "assertions": [
+    {"id": "CJ-SIGNED", "name": "signed_questions_in_contract", "check": "questions are signed by the engineer and live in the hash-locked contract",
+     "regex": "judge_questions\\[\\][^\\n]{0,80}(geometry_contract|hợp đồng)[^\\n]{0,80}(hash|ký)", "required": true},
+    {"id": "CJ-UNCLEAR", "name": "unclear_to_human", "check": "Unclear is a legitimate answer and routes to a human, never to pass",
+     "regex": "Không rõ ⇒ `needs_human`", "required": true},
+    {"id": "CJ-DET", "name": "deterministic_verdict", "check": "verdict is computed by judge_score.py, the agent only writes answers",
+     "regex": "Agent chỉ ghi `judge_answers\\.json`[^\\n]{0,40}Verdict do `judge_score\\.py`", "required": true},
+    {"id": "CJ-EVID", "name": "evidence_or_downgrade", "check": "answers without reasoning/evidence are downgraded to Unclear",
+     "regex": "hạ câu thiếu lập luận/chứng cứ thành Không rõ", "required": true},
+    {"id": "CJ-PRECOND", "name": "gates_pass_same_contract", "check": "refuses unless the geometry gate passed with the same contract hash (DRAFT-PASS refused)",
+     "regex": "verdict == \"PASS\"` \\*\\*với cùng hợp đồng\\*\\*[\\s\\S]{0,200}DRAFT-PASS", "required": true},
+    {"id": "CJ-SEP", "name": "judge_not_builder", "check": "the judge is a fresh agent, not the builder",
+     "regex": "Agent giám khảo ≠ agent dựng", "required": true},
+    {"id": "CJ-NUM", "name": "measured_accuracy_cited", "check": "cites the measured judge accuracy so the judge is not over-trusted",
+     "regex": "64,6 % / 68,2 %", "required": true},
+    {"id": "CJ-EXTRA", "name": "extra_findings_non_gating", "check": "findings outside signed questions never change the verdict",
+     "regex": "extra_findings[^\\n]{0,60}(không chặn|không đổi verdict)", "required": false}
+  ]
+}
