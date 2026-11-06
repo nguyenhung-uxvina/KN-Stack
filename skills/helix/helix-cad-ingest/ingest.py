@@ -19,6 +19,9 @@ from collections import Counter
 import ezdxf
 from ezdxf import recover
 
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import drawing_tables as DT  # noqa: E402  (G1: position-aware title block + parts list + dimension overrides)
+
 # --- known materials (extend as needed) ---
 MATERIALS = [
     "NHÔM 5083", "THÉP C45", "THÉP SS400", "THÉP CT3", "THÉP CT1",
@@ -138,28 +141,66 @@ def extract(path, classification):
             if ln:
                 process_notes.append(ln)
 
-    # ---- dimensions + break-view detection ----
+    # ---- title block + parts list by POSITION (G1) ----
+    txts = DT.texts(msp, doc)   # loose text + texts of title-block / parts-list form blocks (virtual)
+    tb = DT.read_title_block(doc, [t for t in txts if not t.get("virtual")], PART_ID_RE)
+    bom_tables = DT.read_bom_tables(doc, txts)
+    if tb.get("found"):
+        if tb.get("code"):
+            part_id, code_src = tb["code"]["value"], "title_block"
+        else:
+            code_src = "text_search" if part_id else None
+        if tb.get("material"):
+            material = tb["material"]["value"]
+        if tb.get("name"):
+            name = tb["name"]["value"]
+        if tb.get("scale"):
+            scale = tb["scale"]["value"].replace(" ", "")
+    else:
+        code_src = "text_search" if part_id else None
+
+    # ---- dimensions: DIMLFAC applied; displayed text vs geometry classified (G1) ----
     dimensions, conflicts = [], []
     for e in msp.query("DIMENSION"):
+        angular = (e.dimtype & 7) in (2, 5)
         try:
-            meas = round(float(e.get_measurement()), 2)
+            lf = float(e.override().get("dimlfac", 1.0) or 1.0)
+        except Exception:
+            lf = 1.0
+        try:
+            meas = float(e.get_measurement())
+            meas = round(meas if angular else meas * lf, 3)
         except Exception:
             meas = None
         ovr = clean_inline(e.dxf.get("text", ""))
-        if ovr in ("", "<>"):
+        loc = {"handle": e.dxf.handle, "dimlfac": lf}
+        if ovr in ("", "<>") or "<>" in ovr:
             value, tol, conf, note = meas, "IT14/2", "HIGH", ""
+            if "<>" in ovr and ovr != "<>":
+                note = f"text quanh số đo: {ovr}"
         else:
-            value = num(ovr)
+            value = DT.override_value(ovr)
             tolm = TOL_RE.search(ovr)
             tol = "±" + tolm.group(1) if tolm else "IT14/2"
             conf, note = "HIGH", ""
-            if isinstance(meas, (int, float)) and value and abs(meas - value) > max(2.0, 0.02 * value):
+            kind = DT.classify_override(value, meas, float(tolm.group(1).replace(",", ".")) if tolm else None) \
+                if not angular else "AGREE"
+            if kind == "WITHIN_TOL":
+                note = f"nét đo {meas} nằm trong dung sai ghi {value}{tol}"
+            elif kind == "BREAK_VIEW":
                 note = f"break-view: geometry={meas} vs drawn={value}{(' '+tol) if tol!='IT14/2' else ''}"
-                conflicts.append({"type": "BREAK-VIEW",
+                conflicts.append({"type": "BREAK-VIEW", "locator": loc,
                                   "detail": f"{value}{tol}: geometry measured {meas} (rút gọn cắt), lấy {value}"})
+            elif kind == "SCALED_VIEW":
+                note = f"hình vẽ theo tỉ lệ khác: geometry={meas}, ghi {value} (×{round(meas / value, 3)})"
+            elif kind == "TEXT_OVERRIDE":
+                note = f"CHỮ GHI ĐÈ LỆCH NÉT: ghi {value}, nét đo {meas}"
+                conf = "MED"
+                conflicts.append({"type": "TEXT-OVERRIDE", "locator": loc,
+                                  "detail": f"Kích thước ghi '{ovr}' = {value} nhưng nét đo {meas} (lệch {round(meas - value, 3)})"})
         dimensions.append({"param": "", "value": value, "unit": "mm",
                            "tolerance": tol, "source": "DIMENSION", "source_tag": "D",
-                           "confidence": conf, "note": note})
+                           "confidence": conf, "note": note, "locator": loc})
 
     # ---- holes ----
     holes = []
@@ -191,13 +232,23 @@ def extract(path, classification):
     fname = os.path.basename(path)
     fidx_m = re.match(r"\s*([\d.]+)", fname)
     file_index = fidx_m.group(1).rstrip(".") if fidx_m else None
-    if part_id:
+    if part_id and code_src == "text_search":
         missing.append(f"code_in_dxf={part_id} từ khung tên — KHÔNG tin cậy (nguồn copy-paste); dùng file_index={file_index} làm khoá chi tiết")
+    bom = []
+    for ti, tbl in enumerate(bom_tables):
+        for row in tbl["rows"]:
+            c = row["cells"]
+            code_cell = (c.get("code") or "").strip()
+            m_code = DT.CODE_RE.search(code_cell)
+            bom.append({"table": ti, "tt": c.get("tt"), "code": m_code.group().strip() if m_code else (code_cell or None),
+                        "name": c.get("name"), "qty": c.get("qty"), "material": c.get("material"), "note": c.get("note"),
+                        "source": "BOM-TABLE", "source_tag": "T", "confidence": "MED", "locator": row["locators"]})
 
     rec = {
         "meta": {
             "file_index": file_index,
-            "code_in_dxf": part_id, "code_confidence": "LOW",
+            "code_in_dxf": part_id, "code_confidence": "MED" if code_src == "title_block" else "LOW",
+            "code_source": code_src, "title_block": tb,
             "part_id": part_id, "name": name, "assembly": None,
             "product": next((p for p, mk in PRODUCT_MARKERS.items() if any(k in joined for k in mk)), None),
             "material": material, "mass_kg": mass_kg, "mass_source_tag": "T" if mass_kg else None,
@@ -216,7 +267,7 @@ def extract(path, classification):
                            "source": "Surface Texture block", "confidence": "MED"},
         "layers": layers,
         "blocks": blocks,
-        "bom": [],
+        "bom": bom,
         "process_notes": process_notes,
         "conflicts": conflicts,
         "missing": missing,

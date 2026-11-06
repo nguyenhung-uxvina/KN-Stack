@@ -113,6 +113,19 @@ Iterate `modelspace()` (and named paperspace layouts, labeled). Harvest:
 ```
 Honor OCS/UCS when reading insert points (don't report raw OCS coords as world coords). Record each value with its **entity handle** as the source pointer.
 
+**Đọc theo vị trí (G1, `drawing_tables.py`) — đo 2026-11-05 trên bộ 42 tờ:** quét toàn bộ chữ để tìm mã ra
+**0/42** tờ (bắt nhầm mã dòng bảng kê; khung tên là INSERT chỉ chứa nhãn tĩnh, giá trị là chữ rời đặt chồng lên).
+- **Khung tên:** block có ≥ 3 nhãn khung tên (Tỷ lệ, Khối lượng, Thiết kế…) ⇒ lấy chữ rời nằm trong vùng của nó ⇒
+  `meta.title_block` {code, name, material, scale} kèm `locator` (handle, x, y). `code_source = title_block`.
+- **Bảng kê:** hàng tiêu đề ≥ 4 cột đã biết (mẫu "TT · Ký hiệu · Tên gọi · Số lượng · Vật liệu · Ghi chú" và mẫu TCVN
+  "Khổ giấy · Miền · Vị trí · Ký hiệu · Tên gọi · S.lg · Chú thích"); tiêu đề có thể nằm trong block mẫu (đọc chữ ảo);
+  dòng chạy lên hoặc xuống; hai bảng đặt cạnh nhau được tách ⇒ `bom[]` kèm `locator` từng ô.
+- **Kích thước:** nhân **DIMLFAC** (tờ vẽ ×2 dùng 0,5); chữ ghi đè so với nét đo ⇒ AGREE · WITHIN_TOL (trong ± ghi rõ)
+  · SCALED_VIEW (hình chi tiết tỉ lệ khác, ±2 %) · BREAK-VIEW · **TEXT-OVERRIDE** (sửa số không sửa nét ⇒ conflict).
+  Tiền tố số lượng ("4 lỗ Ø12", "4-Ø14") bị bỏ; dung sai chung (IT14/2) KHÔNG áp ở tầng này — thuộc G2b.
+- Kết quả: mã 42/42, bảng kê 6/6 tờ có bảng, vật liệu 31/31 tờ có vật liệu. Trên bộ GIÁ TRƯỢT, bản cũ đọc
+  "Ø28h7" thành 7 và bỏ qua DIMLFAC (334 thay 167) — 6/7 tờ đổi giá trị, đều là sửa đúng.
+
 ### Step 3: PDF Cross-Read (Offload)
 On the vector PDF: `get_text("dict")` for positioned text (title block, notes, dim labels with bbox), `get_drawings()` for vector linework, pdfplumber `find_tables()` for BOM / revision tables. If `OCR-REQUIRED` (raster) → `get_textpage_ocr()` and mark every value `LOW`. Detect garbled text (runs of `0xFFFD`) → flag font/`ToUnicode` loss, mark `LOW`.
 
