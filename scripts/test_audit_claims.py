@@ -199,3 +199,67 @@ def test_release_requires_signer_and_hashes_claims(tmp_path):
         A.release(rec, "  ", "")
     r = A.release(rec, "Kỹ sư A", "ok")
     assert r["status"] == "RELEASED" and len(r["claims_sha256"]) == 64 and r["signer"] == "Kỹ sư A"
+
+
+# ── G2a cross-sheet rules (synthetic set) ──
+
+def sheet(idx, code, name, material=None, bom=(), texts=(), fname=None):
+    tb = {"found": True, "code": {"value": code}, "name": {"value": name} if name else None,
+          "material": {"value": material} if material else None}
+    ex = {"meta": {"file_index": idx, "code_in_dxf": code, "name": name, "material": material, "title_block": tb},
+          "bom": [dict(r) for r in bom], "raw_text": [{"text": t} for t in texts], "dimensions": [], "holes": [],
+          "conflicts": [], "missing": []}
+    return (fname or f"{idx}_x.cad_extract.json", ex)
+
+
+def rules(claims, rule):
+    return [c for c in claims if c["rule_id"] == rule]
+
+
+def test_g2a_bom_code_and_name():
+    s = [sheet("1", "99.TS-01.05.00 BL", "CỤM A", bom=[
+            {"code": "99.TS-01.05.01", "name": "Thanh treo 1", "qty": "02"},
+            {"code": "99.TS-01.05.02", "name": "Thanh treo 3", "qty": "01"},      # wrong code: sheet 3 is "Bia 10"
+            {"code": "99.TS-01.05.09", "name": "Không có tờ", "qty": "01"},
+            {"code": "Bu lông M8", "name": None, "qty": "16"},                   # standard part spilled into code col
+            {"code": "99.TS-01.05.00", "name": "Cụm A", "qty": "01"}]),          # assembly listed without ' BL'
+         sheet("2", "99.TS-01.05.01", "THANH TREO 1"), sheet("3", "99.TS-01.05.02", "BIA 10")]
+    c = A.set_check(s)
+    assert [x["observed"] for x in rules(c, "bom_name_matches_sheet")] == ["Thanh treo 3"]
+    assert [x["observed"] for x in rules(c, "bom_code_matches_sheet")] == ["99.TS-01.05.09"]
+
+
+def test_g2a_material_same_with_standard_is_consistent():
+    s = [sheet("1", "99.TS-01.05.00 BL", "CỤM A", bom=[
+            {"code": "99.TS-01.05.01", "name": "Thanh 1", "material": "Thép SS400"},
+            {"code": "99.TS-01.05.02", "name": "Thanh 2", "material": "Thép Hợp kim SS400"}]),
+         sheet("2", "99.TS-01.05.01", "THANH 1", "THÉP SS400 JIS G3101"),
+         sheet("3", "99.TS-01.05.02", "THANH 2", "THÉP SS400 JIS G3101")]
+    assert [x["observed"] for x in rules(A.set_check(s), "material_consistent")] == ["Thép Hợp kim SS400"]
+
+
+def test_g2a_title_vs_yckt_material_and_quantity():
+    s = [sheet("1", "99.TS-01.00.00", "BỐ TRÍ", bom=[{"code": "99.TS-01.08.00", "name": "Thanh chống", "qty": "02"},
+                                                    {"code": "99.TS-01.09.00", "name": "Mã cạnh", "qty": "08"}]),
+         sheet("2", "99.TS-01.08.00", "THANH CHỐNG", "THÉP AH36",
+               texts=["Yêu cầu kỹ thuật: - Vật liệu: Thép tấm s8. - Số lượng: 12 chiếc."]),
+         sheet("3", "99.TS-01.09.00", "MÃ CẠNH", "THÉP SS400", texts=["- Số lượng: 08 chiếc."])]
+    c = A.set_check(s)
+    assert [x["part_id"] for x in rules(c, "qty_matches_parent")] == ["2"]
+    assert [x["part_id"] for x in rules(c, "material_consistent")] == ["2"]
+
+
+def test_g2a_code_case_mixed_set_flags_all_convention_flags_offenders():
+    s = [sheet("1", "99.ts-01.01.00", "A"), sheet("2", "99.ts-01.02.00", "B"), sheet("3", "99.TS-01.03.00", "C")]
+    assert len(rules(A.set_check(s), "part_code_format")) == 3
+    assert [x["part_id"] for x in rules(A.set_check(s, "upper"), "part_code_format")] == ["1", "2"]
+    uni = [sheet("1", "99.TS-01.01.00", "A"), sheet("2", "99.TS-01.02.00", "B")]
+    assert rules(A.set_check(uni), "part_code_format") == []
+
+
+def test_g2a_continuation_sheets_are_not_duplicates():
+    s = [sheet("7", "99.TS-01.01.00", "THÂN PHAO", fname="07_x.cad_extract.json"),
+         sheet("8", "99.TS-01.01.00", None, fname="08_THAN_to02-03.cad_extract.json"),
+         sheet("10", "99.TS-01.02.00", "DẦM"), sheet("11", "99.TS-01.02.00", "DẦM CUỐI")]
+    dup = rules(A.set_check(s), "part_code_unique")
+    assert sorted(x["part_id"] for x in dup) == ["10", "11"]

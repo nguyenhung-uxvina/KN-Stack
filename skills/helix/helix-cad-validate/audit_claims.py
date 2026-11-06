@@ -97,22 +97,150 @@ def from_extract(ex, part, src):
     return out
 
 
-def set_check(extracts):
-    """extracts: list of (path, extract). Duplicate part codes across different sheets -> NEEDS_CONTEXT."""
-    seen = {}
+def _key(code):
+    return re.sub(r"\s+", " ", (code or "").strip()).upper()
+
+
+def _nname(s):
+    """Name for comparison: case-folded, punctuation and spacing collapsed."""
+    return re.sub(r"[\s\-–,.;:()]+", " ", (s or "").casefold()).strip()
+
+
+def _nmat(s):
+    return re.sub(r"\s+", " ", (s or "").casefold().replace("{", "").replace("}", "")).strip(" .")
+
+
+CONT_RE = re.compile(r"(?i)t[oờ]\s*0?\d+\s*-\s*0?\d+")      # continuation sheet marker in a file name ("tờ 02-03")
+QTY_RE = re.compile(r"(?i)số\s*lượng\s*:\s*(\d+)")
+YCKT_MAT_RE = re.compile(r"(?i)vật\s*liệu\s*:\s*([^.;\n]+)")
+CODE_LIKE = re.compile(r"(?i)\b\d{1,3}\.[a-z]{1,4}-?\d{1,3}(?:\.\d{2}){1,3}(?:\s*b[lk])?\b")
+BL_SUFFIX = re.compile(r"(?i)\s*\bB[LK]\s*$")
+
+
+def _sheet_of(path, ex):
+    return str(ex.get("meta", {}).get("file_index") or os.path.basename(path))
+
+
+def _tb(ex, field):
+    """Title-block value (G1) when present — the fallback heuristics of older ingest are not used for G2a."""
+    v = ((ex.get("meta", {}).get("title_block") or {}).get(field) or {}).get("value")
+    return v if v else None
+
+
+def _same_material(a, b):
+    """Same material when one description's words are contained in the other's (measured: 'Thép SS400' vs
+    'THÉP SS400 JIS G3101' is the same steel written with its standard)."""
+    ta, tb = set(_nmat(a).split()), set(_nmat(b).split())
+    return ta <= tb or tb <= ta
+
+
+def _sheet_texts(ex):
+    return " \n ".join(r.get("text", "") for r in ex.get("raw_text", []))
+
+
+def set_check(extracts, code_case=None):
+    """Cross-sheet claims for one drawing set. extracts: list of (path, extract).
+    part_code_unique   same code on two different parts (continuation sheets excluded)         -> NEEDS_CONTEXT
+    part_code_format   code written differently from the set's dominant form (case, spacing)    -> CONTESTED   (G2a)
+    bom_code_matches_sheet  parts-list code with no sheet in the set                            -> NEEDS_CONTEXT (G2a)
+    bom_name_matches_sheet  parts-list row name != title-block name of the sheet with that code -> CONTESTED   (G2a)
+    material_consistent     title-block material != YCKT "Vật liệu:" on the same sheet, or
+                            parts-list material != material of the referenced sheet             -> CONTESTED   (G2a)
+    qty_matches_parent      "Số lượng: N" on a sheet not found among the parents' list quantities -> CONTESTED  (G2a)
+    """
+    tool, out = "audit_claims/G2a", []
+    sheets = {}
     for path, ex in extracts:
         m = ex.get("meta", {})
         code = m.get("code_in_dxf") or m.get("part_id")
-        if code:
-            seen.setdefault(code, []).append((m.get("file_index") or os.path.basename(path), path))
-    out = []
-    for code, sheets in sorted(seen.items()):
-        if len({s for s, _ in sheets}) > 1:
-            names = ", ".join(s for s, _ in sheets)
-            for sheet, path in sheets:
-                out.append(mk("helix-cad-ingest", str(sheet), "part_code_unique", "NEEDS_CONTEXT",
-                              f"Mã {code} xuất hiện trên {len(sheets)} tờ: {names}.", f"meta.code_in_dxf={code}",
-                              observed=code, expected="mã duy nhất trong bộ", source=path))
+        has_tb = bool((m.get("title_block") or {}).get("found"))
+        sheets[_sheet_of(path, ex)] = {"path": path, "ex": ex, "code": code, "key": _key(code),
+                                       "name": _tb(ex, "name") if has_tb else m.get("name"),
+                                       "material": _tb(ex, "material") if has_tb else m.get("material")}
+    by_key, by_base = {}, {}
+    for s, d in sheets.items():
+        if d["key"]:
+            by_key.setdefault(d["key"], []).append(s)
+            by_base.setdefault(BL_SUFFIX.sub("", d["key"]), []).append(s)
+
+    def lookup(rk):
+        """Sheet(s) for a parts-list code; an assembly code may be drawn as '<code> BL' (bản vẽ lắp)."""
+        return by_key.get(rk) or by_base.get(BL_SUFFIX.sub("", rk))
+
+    # 1. duplicates (continuation sheets of one part are not duplicates)
+    for k, ss in sorted(by_key.items()):
+        if len(ss) < 2:
+            continue
+        names = {_nname(sheets[s]["name"]) for s in ss if sheets[s]["name"]}
+        cont = len(names) <= 1 and any(CONT_RE.search(os.path.basename(sheets[s]["path"])) for s in ss)
+        if cont:
+            continue
+        for s in ss:
+            out.append(mk(tool, s, "part_code_unique", "NEEDS_CONTEXT",
+                          f"Mã {k} xuất hiện trên {len(ss)} tờ: {', '.join(ss)}.", f"meta.code_in_dxf={k}",
+                          observed=sheets[s]["code"], expected="mã duy nhất trong bộ", source=sheets[s]["path"]))
+
+    # 2. code format. With a declared convention (project config, e.g. code_case="upper") flag what breaks it.
+    #    Without one, a MIXED set is inconsistent as a whole: flag every sheet — measured: the majority form
+    #    can be the wrong one (37/42 sheets lower-case), so "dominant form = right" flagged the correct sheets.
+    def shape(c):
+        return "upper" if c == c.upper() else ("lower" if c == c.lower() else "mixed")
+    shapes = {s: shape(d["code"].strip()) for s, d in sheets.items() if d["code"]}
+    counts = {k: list(shapes.values()).count(k) for k in set(shapes.values())}
+    for s, sh in shapes.items():
+        if code_case:
+            bad, why = sh != code_case, f"quy ước dự án: {code_case}"
+        else:
+            bad, why = len(counts) > 1, "bộ dùng lẫn " + ", ".join(f"{k} {v} tờ" for k, v in sorted(counts.items()))
+        if bad:
+            out.append(mk(tool, s, "part_code_format", "CONTESTED",
+                          f"Mã khung tên '{sheets[s]['code'].strip()}' ({sh}) — {why}.", "meta.title_block.code",
+                          observed=sheets[s]["code"].strip(), expected=code_case or "một dạng thống nhất",
+                          source=sheets[s]["path"]))
+
+    # 3. parts-list rows vs referenced sheets
+    parent_qty = {}
+    for s, d in sheets.items():
+        for i, r in enumerate(d["ex"].get("bom", [])):
+            rk = _key(r.get("code"))
+            if not rk or not CODE_LIKE.fullmatch(rk):      # standard / bought-in rows carry no part code
+                continue
+            if r.get("qty"):
+                parent_qty.setdefault(BL_SUFFIX.sub("", rk), set()).add(str(r["qty"]).lstrip("0") or "0")
+            loc = f"bom[{i}]"
+            hit = lookup(rk)
+            if not hit:
+                out.append(mk(tool, s, "bom_code_matches_sheet", "NEEDS_CONTEXT",
+                              f"Bảng kê ghi mã {rk} («{r.get('name')}») nhưng bộ không có tờ mang mã này.", loc,
+                              observed=rk, expected="mã có tờ trong bộ", source=d["path"]))
+                continue
+            child = sheets[hit[0]]
+            if r.get("name") and child["name"] and _nname(r["name"]) != _nname(child["name"]):
+                out.append(mk(tool, s, "bom_name_matches_sheet", "CONTESTED",
+                              f"Bảng kê: {rk} là «{r['name']}», nhưng tờ {hit[0]} mang mã này tên «{child['name']}».",
+                              loc, observed=r["name"], expected=child["name"], source=d["path"]))
+            if r.get("material") and child["material"] and not _same_material(r["material"], child["material"]):
+                out.append(mk(tool, s, "material_consistent", "CONTESTED",
+                              f"Bảng kê: vật liệu của {rk} là «{r['material']}», khung tên tờ {hit[0]} ghi «{child['material']}».",
+                              loc, observed=r["material"], expected=child["material"], source=d["path"]))
+
+    # 4. per sheet: title-block material vs YCKT; stated quantity vs parents (YCKT is often one MTEXT, so read
+    #    all sheet text — measured: process_notes kept only lines starting with '-')
+    for s, d in sheets.items():
+        notes = _sheet_texts(d["ex"])
+        mm = YCKT_MAT_RE.search(notes)
+        if mm and d["material"] and not _same_material(mm.group(1), d["material"]):
+            out.append(mk(tool, s, "material_consistent", "CONTESTED",
+                          f"Khung tên ghi vật liệu «{d['material']}», YCKT ghi «{mm.group(1).strip()}».",
+                          "meta.material vs process_notes", observed=mm.group(1).strip(), expected=d["material"],
+                          source=d["path"]))
+        mq = QTY_RE.search(notes)
+        pk = BL_SUFFIX.sub("", d["key"]) if d["key"] else None
+        if mq and pk in parent_qty and (mq.group(1).lstrip("0") or "0") not in parent_qty[pk]:
+            out.append(mk(tool, s, "qty_matches_parent", "CONTESTED",
+                          f"YCKT ghi số lượng {mq.group(1)}, bảng kê cụm cha ghi {sorted(parent_qty[pk])}.",
+                          "raw_text 'Số lượng:'", observed=mq.group(1), expected=sorted(parent_qty[pk]),
+                          source=d["path"]))
     return out
 
 
@@ -285,6 +413,7 @@ def main(argv=None):
     c.add_argument("--out", required=True)
     s = sub.add_parser("set-check")
     s.add_argument("--extracts", nargs="+", required=True)
+    s.add_argument("--code-case", choices=("upper", "lower"), help="project convention for part codes (optional)")
     s.add_argument("--out", required=True)
     r = sub.add_parser("check-report")
     r.add_argument("--claims", required=True)
@@ -305,14 +434,15 @@ def main(argv=None):
             print(f"=== audit_claims: {rec['machine_verdict']} === ({rec['n_blocking']} chặn / {rec['n_claims']} claim)")
             return 0 if rec["machine_verdict"] == "READY_FOR_HUMAN_RELEASE" else 2
         if a.cmd == "set-check":
-            claims = set_check([(p, _load(p)) for p in a.extracts])
+            claims = set_check([(p, _load(p)) for p in a.extracts], a.code_case)
             rec = {"tool": "audit_claims", "version": VERSION, "part_id": "SET", "profile": "set",
                    "machine_verdict": "BLOCKED" if claims else "READY_FOR_HUMAN_RELEASE",
                    "n_claims": len(claims), "n_blocking": len(claims),
-                   "by_status": {"NEEDS_CONTEXT": len(claims)} if claims else {}, "claims": claims}
+                   "by_status": {st: sum(c["status"] == st for c in claims) for st in STATES
+                                 if any(c["status"] == st for c in claims)}, "claims": claims}
             json.dump(rec, open(a.out + ".json", "w", encoding="utf-8"), ensure_ascii=False, indent=2)
             open(a.out + ".md", "w", encoding="utf-8").write(render_md(rec))
-            print(f"=== set-check: {len(claims)} claim NEEDS_CONTEXT ===")
+            print(f"=== set-check: {len(claims)} claim chặn ===")
             return 2 if claims else 0
         if a.cmd == "check-report":
             bad = check_report(_load(a.claims), open(a.report, encoding="utf-8").read())
