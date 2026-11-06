@@ -263,3 +263,22 @@ def test_g2a_continuation_sheets_are_not_duplicates():
          sheet("10", "99.TS-01.02.00", "DẦM"), sheet("11", "99.TS-01.02.00", "DẦM CUỐI")]
     dup = rules(A.set_check(s), "part_code_unique")
     assert sorted(x["part_id"] for x in dup) == ["10", "11"]
+
+
+def test_g2a_group_code_row_not_compared_to_first_sheet():
+    """Measured false claim: a row "14.00; 14.01; 14.03 — Cụm thiết bị" was compared with sheet 14.00's name."""
+    s = [sheet("1", "99.TS-01.00.00", "BỐ TRÍ", bom=[
+            {"code": "99.TS-01.14.00", "code_cell": "99.TS-01.14.00; 14.01; 14.03", "code_group": True,
+             "name": "Cụm thiết bị trên bia", "qty": "03"}]),
+         sheet("39", "99.TS-01.14.00", "MẠCH CẢM BIẾN")]
+    assert rules(A.set_check(s), "bom_name_matches_sheet") == []
+
+
+def test_g2a_quantity_compared_with_sum_over_parents():
+    """Measured false claim: a part used once in each of two assemblies, YCKT says 02."""
+    s = [sheet("13", "99.TS-01.05.00 BL", "CỤM 1", bom=[{"code": "99.TS-01.05.02", "name": "Thanh", "qty": "01"}]),
+         sheet("22", "99.TS-01.06.00 BL", "CỤM 2", bom=[{"code": "99.TS-01.05.02", "name": "Thanh", "qty": "01"}]),
+         sheet("15", "99.TS-01.05.02", "THANH", texts=["- Số lượng: 02 chiếc."]),
+         sheet("29", "99.TS-01.07.01", "GIỮ SỐ", texts=["- Số lượng: 02 chiếc."]),
+         sheet("28", "99.TS-01.07.00 BL", "CỤM 3", bom=[{"code": "99.TS-01.07.01", "name": "Giữ số", "qty": "01"}])]
+    assert [x["part_id"] for x in rules(A.set_check(s), "qty_matches_parent")] == ["29"]

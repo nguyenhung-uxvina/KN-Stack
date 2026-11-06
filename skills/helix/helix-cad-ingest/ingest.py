@@ -245,7 +245,10 @@ def extract(path, classification):
             c = row["cells"]
             code_cell = (c.get("code") or "").strip()
             m_code = DT.CODE_RE.search(code_cell)
+            # a cell may reference a group: "19.X-01.14.00; 14.01; 14.03" — keep the full cell, not only the first code
+            group = len(re.findall(r"\d+\.\d{2}(?:\s*[;,]|$)", code_cell)) > 1 or ";" in code_cell
             bom.append({"table": ti, "tt": c.get("tt"), "code": m_code.group().strip() if m_code else (code_cell or None),
+                        "code_cell": code_cell or None, "code_group": group,
                         "name": c.get("name"), "qty": c.get("qty"), "material": c.get("material"), "note": c.get("note"),
                         "source": "BOM-TABLE", "source_tag": "T", "confidence": "MED", "locator": row["locators"]})
 

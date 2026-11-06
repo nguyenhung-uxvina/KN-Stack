@@ -199,20 +199,23 @@ def set_check(extracts, code_case=None):
                           source=sheets[s]["path"]))
 
     # 3. parts-list rows vs referenced sheets
-    parent_qty = {}
+    parent_qty = {}     # code -> list of quantities, one per parent row
     for s, d in sheets.items():
         for i, r in enumerate(d["ex"].get("bom", [])):
             rk = _key(r.get("code"))
             if not rk or not CODE_LIKE.fullmatch(rk):      # standard / bought-in rows carry no part code
                 continue
-            if r.get("qty"):
-                parent_qty.setdefault(BL_SUFFIX.sub("", rk), set()).add(str(r["qty"]).lstrip("0") or "0")
+            group = bool(r.get("code_group"))              # "14.00; 14.01; 14.03": the row names the group
+            if r.get("qty") and not group and str(r["qty"]).strip().isdigit():
+                parent_qty.setdefault(BL_SUFFIX.sub("", rk), []).append(int(r["qty"]))
             loc = f"bom[{i}]"
             hit = lookup(rk)
             if not hit:
                 out.append(mk(tool, s, "bom_code_matches_sheet", "NEEDS_CONTEXT",
                               f"Bảng kê ghi mã {rk} («{r.get('name')}») nhưng bộ không có tờ mang mã này.", loc,
                               observed=rk, expected="mã có tờ trong bộ", source=d["path"]))
+                continue
+            if group:   # measured false claim: the group's name was compared with the first code's sheet only
                 continue
             child = sheets[hit[0]]
             if r.get("name") and child["name"] and _nname(r["name"]) != _nname(child["name"]):
@@ -236,11 +239,12 @@ def set_check(extracts, code_case=None):
                           source=d["path"]))
         mq = QTY_RE.search(notes)
         pk = BL_SUFFIX.sub("", d["key"]) if d["key"] else None
-        if mq and pk in parent_qty and (mq.group(1).lstrip("0") or "0") not in parent_qty[pk]:
+        # consistent when the sheet's total equals the SUM over parents (a part used in two assemblies, measured:
+        # 1 + 1 = YCKT 2) or equals one parent row
+        if mq and pk in parent_qty and int(mq.group(1)) not in set(parent_qty[pk]) | {sum(parent_qty[pk])}:
             out.append(mk(tool, s, "qty_matches_parent", "CONTESTED",
-                          f"YCKT ghi số lượng {mq.group(1)}, bảng kê cụm cha ghi {sorted(parent_qty[pk])}.",
-                          "raw_text 'Số lượng:'", observed=mq.group(1), expected=sorted(parent_qty[pk]),
-                          source=d["path"]))
+                          f"YCKT ghi số lượng {mq.group(1)}, bảng kê cụm cha ghi {parent_qty[pk]} (tổng {sum(parent_qty[pk])}).",
+                          "raw_text 'Số lượng:'", observed=mq.group(1), expected=parent_qty[pk], source=d["path"]))
     return out
 
 
