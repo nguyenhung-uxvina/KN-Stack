@@ -32,10 +32,14 @@ PRODUCT_MARKERS = {"GIÁ TRƯỢT UUV": ["TRƯỢT", "TRŪȊT"]}
 MASS_RE    = re.compile(r"(?:KH[ỐO]I\s*L[ƯU][ỢO]NG|MASS|WEIGHT)\s*[:=]?\s*(\d+(?:[.,]\d+)?)\s*(?:kg)?", re.I)
 
 
+ORG_MARKERS = {}   # {org name: [markers]} — project config only; no organisation names in this public code
+
+
 def load_config(path):
-    """Project config (JSON): {"materials": [...], "part_id_regex": "...", "product_markers": {name: [markers]}}.
-    Defaults reproduce the GIÁ TRƯỢT set exactly, so existing callers see no change."""
-    global MATERIALS, PART_ID_RE, PRODUCT_MARKERS
+    """Project config (JSON): {"materials": [...], "part_id_regex": "...", "product_markers": {name: [markers]},
+    "org_markers": {org name: [markers]}}. Defaults reproduce the GIÁ TRƯỢT set, except `org`, which is now
+    filled only from `org_markers` (organisation names do not belong in the shared code)."""
+    global MATERIALS, PART_ID_RE, PRODUCT_MARKERS, ORG_MARKERS
     if not path:
         return
     with io.open(path, encoding="utf-8") as f:
@@ -44,6 +48,7 @@ def load_config(path):
     if cfg.get("part_id_regex"):
         PART_ID_RE = re.compile(cfg["part_id_regex"])
     PRODUCT_MARKERS = cfg.get("product_markers", PRODUCT_MARKERS)
+    ORG_MARKERS = cfg.get("org_markers", ORG_MARKERS)
 
 
 SCALE_RE   = re.compile(r"\b\d+\s*:\s*\d+\b")
@@ -253,7 +258,7 @@ def extract(path, classification):
             "product": next((p for p, mk in PRODUCT_MARKERS.items() if any(k in joined for k in mk)), None),
             "material": material, "mass_kg": mass_kg, "mass_source_tag": "T" if mass_kg else None,
             "scale": scale,
-            "org": "Viện Kỹ thuật Hải quân" if "HẢI QUÂN" in joined.upper() else None,
+            "org": next((o for o, mk in ORG_MARKERS.items() if any(k.upper() in joined.upper() for k in mk)), None),
             "date": None, "classification": classification,
             "dxf_version": f"{doc.dxfversion} ({doc.acad_release})", "units": units,
             "source_files": {"dxf": os.path.basename(path), "pdf": None},
