@@ -30,16 +30,31 @@ MAT_RE = re.compile(r"(?i)\b(thép|ss400|ah36|c45|ct3|inox|nhôm|al\s?\d{4}|gang
                     r"composite|frp|sợi thủy tinh|sợi thuỷ tinh)\b")
 
 
+_UESC = re.compile(r"\\U\+([0-9A-Fa-f]{4})")
+
+
+def decode_uescapes(s):
+    """DXF <= R2004 stores non-ASCII as \\U+XXXX (measured on a second 47-sheet set: 'THANH KHUNG \\U+0110\\U+1EE8NG'
+    — without decoding, no title-block label matched and the reader found 0/47 codes)."""
+    return _UESC.sub(lambda m: chr(int(m.group(1), 16)), s or "")
+
+
+def entity_text(e):
+    """Plain, decoded text of a TEXT / MTEXT / ATTRIB / ATTDEF entity."""
+    raw = e.plain_text() if e.dxftype() == "MTEXT" else e.dxf.get("text", "")
+    return decode_uescapes(raw)
+
+
 def _norm(s):
-    return re.sub(r"\s+", " ", (s or "").strip().lower())
+    return re.sub(r"\s+", " ", decode_uescapes(s).strip().lower())
 
 
 def _text_rec(e, handle):
     t = e.dxftype()
     if t == "TEXT":
-        s, h = e.dxf.text, e.dxf.get("height", 0.0)
+        s, h = entity_text(e), e.dxf.get("height", 0.0)
     elif t == "MTEXT":
-        s, h = e.plain_text(), e.dxf.get("char_height", 0.0)
+        s, h = entity_text(e), e.dxf.get("char_height", 0.0)
     else:
         return None
     s = (s or "").replace("\n", " ").strip()
@@ -58,7 +73,7 @@ def _is_form_block(doc, name):
     n = 0
     for e in blk:
         if e.dxftype() in ("TEXT", "MTEXT"):
-            s = _norm(e.plain_text() if e.dxftype() == "MTEXT" else e.dxf.get("text", ""))
+            s = _norm(entity_text(e))
             n += any(s.startswith(lb) for lb in TITLE_LABELS) or bool(_header_role(s))
     return n >= 3
 
@@ -91,7 +106,7 @@ def _block_labels(doc, name):
     n = 0
     for e in blk:
         if e.dxftype() in ("TEXT", "MTEXT", "ATTDEF"):
-            s = _norm(e.plain_text() if e.dxftype() == "MTEXT" else e.dxf.get("text", ""))
+            s = _norm(entity_text(e))
             n += any(s.startswith(lb) for lb in TITLE_LABELS)
     return n
 

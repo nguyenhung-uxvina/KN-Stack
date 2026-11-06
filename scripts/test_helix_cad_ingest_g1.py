@@ -173,3 +173,23 @@ def test_classify_override_unit():
     assert DT.classify_override(600, 607.4, 20) == "WITHIN_TOL"
     assert DT.classify_override(23, 56.3) == "TEXT_OVERRIDE"   # 2.448× is not a drafting scale
     assert DT.classify_override(150, 150.0) == "AGREE"
+
+
+def test_unicode_escaped_title_block_and_values():
+    r"""DXF <= R2004 writes 'Tỷ lệ' as 'T\U+1EF7 l\U+1EC7'. Measured on a second set: 0/47 codes until decoded."""
+    def esc(s):
+        return "".join(c if ord(c) < 128 else r"\U+%04X" % ord(c) for c in s)
+    doc = ezdxf.new("R2013")
+    blk = doc.blocks.new("khung ten")
+    blk.add_line((0, 0), (180, 0))      # frame lines give the block its extents
+    blk.add_line((0, 0), (0, 56))
+    for i, lb in enumerate(("Tỷ lệ", "Khối lượng", "Thiết kế", "Kiểm tra")):
+        blk.add_mtext(esc(lb), dxfattribs={"insert": (5 + 30 * i, 50), "char_height": 2.5})
+    msp = doc.modelspace()
+    msp.add_blockref("khung ten", (200, 0))
+    msp.add_text("99.TS-01.05.01", dxfattribs={"insert": (330, 40), "height": 3.5})
+    msp.add_text(esc("THANH KHUNG ĐỨNG 1"), dxfattribs={"insert": (260, 30), "height": 5})
+    msp.add_text(esc("THÉP KẾT CẤU"), dxfattribs={"insert": (260, 8), "height": 3})
+    tb = DT.read_title_block(doc)
+    assert tb["found"] and tb["name"]["value"] == "THANH KHUNG ĐỨNG 1" and tb["material"]["value"] == "THÉP KẾT CẤU"
+    assert DT.decode_uescapes(r"THANH KHUNG \U+0110\U+1EE8NG") == "THANH KHUNG ĐỨNG"

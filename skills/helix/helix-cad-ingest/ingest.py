@@ -102,9 +102,9 @@ def extract(path, classification):
     raw_text = []
     for e in msp:
         if e.dxftype() == "TEXT":
-            t = e.dxf.text.strip()
+            t = DT.decode_uescapes(e.dxf.text).strip()
         elif e.dxftype() == "MTEXT":
-            t = e.plain_text().strip()
+            t = DT.decode_uescapes(e.plain_text()).strip()
         else:
             continue
         if t:
@@ -177,7 +177,7 @@ def extract(path, classification):
             meas = round(meas if angular else meas * lf, 3)
         except Exception:
             meas = None
-        ovr = clean_inline(e.dxf.get("text", ""))
+        ovr = clean_inline(DT.decode_uescapes(e.dxf.get("text", "")))
         loc = {"handle": e.dxf.handle, "dimlfac": lf}
         if ovr in ("", "<>") or "<>" in ovr:
             value, tol, conf, note = meas, "IT14/2", "HIGH", ""
