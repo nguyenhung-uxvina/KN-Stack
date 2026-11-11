@@ -98,6 +98,50 @@ def test_gates_skip_is_needs_evidence_info_is_advisory():
     assert [x["status"] for x in A.from_gates(rep, "P", "g")] == ["NEEDS_EVIDENCE", "ADVISORY", "FAIL"]
 
 
+# ── 2D master vs 3D witness (helix-cad-crosscheck) ──
+
+XC_PASS = {"version": "1.0", "verdict": "PASS",
+           "checks": [{"rule_id": "X2_visible", "status": "PASS", "locator": "top"},
+                      {"rule_id": "X2_modelled_not_drawn", "status": "INFO", "attribution": "simplified",
+                       "locator": "top:m3"}]}
+MUT_OK = {"baseline_verdict": "PASS", "total": 4, "caught": 4, "attribution_right": 4, "mutants": []}
+
+
+def test_crosscheck_mapping_keeps_attribution():
+    rep = {"checks": [{"rule_id": "X2_drawn_not_modelled", "status": "FAIL", "attribution": "model", "locator": "top:8C"},
+                      {"rule_id": "X2_drawn_not_modelled", "status": "CONTESTED", "attribution": "drawing",
+                       "locator": "side:A0"},
+                      {"rule_id": "X2_modelled_not_drawn", "status": "INFO", "attribution": "simplified"}]}
+    c = A.from_crosscheck(rep, "P", "x")
+    assert [x["status"] for x in c] == ["FAIL", "CONTESTED", "ADVISORY"]
+    assert "quy cho: drawing" in c[1]["message"] and c[1]["locator"].startswith("side:A0")
+    assert len({x["claim_id"] for x in c}) == 3
+
+
+def test_mutate_mapping():
+    assert statuses(A.from_mutate(MUT_OK, "P", "m"), "L6_positive_control") == ["PASS"]
+    wrong = dict(MUT_OK, attribution_right=3)
+    assert statuses(A.from_mutate(wrong, "P", "m"), "L6_positive_control") == ["FAIL"]
+    esc = dict(MUT_OK, caught=3, mutants=[{"name": "D1_move_circle_y", "caught": False}])
+    assert statuses(A.from_mutate(esc, "P", "m"), "L6_escaped") == ["FAIL"]
+    assert statuses(A.from_mutate({"baseline_verdict": "FAIL"}, "P", "m"), "L6_positive_control") == ["NEEDS_EVIDENCE"]
+
+
+def test_reconstruct_profile_needs_positive_control(tmp_path):
+    base = {"gates": w(tmp_path, "g.json", GATES_PASS), "crosscheck": w(tmp_path, "x.json", XC_PASS)}
+    rec = A.collect("P", base, "reconstruct")
+    assert rec["machine_verdict"] == "BLOCKED" and statuses(rec["claims"], "required_input_mutate") == ["ABSTAINED"]
+    rec = A.collect("P", dict(base, mutate=w(tmp_path, "m.json", MUT_OK)), "reconstruct")
+    assert rec["machine_verdict"] == "READY_FOR_HUMAN_RELEASE"
+
+
+def test_cli_accepts_crosscheck_inputs(tmp_path):
+    out = str(tmp_path / "o")
+    assert A.main(["collect", "--part", "P", "--gates", w(tmp_path, "g.json", GATES_PASS),
+                   "--crosscheck", w(tmp_path, "x.json", XC_PASS), "--mutate", w(tmp_path, "m.json", MUT_OK),
+                   "--profile", "reconstruct", "--out", out]) == 0
+
+
 # ── LLM ──
 
 def test_judge_mapping():

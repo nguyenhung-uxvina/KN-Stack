@@ -12,13 +12,16 @@ Inputs (any subset):  helix-cad-ingest  <part>.cad_extract.json   (Perception)
                       helix-cad-validate validate report .json    (Cognition, data rules)
                       helix-cad-gates    cad_gates_report .json   (Cognition, geometry)
                       helix-cad-judge    judge_verdict .json      (LLM, advisory / needs-human only)
+                      helix-cad-crosscheck crosscheck .json       (2D master vs 3D witness, with attribution)
+                      helix-cad-crosscheck mutate .json           (L6 positive control of the crosscheck)
 
 States: PASS · FAIL · ADVISORY (visible, never blocks) · NEEDS_EVIDENCE · NEEDS_RECOGNITION_REVIEW ·
         NEEDS_RULE_REVIEW · NEEDS_CONTEXT · CONTESTED · NEEDS_HUMAN_RELEASE · ABSTAINED.
 Every state except PASS and ADVISORY blocks.
 
 Subcommands
-  collect      --part ID [--extract F] [--validate F] [--gates F] [--judge F] [--profile full|model|drawing]
+  collect      --part ID [--extract F] [--validate F] [--gates F] [--judge F] [--crosscheck F] [--mutate F]
+               [--profile full|model|drawing|reconstruct]
                --out PREFIX          -> PREFIX.json + PREFIX.md ; exit 0 READY_FOR_HUMAN_RELEASE · 2 BLOCKED · 3 IO
   set-check    --extracts F [F ...] --out PREFIX   -> cross-sheet claims (duplicate part codes)
   check-report --claims F --report F.md            -> exit 2 if a finding line cites no existing claim_id
@@ -39,7 +42,11 @@ STATES = ("PASS", "FAIL", "ADVISORY", "NEEDS_EVIDENCE", "NEEDS_RECOGNITION_REVIE
           "NEEDS_CONTEXT", "CONTESTED", "NEEDS_HUMAN_RELEASE", "ABSTAINED")
 NON_BLOCKING = {"PASS", "ADVISORY"}
 PROFILES = {"full": ("extract", "validate", "gates", "judge"), "model": ("gates", "judge"),
-            "drawing": ("extract", "validate")}
+            "drawing": ("extract", "validate"),
+            # 3D built FROM a 2D drawing: the drawing is master, the model is checked against it, and a
+            # crosscheck "0 lỗi" counts only with its positive control (planted faults caught + attributed right)
+            "reconstruct": ("gates", "crosscheck", "mutate")}
+KINDS = ("extract", "validate", "gates", "judge", "crosscheck", "mutate")
 ID_RE = re.compile(r"\[(C-[0-9a-f]{10})\]")
 
 
@@ -284,6 +291,43 @@ def from_gates(rep, part, src):
     return out
 
 
+# ── 2D master vs 3D witness: helix-cad-crosscheck ──────────────────────────────────────────────────────
+
+def from_crosscheck(rep, part, src):
+    """CONTESTED = the drawing contradicts itself (another view arbitrates) -> a 2D fix proposal for a human;
+    FAIL = the model does not follow the drawing. Both block."""
+    out, tool, ver = [], "helix-cad-crosscheck", str(rep.get("version", ""))
+    for i, c in enumerate(rep.get("checks", [])):
+        st = {"PASS": "PASS", "FAIL": "FAIL", "CONTESTED": "CONTESTED", "INFO": "ADVISORY"}.get(c.get("status"),
+                                                                                              "ADVISORY")
+        att = c.get("attribution", "")
+        msg = c.get("message", "") + (f" [quy cho: {att}]" if att else "")
+        loc = f'{c.get("locator") or ""} checks[{i}]'.strip()
+        out.append(mk(tool, part, c.get("rule_id", "?"), st, msg, loc, c.get("observed", ""),
+                      c.get("expected", ""), c.get("severity", "") or att, src, ver))
+    return out
+
+
+def from_mutate(r, part, src):
+    tool = "helix-cad-crosscheck/mutate"
+    if r.get("baseline_verdict") not in ("PASS", "PASS_GEOMETRY"):
+        return [mk(tool, part, "L6_positive_control", "NEEDS_EVIDENCE",
+                   "Đối chứng dương chưa chạy được: bộ gốc chưa PASS.", "baseline", r.get("baseline_verdict"), "PASS",
+                   source=src)]
+    tot, caught, right = r.get("total", 0), r.get("caught", 0), r.get("attribution_right", 0)
+    if not tot:
+        return [mk(tool, part, "L6_positive_control", "NEEDS_EVIDENCE", "Không cấy được lỗi nào.", "mutants",
+                   "0", "≥ 1", source=src)]
+    out = [mk(tool, part, "L6_positive_control", "PASS" if caught == tot and right == tot else "FAIL",
+              "Lỗi cấy bị bắt và quy đúng bên (bản vẽ/mô hình)", "mutants",
+              f"bắt {caught}/{tot}, quy đúng {right}/{tot}", f"{tot}/{tot}", source=src)]
+    for m in r.get("mutants", []):
+        if m.get("caught") is False:
+            out.append(mk(tool, part, "L6_escaped", "FAIL", f"Lỗi cấy {m['name']} lọt qua bộ kiểm",
+                          f"mutant {m['name']}", "không bắt", "bắt", source=src))
+    return out
+
+
 # ── LLM: judge (never PASS on its own authority beyond its signed questions; never blocks via extras) ────
 
 def from_judge(v, part, src):
@@ -309,8 +353,9 @@ def from_judge(v, part, src):
 
 def collect(part, inputs, profile):
     claims = []
-    conv = {"extract": from_extract, "validate": from_validate, "gates": from_gates, "judge": from_judge}
-    for kind in ("extract", "validate", "gates", "judge"):
+    conv = {"extract": from_extract, "validate": from_validate, "gates": from_gates, "judge": from_judge,
+            "crosscheck": from_crosscheck, "mutate": from_mutate}
+    for kind in KINDS:
         if inputs.get(kind):
             claims += conv[kind](_load(inputs[kind]), part, inputs[kind])
     for kind in PROFILES[profile]:
@@ -411,7 +456,7 @@ def main(argv=None):
     sub = ap.add_subparsers(dest="cmd", required=True)
     c = sub.add_parser("collect")
     c.add_argument("--part", required=True)
-    for k in ("extract", "validate", "gates", "judge"):
+    for k in KINDS:
         c.add_argument(f"--{k}")
     c.add_argument("--profile", choices=sorted(PROFILES), default="full")
     c.add_argument("--out", required=True)
@@ -432,7 +477,7 @@ def main(argv=None):
     a = ap.parse_args(argv)
     try:
         if a.cmd == "collect":
-            rec = collect(a.part, {k: getattr(a, k) for k in ("extract", "validate", "gates", "judge")}, a.profile)
+            rec = collect(a.part, {k: getattr(a, k) for k in KINDS}, a.profile)
             json.dump(rec, open(a.out + ".json", "w", encoding="utf-8"), ensure_ascii=False, indent=2)
             open(a.out + ".md", "w", encoding="utf-8").write(render_md(rec))
             print(f"=== audit_claims: {rec['machine_verdict']} === ({rec['n_blocking']} chặn / {rec['n_claims']} claim)")
