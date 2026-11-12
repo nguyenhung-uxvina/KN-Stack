@@ -1,0 +1,27 @@
+{
+  "skill": "helix-cad-crosscheck",
+  "version": "1.0",
+  "description": "Static assertions for helix-cad-crosscheck — 3D model checked back against the 2D drawing it was built from. Encodes CEO 2026-11-11 'drawing is master', the 6-layer research (L1/L2/L3/L5/L6), and the attribution bug found while building it: only a view that sees the direction of disagreement may blame the drawing.",
+  "mode": "static",
+  "test_input": "the AI built a STEP from our DXF plate drawing — check the model back against the drawing and propose drawing fixes if the drawing contradicts itself",
+  "total_required": 7,
+  "passing_score": 7,
+  "assertions": [
+    {"id": "XC-MASTER", "name": "drawing_is_master", "check": "states the 2D drawing is master and the model a witness",
+     "regex": "(bản vẽ|drawing)[^\\n]{0,20}(là GỐC|là gốc|is (the )?master)", "required": true},
+    {"id": "XC-DEFAULT-MODEL", "name": "default_blames_model", "check": "default attribution is the model; drawing only when another view sees the direction of disagreement",
+     "regex": "(mặc định|default)[^\\n]{0,40}(MÔ HÌNH|model)[^\\n]{0,200}(phương lệch|direction)", "required": true},
+    {"id": "XC-HLR", "name": "hlr_projection", "check": "re-projects the model with hidden-line removal and compares DXF entities per declared view",
+     "regex": "HLR[^\\n]{0,80}(DXF|chiếu song song)", "required": true},
+    {"id": "XC-REGISTRY", "name": "view_registry", "check": "views declared in a registry the engineer approves; machine never guesses view direction",
+     "regex": "(sổ hình chiếu|view_registry)[^\\n]{0,120}(duyệt|approve)|Đoán phương nhìn", "required": true},
+    {"id": "XC-L6", "name": "positive_control", "check": "mutate.py plants drawing and model faults and requires catch + correct single-side attribution",
+     "regex": "mutate\\.py[^\\n]{0,120}(đối chứng dương|positive control)", "required": true},
+    {"id": "XC-NO-AUTOFIX", "name": "never_edits_drawing", "check": "machine never edits the drawing; fixes are proposals for the CEO",
+     "regex": "(không bao giờ sửa bản vẽ|never edits? the drawing|máy không sửa bản vẽ)", "required": true},
+    {"id": "XC-CLAIMS", "name": "audit_claims_profile", "check": "results enter audit_claims with the reconstruct profile",
+     "regex": "--profile reconstruct", "required": true},
+    {"id": "XC-ISOLATION", "name": "model_mutants_isolated", "check": "model mutants built in an isolated child process",
+     "regex": "(tiến trình con|subprocess)[^\\n]{0,40}(cách ly|isolated)", "required": false}
+  ]
+}

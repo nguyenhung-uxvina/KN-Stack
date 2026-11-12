@@ -26,9 +26,9 @@ _spec.loader.exec_module(A)
 
 # which claim rules count as "detecting" a class (strict recall)
 CLASS_RULES = {
-    "C1": {"part_code_unique", "bom_code_matches_sheet", "bom_name_matches_sheet"},
-    "C2": {"part_code_unique", "title_block_code_untrusted", "part_code_format"},
-    "C3": {"material_present", "material_consistent", "material_known"},
+    "C1": {"bom_code_matches_sheet", "bom_name_matches_sheet"},
+    "C2": {"part_code_unique", "part_code_format"},
+    "C3": {"material_consistent", "material_known"},
     "C4": {"qty_matches_parent"},
     "C5": set(),
 }

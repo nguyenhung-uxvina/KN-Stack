@@ -98,6 +98,50 @@ def test_gates_skip_is_needs_evidence_info_is_advisory():
     assert [x["status"] for x in A.from_gates(rep, "P", "g")] == ["NEEDS_EVIDENCE", "ADVISORY", "FAIL"]
 
 
+# ── 2D master vs 3D witness (helix-cad-crosscheck) ──
+
+XC_PASS = {"version": "1.0", "verdict": "PASS",
+           "checks": [{"rule_id": "X2_visible", "status": "PASS", "locator": "top"},
+                      {"rule_id": "X2_modelled_not_drawn", "status": "INFO", "attribution": "simplified",
+                       "locator": "top:m3"}]}
+MUT_OK = {"baseline_verdict": "PASS", "total": 4, "caught": 4, "attribution_right": 4, "mutants": []}
+
+
+def test_crosscheck_mapping_keeps_attribution():
+    rep = {"checks": [{"rule_id": "X2_drawn_not_modelled", "status": "FAIL", "attribution": "model", "locator": "top:8C"},
+                      {"rule_id": "X2_drawn_not_modelled", "status": "CONTESTED", "attribution": "drawing",
+                       "locator": "side:A0"},
+                      {"rule_id": "X2_modelled_not_drawn", "status": "INFO", "attribution": "simplified"}]}
+    c = A.from_crosscheck(rep, "P", "x")
+    assert [x["status"] for x in c] == ["FAIL", "CONTESTED", "ADVISORY"]
+    assert "quy cho: drawing" in c[1]["message"] and c[1]["locator"].startswith("side:A0")
+    assert len({x["claim_id"] for x in c}) == 3
+
+
+def test_mutate_mapping():
+    assert statuses(A.from_mutate(MUT_OK, "P", "m"), "L6_positive_control") == ["PASS"]
+    wrong = dict(MUT_OK, attribution_right=3)
+    assert statuses(A.from_mutate(wrong, "P", "m"), "L6_positive_control") == ["FAIL"]
+    esc = dict(MUT_OK, caught=3, mutants=[{"name": "D1_move_circle_y", "caught": False}])
+    assert statuses(A.from_mutate(esc, "P", "m"), "L6_escaped") == ["FAIL"]
+    assert statuses(A.from_mutate({"baseline_verdict": "FAIL"}, "P", "m"), "L6_positive_control") == ["NEEDS_EVIDENCE"]
+
+
+def test_reconstruct_profile_needs_positive_control(tmp_path):
+    base = {"gates": w(tmp_path, "g.json", GATES_PASS), "crosscheck": w(tmp_path, "x.json", XC_PASS)}
+    rec = A.collect("P", base, "reconstruct")
+    assert rec["machine_verdict"] == "BLOCKED" and statuses(rec["claims"], "required_input_mutate") == ["ABSTAINED"]
+    rec = A.collect("P", dict(base, mutate=w(tmp_path, "m.json", MUT_OK)), "reconstruct")
+    assert rec["machine_verdict"] == "READY_FOR_HUMAN_RELEASE"
+
+
+def test_cli_accepts_crosscheck_inputs(tmp_path):
+    out = str(tmp_path / "o")
+    assert A.main(["collect", "--part", "P", "--gates", w(tmp_path, "g.json", GATES_PASS),
+                   "--crosscheck", w(tmp_path, "x.json", XC_PASS), "--mutate", w(tmp_path, "m.json", MUT_OK),
+                   "--profile", "reconstruct", "--out", out]) == 0
+
+
 # ── LLM ──
 
 def test_judge_mapping():
@@ -199,3 +243,86 @@ def test_release_requires_signer_and_hashes_claims(tmp_path):
         A.release(rec, "  ", "")
     r = A.release(rec, "Kỹ sư A", "ok")
     assert r["status"] == "RELEASED" and len(r["claims_sha256"]) == 64 and r["signer"] == "Kỹ sư A"
+
+
+# ── G2a cross-sheet rules (synthetic set) ──
+
+def sheet(idx, code, name, material=None, bom=(), texts=(), fname=None):
+    tb = {"found": True, "code": {"value": code}, "name": {"value": name} if name else None,
+          "material": {"value": material} if material else None}
+    ex = {"meta": {"file_index": idx, "code_in_dxf": code, "name": name, "material": material, "title_block": tb},
+          "bom": [dict(r) for r in bom], "raw_text": [{"text": t} for t in texts], "dimensions": [], "holes": [],
+          "conflicts": [], "missing": []}
+    return (fname or f"{idx}_x.cad_extract.json", ex)
+
+
+def rules(claims, rule):
+    return [c for c in claims if c["rule_id"] == rule]
+
+
+def test_g2a_bom_code_and_name():
+    s = [sheet("1", "99.TS-01.05.00 BL", "CỤM A", bom=[
+            {"code": "99.TS-01.05.01", "name": "Thanh treo 1", "qty": "02"},
+            {"code": "99.TS-01.05.02", "name": "Thanh treo 3", "qty": "01"},      # wrong code: sheet 3 is "Bia 10"
+            {"code": "99.TS-01.05.09", "name": "Không có tờ", "qty": "01"},
+            {"code": "Bu lông M8", "name": None, "qty": "16"},                   # standard part spilled into code col
+            {"code": "99.TS-01.05.00", "name": "Cụm A", "qty": "01"}]),          # assembly listed without ' BL'
+         sheet("2", "99.TS-01.05.01", "THANH TREO 1"), sheet("3", "99.TS-01.05.02", "BIA 10")]
+    c = A.set_check(s)
+    assert [x["observed"] for x in rules(c, "bom_name_matches_sheet")] == ["Thanh treo 3"]
+    assert [x["observed"] for x in rules(c, "bom_code_matches_sheet")] == ["99.TS-01.05.09"]
+
+
+def test_g2a_material_same_with_standard_is_consistent():
+    s = [sheet("1", "99.TS-01.05.00 BL", "CỤM A", bom=[
+            {"code": "99.TS-01.05.01", "name": "Thanh 1", "material": "Thép SS400"},
+            {"code": "99.TS-01.05.02", "name": "Thanh 2", "material": "Thép Hợp kim SS400"}]),
+         sheet("2", "99.TS-01.05.01", "THANH 1", "THÉP SS400 JIS G3101"),
+         sheet("3", "99.TS-01.05.02", "THANH 2", "THÉP SS400 JIS G3101")]
+    assert [x["observed"] for x in rules(A.set_check(s), "material_consistent")] == ["Thép Hợp kim SS400"]
+
+
+def test_g2a_title_vs_yckt_material_and_quantity():
+    s = [sheet("1", "99.TS-01.00.00", "BỐ TRÍ", bom=[{"code": "99.TS-01.08.00", "name": "Thanh chống", "qty": "02"},
+                                                    {"code": "99.TS-01.09.00", "name": "Mã cạnh", "qty": "08"}]),
+         sheet("2", "99.TS-01.08.00", "THANH CHỐNG", "THÉP AH36",
+               texts=["Yêu cầu kỹ thuật: - Vật liệu: Thép tấm s8. - Số lượng: 12 chiếc."]),
+         sheet("3", "99.TS-01.09.00", "MÃ CẠNH", "THÉP SS400", texts=["- Số lượng: 08 chiếc."])]
+    c = A.set_check(s)
+    assert [x["part_id"] for x in rules(c, "qty_matches_parent")] == ["2"]
+    assert [x["part_id"] for x in rules(c, "material_consistent")] == ["2"]
+
+
+def test_g2a_code_case_mixed_set_flags_all_convention_flags_offenders():
+    s = [sheet("1", "99.ts-01.01.00", "A"), sheet("2", "99.ts-01.02.00", "B"), sheet("3", "99.TS-01.03.00", "C")]
+    assert len(rules(A.set_check(s), "part_code_format")) == 3
+    assert [x["part_id"] for x in rules(A.set_check(s, "upper"), "part_code_format")] == ["1", "2"]
+    uni = [sheet("1", "99.TS-01.01.00", "A"), sheet("2", "99.TS-01.02.00", "B")]
+    assert rules(A.set_check(uni), "part_code_format") == []
+
+
+def test_g2a_continuation_sheets_are_not_duplicates():
+    s = [sheet("7", "99.TS-01.01.00", "THÂN PHAO", fname="07_x.cad_extract.json"),
+         sheet("8", "99.TS-01.01.00", None, fname="08_THAN_to02-03.cad_extract.json"),
+         sheet("10", "99.TS-01.02.00", "DẦM"), sheet("11", "99.TS-01.02.00", "DẦM CUỐI")]
+    dup = rules(A.set_check(s), "part_code_unique")
+    assert sorted(x["part_id"] for x in dup) == ["10", "11"]
+
+
+def test_g2a_group_code_row_not_compared_to_first_sheet():
+    """Measured false claim: a row "14.00; 14.01; 14.03 — Cụm thiết bị" was compared with sheet 14.00's name."""
+    s = [sheet("1", "99.TS-01.00.00", "BỐ TRÍ", bom=[
+            {"code": "99.TS-01.14.00", "code_cell": "99.TS-01.14.00; 14.01; 14.03", "code_group": True,
+             "name": "Cụm thiết bị trên bia", "qty": "03"}]),
+         sheet("39", "99.TS-01.14.00", "MẠCH CẢM BIẾN")]
+    assert rules(A.set_check(s), "bom_name_matches_sheet") == []
+
+
+def test_g2a_quantity_compared_with_sum_over_parents():
+    """Measured false claim: a part used once in each of two assemblies, YCKT says 02."""
+    s = [sheet("13", "99.TS-01.05.00 BL", "CỤM 1", bom=[{"code": "99.TS-01.05.02", "name": "Thanh", "qty": "01"}]),
+         sheet("22", "99.TS-01.06.00 BL", "CỤM 2", bom=[{"code": "99.TS-01.05.02", "name": "Thanh", "qty": "01"}]),
+         sheet("15", "99.TS-01.05.02", "THANH", texts=["- Số lượng: 02 chiếc."]),
+         sheet("29", "99.TS-01.07.01", "GIỮ SỐ", texts=["- Số lượng: 02 chiếc."]),
+         sheet("28", "99.TS-01.07.00 BL", "CỤM 3", bom=[{"code": "99.TS-01.07.01", "name": "Giữ số", "qty": "01"}])]
+    assert [x["part_id"] for x in rules(A.set_check(s), "qty_matches_parent")] == ["29"]

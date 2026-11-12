@@ -1,14 +1,15 @@
 ---
 name: helix-cad-agents
-description: "Orchestrator mỏng cho bộ agent Claude × CAD — menu 9 ứng dụng, mỗi ứng dụng định tuyến sang khối/flow đã có, không tự làm việc của khối: (1) spec → CAD → STEP [helix-spec-to-cad / helix-cad-bridge + helix-cad-gates] · (2) bóc kích thước/vật liệu/BOM từ DXF có nhãn nguồn D/G/T [helix-cad-ingest] · (4) họ biến thể + đổi layer [helix-cad-batch] · (5) cổng hình học tất định F1–F4 [helix-cad-gates] · (9) giám khảo ý đồ [helix-cad-judge] · đợt 2: (3) dựng NHÁP từ bản vẽ, (6) hàn/lắp ráp nhiều tờ, (7) GD&T, (8) rà trước phát hành. Router phân loại MẬT chặn mọi agent LLM; ledger _pipeline_state.md; MỘT khối mỗi lượt, dừng chờ CEO. Bài học phép đo GIÁ TRƯỢT 2026-11-02 mã hoá thành luật: điểm dò bắt buộc, khối lượng không phải mục tiêu, khai phương pháp chiếu, agent dựng cách ly, giám khảo khác agent dựng. Triggers on: 'cad agents', 'bộ agent CAD', 'claude cad', 'claude với CAD', 'ứng dụng CAD', 'CAD pipeline', 'agent CAD', 'tự động CAD', 'dựng CAD bằng AI', 'AI CAD workflow'."
+description: "Orchestrator mỏng cho bộ agent Claude × CAD — menu 10 ứng dụng, mỗi ứng dụng định tuyến sang khối/flow đã có, không tự làm việc của khối: (1) spec → CAD → STEP [helix-spec-to-cad / helix-cad-bridge + helix-cad-gates] · (2) bóc kích thước/vật liệu/BOM từ DXF có nhãn nguồn D/G/T [helix-cad-ingest] · (4) họ biến thể + đổi layer [helix-cad-batch] · (5) cổng hình học tất định F1–F4 [helix-cad-gates] · (9) giám khảo ý đồ [helix-cad-judge] · (10) dựng 3D từ 2D CÓ KIỂM NGƯỢC — bản vẽ là gốc, 4 agent (lập sổ hình chiếu, dựng cách ly với vòng crosscheck bên trong, chẩn đoán, lập phiếu đề xuất sửa 2D) + cổng tất định crosscheck/mutate/audit_claims --profile reconstruct [helix-cad-crosscheck] · đợt 2: (3) dựng NHÁP từ bản vẽ, (6) hàn/lắp ráp nhiều tờ, (7) GD&T, (8) rà trước phát hành. Router phân loại MẬT chặn mọi agent LLM; ledger _pipeline_state.md; MỘT khối mỗi lượt, dừng chờ CEO. Bài học phép đo GIÁ TRƯỢT 2026-11-02 mã hoá thành luật: điểm dò bắt buộc, khối lượng không phải mục tiêu, khai phương pháp chiếu, agent dựng cách ly, giám khảo khác agent dựng. Triggers on: 'cad agents', 'bộ agent CAD', 'claude cad', 'claude với CAD', 'ứng dụng CAD', 'CAD pipeline', 'agent CAD', 'tự động CAD', 'dựng CAD bằng AI', 'AI CAD workflow', 'dựng 3D từ 2D', 'tạo 3D từ bản vẽ', '3D từ 2D có kiểm', 'đề xuất sửa bản vẽ'."
 allowed-tools: ["Read", "Write", "Edit", "Bash", "Grep", "Glob", "Task"]
 ---
 
-# helix-cad-agents: Bộ định tuyến 9 ứng dụng Claude × CAD
+# helix-cad-agents: Bộ định tuyến 10 ứng dụng Claude × CAD
 
 > **Role:** Thin commander. **NEVER does block work itself** — chỉ phân loại, chọn ứng dụng, gọi khối,
 > ghi ledger, dừng chờ CEO. Khối thật: [[helix-cad-ingest]] · [[helix-spec-to-cad]] / [[helix-cad-bridge]] ·
-> [[helix-cad-gates]] · [[helix-cad-batch]] · [[helix-cad-judge]] · [[helix-cad-roundtrip]] · [[helix-cad-validate]].
+> [[helix-cad-gates]] · [[helix-cad-batch]] · [[helix-cad-judge]] · [[helix-cad-roundtrip]] · [[helix-cad-validate]] ·
+> [[helix-cad-crosscheck]].
 > **Nguồn:** `/research --deep "CAD claude"` 2026-11-02 (`3_Resources/Deep-Content-Analyzer-Outputs/RESEARCH_claude-cad-helix-p3p4_2026-11-02.md`)
 > + phép đo 5 bản vẽ GIÁ TRƯỢT cùng ngày.
 
@@ -49,10 +50,13 @@ allowed-tools: ["Read", "Write", "Edit", "Bash", "Grep", "Glob", "Task"]
 | 4 | Họ biến thể / đổi layer | 1 | điều kiện: mô hình gốc PASS F1–F4 → `helix-cad-batch/batch_sweep.py` → CEO chọn biến thể → cổng đầy đủ cho biến thể phát hành |
 | 5 | Cổng hình học | 1 | kỹ sư ký `geometry_contract.json` → `geom_gates.py` → `render_views.py` → CEO xem render + ký |
 | 9 | Giám khảo ý đồ | 1 | kỹ sư ký `judge_questions[]` trong hợp đồng → điều kiện: cổng PASS cùng hash, không MẬT → `/helix-cad-judge` (agent mới ghi `judge_answers.json`) → `judge_score.py` tính verdict → CEO quyết khi `block` / xem tay khi `needs_human` |
+| 10 | Dựng 3D từ 2D có kiểm ngược | 1 | `references/crosscheck-agents.md`: A1 agent lập `views.json` → kỹ sư duyệt phương nhìn/tỉ lệ → A2 agent dựng cách ly (vòng `crosscheck.py` bên trong: sửa mô hình khi `model`, KHÔNG theo hình bị nghi khi `drawing`) → A3 script `geom_gates` + `crosscheck` + `mutate` + `audit_claims --profile reconstruct` → A4 agent chẩn đoán (khác A2) → A5 agent lập phiếu đề xuất sửa 2D (nếu có) → CEO quyết từng mục → người sửa DXF → lại A3. Mô hình vẫn là NHÁP tới khi kỹ sư ký |
 | 3 | Dựng NHÁP từ bản vẽ | 2 | `render_dxf.py` → agent cách ly dựng + `inferred_spec.json` → kỹ sư duyệt spec → cổng 5 → judge 9 |
 | 6 | Hàn / lắp ráp nhiều tờ | 2 | như 3, thêm danh sách thành viên + tờ con (`authoritative_bom.py` WELD-ASSY) |
 | 7 | GD&T | 2 | `ingest.py` giải mã khung dung sai AIGDT → `gdt[]` (chỉ chép) → kỹ sư đối chiếu từng khung |
 | 8 | Rà trước phát hành | 2 | quy tắc số trong `validate.py`; LLM chỉ giải thích; trạng thái NEEDS_EVIDENCE / NEEDS_HUMAN_RELEASE / ABSTAINED |
+
+Ứng dụng 10 thay đường thủ công của 3 cho chi tiết đơn: cùng giao thức cách ly, thêm kiểm ngược về bản vẽ.
 
 **Đợt 2 chưa bật.** Chọn 3/6/7/8 ⇒ trả lời: *"Đợt 2 chờ kết quả nhánh (a) phép đo GIÁ TRƯỢT (spec đã duyệt → so 2 nhánh).
 Hiện có thể chạy thủ công theo `references/reconstruct-brief.md` (giao thức cách ly của phép đo), kết quả là NHÁP."*
@@ -93,11 +97,15 @@ PASS ≠ chữ ký.
 | `cad_gates_report.json/.md` + `model_views.png` | gates | judge, CEO |
 | `judge_answers.json` | judge (agent) | `judge_score.py` |
 | `judge_verdict.json/.md` | `judge_score.py` (tất định) | CEO |
+| `views.json` (sổ hình chiếu) | A1 agent → kỹ sư duyệt | crosscheck, mutate, A2 |
+| `xc.json/.md` + PNG chồng nét · `mut.json` | `crosscheck.py` / `mutate.py` (tất định) | audit_claims, A4, A5 |
+| `chan_doan.md` · `de_xuat_sua_ban_ve.md` | A4 / A5 (agent khác A2) | CEO |
 
 ## COD
 | Task | COD |
 |---|---|
 | Phân loại, chọn ứng dụng, ký spec/contract, xem render, quyết khi judge block | **C** |
+| Duyệt sổ hình chiếu; quyết từng mục đề xuất sửa bản vẽ (ứng dụng 10) | **C** |
 | Bóc DXF, dựng theo spec, chạy cổng, render, batch, judge | O |
 | Thông báo, định dạng ledger | D |
 
