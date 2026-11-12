@@ -148,6 +148,34 @@ def test_hidden_view_wrong_is_attributed_to_drawing():
     assert any(p["view"] == "side" and p["witness_views"] == ["top"] for p in rep["drawing_fix_proposals"])
 
 
+def test_dashed_linetype_on_visible_layer_counts_as_hidden():
+    # side-view hidden lines drawn on the VISIBLE layer with a DASHED linetype override (and once via a dashed layer)
+    def build(by_layer):
+        doc = drawing(hole_side_y=200)                          # real hidden lines moved off the part -> replaced below
+        m = doc.modelspace()
+        for e in [e for e in m if e.dxf.layer == "H"]:
+            m.delete_entity(e)
+        if by_layer:
+            doc.layers.add("VD", linetype="DASHED")
+        sx, sy = SIDE0
+        for yy in (35, 45):
+            xs = sx + (60 - yy) / K
+            att = {"layer": "VD"} if by_layer else {"layer": "V", "linetype": "DASHED"}
+            m.add_line((xs, sy), (xs, sy + 4), dxfattribs=att)
+        return doc
+    for by_layer in (False, True):
+        reg = copy.deepcopy(REG)
+        if by_layer:
+            reg["views"][1]["layers_visible"] = ["V", "VD"]
+        dv = X.read_view(build(by_layer), reg["views"][1])
+        assert len(dv["hidden"]) == 2 and all(len(it["pts"]) >= 2 for it in dv["hidden"])
+        rep = run(plate(), build(by_layer), reg)
+        assert rep["verdict"] == "PASS", blocking(rep)
+    # opt-out keeps the old behaviour: dashed line on a visible layer is compared as visible
+    reg = copy.deepcopy(REG); reg["views"][1]["hidden_by_linetype"] = False
+    assert not X.read_view(build(False), reg["views"][1])["hidden"]
+
+
 def test_wrong_declared_scale_is_flagged_as_scale():
     reg = copy.deepcopy(REG)
     reg["views"][0]["scale"] = 2.2

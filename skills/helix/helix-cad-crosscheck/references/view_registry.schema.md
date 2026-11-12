@@ -39,6 +39,7 @@ khung tên và bố cục tờ; `crosscheck.py` từ chối sổ thiếu trườ
 | `views[].up` | ✅ | Phương hệ mô hình hiện **lên trên** trên tờ. Màn hình phải = look_dir × up |
 | `layers_visible` | — | Lớp nét thấy (mặc định `["0"]`). Lớp kích thước, trục, chữ KHÔNG đưa vào đây |
 | `layers_hidden` | — | Lớp nét khuất |
+| `hidden_by_linetype` | — | Mặc định `true`: thực thể trên lớp nét thấy có kiểu đường họ nét đứt (`DASHED`, `HIDDEN`, `ACAD_ISO02/03…`, theo thực thể hoặc theo lớp) được tính là **nét khuất**. Đặt `false` khi nét đứt trên hình là quy ước KHÁC mà mô hình vẫn thấy (vd phần cọc chôn dưới đất — mô hình không dựng đất); ghi lý do trong quyết định duyệt sổ. Ký hiệu hàn / đường dẫn nét đứt vẫn phải khai `annotations` |
 | `hidden_lines` | — | `full` (vẽ đủ nét khuất — thiếu nét khuất là lỗi) · `partial` (mặc định, chỉ kiểm nét khuất đã vẽ) · `none` |
 | `kind` | — | `projection` (mặc định) · `section` (cần `section.point`: một điểm trên mặt cắt, hệ mô hình; giữ phần vật phía sau mặt cắt theo look_dir) |
 | `anchor` | — | Ghim tịnh tiến: điểm mô hình `model` (mm) nằm ở `sheet` (đơn vị tờ). Không khai ⇒ khớp chung mọi hình chiếu (mỗi trục thế giới một lựa chọn ICP/tâm/mép min/mép max, nhiều điểm khớp nhất). Khai khi biết chắc mốc chuẩn (mặt chuẩn A) |

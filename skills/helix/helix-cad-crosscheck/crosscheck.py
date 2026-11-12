@@ -105,6 +105,20 @@ def _in_region(pts, reg):
     return inside.mean() >= 0.5
 
 
+_DASHED = ("DASH", "HIDDEN", "ACAD_ISO02", "ACAD_ISO03")
+
+
+def _is_dashed(doc, e, layer):
+    """Kiểu đường thực của thực thể (BYLAYER ⇒ kiểu đường của lớp) thuộc họ nét đứt / nét khuất."""
+    lt = str(e.dxf.get("linetype", "BYLAYER") or "BYLAYER").upper()
+    if lt == "BYLAYER":
+        try:
+            lt = str(doc.layers.get(layer).dxf.linetype).upper()
+        except Exception:
+            return False
+    return any(k in lt for k in _DASHED)
+
+
 def read_view(doc, view):
     """Polylines (sheet units) of one view, split into visible / hidden by layer; circles; dimensions."""
     from ezdxf import path as ezpath
@@ -131,6 +145,8 @@ def read_view(doc, view):
         kind = "visible" if layer in vis_l else "hidden" if layer in hid_l else None
         if kind is None:
             continue
+        if kind == "visible" and view.get("hidden_by_linetype", True) and _is_dashed(doc, e, layer):
+            kind = "hidden"           # nét đứt (kiểu đường theo thực thể hoặc theo lớp) = nét khuất, dù nằm trên lớp nét thấy
         try:
             pts = [(q.x, q.y) for q in ezpath.make_path(e).flattening(distance=0.02)]
         except Exception:
@@ -928,7 +944,8 @@ def render_png(views, out_dir, part=""):
         ax.set_title(f"{part} — hình {vid}: xanh nhạt = mô hình chiếu · đen = bản vẽ · "
                      f"ĐỎ = vẽ mà mô hình không có · XANH = mô hình có mà không vẽ · TÍM = chú thích trên lớp nét (X8)",
                      fontsize=7)
-        p = os.path.join(out_dir, f"xcheck_{vid}.png")
+        ten = "".join("_" if c in '<>:"/\\|?*' else c for c in str(vid))        # Windows: «:» trong tên hình (vd «Tiết diện (1:5)») ⇒ tệp rỗng ADS
+        p = os.path.join(out_dir, f"xcheck_{ten}.png")
         fig.savefig(p, dpi=160, bbox_inches="tight")
         plt.close(fig)
         paths.append(p)
