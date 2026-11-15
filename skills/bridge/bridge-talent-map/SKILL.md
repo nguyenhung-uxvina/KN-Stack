@@ -13,7 +13,7 @@ Map who knows what, identify key-person risks, detect skill gaps, and plan mitig
 - When a team member departure is announced or anticipated
 - When a skill gap blocks a project
 - When planning hiring or cross-training
-- When bridge-risk-radar flags key-person dependency
+- When /risk flags key-person dependency
 
 ## Workflow
 
@@ -81,7 +81,7 @@ Everything else is secondary.
 
 ## Integration Points
 
-- Feeds into: bridge-risk-radar (key-person risks), bridge-dashboard (capacity view)
+- Feeds into: /risk (key-person risks)
 - Receives from: bridge-knowledge-base (KB coverage per person), HELIX project data (who works on what)
 
 ## Metrics

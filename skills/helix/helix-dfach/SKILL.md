@@ -193,7 +193,7 @@ helix-dfach WRITES TO:
   - helix-quality-gate → DfACH score feeds Gate 3 auto-check
   - helix-embody-realize → DfACH FAIL items → DfX issues to resolve
   - forge-library → commodity hardware specs cataloged for reuse
-  - bridge-risk-radar → ACH-specific risks identified
+  - /risk → ACH-specific risks identified
 ```
 
 ## Rules

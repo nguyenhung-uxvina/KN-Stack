@@ -1,6 +1,6 @@
 ---
 name: yt-learn
-description: Deep learning analysis pipeline for YouTube videos. Takes a YouTube URL → creates NotebookLM notebook → runs 9 structured learning queries (Q1-Q8 generic + Q9 WX defense context) → synthesizes into a complete video analysis file. Triggers when user pastes a youtube.com or youtu.be URL, or explicitly calls /yt-learn. Different from /yt-extract (short metadata extract) and /yt-search (discovery). This skill is for deep mastery extraction from a single video.
+description: Deep learning analysis pipeline for YouTube videos. Takes a YouTube URL → creates NotebookLM notebook → runs 9 structured learning queries (Q1-Q8 generic + Q9 WX defense context) → synthesizes into a complete video analysis file. Triggers when user pastes a youtube.com or youtu.be URL, or explicitly calls /yt-learn. Different from /yt-search (discovery). This skill is for deep mastery extraction from a single video.
 ---
 
 # YT Learn — Phân Tích Học Tập Sâu từ YouTube Video
@@ -11,7 +11,6 @@ Nhận YouTube URL → tạo NotebookLM notebook → chạy 9 query phân tích 
 
 - Khi CEO dán link YouTube video và muốn phân tích sâu để học tập
 - Khi phát hiện video có giá trị học tập cao cần khai thác 9 chiều
-- Khác với `/yt-extract` (trích metadata ngắn) — skill này **deep learning pipeline**
 - Khác với `/yt-search` (tìm video) — skill này xử lý 1 video cụ thể đã có sẵn
 
 ## Input
@@ -439,16 +438,16 @@ Lưu audio vào: `D:/Workshop_X/3_Resources/Deep-Content-Analyzer-Outputs/YT-Lea
 
 ---
 
-## vs /yt-extract vs /yt-search
+## vs /yt-search
 
-| | `/yt-search` | `/yt-extract` | `/yt-learn` |
-|---|---|---|---|
-| Input | Topic/keyword | YouTube URL | YouTube URL |
-| Purpose | Discovery | Metadata extract | Deep learning analysis |
-| NLM | Optional | Optional | Required (core engine) |
-| Output | List of videos | 1-page summary | 11-section analysis + Systems Thinking + Debate + audio |
-| Time | ~1 min | ~2 min | ~15-20 min (batch) / ~25 min (sequential) |
-| When | "Tìm video về X" | "Tóm tắt video này" | "Học sâu từ video này" |
+| | `/yt-search` | `/yt-learn` |
+|---|---|---|
+| Input | Topic/keyword | YouTube URL |
+| Purpose | Discovery | Deep learning analysis |
+| NLM | Optional | Required (core engine) |
+| Output | List of videos | 11-section analysis + Systems Thinking + Debate + audio |
+| Time | ~1 min | ~15-20 min (batch) / ~25 min (sequential) |
+| When | "Tìm video về X" | "Học sâu từ video này" |
 
 ## Integration Points
 

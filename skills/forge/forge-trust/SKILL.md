@@ -11,7 +11,7 @@ Build and track trust evidence packages for defense customers evaluating ACH pro
 
 - Before customer demonstrations or presentations
 - When forge-validate produces results worth sharing
-- When bridge-risk-radar flags trust decay (60+ days no contact)
+- When /risk flags trust decay (60+ days no contact)
 - Monthly trust review as part of FORGE protocol
 
 ## Workflow
@@ -111,7 +111,7 @@ CEO executes all customer-facing interactions:
 
 ### Step 5: Trust Decay Alert
 
-Flag for bridge-risk-radar when:
+Flag for /risk when:
 - No customer contact in 60+ days
 - Open concerns not addressed in 30+ days
 - Customer tone shift detected (from proactive to passive)
@@ -136,7 +136,7 @@ forge-trust READS FROM HELIX:
   - Quality gate → has it passed required gates?
 
 forge-trust WRITES TO:
-  - bridge-risk-radar → trust decay alerts
+  - /risk → trust decay alerts
   - forge-portfolio → customer engagement status
   - forge-evolve → trust as competitive moat metric
 ```

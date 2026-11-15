@@ -18,7 +18,7 @@ Prevent premature deployment by enforcing a 4-phase sequential gate protocol. CE
 
 ### Step 1: Identify Current Phase
 
-Determine which deployment phase the product is at (0-3). Check Status.md and bridge-dashboard for existing records. If no prior record, product starts at Phase 0.
+Determine which deployment phase the product is at (0-3). Check Status.md for existing records. If no prior record, product starts at Phase 0.
 
 ### Step 2: Verify Prior Phase Evidence
 
@@ -54,7 +54,7 @@ Human Decision: "System works under controlled conditions with fallback"
 | 1 | forge-validate Stage 2 (field simulation) passed | Field test report |
 | 2 | Fallback tested under realistic conditions | Test evidence |
 | 3 | Customer briefed on capabilities AND limitations | Meeting record |
-| 4 | Continuous monitoring active | forge-flywheel config |
+| 4 | Continuous monitoring active | monitoring config |
 | 5 | Operator training completed | Training log |
 
 Human Decision: "System ready for limited external use"
@@ -149,7 +149,7 @@ GOVERNANCE GATE VERDICT:
 ## Integration Points
 
 - Reads from: forge-validate (stage results), forge-fallback (architecture status), forge-trust (customer briefing), helix-quality-gate (design phase gates), helix-integration-debt (debt level), helix-detail-finalize (manufacturing package)
-- Writes to: bridge-dashboard (deployment status per product), forge-portfolio (deployment maturity), bridge-risk-radar (deployment without evidence = RED flag, missing governance docs = YELLOW flag)
+- Writes to: forge-portfolio (deployment maturity), /risk (deployment without evidence = RED flag, missing governance docs = YELLOW flag)
 
 ## Metrics
 

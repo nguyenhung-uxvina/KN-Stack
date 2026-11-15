@@ -299,7 +299,7 @@ helix-detail-finalize WRITES TO:
   - helix-quality-gate → Gate 4 readiness
   - **forge-fabrication → F0 handoff package (closes R&D → production loop)**
   - bridge-deploy-gate → manufacturing package signed off
-  - bridge-risk-radar → manufacturing risks identified
+  - /risk → manufacturing risks identified
   - forge-library → new component drawings cataloged
 
 helix-detail-finalize FOLLOW-UP (CEO-triggered):
@@ -322,7 +322,7 @@ After: P4 mirrors P1-P3. Each block has independent checkpoint, can be re-run, c
 **The bigger closure:** `BE → Handoff_to_Fabrication.md → forge-fabrication F0`. Previously there was a black hole between "design freeze" and "part on shop floor". Now it's a documented bridge that auto-generates the production trigger.
 
 ```
-HELIX P1 → P2 → P3 → P4 (this) → forge-fabrication F0→F5 → field → forge-flywheel
+HELIX P1 → P2 → P3 → P4 (this) → forge-fabrication F0→F5 → field
 ```
 
 Compounding asset, not one-shot transaction.

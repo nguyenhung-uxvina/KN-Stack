@@ -365,7 +365,7 @@ forge-market-intel READS FROM:
   - reverse-engineering COMPARE → competitor product analysis
 
 forge-market-intel WRITES TO:
-  - bridge-risk-radar → competitive threat signals
+  - /risk → competitive threat signals
   - forge-portfolio → market context for prioritization
   - forge-pre-study → competitor data for PRESTUDY E-EXISTING
   - reverse-engineering COMPARE → candidates for evaluation

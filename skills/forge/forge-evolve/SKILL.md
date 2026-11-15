@@ -142,10 +142,9 @@ Review against FORGE's Three Laws:
 forge-evolve READS FROM:
   - All HELIX metrics → methodology adoption, debt trends
   - forge-portfolio → FORGE scores per product
-  - forge-flywheel → compound metrics
   - forge-library → model inventory
   - forge-trust → customer engagement health
-  - bridge-risk-radar → strategic risk context
+  - /risk → strategic risk context
 
 forge-evolve WRITES TO:
   - Portfolio direction → HELIX resource priorities

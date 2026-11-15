@@ -62,7 +62,7 @@ Output: skills/<domain>/<skill>/                  (in target skill folder)
 
 ### Without tests (faster, for one-off scripts)
 ```
-/codify --target skills/guard/ratio-check --no-tests
+/codify --target skills/guard/analyst-trap --no-tests
 ```
 
 ## Workflow
@@ -374,9 +374,8 @@ codify CAN BE INVOKED ON (top candidates):
   - erp-stock → reorder_classifier.py (OK/LOW/BLOCKING + max_builds)
   - erp-quality → fpy.py (FPY + NCR pattern groupby)
   - helix-p4-bom → bom_csv_export.py (markdown table → ERPNext CSV)
-  - bridge-dashboard → dashboard_metrics.py (7 metrics aggregation)
   - forge-portfolio → portfolio_rollup.py (per-product status rollup)
-  - guard/ratio-check → ratio_calc.py (analytical:physical counter)
+  - guard/analyst-trap → ratio_calc.py (analytical:physical counter)
   - galaxy/galaxy-links → wikilink_density.py (graph metric on Galaxy)
   - forge-shift → shift_score.py (SHIFT checklist scoring)
 

@@ -169,7 +169,6 @@ Bounded RE allocation — 11% of 26-person team. Prevents Analyst Trap.
 ### Step 4: Present and Route
 
 - Present dashboard to CEO
-- Feed FORGE scores to bridge-dashboard if requested
 - Flag anti-patterns from architecture doc:
   - forge-shift GO but no HELIX project-init → Strategy-Execution Gap
   - HELIX building but no forge-shift → Accidental ACH
