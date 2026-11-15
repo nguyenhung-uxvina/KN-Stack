@@ -1,5 +1,42 @@
 # Changelog
 
+## [1.12.0] - 2026-11-02
+
+Gộp bốn PR đã merge sau 1.11.0 mà chưa ghi changelog: #30, #32, #33, #38.
+
+### Added
+- **`mcp/autocad-bridge/` — MCP server cục bộ cho AutoCAD** (PR #38). Điều khiển AutoCAD qua COM, đọc DXF ngoại tuyến bằng ezdxf; 25 tool, 90 test, không cần AutoCAD để chạy test.
+  - Đọc: khung tên TCVN; kích thước theo chữ in trên giấy (không theo số đo hình học của hình cắt rút gọn); nhãn SL/TL/VL; lỗ; layer; extents.
+  - Quét cả bộ DXF ra CSV, báo khung tên chép: trùng mã khác tên, trùng số tờ, tên tệp khác tên trong khung tên.
+  - Rào chắn:
+    - một luồng STA có timeout;
+    - chỉ retry lời gọi đọc (vá lỗi v1 vẽ trùng khi AutoCAD bận);
+    - tool ghi phải chỉ rõ bản vẽ (`expected_document`);
+    - PathPolicy từ chối mặc định;
+    - `acad_command` theo allow-list;
+    - mỗi tool ghi là một bước UNDO;
+    - thao tác phá huỷ cần `plan_token`;
+    - sổ kiểm toán nối chuỗi băm;
+    - lỗi có mã;
+    - profile `read`/`draft`.
+- **`helix-p3-form` — khối BF của P3: chức năng → hình thể** (PR #32).
+  - Dùng C&C² cùng hướng dẫn chưng cất từ *Thiết kế hiện thân*, *Thiết kế kỹ thuật hệ thống* (P&B) và *Konstruktionslehre 9* (807 quy tắc có mã, đã soát toàn tệp).
+  - Đối chiếu giải pháp hiện có (dự án / web / sáng chế).
+  - Chấm D-lọc + W×HOQ với checklist 14 mục theo từng ứng viên; hai cổng CEO; kế hoạch thử bắt buộc.
+- **`scripts/p3_form_ref_check.py`** (PR #32) — kiểm trích sách của references: chương/mục có thật, trích nguyên văn khớp.
+- **`scripts/p3_form_lint.py`** (PR #32) — cổng máy cho đầu ra BF (`--draft` / chốt, `--quick`, `--refs`). Eval static `helix-p3-form`.
+- **`unlimited-ocr` (extract)** (PR #33) — OCR trang scan/PDF ảnh ra Markdown theo trang qua baidu/Unlimited-OCR. Có backend `windows` cục bộ (Windows.Media.Ocr) để làm nốt khi hết quota, hoặc cho tài liệu không được gửi đi.
+
+### Changed
+- **`helix-embody-realize`** (PR #32): P3 có 7 khối (B0 → BF → BA …); thêm cờ `--skip-form "<lý do>"`.
+- **`helix-p3-preflight`, `helix-p3-layout`, `helix-p3-compile`, `helix-p3-dfx`** (PR #32): đọc và ghi theo hợp đồng tệp của BF; Gate 3 không khuyến nghị khi còn D/W tạm.
+
+### Fixed
+- **`cc2_sheet_lint`** (PR #30):
+  - Phiếu thứ hai có tiêu đề hỏng (không dấu, gạch đầu dòng, đánh số, GT-02…) không còn bị gộp im lặng vào phiếu trước; thêm mã `DUP_ITEM` và `HEADER_UNPARSED`.
+  - Mục chỉ chứa chữ giữ chỗ `{{…}}` không còn được tính là đã điền; chỉ mục 6 được để `{{điền SAU}}`.
+- **`helix-cc2 --variant`** (PR #30): tiền tố tệp là `<PROJECT>_<V0>_` (V0 = mã biến thể cắt tại dấu `-` đầu tiên), khớp `helix-embody-realize`, nên P3 tìm thấy `CC2_Handoff.md`.
+
 ## [1.11.0] - 2026-10-26
 
 ### Added
