@@ -220,6 +220,39 @@ Ví dụ:
 
 If CEO provides additional context → append to pipeline state as `## CEO Context Input` section.
 
+#### 1.5d: Hydrodynamic Intake — chỉ khi sản phẩm là THÂN NỔI TỰ HÀNH
+
+Kích hoạt khi sản phẩm là xuồng / tàu / USV tự hành có thân chịu lực thuỷ động (Nền tảng B, VN-ALPB,
+USV…). **Bỏ qua** cho sản phẩm không phải thân tàu, và ghi rõ "1.5d: không áp" vào pipeline state. Với vật
+thể bị kéo, cầu phao tốc độ thấp, spar: chỉ hỏi câu 3–4 (câu 1–2 giả định thân tự hành lướt/bán lướt).
+
+Bốn câu này rẻ nhất để hỏi và đắt nhất khi bị bỏ qua — mỗi câu chặn một lựa chọn sai ở Phase 2–3 mà
+không phép tính nào về sau sửa được:
+
+```
+═══ 1.5d HYDRO INTAKE — {{project}} {{variant}} ═══
+1. Dải tốc độ: L_WL, thể tích chiếm nước ∇, tốc độ thiết kế → Fn_L = V/√(gL), Fn_∇ = V/√(g∇^1/3).
+   Vùng nào: chiếm nước (Fn_L < 0,40) · bán chiếm nước (0,40–0,65) · bán lướt · lướt (Fn_∇ ≥ 3,0)?
+   (vùng quyết định họ dáng thân và bảng tra nào dùng được)
+2. Tăng tốc: có yêu cầu thời gian đạt tốc độ (hole shot) không? Ước gia tốc dọc sơ bộ > 0,05 g
+   ⇒ phải tính biên lực đẩy ≥ 20% tại tốc độ bướu trước khi khoá động cơ – tỷ số truyền.
+3. Nước nông: độ sâu tuyến vận hành MÙA CẠN nhất h so với 0,8·LOA. h < 0,8·LOA ⇒ gắn cờ
+   "hiệu chỉnh nước nông trước khi chốt công suất" (vùng tới hạn Fn_h 0,70–1,20: R/W có thể +80%).
+4. Điều kiện biển: ghi CẶP chiều cao sóng có nghĩa H₁/₃ VÀ chu kỳ sóng T_w cho vùng vận hành —
+   không nhận "cấp sóng X" một con số (cùng H₁/₃, T_w 9,0 → 4,6 s làm gia tốc tăng ~50%).
+Câu nào chưa có số ⇒ ghi "CHƯA CÓ — cần đo/tra" (KHÔNG đoán), đưa vào Open Questions của BA.
+═══════════════════════════════════════════════════
+```
+
+Ghi câu trả lời vào pipeline state thành mục `## Hydro Intake`. Block **BA** (`/helix-p1-requirements`)
+đọc mục này và sinh yêu cầu tương ứng (tốc độ/vùng · gia tốc · độ sâu · điều kiện biển), mỗi yêu cầu có
+phương pháp kiểm (câu 2–4 thường là **T** — thử vật lý). Các ngưỡng trên là của Blount, hiệu chỉnh trên
+thân đơn lướt/bán lướt phương Tây: dùng làm **cổng hỏi**, không làm hằng số thiết kế.
+
+> Nguồn: Blount, *Performance by Design* (2018) qua sách phái sinh nội bộ
+> `3_Resources/Books/performance-by-design/book.md` — Ch.01 (vùng tốc độ), Ch.10 (0,05 g, biên 20%),
+> Ch.11 (0,8·LOA, Fn_h), Ch.04 (cặp H₁/₃ + T_w).
+
 ### Step 2: Initialize Pipeline State
 
 Determine output path based on variant:
