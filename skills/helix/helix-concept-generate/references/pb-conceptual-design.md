@@ -223,7 +223,7 @@ When N SFs × M WPs = too many combinations:
 - **Recommended column grouping (§6.4.2):** Group morpho columns by energy domain (mechanical / electrical / software / passive) to reveal compatibility patterns and domain coupling. P&B treats this as standard practice for multi-domain systems — apply for all Original designs, optional for Variant.
 - Only combine COMPATIBLE working principles (check 8 types above)
 - Check physical + geometric + E-M-S flow continuity
-- ≥3 concept variants REQUIRED
+- ≥3 concept variants REQUIRED (Workshop X convention — P&B asks for several variants but sets no minimum)
 - Working structure documentation: describe how WPs work as integrated system
 - Principle sketches: hand-drawn preferred at this stage (freedom to explore)
 

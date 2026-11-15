@@ -24,7 +24,7 @@ Usage: /gate2 [project_name] OR provide details interactively.
    - Score 6 criteria independently (0-4 each):
      A. Concept Diversity (15%) -- >=3 different concepts evaluated?
      B. Evaluation Rigor (25%) -- VDI 2225 criteria independent, weights justified, sensitivity done?
-     C. Selected Concept Quality (25%) -- Rt >=0.70, no unresolved weak spots?
+     C. Selected Concept Quality (25%) -- Rt >0.80 with a balanced profile, or 0.60-0.80 with weak spots removed (P&B p. 197 bands, same as /helix-p2-develop Step 5); no unresolved weak spots?
      D. Function Coverage (15%) -- all sub-functions have working principle assigned?
      E. Feasibility Check (15%) -- local content >=40% achievable, cost in range?
      F. Documentation (5%) -- rationale documented, fallback concept identified?
