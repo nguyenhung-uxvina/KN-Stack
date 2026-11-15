@@ -7,6 +7,7 @@
 #   bash setup.sh --update  [VAULT_DIR]   Re-copy rules only
 #   bash setup.sh --verify                Check all junctions resolve
 #   bash setup.sh --unlink                Remove all junctions
+#   bash setup.sh --prune                 Remove junctions whose target is gone
 #   bash setup.sh --status                Show deployment summary
 
 set -euo pipefail
@@ -212,35 +213,47 @@ do_verify() {
     fi
 }
 
-# ── Unlink: remove all junctions ──
+# ── Unlink: remove every junction that points into this checkout ──
+# The previous version ran Git Bash `rmdir` on each junction; on a junction to a
+# non-empty directory that fails ("Directory not empty"), the error was sent to
+# /dev/null, and the command reported "Removed 0 junctions" while removing none.
+# `cmd /c rmdir` removes the link itself and never touches the target's contents.
 do_unlink() {
     echo "=== KN-Stack Unlink ==="
-    local count=0
+    local win_commands=$(cygpath -w "$COMMANDS_DIR" 2>/dev/null || echo "$COMMANDS_DIR")
+    local win_root=$(cygpath -w "$KNSTACK_DIR" 2>/dev/null || echo "$KNSTACK_DIR")
+    local n=$(powershell.exe -ExecutionPolicy Bypass -Command "
+        \$root = '${win_root}'.TrimEnd('\\') + '\\'
+        \$n = 0
+        Get-ChildItem -Path '${win_commands}' -Force | Where-Object { \$_.LinkType -eq 'Junction' } | ForEach-Object {
+            \$t = \$_.Target; if (\$t -is [array]) { \$t = \$t[0] }
+            if (\$t -and \$t.StartsWith(\$root, [System.StringComparison]::OrdinalIgnoreCase)) {
+                cmd /c rmdir \"\$(\$_.FullName)\"; \$n++
+            }
+        }
+        Write-Output \$n
+    " 2>/dev/null | tr -d '\r')
+    log_ok "Removed ${n:-0} junctions"
+}
 
-    for domain_dir in "$KNSTACK_DIR"/skills/*/; do
-        for skill_dir in "$domain_dir"*/; do
-            local skill_name=$(basename "$skill_dir")
-            local target="$COMMANDS_DIR/$skill_name"
-
-            if [ -d "$target" ]; then
-                # Remove junction (rmdir removes junction without deleting target)
-                rmdir "$target" 2>/dev/null && count=$((count + 1))
-            fi
-        done
-    done
-
-    local src name target
-    while IFS= read -r src; do
-        [ -z "$src" ] && continue
-        name=$(basename "$src")
-        target="$COMMANDS_DIR/$name"
-        if [ -d "$target" ]; then
-            rmdir "$target" 2>/dev/null && count=$((count + 1))
-        fi
-    done < <(plugin_skill_dirs)
-
-    log_ok "Removed $count junctions"
-    echo "Restore from backup: cp -r ~/.claude/commands.bak.*/* ~/.claude/commands/"
+# ── Prune: remove junctions whose target no longer exists ──
+# Deleting or renaming a skill in the repo leaves its junction behind, pointing at
+# nothing; --install only adds and --verify only walks source dirs, so neither notices.
+# Only junctions with a missing target are touched — never a real file or directory.
+do_prune() {
+    echo "=== KN-Stack Prune ==="
+    local win_commands=$(cygpath -w "$COMMANDS_DIR" 2>/dev/null || echo "$COMMANDS_DIR")
+    powershell.exe -ExecutionPolicy Bypass -Command "
+        \$n = 0
+        Get-ChildItem -Path '${win_commands}' -Force | Where-Object { \$_.LinkType -eq 'Junction' } | ForEach-Object {
+            \$t = \$_.Target; if (\$t -is [array]) { \$t = \$t[0] }
+            if (\$t -and -not (Test-Path -LiteralPath \$t)) {
+                cmd /c rmdir \"\$(\$_.FullName)\"
+                Write-Output ('  removed: ' + \$_.Name + ' -> ' + \$t); \$n++
+            }
+        }
+        Write-Output \"\$n dangling junction(s) removed\"
+    " 2>&1 | tr -d ''
 }
 
 # ── Status: show summary ──
@@ -291,9 +304,10 @@ case "$MODE" in
         ;;
     --verify) do_verify ;;
     --unlink) do_unlink ;;
+    --prune) do_prune ;;
     --status) do_status ;;
     *)
-        echo "Usage: bash setup.sh {--install|--update|--verify|--unlink|--status} [VAULT_DIR]"
+        echo "Usage: bash setup.sh {--install|--update|--verify|--unlink|--prune|--status} [VAULT_DIR]"
         exit 1
         ;;
 esac
