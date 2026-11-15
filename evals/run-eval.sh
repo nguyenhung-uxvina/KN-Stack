@@ -30,12 +30,15 @@ EVALS_FILE="$VAULT_ROOT/evals/${SKILL_NAME}.json"
 SKILL_DIR="$HOME/.claude/commands"
 SKILL_FILE=""
 
-# Find skill file
-if [ -f "$SKILL_DIR/${SKILL_NAME}.md" ]; then
-  SKILL_FILE="$SKILL_DIR/${SKILL_NAME}.md"
-elif [ -f "$SKILL_DIR/${SKILL_NAME}/SKILL.md" ]; then
-  SKILL_FILE="$SKILL_DIR/${SKILL_NAME}/SKILL.md"
-else
+# Find skill file. THIS checkout first: an eval has to judge the branch under test.
+# Looking only at ~/.claude/commands graded whatever tree the junctions pointed at,
+# so an eval run from a feature worktree silently scored the deployed copy instead.
+shopt -s nullglob
+for cand in "$VAULT_ROOT"/skills/*/"${SKILL_NAME}"/SKILL.md             "$VAULT_ROOT"/plugins/*/skills/"${SKILL_NAME}"/SKILL.md             "$SKILL_DIR/${SKILL_NAME}.md"             "$SKILL_DIR/${SKILL_NAME}/SKILL.md"; do
+  if [ -f "$cand" ]; then SKILL_FILE="$cand"; break; fi
+done
+shopt -u nullglob
+if [ -z "$SKILL_FILE" ]; then
   echo "ERROR: Skill file not found for: $SKILL_NAME"
   exit 1
 fi
