@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 # setup.sh — KN-Stack Deployment Script
-# Deploy skills via Windows directory junctions, copy hooks/rules to vault.
+# Deploy skills via Windows directory junctions, copy rules to vault.
 #
 # Usage:
-#   bash setup.sh --install [VAULT_DIR]   Deploy skills + hooks + rules
-#   bash setup.sh --update  [VAULT_DIR]   Re-copy hooks + rules only
+#   bash setup.sh --install [VAULT_DIR]   Deploy skills + rules
+#   bash setup.sh --update  [VAULT_DIR]   Re-copy rules only
 #   bash setup.sh --verify                Check all junctions resolve
 #   bash setup.sh --unlink                Remove all junctions
 #   bash setup.sh --status                Show deployment summary
@@ -117,27 +117,17 @@ do_install() {
 
     log_ok "Plugin skills: $presult"
 
-    # Deploy hooks and rules to vault
+    # Deploy rules to vault
     if [ -n "$VAULT_DIR" ]; then
         do_update_vault "$VAULT_DIR"
     fi
 }
 
-# ── Update: re-copy hooks and rules ──
+# ── Update: re-copy rules ──
 do_update_vault() {
     local vault="$1"
     echo ""
-    echo "=== Deploying hooks + rules to $vault ==="
-
-    # Hooks
-    local hooks_dir="$vault/.claude/hooks"
-    mkdir -p "$hooks_dir"
-    for hook in "$KNSTACK_DIR"/hooks/*.sh; do
-        local name=$(basename "$hook")
-        cp "$hook" "$hooks_dir/$name"
-        chmod +x "$hooks_dir/$name"
-        log_ok "hook: $name"
-    done
+    echo "=== Deploying rules to $vault ==="
 
     # Rules
     local rules_dir="$vault/.claude/rules"

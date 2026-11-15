@@ -1,18 +1,19 @@
-# KN-Stack System Overview — v1.1.0 (2026-06-12)
+# KN-Stack System Overview
 
-> Current-state map of the agentic system. This is the **freshest** architecture doc.
-> The per-pillar deep-dives (BRIDGE/FORGE/HELIX_Architecture.md) date from v1.0.0 (2026-04-23)
-> and predate: helix P4 pipeline, forge-fabrication, book domain, mentors scale-out (26→54), tana domain.
-> Trust this file for topology; trust the deep-dives only for per-pillar design rationale.
+> Current-state map of the agentic system.
+> Skill counts are deliberately absent from this file — they change on every merge and every
+> hard-coded number here went stale. Run `bash setup.sh --status` for the real figures.
 
 ## What this system is
 
-KN-Stack is the source of truth for **230 Claude Code skills** (15 domains) that run Workshop X
-as an AI-First company: product strategy (FORGE), design execution (HELIX, Pahl-Beitz),
-manufacturing (forge-fabrication → ERPNext), operations (BRIDGE, ops), knowledge management
-(galaxy, IPARAG/Zettelkasten), and a 54-mentor AI advisory board.
+KN-Stack is the source of truth for the Claude Code skills that run Workshop X as an AI-First
+company: product strategy (FORGE), design execution (HELIX, Pahl-Beitz), manufacturing
+(forge-fabrication → ERPNext), operations (BRIDGE, ops), knowledge management (galaxy,
+IPARAG/Zettelkasten), and an AI mentor board.
 
-Deployment: NTFS junctions from `~/.claude/commands/<skill>` → `D:\KN-Stack\skills\<domain>\<skill>` (`setup.sh --install/--verify/--status`).
+Deployment: NTFS junctions from `~/.claude/commands/<skill>` → `D:\KN-Stack\skills\<domain>\<skill>`
+(`setup.sh --install/--verify/--status`). The working tree IS the runtime: switching branch,
+stashing or resetting in `D:\KN-Stack` changes what every session loads.
 
 ## The closed loop (R&D → production → knowledge)
 
@@ -21,7 +22,7 @@ FORGE (what to build)
   forge-pre-study → forge-job-map (ODI) → forge-scout/shift → forge-validate → forge-portfolio
         │
         ▼
-HELIX (how to build — Pahl-Beitz P1→P4, each a 6-block mega-skill pipeline)
+HELIX (how to build — Pahl-Beitz P1→P4; each phase skill is an orchestrator that delegates to blocks)
   helix-task-clarify    = p1-preflight → requirements → validate → abstract → structure → compile
   helix-concept-generate= p2-preflight → frame → search → develop → risk → select
   helix-embody-realize  = p3-preflight → form (BF) → layout → integrate → dfx → bom → compile
@@ -35,53 +36,56 @@ FABRICATION (forge-fabrication, F0–F5)
         ▼
 KNOWLEDGE (galaxy)
   galaxy-note (permanent notes) ← session-exit / tana-* (THỊNH capture)
-  mentor-board (orchestrator) → 54 mentors/* skills (CONSULT/PANEL/DEBATE/DECIDE, DMIR + retro)
+  mentor-board (orchestrator) → mentors/* skills (CONSULT/PANEL/DEBATE/DECIDE, DMIR + retro)
   codify (markdown → Python, ledger at scripts/_codify_ledger.md)
 ```
 
-Quality gates: `gate0`–`gate3` (system/) enforce the 3-Gate Quality System between phases;
-`helix-quality-gate` runs the in-pipeline review. Guard rails (guard/) watch CEO failure
-modes: `analyst-trap`, `ratio-check` (MAKE:THINK), `physical-sprint`.
+Quality gates: `helix-quality-gate` is the gate every HELIX phase skill and block points to
+(Gates 1–4). `gate0` (system/) is the only Phase-0 gate. `gate1`–`gate3` (system/) are older
+standalone scorecards that no HELIX skill calls and whose thresholds differ — see Known debt.
+Guard rails (guard/) watch CEO failure modes: `analyst-trap`, `physical-sprint`.
 
-## Domains (230 skills)
+## Domains
 
-| Domain | n | Role | Key entry points |
-|---|---|---|---|
-| helix | 40 | Pahl-Beitz design execution | helix-task-clarify, -concept-generate, -embody-realize, -detail-finalize, helix-project-init |
-| mentors | 54 | Per-mentor AI advisors (NotebookLM-grounded) | via galaxy/mentor-board |
-| book | 23 | Codebase↔book↔skill pipelines | codebase-to-book (book-*), book-to-codebase (btc-*), book-to-skill, notebook-to-book |
-| system | 16 | Design/decision tools | gate0-3, decide, cld, archetype, leverage |
-| forge | 15 | Product strategy + manufacturing | forge-pre-study, forge-job-map, forge-fabrication |
-| ops | 15 | CEO operations | portfolio, sprint, weekly-3, hire-tracker, nlm |
-| galaxy | 12 | Zettelkasten + mentor board + codify | galaxy-note, mentor-board, research, codify |
-| bridge | 10 | Operations layer | bridge-dashboard, bridge-flywheel, bridge-knowledge-base |
-| tana | 9 | THỊNH workflow capture (Tana MCP) | tana-thu/hoa/ich/nho/hanh, tana-session, tana-weekly |
-| design | 8 | Specialized engineering tools | reverse-engineering, odi, sdmodel, helm-aluminum-boat |
-| guard | 7 | CEO guard rails | analyst-trap, ratio-check, aigate |
-| extract | 7 | Content extraction | yt-extract/yt-learn/yt-search, x/fb/linkedin/chat-extract |
-| erp | 6 | ERPNext integration | erp-master/bom/production/quality/stock/finance |
-| session | 5 | Session lifecycle | catchup, checkpoint, session-exit |
-| learn | 3 | Learning methodology | learn-methodology/practice/track |
+| Domain | Role | Key entry points |
+|---|---|---|
+| helix | Pahl-Beitz design execution, CAD chain, C&C² | helix-task-clarify, -concept-generate, -embody-realize, -detail-finalize, helix-project-init, helix-quality-gate |
+| mentors | Per-mentor AI advisors (NotebookLM-grounded) | via galaxy/mentor-board |
+| book | Codebase↔book↔skill pipelines | codebase-to-book (book-*), book-to-codebase (btc-*), book-to-skill, notebook-to-book, book-to-book |
+| system | Decision and systems-thinking tools, legacy gates | gate0, decide, cycle, constraint, cld, archetype, leverage |
+| forge | Product strategy + manufacturing | forge-pre-study, forge-job-map, forge-shift, forge-fabrication |
+| ops | CEO operations | portfolio, risk, sprint, weekly-3, nlm |
+| galaxy | Zettelkasten + mentor board + codify | galaxy-note, mentor-board, research, codify |
+| bridge | Operations layer | bridge-judgment, bridge-knowledge-base, bridge-signal-extract |
+| tana | THỊNH workflow capture (needs the Tana MCP server) | tana-thu/hoa/ich/nho/hanh, tana-session, tana-weekly |
+| design | Specialized engineering tools | reverse-engineering, odi, sdmodel, helm-aluminum-boat |
+| guard | CEO guard rails | analyst-trap, aigate, qc |
+| extract | Content extraction | yt-learn, yt-search, chat-extract |
+| erp | ERPNext integration (needs the ERPNext MCP server) | erp-master/bom/production/quality/stock/finance |
+| session | Session lifecycle | catchup, checkpoint, session-exit |
+| learn | Learning methodology | learn-methodology/practice/teach/track |
 
 ## Infrastructure
 
-- **hooks/** (3): `session-briefing.sh` (SessionStart — vault health briefing), `track-skill-usage.sh` (UserPromptSubmit — MAKE/CHECK/THINK CSV), `check-learnings.sh` (Stop — daily learning reminder). All paths git-relative; deployed to the vault by `setup.sh --update`.
-- **rules/** (4): vault rules for 1_Projects, 5_Galaxy, 2_Areas/HELIX, 3_Resources.
-- **evals/** (9 specs + runner): runtime mode pipes test_input to `claude -p`; **static mode** audits SKILL.md directly (use for orchestrators). Covered: analyst-trap, research, helix-task-clarify, helix-concept-generate, helix-embody-realize, helix-quality-gate, forge-fabrication, mentor-board, codebase-to-book.
+- **rules/** (4): vault rules for 1_Projects, 5_Galaxy, 2_Areas/HELIX, 3_Resources; copied to the vault by `setup.sh --update`.
+- **evals/** (specs + runner): runtime mode pipes test_input to `claude -p`; **static mode** audits SKILL.md directly (use for orchestrators).
 - **scripts/**: codified Python (Naval code leverage); registry at `_codify_ledger.md`.
+- **plugins/**, **mcp/**: self-contained plugins and local MCP servers.
 
-## Standards (enforced 2026-06-12)
+## Standards
 
-1. Every SKILL.md starts with frontmatter: `name:` (= dir name) + `description:` with "Triggers on: …" (EN + VN). 230/230 compliant.
+1. Every SKILL.md starts with frontmatter: `name:` (= dir name) + `description:` with "Triggers on: …" (EN + VN).
 2. References resolve relative to the skill dir; cross-skill refs use `../<skill>/references/<file>.md` (see book domain).
-3. Runtime state (`_meta/`, `progress.md`) and vault artifacts (`.obsidian/`, `book/`, xlsx/docx) are gitignored — never commit them.
+3. Runtime state (`_meta/`, `progress.md`) and vault artifacts (`.obsidian/`, `book/`, xls/xlsx/docx) are gitignored — never commit them.
 4. New orchestrator/mega-skill ⇒ add a static-mode eval spec.
-5. Counts drift — verify with `setup.sh --status` before citing.
+5. A skill that names a tool, file or sibling skill must name one that exists. The 2026-11-15 audit removed 16 skills, most of them for pointing at things that were never there.
 
-## Known debt (deliberate, not forgotten)
+## Known debt (measured 2026-11-15, not yet resolved)
 
-- Naming: 15 legacy helix skills don't follow `helix-p{n}-{block}` (they predate the pipeline convention; renaming would break muscle memory + junctions — revisit at v2.0).
-- `btc-*` block prefix vs `book-` convention: accepted as the book-to-codebase block namespace.
-- BRIDGE/FORGE/HELIX deep-dive docs are v1.0.0-era (see banner above).
-- Eval coverage 9/230 — by design only orchestrators/gates get specs; blocks are exercised through their orchestrator.
-- Overlap clusters to watch: research ↔ research-to-skill ↔ skill-from-research; learn-* ↔ galaxy/learning; docs/TNKCT_* project artifacts should migrate to the vault.
+- **Threshold drift across layers.** Requirement count is ">= 40" in helix-quality-gate Gate 1 but "50-80" in helix-task-clarify and helix-p1-requirements. Quantification is ">=80%" (FAIL below 60%) in system/gate1. One concept, several numbers; none cites a source.
+- **Two folder names for one phase.** Skills write both `Phase3-Embody/` and `Phase3-Embodiment/`, and the vault holds both. Fixing it needs a naming decision plus a vault rename.
+- **Two ODI scales.** forge-job-map scores opportunity with cut-offs at 8.0 / 6.0 / 4.0; design/odi uses Ulwick's > 15 / 12–15 / 10–12. Vault artifacts exist in both.
+- **system/gate1–gate3 vs helix-quality-gate.** Same gates, different checks and pass marks; only helix-quality-gate is wired into the pipeline.
+- **Phase orchestrators restate their blocks.** The four phase skills repeat each block's output contract in a "Data Bus" table that has drifted from the blocks (file names, variant prefixes). The blocks are what runs; the tables are the copy.
+- **Naming:** legacy helix skills don't follow `helix-p{n}-{block}`; `btc-*` is accepted as the book-to-codebase block namespace.
+- **Overlap clusters still open:** research-to-skill ↔ skill-from-research; learn-* ↔ galaxy/learning; ops/portfolio ↔ forge-portfolio; session/journal ↔ helix-design-journal ↔ ops/teach.

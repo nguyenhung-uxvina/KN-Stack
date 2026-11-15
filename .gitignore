@@ -1,5 +1,4 @@
 # Runtime artifacts
-create-junctions.ps1
 *.bak
 *.tmp
 
@@ -19,6 +18,7 @@ desktop.ini
 /book/
 
 # Binary office artifacts
+*.xls
 *.xlsx
 *.docx
 
