@@ -1,6 +1,6 @@
 ---
 name: helix-cad-gates
-description: "Geometry Computational Sensor + Gate cho mô hình CAD do AI dựng — đo STEP so với geometry_contract.json kỹ sư đã ký (KHÔNG cần STEP đáp án): F1 B-Rep kín/hợp lệ · F2 hộp bao TỪNG TRỤC + phát hiện ĐẢO TRỤC + điểm dò point-in-solid bắt ẢNH GƯƠNG và SAI VỊ TRÍ · F3 đếm feature trụ theo Ø · F4 uốn tham số ±10% dựng lại (hợp đồng PARAMS/build) · khối lượng so khung tên chỉ là INFO. Kèm cad_runner.py (chạy model.py trong tiến trình con cách ly, timeout) và render_views.py (6 hình chiếu + trục đo PNG cho cổng CEO và giám khảo ý đồ). Tất định, cục bộ, không LLM; báo cáo cùng định dạng helix-cad-validate (PASS/FAIL/SKIP/INFO, exit 0/2/3, --approved-hash). Triggers on: 'cad gates', 'geometry gate', 'kiểm mô hình AI dựng', 'cổng hình học', 'B-Rep kín', 'đảo trục', 'ảnh gương', 'point probe', 'điểm dò', 'đếm lỗ', 'parametric flex', 'uốn tham số', 'render views', 'kiểm STEP', 'verify STEP', 'geom gates'."
+description: "Geometry Computational Sensor + Gate cho mô hình CAD do AI dựng — đo STEP so với geometry_contract.json kỹ sư đã ký (KHÔNG cần STEP đáp án): F1 B-Rep kín/hợp lệ · F2 hộp bao TỪNG TRỤC + phát hiện ĐẢO TRỤC + điểm dò point-in-solid bắt ẢNH GƯƠNG và SAI VỊ TRÍ · F3 đếm feature trụ theo Ø (thiếu VÀ thừa) · F4 uốn tham số ±10% dựng lại + hình PHẢI đổi + param_probes bắt toạ độ tuyệt đối (hợp đồng PARAMS/build) · --mode release mặc định ép FAIL khi hợp đồng mỏng (thiếu điểm dò / --model / --approved-hash) · khối lượng so khung tên chỉ là INFO. Kèm cad_runner.py (chạy model.py trong tiến trình con cách ly, timeout) và render_views.py (6 hình chiếu + trục đo PNG cho cổng CEO và giám khảo ý đồ). Tất định, cục bộ, không LLM; báo cáo cùng định dạng helix-cad-validate (PASS/FAIL/SKIP/INFO, exit 0/2/3 + 4 DRAFT-PASS, --approved-hash). Triggers on: 'cad gates', 'geometry gate', 'kiểm mô hình AI dựng', 'cổng hình học', 'B-Rep kín', 'đảo trục', 'ảnh gương', 'point probe', 'điểm dò', 'đếm lỗ', 'parametric flex', 'uốn tham số', 'render views', 'kiểm STEP', 'verify STEP', 'geom gates'."
 allowed-tools: ["Read", "Write", "Edit", "Bash", "Grep", "Glob"]
 ---
 
@@ -20,6 +20,10 @@ allowed-tools: ["Read", "Write", "Edit", "Bash", "Grep", "Glob"]
 - **Đếm feature cho qua nhầm**: P4 puly — trục Ø12 sai, nhưng mũ Ø20 khớp check "Ø19–20" ⇒ F3 PASS;
   chỉ **điểm dò** bắt được (0/2). ⇒ mọi feature quan trọng phải có `probes[]`.
 - Agent dựng **tự chỉnh độ dày tấm cho khớp KL khung tên** ⇒ KL chỉ là INFO, cấm làm mục tiêu.
+- **Rà điểm mù 2026-11-05** (đối chiếu CADCodeVerify, arXiv 2410.05340): 4 đột biến từng PASS cổng v1.0 —
+  M1 `build()` khai PARAMS nhưng bỏ qua (F4 chỉ kiểm B-Rep kín) · M2 lỗ đặt toạ độ tuyệt đối (đứng yên khi
+  chiều dài đổi) · M3 hợp đồng chỉ có bbox + khối hộp **không có lỗ** ⇒ verdict PASS (SKIP không chặn) ·
+  M4 lỗ thừa ngoài spec (F3 chỉ đếm ≥). v1.1 vá cả 4; mỗi đột biến có test và FAIL trên v1.0.
 
 ## Operational Envelope
 | DO | DON'T |
@@ -27,6 +31,7 @@ allowed-tools: ["Read", "Write", "Edit", "Bash", "Grep", "Glob"]
 | Chấm STEP so với `geometry_contract.json` đã ký | So với "cảm giác đúng" hay render đẹp |
 | Chạy `model.py` qua `cad_runner.py` (tiến trình con `-I`, timeout) | `exec`/import mã AI viết vào tiến trình chính |
 | Báo FAIL rõ khi thiếu solid, thiếu hợp đồng PARAMS | Văng lỗi / SKIP im lặng |
+| `--mode release` khi đưa cho judge/CEO; `--mode draft` chỉ khi đang lặp dựng | Đưa `DRAFT-PASS` cho judge/CEO như PASS |
 | Ghi KL là INFO | Đóng/mở cổng theo KL; gợi ý chỉnh kích thước cho khớp KL |
 | Dùng `--approved-hash` | Để agent sửa hợp đồng cho cổng xanh |
 
@@ -50,9 +55,10 @@ python cad_runner.py run --model model.py            # → model.step ; exit 2 n
 ### Step 3: Cổng (Offload — mỗi vòng lặp)
 ```bash
 python geom_gates.py --step model.step --contract geometry_contract.json --model model.py \
-                     --out cad_gates_report --approved-hash <sha256>
+                     --out cad_gates_report --approved-hash <sha256>          # --mode release (mặc định)
 ```
 Exit 0 = PASS (mở cho judge + CEO) · 2 = FAIL (gửi `fix_hint` về khối dựng, 1 vòng/lượt) · 3 = lỗi IO.
+Đang lặp dựng, hợp đồng chưa đủ: thêm `--mode draft` ⇒ verdict `DRAFT-PASS` (**exit 4**, cố ý ≠ 0) — **không** mở judge/CEO.
 
 ### Step 4: Render cho người (Offload → CORE)
 ```bash
@@ -64,6 +70,12 @@ CEO/kỹ sư xem 6 hình chiếu + trục đo (Spatial Blindness gate của [[he
 - `is_inside` chỉ có trên solid — STEP chỉ có shell ⇒ `F2_probes` FAIL kèm "xem F1" (không văng lỗi).
 - Điểm dò đặt **giữa** feature, cách biên ≥ 1 mm; điểm sát biên cho kết quả bấp bênh.
 - F4 FAIL vì "không theo hợp đồng PARAMS/build" ≠ "số cứng" — mô hình có thể có hằng số tên nhưng không gọi được `build(params)`.
+- F4 "không tác động" = uốn ±10% cho hình y hệt (hộp bao + thể tích + trọng tâm). Tham số thật sự không đổi
+  hình (số nguyên đếm, cờ) ⇒ bỏ khỏi `f4_params`, đừng nới cổng.
+- `F4_model_matches_step` FAIL ⇒ STEP đang kiểm không phải đầu ra của `model.py` — xuất lại, đừng sửa hợp đồng.
+- `F3_unlisted` bắt cả **bo cung** (mặt trụ Ø = 2r): liệt kê fillet trong `cyl_features` hoặc kỹ sư đặt
+  `cyl_exhaustive: false` rồi ký lại.
+- `param_probes` chỉ nhận `+ - * /`, số, tên PARAMS (không `eval`) — biểu thức khác ⇒ FAIL kèm lỗi.
 - Render bằng sắp xếp độ sâu + bỏ mặt quay lưng; đủ để soi hướng/feature, không phải ảnh kỹ thuật.
 
 ## Integration Map
@@ -90,5 +102,8 @@ CEO/kỹ sư xem 6 hình chiếu + trục đo (Spatial Blindness gate của [[he
 | Duyệt render + ký | **C** |
 
 ## Tests
-`python -m pytest scripts/test_helix_cad_gates.py -v` — 12 ca đột biến (shell hở, đảo trục, lỗ đúng Ø sai chỗ,
-thiếu lỗ, không điểm dò ⇒ SKIP, KL không gating, F4 có/không hợp đồng, fillet giòn, hash lệch, mã thoát).
+`python -m pytest scripts/test_helix_cad_gates.py -v` — 23 ca: 12 đột biến gốc (shell hở, đảo trục, lỗ đúng Ø
+sai chỗ, thiếu lỗ, không điểm dò ⇒ SKIP, KL không gating, F4 có/không hợp đồng, fillet giòn, hash lệch, mã thoát
+— ca này nay chạy `--mode draft`) + 11 ca điểm mù 2026-11-05 (M1–M4, đối chứng dương lỗ theo tham số, model≠STEP,
+release/draft, waiver, biểu thức probe không chạy mã). Đối chứng âm: chạy bộ test này trên `geom_gates.py` v1.0 ⇒
+10/11 ca mới FAIL; ca còn lại (`test_release_full_contract_passes`) là đối chứng dương nên PASS ở cả hai bản.
