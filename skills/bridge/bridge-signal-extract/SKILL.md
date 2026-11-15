@@ -75,7 +75,7 @@ NEVER auto-route without human validation. Signal quality degrades if AI misinte
 | Assumptions | Requirements list (verify/update) |
 | Interface changes | ICD tracker |
 | Action items | Project Status.md |
-| Risk flags | bridge-risk-radar |
+| Risk flags | /risk |
 | Anomalies | KB Layer 2 + validation plan |
 | Tacit insights | Galaxy note candidates |
 | Cross-product patterns | KB Layer 3 |
@@ -115,8 +115,7 @@ Generate a structured Signal Report:
 ## Integration Points
 
 - Feeds into: bridge-knowledge-base (KB Layer 2+3)
-- Feeds into: bridge-risk-radar (risk flags)
-- Feeds into: bridge-flywheel (insight generation count)
+- Feeds into: /risk (risk flags)
 - Receives from: HELIX sync protocol summaries
 - Receives from: User input (meeting notes, test data, field reports)
 

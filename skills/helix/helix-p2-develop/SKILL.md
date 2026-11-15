@@ -230,7 +230,9 @@ STEP 4 — SCORE (0-4, tendency signs ↑↓, uncertainty ?):
 
 STEP 5 — CALCULATE:
   x_t = Σ(w×s) / (4×Σw)   |  x_e = Σ(w×s) / (4×Σw)
-  Threshold: ≥ 0.6 | RANKING: ___
+  Bands (P&B §6.5.2, p. 197 — full quote in helix-concept-generate/references/pb-conceptual-design.md):
+    x < 0.6 → eliminate | 0.6–0.8 → release ONLY after removing weak spots | > 0.8 + balanced → proceed
+  RANKING: ___
 
 STEP 6 — Rt-Re DIAGRAM: [above diagonal = good value]
 
@@ -242,7 +244,7 @@ STEP 8 — WEAK SPOTS:
   ⚠ High ? on high-weight → RISK SPOT
   
 VALUE PROFILE: [bar chart visualization]
-GOLDEN RULE: "Balanced 75% > Unbalanced 85%"
+GOLDEN RULE: "Balanced 75% > Unbalanced 85%"  (Workshop X illustration — the 75/85 figures are not in P&B; the principle is the balanced value profile, p. 197)
 ```
 
 ### Step C5: TRIZ Solution Improvement

@@ -247,8 +247,7 @@ helix-project-init READS FROM:
 helix-project-init WRITES TO:
   - helix-task-clarify → charter + ICD v0 as inputs for Phase 1
   - helix-sync-protocol → sync calendar as baseline
-  - bridge-dashboard → new project appears in dashboard
-  - bridge-risk-radar → initial risk register entry
+  - /risk → initial risk register entry
 ```
 
 ## Rules

@@ -158,7 +158,7 @@ Date: {{today}}
 UNDERSERVED (top 15 — invest here):
 | Rank | Outcome | Job Step | Imp | Sat | Opp Score |
 |------|---------|----------|-----|-----|-----------|
-| 1 | {{outcome}} | {{step}} | 4.8 | 1.9 | 9.6 |
+| 1 | {{outcome}} | {{step}} | 4.8 | 1.9 | 7.7 |
 | 2 | ... | | | | |
 
 OVERSERVED (bottom 15 — reduce cost here):

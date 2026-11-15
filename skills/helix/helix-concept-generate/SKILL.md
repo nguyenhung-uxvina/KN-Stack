@@ -568,7 +568,7 @@ helix-concept-generate WRITES TO:
   - helix-embody-realize → handoff package
   - helix-quality-gate → gate 2 readiness
   - forge-library → new solution principles
-  - bridge-risk-radar → concept risks
+  - /risk → concept risks
   - helix-design-journal → session log
 
 helix-concept-generate VISUAL OUTPUTS (via /helix-draw):

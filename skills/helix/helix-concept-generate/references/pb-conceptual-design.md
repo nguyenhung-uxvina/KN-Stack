@@ -223,7 +223,7 @@ When N SFs × M WPs = too many combinations:
 - **Recommended column grouping (§6.4.2):** Group morpho columns by energy domain (mechanical / electrical / software / passive) to reveal compatibility patterns and domain coupling. P&B treats this as standard practice for multi-domain systems — apply for all Original designs, optional for Variant.
 - Only combine COMPATIBLE working principles (check 8 types above)
 - Check physical + geometric + E-M-S flow continuity
-- ≥3 concept variants REQUIRED
+- ≥3 concept variants REQUIRED (Workshop X convention — P&B asks for several variants but sets no minimum)
 - Working structure documentation: describe how WPs work as integrated system
 - Principle sketches: hand-drawn preferred at this stage (freedom to explore)
 
@@ -325,7 +325,14 @@ Technical Value:  x_t = Σ(w_i × s_i) / (4 × Σw_i)
 Economic Value:   x_e = Σ(w_j × s_j) / (4 × Σw_j)
 
 x_t, x_e ∈ [0, 1]
-Threshold: x ≥ 0.6 (below = eliminate)
+Thresholds (P&B §6.5.2, printed p. 197) — three bands, not one cut-off:
+  x < 0.6            → eliminate
+  0.6 ≤ x ≤ 0.8      → release for embodiment ONLY after removing weak spots / improving the combination
+  x > 0.8 + balanced → move on to embodiment design without further improvement
+("Concept variants that are some 60% below the target are not worth further development. Variants with
+ratings above 80% and a balanced value profile—those without extremely bad individual characteristics—can
+generally be moved on to the embodiment design phase without further improvement. Intermediate variants
+should only be released for embodiment design after the elimination of weak spots or an improved combination")
 ```
 
 **S-Diagram:**
@@ -346,7 +353,7 @@ x_e ↑
 - Score 2+ below concept average → RELATIVE WEAK SPOT
 - High uncertainty (?) on high-weight criterion → RISK SPOT
 
-**Golden Rule:** "Balanced 75% > Unbalanced 85%"
+**Golden Rule:** "Balanced 75% > Unbalanced 85%" — *Workshop X illustration; the 75/85 figures are not in P&B. The principle is: P&B p. 123 (two variants with the same overall weighted value — the balanced one is better) and p. 197 (balanced value profile).*
 A concept with all 3s (balanced) is SAFER than one with mix of 4s and 1s.
 
 **Value Profile Analysis:** Plot bar chart per criterion to visualize balance vs. imbalance.

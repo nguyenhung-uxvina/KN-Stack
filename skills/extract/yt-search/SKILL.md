@@ -7,14 +7,14 @@ description: Search YouTube for videos on a topic, present results, then optiona
 
 Tìm video trên YouTube → chọn video tốt → tạo NLM notebook → query insights → route to vault.
 
-**PATH:** `yt-dlp` tại `C:/Users/ADMIN/AppData/Roaming/Python/Python313/Scripts/yt-dlp.exe`
-Luôn prefix bash: `export PATH="$PATH:/c/Users/ADMIN/AppData/Roaming/Python/Python313/Scripts"`
+**PATH:** `yt-dlp` tại `C:/Users/Admin/AppData/Local/Programs/Python/Python312/Scripts/yt-dlp.exe`
+Luôn prefix bash: `export PATH="$PATH:/c/Users/Admin/AppData/Local/Programs/Python/Python312/Scripts"`
 
 ## When to Use
 
 - Khi CEO muốn tìm video về một chủ đề cụ thể
 - Khi cần market intel, competitor intel, hoặc technical references từ YouTube
-- Khác với `/yt-extract-short` (extract 1 URL đã có) — skill này **tìm kiếm** trước
+- Khác với `/yt-learn` (extract 1 URL đã có) — skill này **tìm kiếm** trước
 
 ## Input
 
@@ -33,7 +33,7 @@ Luôn prefix bash: `export PATH="$PATH:/c/Users/ADMIN/AppData/Roaming/Python/Pyt
 ### Step 1: Search YouTube via yt-dlp
 
 ```bash
-export PATH="$PATH:/c/Users/ADMIN/AppData/Roaming/Python/Python313/Scripts"
+export PATH="$PATH:/c/Users/Admin/AppData/Local/Programs/Python/Python312/Scripts"
 yt-dlp "ytsearch8:<topic>" \
   --flat-playlist \
   --print "%(id)s | %(title)s | %(duration_string)s | %(view_count)s | %(upload_date)s | %(channel)s" \
@@ -159,7 +159,7 @@ Chạy 4 queries:
 | Save report to vault | Ghi vào `0_Inbox/YT_Search_<topic>_<date>.md` |
 | Save to KB | Add vào `3_Resources/` subfolder phù hợp |
 | Galaxy candidate | Run `/galaxy-gate` → tạo note nếu pass |
-| Deep-dive 1 video | Chạy `/yt-extract-short` với URL cụ thể |
+| Deep-dive 1 video | Chạy `/yt-learn` với URL cụ thể |
 | Discard | Xóa notebook, không lưu |
 
 ---
@@ -190,15 +190,15 @@ Nếu CEO chỉ muốn danh sách video (không extract):
 | Lỗi | Xử lý |
 |-----|-------|
 | yt-dlp không tìm được | Thử lại với từ khóa ngắn hơn / tiếng Anh |
-| Tất cả videos private/no caption | Báo CEO: "NLM không extract được — thử /yt-extract-short từng URL" |
+| Tất cả videos private/no caption | Báo CEO: "NLM không extract được — thử /yt-learn từng URL" |
 | NLM timeout | Retry 1 lần sau 30s |
 | < 3 kết quả tìm được | Báo CEO, gợi ý từ khóa thay thế |
 
 ---
 
-## vs /yt-extract-short
+## vs /yt-learn
 
-| | `/yt-search` | `/yt-extract-short` |
+| | `/yt-search` | `/yt-learn` |
 |---|-------------|---------------------|
 | Input | Topic/keyword | Specific URL |
 | Purpose | Discovery — tìm video | Extraction — mine 1 URL |

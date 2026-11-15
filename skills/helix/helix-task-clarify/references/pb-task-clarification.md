@@ -26,7 +26,7 @@ Source: P&B Ch5 (Task Clarification) + Ch6.1-6.3 (Abstraction + Function Structu
 └──────┴────────────────────────┴────────┴──────────┴──────────┘
 ```
 
-### Main Heading Checklist (P&B Table 5.1)
+### Main Heading Checklist (P&B Figure 5.3, p. 149)
 
 | # | Category | Ví dụ |
 |---|----------|-------|
@@ -133,7 +133,9 @@ RULE: Tag EVERY requirement with timing. Requirements tagged [LATE] may use plac
       values initially — mark as [TBD] with planned resolution date.
 ```
 
-## Task Source Types (P&B 5.1)
+## Task Source Types (P&B §5.1, p. 144)
+
+> P&B names **3** forms: development order, definite order, request (from sales, research, testing, assembly…). Rows 4–6 below are Workshop X additions, not P&B.
 
 | # | Source Type | Definition | Implications |
 |---|-----------|-----------|-------------|
@@ -144,7 +146,7 @@ RULE: Tag EVERY requirement with timing. Requirements tagged [LATE] may use plac
 | 5 | Problem Report | Field failures or deficiencies | Root cause before requirements |
 | 6 | Regulatory Change | New standards require redesign | Compliance-driven, constraint-focused |
 
-## Obviously Necessary Items (P&B 5.2)
+## Obviously Necessary Items (P&B §5.4, p. 157 — «obvious requirements»)
 
 Prompt to capture requirements so basic they might be skipped:
 
@@ -161,7 +163,7 @@ CHECKLIST — "What's so obvious it might be forgotten?"
   □ Spare parts obtainable within acceptable lead time
 ```
 
-## Implicit Requirements (P&B 5.2)
+## Implicit Requirements (P&B §5.2.3, p. 150)
 
 Prompt: **"What would the customer reject the design for if absent, even though they never stated it?"**
 
@@ -243,7 +245,7 @@ SOLUTION IDEAS LOG:
 These ideas feed Phase 2 working principle search — they are NOT lost, just parked.
 ```
 
-## Department Objection Protocol (P&B 5.4 — 4-Step Compilation Step 4)
+## Department Objection Protocol (P&B §5.2.5, p. 153 — compiling the requirements list, step 4)
 
 Before releasing the Requirements List as "v1.0":
 

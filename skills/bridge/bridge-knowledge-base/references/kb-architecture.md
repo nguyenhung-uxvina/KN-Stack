@@ -37,7 +37,7 @@ Changes continuously, captured from work.
 Contents:
 - Design review extracts (from bridge-signal-extract)
 - Field feedback digests (structured from anecdotal)
-- Cross-product lessons (from bridge-cross-learn)
+- Cross-product lessons
 - CEO decision rationale (from bridge-judgment)
 - Galaxy permanent notes (atomic insights)
 

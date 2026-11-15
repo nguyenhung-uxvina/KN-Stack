@@ -415,7 +415,6 @@ When migrating:
 | Production → Status.md | Unit counts, completion dates | `/ops production` → update project Status.md |
 | Inventory → FORGE Cost | Actual material costs | `/ops inventory` costs → `/forge-cost` validation |
 | CRM → bd-pulse | Customer touchpoints | Shared data in `Customers` sheet |
-| Finance → bridge-dashboard | Revenue, margin | `/ops finance` → dashboard metrics |
 
 ## STRUCTURED GUARDRAILS (Research-validated — Springer 2025)
 

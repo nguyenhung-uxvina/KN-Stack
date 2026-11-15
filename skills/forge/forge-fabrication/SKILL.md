@@ -403,10 +403,8 @@ Traceability artifacts in <run_dir>/:
   _pipeline_state.md  (full ledger)
 
 Compound learning hooks:
-  - /forge-flywheel <product> → log field data collection start (warranty period begin)
   - /forge-library audit → check if this run validates a model from library
   - /helix-design-journal → record any production-discovered issues for next P3
-  - /bridge-cross-learn → suggest if patterns transfer to other products
 ═══════════════════════════════════════════════════
 ```
 
@@ -455,10 +453,9 @@ This closes the R&D → production gap that previously required manual bridging.
 
 Each completed run automatically:
 
-1. **Updates `forge-flywheel`:** Field deployment starts → data collection begins → model retraining accumulator
-2. **Updates `forge-library`:** If product uses a library model, log production validation as evidence
-3. **Updates `bridge-knowledge-base`:** Run summary becomes searchable case study
-4. **Updates routing actuals:** Job Card actual hours feed back to update planned hours in `_routing.md` (improving F0 capacity estimates over time)
+1. **Updates `forge-library`:** If product uses a library model, log production validation as evidence
+2. **Updates `bridge-knowledge-base`:** Run summary becomes searchable case study
+3. **Updates routing actuals:** Job Card actual hours feed back to update planned hours in `_routing.md` (improving F0 capacity estimates over time)
 
 These hooks turn each run from a one-shot operation into a **compounding asset** — Naval's "code/media that work while you sleep."
 
@@ -513,7 +510,6 @@ forge-fabrication WRITES TO:
   - 1_Projects/<product>/_routing.md → planned hours updated from actuals (after F3)
 
 forge-fabrication TRIGGERS (CEO-prompted after F5):
-  - /forge-flywheel <product> → start field data collection window
   - /forge-library audit → log model validation evidence
   - /bridge-knowledge-base → ingest run summary
   - /helix-design-journal → capture any production-discovered design issues
@@ -546,7 +542,7 @@ HELIX P1 → P2 → P3 → P4 → [GAP] → manual erp-* calls → field
 
 After forge-fabrication:
 ```
-HELIX P1 → P2 → P3 → P4 → forge-fabrication F0→F5 → field data → forge-flywheel → loop
+HELIX P1 → P2 → P3 → P4 → forge-fabrication F0→F5 → field data → loop
 ```
 
 Each run is now a **node in a compounding graph**, not a standalone transaction.

@@ -188,7 +188,7 @@ Images/PDFs per platform:
 
 - Feeds into: `bridge-signal-extract` (same output format)
 - Feeds into: `bridge-knowledge-base` (KB Layer 2 product knowledge)
-- Feeds into: `bridge-risk-radar` (relationship risk flags)
+- Feeds into: `/risk` (relationship risk flags)
 - Feeds into: Galaxy (via `/galaxy-gate` for qualifying insights)
 - Feeds into: Project `Status.md` (action items, decisions)
 

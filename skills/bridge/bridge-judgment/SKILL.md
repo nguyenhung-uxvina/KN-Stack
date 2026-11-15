@@ -13,7 +13,6 @@ Structure decisions with options, evidence, risks, and unknowns. Present the dec
 - When making a strategic choice (invest in product X vs Y)
 - When allocating resources (hire vs buy)
 - When assessing risk (deploy now vs wait)
-- When bridge-dashboard metric #5 (Decision Quality) needs improvement
 
 ## Critical Principle
 
@@ -100,7 +99,7 @@ CEO reviews package, factors in experience, intuition, relationships, and contex
 ## Integration Points
 
 - Reads from: bridge-knowledge-base (prior decisions), FORGE portfolio (strategic context), HELIX project data (technical constraints)
-- Writes to: KB Layer 3 (decision log), helix-design-journal (project decisions), bridge-dashboard (decision quality metric #5)
+- Writes to: KB Layer 3 (decision log), helix-design-journal (project decisions)
 
 ## Metrics
 

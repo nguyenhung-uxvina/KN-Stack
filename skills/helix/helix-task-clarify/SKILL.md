@@ -458,7 +458,7 @@ helix-task-clarify WRITES TO:
   - helix-concept-generate → requirements + function structure + essential problem
   - helix-quality-gate → Gate 1 readiness
   - ICD v1 → requirements allocated to domains
-  - bridge-risk-radar → requirements risks
+  - /risk → requirements risks
   - helix-design-journal → session log
 
 helix-task-clarify VISUAL OUTPUTS (via /helix-draw):

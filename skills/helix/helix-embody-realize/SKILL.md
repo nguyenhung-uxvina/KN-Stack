@@ -471,7 +471,7 @@ helix-embody-realize WRITES TO:
   - helix-detail-finalize → frozen layout + BOM + geometry-of-record for Phase 4
   - helix-quality-gate → Gate 3 readiness
   - ICD v3 → frozen interfaces + geometry-of-record registry (C3a)
-  - bridge-risk-radar → integration risks
+  - /risk → integration risks
   - forge-library → new components cataloged
   - helix-design-journal → session log
 
