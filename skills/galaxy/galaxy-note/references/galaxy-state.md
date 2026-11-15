@@ -1,11 +1,42 @@
 # Galaxy State Reference
 
-Last updated: 2026-06-10
-Total notes: 74
-Target: 60-80 (WITHIN TARGET)
+Last updated: 2026-06-30 (census rescan via /galaxy-links)
+Permanent notes: **227** (D:\Workshop_X\5_Galaxy\, excluding `_README.md` + `GALAXY-ROADMAP.md`)
+Target: 60-80 — EXCEEDED ~3×. The vault has grown well past the original target; treat target as historical.
 
+## Tag Census (2026-06-30 — mechanical, reproducible)
 
-## Current Notes by Cluster
+Counted across all 227 permanent notes (a note may carry several Galaxy tags). This is the authoritative
+breakdown; the A–I conceptual cluster tables further down are a **historical partial map** (~66 notes as of
+2026-06-10) and were never extended to the ~161 notes added since — cluster assignment is CEO editorial
+judgment (Core per COD), not auto-derivable, since notes carry no cluster tag.
+
+| Galaxy tag | Notes | | Topic tag | Notes |
+|-----------|-------|---|-----------|-------|
+| `#product`     | 111 | | `#topic/systems-thinking`     | 28 |
+| `#three-laws`  | 109 | | `#topic/knowledge-management` | 26 |
+| `#pahl`        |  79 | | `#topic/technology`           | 24 |
+| `#warning`     |  73 | | `#topic/ai-tools`             | 14 |
+| `#defense`     |  60 | | `#topic/learning`             |  8 |
+| `#ceo`         |  36 | | `#topic/philosophy`           |  7 |
+| `#acq`         |  33 | | `#topic/electronics`          |  6 |
+| `#sys`         |  31 | | `#topic/network-theory`       |  5 |
+| `#meta`        |  23 | | `#topic/productivity`         |  4 |
+
+**Roadmap gaps now closed vs 2026-06-10:** `#three-laws` 0→109, `#defense` 2→60, `#ceo` 1→36, `#acq` 3→33 —
+all four underrepresented categories flagged in the old Growth Gaps table have since been filled well past target.
+
+**To re-run this census:** `Get-ChildItem D:\Workshop_X\5_Galaxy\*.md | ? BaseName -notmatch '^_|GALAXY-ROADMAP'`
+then count `#tag` matches in frontmatter (see session 2026-06-30 for the exact one-liner).
+
+---
+
+## Historical Cluster Map (A–I) — partial, ~66 notes as of 2026-06-10
+
+> Below covers only the early KM-fundamentals + first product notes. NOT extended to the full 227.
+> Kept for hub-note reference and the original conceptual scheme. Counts here are NOT current totals.
+
+### Current Notes by Cluster
 
 ### A: KM Fundamentals (6)
 - Nguyên Tắc Atomic Note (hub, 8 links)
