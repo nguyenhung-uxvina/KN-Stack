@@ -112,6 +112,16 @@ FLAGS:
 
 Source marking: (L)=Library, (S)=Standards, (A)=ACH, (H)=Human, (T)=TRIZ
 
+**RESEARCH HOOK (M1 Literature / M3 Known products):** These two methods are the search
+moments most prone to model-memory hallucination — invented principles, wrong TRL, stale
+benchmarks. For a **solution-determining SF** (the ≥5-WP flagged one), or any WP whose
+Source column would otherwise be blank, raise a Research Brief via `/helix-research`
+(`type: working-principle` for physical-principle questions, `type: prior-art` for
+"does this product/patent already exist" questions; `phase: P2`; `source_block: helix-p2-search`;
+`risk_if_wrong: HIGH` when the SF is solution-determining). Every WP populated from a
+Research Response carries that response's citation in the Source column — a WP with no
+Source stays flagged (⚠), never silently trusted.
+
 ### Step B2: DSO Pre-Ranking
 
 ```

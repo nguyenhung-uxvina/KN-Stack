@@ -1,0 +1,70 @@
+# denylist.yaml — Computational Sensor cho gate MẬT của leo-bridge.
+# CEO bổ sung tự do. Quy tắc match:
+#   product_codes + defense_terms: KHÔNG phân biệt hoa thường, khớp nguyên từ (word boundary).
+#   codenames: PHÂN BIỆT hoa thường (tránh false positive từ generic: "sentinel", "verdict"...).
+#   drawing_patterns: regex Python.
+# LƯU Ý false-positive đã né: "đạn" đứng riêng KHÔNG có (vì "bạc đạn" = bearing);
+#   "Axis"/"Scout"/"Nexus" không đưa vào (từ tiếng Anh quá phổ biến trong cơ khí) —
+#   các sản phẩm đó luôn đi kèm mã VN-* nên đã bị chặn qua product_codes.
+
+product_codes:
+  - BB-01
+  - TARGET-DRONE-001
+  - V-SMASH
+  - V-ACS
+  - V-CAM-HQ
+  - VN-TGT
+  - VN-12.7MM-SIM
+  - VN-AST-MSL
+  - VN-CUAV-SIM
+  - VN-CUAS
+  - VN-RWS127
+  - VN-MGM
+  - VN-AICC
+  - VN-RCE-VSN
+  - VN-PONTOON
+  - VN-XUONG-UUV
+  - VN-FWTP
+  - VN-USV-SS
+  - VN-SST
+  - VN-TLS
+  - VN-ALPB
+  - VSN-1500
+  - VSN-HKN
+
+codenames:
+  - THANH TRI
+  - Bastion
+  - Sentinel
+  - Verdict
+  - Kairos
+  - LOMAH
+
+defense_terms:
+  - khí tài
+  - giá trượt
+  - ngư lôi
+  - đạn dược
+  - viên đạn
+  - bia tập bắn
+  - quốc phòng
+  - vũ khí
+  - hỏa lực
+  - phóng lôi
+  - BQP
+  - torpedo
+  - fire control
+  - FCS
+  - weapon
+  - munition
+  - warship
+  - UUV
+  - USV
+  - C-UAS
+  - counter-uav
+  - radar target
+  - towed target
+
+drawing_patterns:
+  - 'TN-\d{2}-\d{2}-\d{3}'
+  - 'WX-[A-Z]{2,4}-\d{3}'

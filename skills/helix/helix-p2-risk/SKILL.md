@@ -229,6 +229,12 @@ If sensitive → weight of Cx is the REAL decision.
   - Domain-specific FM source tracking for traceability to CSR functions
   - FM Source Summary table validates coverage across all 3 domains
 
+**RESEARCH HOOK (knowledge gaps):** For every RTA knowledge gap classified NEW, generate one
+Research Brief (`type: knowledge-gap`, `phase: P2`, `source_block: helix-p2-risk`,
+`risk_if_wrong` = HIGH when the gap sits on a CRITICAL CFMA path) and list the brief_ids in
+the gap-closing plan. Gaps with an unanswered brief stay OPEN in the risk register — a plan
+line without evidence does not close a gap.
+
 ## Output
 
 Save to `1_Projects/{{project}}/Phase2-Concept/`:

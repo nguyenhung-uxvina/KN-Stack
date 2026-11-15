@@ -90,6 +90,12 @@ Score product against 8 Altshuller evolution trends:
 
 **Stalled (<3)** = highest-leverage innovation direction for Block BB.
 
+**RESEARCH HOOK (state of the art):** TESE scoring above draws on model knowledge, which is
+capped at training cutoff. If any trend scores ≤2, or CEO suspects the field moved recently,
+raise a Research Brief via `/helix-research` (`type: state-of-the-art`, `phase: P2`) — the
+dispatcher will propose T2/T3. Update the trend table only with cited findings; log the
+Response file in the ledger line.
+
 **Skip condition:** Adaptive/Variant designs → skip.
 
 ### ICDM Extension (if --icdm active)

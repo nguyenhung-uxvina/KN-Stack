@@ -89,6 +89,17 @@ UNRESOLVED CONFLICTS (CEO must decide):
 - {{conflict}} — Mech vs Elec: {{trade-off description}}
 ```
 
+### Step 3b: Escalation to Real Councils (optional — RED complexity or unresolved contradiction)
+
+The three perspectives above are SIMULATED from the embedded WX knowledge base. When
+(a) complexity = RED, or (b) Step 3 contradictions cannot be resolved within this debate,
+offer CEO an escalation instead of forcing a synthesis:
+- **Judgment question** → `/mentor-board` PANEL or DEBATE with the matching specialist
+  council (naval-architect, nswc-hull, torpedo-asw, cdpr-cable-robot, harness-engineering…)
+- **Retrieval question** (a fact/benchmark would settle it) → `/helix-research` brief
+Record the escalation verdict in the JSON side-car as `"escalated_to"` + summary. Skipping
+escalation at RED is a CEO decision (Core), noted in the side-car.
+
 ### Step 4: Synthesis + Recommendation
 
 ```
