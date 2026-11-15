@@ -12,6 +12,7 @@ allowed-tools: ["Read", "Bash", "Task", "Write"]
 
 ## Luật cứng (cơ chế, không phải lời nhắc)
 1. **Không chạy nếu `cad_gates_report.json` có `verdict != "PASS"`.** Orchestrator kiểm trước khi gọi.
+   `DRAFT-PASS` (cổng chạy `--mode draft`, hợp đồng chưa đủ) **≠ PASS** ⇒ không chạy judge.
 2. **Agent giám khảo ≠ agent dựng.** Luôn `Task(general-purpose)` MỚI, không truyền lịch sử hội thoại của agent dựng.
 3. Đầu vào CỐ ĐỊNH, chỉ 4 tệp: `spec.md` (đã duyệt) · `model.py` · `model_views.png` · `cad_gates_report.json`.
    Không đọc bản vẽ gốc (judge kiểm mô hình ↔ spec; spec ↔ bản vẽ là việc của kỹ sư khi duyệt spec).

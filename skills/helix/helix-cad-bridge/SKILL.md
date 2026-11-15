@@ -94,7 +94,9 @@ MATERIAL / EXPORT: [material] · units mm · export STEP + PNG
 ```
 No `geometry_contract.json` yet ⇒ draft one from the Step 2 table (schema:
 `helix-cad-gates/references/geometry_contract.schema.md`, ≥1 probe per critical feature) and have the CEO sign it
-before Step 5 — the gate never runs against an unsigned contract.
+before Step 5 — the gate never runs against an unsigned contract. Enforced: `geom_gates.py` defaults to
+`--mode release`, which FAILs without `--approved-hash`, `probes[]`, `--model` or `param_probes[]` (unless waived in
+the signed contract). Use `--mode draft` while iterating; its `DRAFT-PASS` does not open Step 5.
 
 ### Step 5: CEO Verifies Rendered Geometry (CORE — Spatial Blindness Gate)
 ```
