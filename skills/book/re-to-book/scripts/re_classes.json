@@ -1,0 +1,10 @@
+{
+  "classes": [
+    {"class": "BLOCK", "patterns": ["*_Idea_Log.md", "*_S0_Legal_Gate.md", "*BOM*", "*.backup", "*_Book_GapFill.md"]},
+    {"class": "CUT", "patterns": ["*_Hypotheses.md"]},
+    {"class": "DECISION", "patterns": ["_pipeline_state.md", "*_S1_Source_Gate.md", "_source/_ma_nguon.md"]},
+    {"class": "IGNORE", "patterns": ["_analysis/*", "_source/video/*", "*.json", "*.py", "*_out.txt", "__pycache__/*"]},
+    {"class": "SOURCE", "patterns": ["_source/*"]},
+    {"class": "READ", "patterns": ["*_S0_Patent_CC2.md", "*_S1A_*.md", "*_S1B_*.md", "*_S1C_*.md", "*_S1M_*.md", "*_S2B_*.md", "*_S2M_*.md", "TECH_T*.md", "*_Precision_Debt.md"]}
+  ]
+}
