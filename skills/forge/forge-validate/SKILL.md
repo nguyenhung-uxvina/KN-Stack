@@ -376,7 +376,7 @@ CEO validates:
 - Evidence bar acceptable?
 - Decision: CONTINUE / PIVOT / ESCALATE
 
-Save to: `2_Areas/FORGE/ACH-Design-Principle/ACH_Thesis_Scorecard_{{date}}.md`
+Save to: `2_Areas/FORGE — Product Strategy/ACH-Design-Principle/ACH_Thesis_Scorecard_{{date}}.md`
 
 → Feed to forge-evolve (moat assessment) and forge-portfolio (FORGE SCORE dimension O)
 

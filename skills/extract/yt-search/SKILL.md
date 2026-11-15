@@ -7,8 +7,8 @@ description: Search YouTube for videos on a topic, present results, then optiona
 
 Tìm video trên YouTube → chọn video tốt → tạo NLM notebook → query insights → route to vault.
 
-**PATH:** `yt-dlp` tại `C:/Users/ADMIN/AppData/Roaming/Python/Python313/Scripts/yt-dlp.exe`
-Luôn prefix bash: `export PATH="$PATH:/c/Users/ADMIN/AppData/Roaming/Python/Python313/Scripts"`
+**PATH:** `yt-dlp` tại `C:/Users/Admin/AppData/Local/Programs/Python/Python312/Scripts/yt-dlp.exe`
+Luôn prefix bash: `export PATH="$PATH:/c/Users/Admin/AppData/Local/Programs/Python/Python312/Scripts"`
 
 ## When to Use
 
@@ -33,7 +33,7 @@ Luôn prefix bash: `export PATH="$PATH:/c/Users/ADMIN/AppData/Roaming/Python/Pyt
 ### Step 1: Search YouTube via yt-dlp
 
 ```bash
-export PATH="$PATH:/c/Users/ADMIN/AppData/Roaming/Python/Python313/Scripts"
+export PATH="$PATH:/c/Users/Admin/AppData/Local/Programs/Python/Python312/Scripts"
 yt-dlp "ytsearch8:<topic>" \
   --flat-playlist \
   --print "%(id)s | %(title)s | %(duration_string)s | %(view_count)s | %(upload_date)s | %(channel)s" \

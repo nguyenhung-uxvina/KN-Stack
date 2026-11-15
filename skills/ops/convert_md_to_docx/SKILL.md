@@ -11,7 +11,7 @@ description: >-
 
 Convert a Markdown file to DOCX format.
 
-Usage: /splash <file_path>
+Usage: /convert_md_to_docx <file_path>
 
 1. If no file path is provided in "$ARGUMENTS", ask the user which .md file to convert.
 2. Read the markdown file using the Read tool.

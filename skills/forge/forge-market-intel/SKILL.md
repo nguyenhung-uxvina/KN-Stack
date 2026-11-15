@@ -158,7 +158,7 @@ THREAT: Price pressure
 → Cost reduction via ACH + continuous improvement
 ```
 
-Save to: `2_Areas/FORGE/Market-Intelligence/COMPETITOR_WATCH_{{date}}.md`
+Save to: `2_Areas/FORGE — Product Strategy/Market-Intelligence/COMPETITOR_WATCH_{{date}}.md`
 
 **STOP. CEO reviews signals and decides responses.**
 
@@ -247,7 +247,7 @@ REVENUE TRAJECTORY:
 | 2036 | Target | $5-10M ASEAN export |
 ```
 
-Save to: `2_Areas/FORGE/Market-Intelligence/ASEAN_EXPORT_{{date}}.md`
+Save to: `2_Areas/FORGE — Product Strategy/Market-Intelligence/ASEAN_EXPORT_{{date}}.md`
 
 **STOP. CEO reviews and prioritizes markets.**
 
@@ -348,7 +348,7 @@ QUICK FILTER FOR NEW PARTNERSHIP REQUESTS:
 Only "YES" to all 5 → proceed to detailed 5-criteria evaluation above.
 ```
 
-Save to: `2_Areas/FORGE/Market-Intelligence/PARTNER_EVAL_{{partner}}_{{date}}.md`
+Save to: `2_Areas/FORGE — Product Strategy/Market-Intelligence/PARTNER_EVAL_{{partner}}_{{date}}.md`
 
 **STOP. CEO decides on partnership action.**
 
