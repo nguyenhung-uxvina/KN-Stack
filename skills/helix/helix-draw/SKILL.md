@@ -1,6 +1,6 @@
 ---
 name: helix-draw
-description: "Generate Excalidraw diagrams for HELIX pipeline outputs. Creates .excalidraw.md files viewable in Obsidian. Supports 12 diagram types across Phase 1-3 blocks. Triggers on 'draw', 'diagram', 'excalidraw', 'vẽ sơ đồ', 'biểu đồ', 'chart', 'visual', or when a block-skill output would benefit from a visual representation."
+description: "Generate Excalidraw diagrams for HELIX pipeline outputs. Creates .excalidraw.md files viewable in Obsidian. Supports 12 diagram types across Phase 1-3 blocks. Triggers on 'draw', 'diagram', 'excalidraw', 'vẽ sơ đồ', 'biểu đồ', 'chart', 'visual', or when a block-skill output would benefit from a visual representation. NOT for publication-grade figures (book illustrations, KHCN proposals, partner reports, slides, web) — those go to the diagram-design plugin; see docs/DIAGRAM_ROUTING.md."
 allowed-tools: ["Read", "Write", "Glob", "Grep", "Bash", "Agent"]
 ---
 
@@ -9,6 +9,7 @@ allowed-tools: ["Read", "Write", "Glob", "Grep", "Bash", "Agent"]
 > **Purpose:** Generate `.excalidraw.md` files from structured data produced by HELIX pipeline blocks.
 > **Output:** Obsidian-compatible Excalidraw files with `excalidraw-plugin: parsed` frontmatter.
 > **Integration:** Called by block-skills via reference, or standalone via `/helix-draw <type> <project>`.
+> **Phân luồng:** helix-draw = sơ đồ LÀM VIỆC trong vault. Hình XUẤT BẢN (sách in, đề xuất KHCN, báo cáo đối tác, slide) → plugin `diagram-design`. Nhập tệp `.excalidraw` này sang bằng `/diagram-design:import-excalidraw`, không vẽ lại. Bảng đầy đủ: `docs/DIAGRAM_ROUTING.md`.
 
 ## Usage
 
