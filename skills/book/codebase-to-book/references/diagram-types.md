@@ -2,6 +2,8 @@
 
 > Hướng dẫn khi nào dùng loại diagram nào trong sách kỹ thuật. Mọi diagram dùng Mermaid format (```mermaid fenced code blocks) — render native trên GitHub và hầu hết web framework.
 
+> **Hình xuất bản (bản in / PDF / bìa chương / slide giới thiệu sách):** Mermaid vẫn là nguồn trong thân chương. Khi cần hình chất lượng in, nhập khối Mermaid sang plugin `diagram-design` bằng `/diagram-design:import-mermaid`, xuất SVG/PNG, rồi đặt hình đó cạnh khối Mermaid gốc. Không xoá khối gốc, vì diff văn bản cần nó. Các loại Mermaid bị tránh ở cuối tệp này (`quadrantChart`, `sankey`, `timeline`…) thì `diagram-design` vẽ ổn định. Xem `docs/DIAGRAM_ROUTING.md`.
+
 ## Decision: Khi nào dùng loại nào?
 
 | Concept to show | Diagram type | Example use |
